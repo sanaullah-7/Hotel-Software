@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@v4
 
 
-      # 2. CI machine par Node.js 20 setup karega.
+      # 2. CI machine par Node.js 24 setup karega.
       # npm cache use karega taake future CI runs faster hon.
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -48,6 +48,15 @@ jobs:
       # 3. Client ki exact dependencies package-lock.json ke mutabiq install karega.
       - name: Install Client dependencies
         run: npm ci
+
+
+      # Temporary debug step
+      # Isse pata chalega ke GitHub CI mein actual versions kya hain.
+      - name: Check environment
+        run: |
+          node -v
+          npm -v
+          npm ls jsdom undici vitest
 
 
       # 4. ESLint run karega.
