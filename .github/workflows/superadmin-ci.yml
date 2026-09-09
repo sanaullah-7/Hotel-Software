@@ -1,0 +1,68 @@
+name: SuperAdmin CI Pipeline
+
+# Workflow kab chalegi?
+# Jab main ya dev branch par code push hoga.
+# Ya jab main/dev branch ke liye Pull Request banegi/update hogi.
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+  pull_request:
+    branches:
+      - main
+      - dev
+
+
+jobs:
+  superadmin-ci:
+
+    # GitHub ek temporary Ubuntu machine provide karega
+    # aur isi machine par CI run hogi.
+    runs-on: ubuntu-latest
+
+    # Is job ke tamam "run" commands SuperAdmin folder ke andar run honge.
+    # Isliye har step mein working-directory dobara likhne ki zaroorat nahi.
+    defaults:
+      run:
+        working-directory: SuperAdmin
+
+    steps:
+
+      # 1. GitHub repository ka code temporary CI machine par checkout karega.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+
+      # 2. CI machine par Node.js 20 setup karega.
+      # npm cache use karega taake future CI runs faster hon.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: SuperAdmin/package-lock.json
+
+
+      # 3. SuperAdmin ki exact dependencies package-lock.json ke mutabiq install karega.
+      - name: Install SuperAdmin dependencies
+        run: npm ci
+
+
+      # 4. ESLint run karega.
+      # Code quality aur linting problems check hongi.
+      - name: Run ESLint
+        run: npm run lint
+
+
+      # 5. SuperAdmin ke automated tests run karega.
+      # Agar koi test fail hua to CI fail ho jayegi.
+      - name: Run tests
+        run: npm test
+
+
+      # 6. React production build check karega.
+      # Agar production build successfully ban gaya to build check pass.
+      - name: Build SuperAdmin
+        run: npm run build

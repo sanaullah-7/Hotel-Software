@@ -1,0 +1,62 @@
+name: Server CI Pipeline 
+
+# Ye workflow kab chalegi?
+# Matlab /jab main ya dev par push hone par CI chalegi.
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+# Matlab jab koi PR main ya develop mein merge hone ke liye banaye, CI chalegi.
+  pull_request:
+    branches:
+      - main
+      - dev
+
+
+jobs: # CI mein kaunse kaam perform karne hain?
+  server-ci:
+
+    # GitHub tumhare computer ko use nahi karta.
+    # GitHub ek temporary machine create karta hai aur us par CI run karta hai.
+    runs-on: ubuntu-latest
+
+ # Is job ke tamam "run" commands Server folder ke andar run honge.
+    # Isliye har step mein working-directory dobara likhne ki zaroorat nahi.
+    defaults:
+      run:
+        working-directory: Server
+
+    steps:
+
+      # 1. Repository ka code GitHub machine par lao
+      - name: Checkout repository
+        uses: actions/checkout@v4 # GitHub machine ko tumhara repository code chahiye.
+
+
+      # 2. Node.js setup karo
+      - name: Setup Node.js
+        uses: actions/setup-node@v4 # GitHub machine par Node.js available/setup karta hai.
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: Server/package-lock.json
+
+
+      # 3. Server folder mein dependencies install karo
+      # npm ci CI environment ke liye recommended hai
+      - name: Install server dependencies
+ 
+        run: npm ci
+
+
+      # 4. ESLint run karo
+      # Code quality/syntax problems check hongi
+      - name: Run ESLint
+        run: npm run lint
+
+
+      # 5. Automated tests run karo
+      - name: Run tests
+        run: npm test
