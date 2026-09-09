@@ -1,13 +1,8 @@
-import express from "express";
+import app from "./app.js"; // app instance ko import kiya
 import mongoose from "mongoose";
 
-const app = express();
-const PORT = 5000
 
-// API Route
-app.get('/', (req, res) => {
-    res.send("Api is Running and must i will block it.");
-});
+const PORT = 5000
 
 // DB Connection & Server Start
 mongoose.connect("mongodb://localhost:27017/Hotel") // Changed localhost to 127.0.0.1
