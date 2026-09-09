@@ -39,7 +39,7 @@ jobs: # CI mein kaunse kaam perform karne hain?
       - name: Setup Node.js
         uses: actions/setup-node@v4 # GitHub machine par Node.js available/setup karta hai.
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
           cache-dependency-path: Server/package-lock.json
 
