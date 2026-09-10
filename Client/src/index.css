@@ -1,1 +1,290 @@
 @import "tailwindcss";
+
+/* ==========================================================================
+   INDEX CSS — Hotel software Dashboard
+   Tailwind directives + Global styles (variables, reset, typography,
+   layout utilities, components) in one file.
+   Import this once at your app root, e.g. in main.jsx:  import './index.css';
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1. CSS VARIABLES (Design Tokens)
+   Centralized values used across Tailwind config, MUI theme, and custom CSS.
+   -------------------------------------------------------------------------- */
+:root {
+  /* Brand Colors */
+  --color-primary: #1a2b49;
+  --color-primary-light: #2f4573;
+  --color-primary-dark: #0f1b30;
+  --color-secondary: #c9a15a;
+  --color-secondary-light: #dcb87c;
+
+  /* Status Colors */
+  --color-success: #2e7d32;
+  --color-warning: #ed6c02;
+  --color-error: #d32f2f;
+  --color-info: #0288d1;
+
+  /* Neutrals */
+  --color-bg: #f5f6fa;
+  --color-surface: #ffffff;
+  --color-border: #e0e2e8;
+  --color-text-primary: #1c1c1e;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+
+  /* Typography */
+  --font-family-base: "Inter", "Roboto", "Helvetica Neue", Arial, sans-serif;
+  --font-size-base: 14px;
+  --line-height-base: 1.5;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* Layout */
+  --sidebar-width: 260px;
+  --sidebar-collapsed-width: 72px;
+  --topbar-height: 64px;
+
+  /* Radius & Shadow */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 250ms ease-in-out;
+}
+
+/* Dark mode overrides (optional — toggle via class or data-attribute) */
+[data-theme="dark"] {
+  --color-bg: #10131a;
+  --color-surface: #1a1d27;
+  --color-border: #2a2e3a;
+  --color-text-primary: #f5f6fa;
+  --color-text-secondary: #b0b3bd;
+  --color-text-muted: #7a7d87;
+}
+
+/* --------------------------------------------------------------------------
+   2. RESET / NORMALIZE
+   Fills gaps beyond Tailwind's preflight for consistency.
+   -------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* --------------------------------------------------------------------------
+   3. TYPOGRAPHY
+   -------------------------------------------------------------------------- */
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.25rem; }
+h4 { font-size: 1.125rem; }
+h5 { font-size: 1rem; }
+h6 { font-size: 0.875rem; }
+
+p {
+  margin: 0;
+  color: var(--color-text-secondary);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   4. LAYOUT UTILITIES
+   Shared structural classes used across dashboard layout components.
+   -------------------------------------------------------------------------- */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--color-bg);
+}
+
+.app-sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  transition: width var(--transition-base);
+}
+
+.app-sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+}
+
+.app-topbar {
+  height: var(--topbar-height);
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--spacing-lg);
+}
+
+.app-content {
+  flex: 1;
+  padding: var(--spacing-lg);
+  overflow-y: auto;
+}
+
+/* --------------------------------------------------------------------------
+   5. CARD / SURFACE COMPONENTS
+   -------------------------------------------------------------------------- */
+.surface-card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-lg);
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+}
+
+/* --------------------------------------------------------------------------
+   6. STATUS BADGES
+   Used for booking status, room status, leave status, etc.
+   -------------------------------------------------------------------------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 999px;
+  text-transform: capitalize;
+}
+
+.badge-success { background: rgba(46, 125, 50, 0.1); color: var(--color-success); }
+.badge-warning { background: rgba(237, 108, 2, 0.1); color: var(--color-warning); }
+.badge-error   { background: rgba(211, 47, 47, 0.1); color: var(--color-error); }
+.badge-info    { background: rgba(2, 136, 209, 0.1); color: var(--color-info); }
+
+/* --------------------------------------------------------------------------
+   7. SCROLLBAR STYLING
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-muted);
+}
+
+/* --------------------------------------------------------------------------
+   8. MUI + TAILWIND COEXISTENCE NOTES
+   -------------------------------------------------------------------------- */
+/*
+  - Tailwind's preflight resets can conflict with MUI's baseline styles.
+    If issues occur, disable Tailwind's preflight (corePlugins.preflight: false
+    in tailwind.config.js) and rely on the reset section above instead.
+  - MUI theme palette/typography should pull from the same CSS variables
+    above (e.g., theme.palette.primary.main = var(--color-primary)) to keep
+    a single source of truth for design tokens.
+  - Avoid using Tailwind's `@apply` for MUI component overrides — prefer
+    MUI's `sx` prop or `styled()` API for those, and reserve Tailwind for
+    layout/spacing/utility classes on custom (non-MUI) elements.
+*/
+
+/* --------------------------------------------------------------------------
+   9. ACCESSIBILITY / FOCUS STATES
+   -------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 2px solid var(--color-secondary);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   10. RESPONSIVE HELPERS
+   -------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .app-sidebar {
+    position: fixed;
+    z-index: 50;
+    height: 100vh;
+    transform: translateX(-100%);
+  }
+
+  .app-sidebar.open {
+    transform: translateX(0);
+  }
+
+  .app-content {
+    padding: var(--spacing-md);
+  }
+}
