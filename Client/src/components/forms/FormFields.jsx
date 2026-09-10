@@ -1,9 +1,36 @@
-import React from 'react';
 
-export default function FormFields() {
+import { TextField } from '@mui/material';
+
+/**
+ * A reusable Form Field wrapping MUI's TextField.
+ * Ensures consistent styling, margins, and behavior across all forms.
+ */
+export default function CustomTextField({ 
+  label, 
+  name, 
+  value, 
+  onChange, 
+  type = 'text', 
+  required = false, 
+  error = false, 
+  helperText = '',
+  className = '',
+  ...props 
+}) {
   return (
-    <div className="w-full">
-      <p className="text-gray-500">Form Fields Component Placeholder</p>
-    </div>
+    <TextField
+      fullWidth
+      variant="outlined"
+      label={label}
+      name={name}
+      type={type}
+      value={value}
+      onChange={onChange}
+      required={required}
+      error={error}
+      helperText={helperText}
+      className={`mb-4 ${className}`}
+      {...props}
+    />
   );
 }
