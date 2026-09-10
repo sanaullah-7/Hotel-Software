@@ -1,5 +1,15 @@
 import app from "./app.js"; // app instance ko import kiya
 import mongoose from "mongoose";
+import chalk from "chalk";
+
+// 🚀 Aik hi dafa colors ko automatic functions mein define kar diya
+const log = {
+  success: (msg) => console.log(chalk.bold.green(`➔ [SUCCESS] ${msg} 🎉`)),
+  info: (msg) => console.log(chalk.bold.cyan(`➔ [INFO] ${msg} 🚀`)),
+  error: (msg) => console.log(chalk.bold.red(`❌ [ERROR] ${msg}`))
+};
+
+
 
 
 
