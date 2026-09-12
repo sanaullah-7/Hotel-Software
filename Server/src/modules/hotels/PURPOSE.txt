@@ -1,0 +1,1 @@
+Hotel listing banane, edit karne, aur dikhane ka pura logic yahan hai — hotel ka naam, address, amenities, images waghera.

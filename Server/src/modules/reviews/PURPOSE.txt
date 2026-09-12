@@ -1,0 +1,1 @@
+Guests apne stay kay baad hotel ko review/rating de sakte hain, uska logic yahan hai.

@@ -1,0 +1,1 @@
+Hotel kay general inventory/stock items (jese towels, toiletries) ka record rakhne ka logic — ye inventoryLock se alag hai, wo booking lock kay liye hai.

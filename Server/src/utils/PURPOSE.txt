@@ -1,0 +1,1 @@
+Chote chote helper functions yahan hain jo baar baar use hotay hain — jese standard API response format, error banana, async function wrapper, JWT token generate karna, aur pagination logic.

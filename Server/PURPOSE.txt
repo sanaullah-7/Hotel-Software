@@ -1,0 +1,1 @@
+Ye Server ka root folder hai jahan pura backend (Node.js + Express) ka code hai. Client aur SuperAdmin isse alag folders hain.

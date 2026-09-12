@@ -1,0 +1,1 @@
+Ye folder app kay basic setup files rakhta hai — database connect (db.js), environment variables load (env.js), aur logging setup (logger.js). Server start honay se pehle jo cheezen ready honi chahiye, wo yahan hain.
