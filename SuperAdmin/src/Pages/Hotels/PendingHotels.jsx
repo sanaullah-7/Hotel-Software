@@ -28,6 +28,7 @@ export default function PendingHotels() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
+     
     setLoading(true); setError('');
     try {
       const res = await ApprovalService.getApprovals({ status: 'PENDING', page, limit: DEFAULT_PAGE_SIZE, search });
@@ -36,7 +37,9 @@ export default function PendingHotels() {
     finally { setLoading(false); }
   }, [page, search]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(1); }, [search]);
 
   const handleAction = async () => {
@@ -47,6 +50,7 @@ export default function PendingHotels() {
       if (confirm.type === 'reject')  await ApprovalService.rejectRequest(confirm.item.id, rejectReason);
       toast.success(`Application ${confirm.type}d successfully.`);
       setConfirm(null); setRejectReason(''); setDrawerOpen(false); setSelected(null);
+       
       fetchData(); refreshUnreadCount();
     } catch (e) { toast.error(e.message || 'Action failed.'); }
     finally { setActionLoading(false); }

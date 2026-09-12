@@ -12,7 +12,9 @@ import { CheckCircle } from 'lucide-react';
 export default function ApprovedRequest() {
   const [data,setData]=useState([]); const [total,setTotal]=useState(0); const [page,setPage]=useState(1);
   const [loading,setLoading]=useState(true); const [error,setError]=useState('');
+   
   const fetch=useCallback(async()=>{setLoading(true);setError('');try{const r=await ApprovalService.getApprovals({status:'APPROVED',page,limit:DEFAULT_PAGE_SIZE});setData(r.data);setTotal(r.total);}catch(e){setError(e.message);}finally{setLoading(false);};},[page]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(()=>{fetch();},[fetch]);
   return (
     <div className="animate-fadein">

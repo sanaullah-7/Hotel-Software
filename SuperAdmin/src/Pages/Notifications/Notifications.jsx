@@ -21,6 +21,7 @@ export default function Notifications() {
   const [error,   setError]   = useState('');
 
   const fetchData = useCallback(async () => {
+     
     setLoading(true); setError('');
     try {
       const res = await NotificationService.getNotifications();
@@ -29,6 +30,7 @@ export default function Notifications() {
     finally { setLoading(false); }
   }, []);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const markRead = async (id) => {

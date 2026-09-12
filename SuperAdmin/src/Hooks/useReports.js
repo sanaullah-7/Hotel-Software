@@ -9,6 +9,7 @@ export function useReports() {
   const [error, setError] = useState(null);
 
   const fetchReports = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -28,6 +29,7 @@ export function useReports() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchReports();
   }, [fetchReports]);
 

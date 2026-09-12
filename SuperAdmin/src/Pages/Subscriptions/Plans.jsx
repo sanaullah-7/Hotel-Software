@@ -3,10 +3,9 @@ import PageHeader from '../../Components/Common/pageHeader.jsx';
 import PlanCard from '../../Components/Subscriptions/PlanCard.jsx';
 import Model from '../../Components/Common/Model.jsx';
 import { useSubscription } from '../../Hooks/useSubscription.js';
-import { formatCurrency } from '../../utils/formatCurrency.js';
 
 export default function Plans() {
-  const { plans, loading } = useSubscription();
+  const { plans } = useSubscription();
   const [selectedPlan, setSelectedPlan] = useState(null);
 
   return (

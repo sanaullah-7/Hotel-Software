@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Database, RefreshCw, Cpu, Server } from 'lucide-react';
+import {  RefreshCw, Server } from 'lucide-react';
 
 export default function SystemSettings() {
   const [maintenanceMode, setMaintenanceMode] = useState(false);

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY, THEME_KEY, SIDEBAR_KEY } from '../utils/constants.js';
 import { NotificationService } from '../Services/NotificationService.js';
@@ -80,6 +81,7 @@ export function SuperAdminProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (isAuthenticated) refreshUnreadCount();
   }, [isAuthenticated, refreshUnreadCount]);
 

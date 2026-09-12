@@ -1,5 +1,5 @@
 import { useLocation, Link } from 'react-router-dom';
-import { Bell, Sun, Moon, Menu, Search, ChevronRight } from 'lucide-react';
+import { Bell, Sun, Moon, Menu, ChevronRight } from 'lucide-react';
 import { useSuperAdmin } from '../../Context/SuperAdminContext.jsx';
 
 // Map pathname segments to readable labels

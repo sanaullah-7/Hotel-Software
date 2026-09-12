@@ -9,6 +9,7 @@ export function useApprovel(initialParams = {}) {
   const [params, setParams] = useState(initialParams);
 
   const fetchApprovals = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -23,16 +24,19 @@ export function useApprovel(initialParams = {}) {
   }, [params]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchApprovals();
   }, [fetchApprovals]);
 
   const approve = async (id) => {
     await ApprovalService.approveRequest(id);
+     
     fetchApprovals();
   };
 
   const reject = async (id, reason) => {
     await ApprovalService.rejectRequest(id, reason);
+     
     fetchApprovals();
   };
 

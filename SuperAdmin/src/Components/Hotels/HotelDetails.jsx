@@ -1,7 +1,6 @@
 import Drawer from '../Common/Drawer.jsx';
 import HotelStatusBadge from './HotelStatusBadge.jsx';
-import { Building2, MapPin, Mail, Phone, Star, Bed, Calendar, Hash, ShieldAlert } from 'lucide-react';
-import { formatDate } from '../../utils/ForamteDate.js';
+import {  MapPin, Mail, Phone, Star, Bed, Hash, ShieldAlert } from 'lucide-react';
 
 export default function HotelDetails({ hotel, isOpen, onClose, onSuspend, onActivate, onApprove }) {
   if (!hotel) return null;

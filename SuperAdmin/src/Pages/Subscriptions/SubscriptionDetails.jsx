@@ -2,7 +2,6 @@ import Drawer from '../../Components/Common/Drawer.jsx';
 import SubscriptionStatusBadge from '../../Components/Subscriptions/SubscriptionStatusBadge.jsx';
 import { formatCurrency } from '../../utils/formatCurrency.js';
 import { formatDate } from '../../utils/ForamteDate.js';
-import { Building2, Calendar, CreditCard, ShieldCheck } from 'lucide-react';
 
 export default function SubscriptionDetails({ subscription, isOpen, onClose }) {
   if (!subscription) return null;

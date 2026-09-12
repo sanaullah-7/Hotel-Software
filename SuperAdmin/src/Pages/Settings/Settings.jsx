@@ -1,45 +1,46 @@
 import PageHeader from '../../Components/Common/pageHeader.jsx';
 import { useSuperAdmin } from '../../Context/SuperAdminContext.jsx';
-import { Sun, Moon, Bell, Shield, Globe } from 'lucide-react';
+import { Sun, Bell, Shield, Globe } from 'lucide-react';
+
+const SectionCard = ({ title, icon: Icon, children }) => (
+  <div className="sa-card" style={{ marginBottom: 16 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--color-border)' }}>
+      <Icon size={18} style={{ color: 'var(--color-primary)' }} />
+      <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>{title}</h3>
+    </div>
+    {children}
+  </div>
+);
+
+const Toggle = ({ label, desc, checked, onChange }) => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
+    <div>
+      <div style={{ fontSize: 13.5, fontWeight: 500 }}>{label}</div>
+      {desc && <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>{desc}</div>}
+    </div>
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={onChange}
+      style={{
+        width: 44, height: 24, borderRadius: 99, border: 'none', cursor: 'pointer',
+        background: checked ? 'var(--color-primary)' : 'var(--color-border)',
+        position: 'relative', transition: 'background var(--transition-base)', flexShrink: 0,
+      }}
+    >
+      <span style={{
+        position: 'absolute', top: 2, left: checked ? 22 : 2,
+        width: 20, height: 20, borderRadius: '50%', background: '#fff',
+        transition: 'left var(--transition-base)',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+      }} />
+    </button>
+  </div>
+);
 
 export default function Settings() {
   const { theme, toggleTheme } = useSuperAdmin();
 
-  const SectionCard = ({ title, icon: Icon, children }) => (
-    <div className="sa-card" style={{ marginBottom: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid var(--color-border)' }}>
-        <Icon size={18} style={{ color: 'var(--color-primary)' }} />
-        <h3 style={{ fontSize: 15, fontWeight: 700, margin: 0 }}>{title}</h3>
-      </div>
-      {children}
-    </div>
-  );
-
-  const Toggle = ({ label, desc, checked, onChange }) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
-      <div>
-        <div style={{ fontSize: 13.5, fontWeight: 500 }}>{label}</div>
-        {desc && <div style={{ fontSize: 12, color: 'var(--color-text-muted)', marginTop: 2 }}>{desc}</div>}
-      </div>
-      <button
-        role="switch"
-        aria-checked={checked}
-        onClick={onChange}
-        style={{
-          width: 44, height: 24, borderRadius: 99, border: 'none', cursor: 'pointer',
-          background: checked ? 'var(--color-primary)' : 'var(--color-border)',
-          position: 'relative', transition: 'background var(--transition-base)', flexShrink: 0,
-        }}
-      >
-        <span style={{
-          position: 'absolute', top: 2, left: checked ? 22 : 2,
-          width: 20, height: 20, borderRadius: '50%', background: '#fff',
-          transition: 'left var(--transition-base)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-        }} />
-      </button>
-    </div>
-  );
 
   return (
     <div className="animate-fadein" style={{ maxWidth: 640 }}>

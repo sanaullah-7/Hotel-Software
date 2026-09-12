@@ -29,6 +29,7 @@ export default function Approvels() {
   const [error,  setError]  = useState('');
 
   const fetchData = useCallback(async () => {
+     
     setLoading(true); setError('');
     try {
       const res = await ApprovalService.getApprovals({ page, limit: DEFAULT_PAGE_SIZE, status, search });
@@ -37,7 +38,9 @@ export default function Approvels() {
     finally { setLoading(false); }
   }, [page, status, search]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(1); }, [status, search]);
 
   return (

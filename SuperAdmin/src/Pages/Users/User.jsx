@@ -30,6 +30,7 @@ export default function UserPage() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
+     
     setLoading(true); setError('');
     try {
       const res = await UserService.getUsers({ page, limit: DEFAULT_PAGE_SIZE, role, status, search });
@@ -38,7 +39,9 @@ export default function UserPage() {
     finally { setLoading(false); }
   }, [page, role, status, search]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(1); }, [role, status, search]);
 
   const handleAction = async () => {
@@ -48,6 +51,7 @@ export default function UserPage() {
       if (confirm.type === 'activate') await UserService.activateUser(confirm.user.id);
       if (confirm.type === 'suspend')  await UserService.suspendUser(confirm.user.id);
       toast.success(`User ${confirm.type}d successfully.`);
+       
       setConfirm(null); fetchData();
     } catch (e) { toast.error(e.message || 'Action failed.'); }
     finally { setActionLoading(false); }

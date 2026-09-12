@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Bell, Mail, ShieldAlert } from 'lucide-react';
 
 export default function NotifictionSettings() {
   const [emailAlerts, setEmailAlerts] = useState(true);

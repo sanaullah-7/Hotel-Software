@@ -9,6 +9,7 @@ export function useReceptionist(initialParams = {}) {
   const [params, setParams] = useState(initialParams);
 
   const fetchReceptionists = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -23,16 +24,19 @@ export function useReceptionist(initialParams = {}) {
   }, [params]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchReceptionists();
   }, [fetchReceptionists]);
 
   const activateReceptionist = async (id) => {
     await ReceptionistService.activateReceptionist(id);
+     
     fetchReceptionists();
   };
 
   const suspendReceptionist = async (id, reason) => {
     await ReceptionistService.suspendReceptionist(id, reason);
+     
     fetchReceptionists();
   };
 

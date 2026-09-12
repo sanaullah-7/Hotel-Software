@@ -18,6 +18,7 @@ export default function SupportTicket() {
   const [selectedTicket, setSelectedTicket] = useState(null);
 
   const fetchTickets = async () => {
+     
     setLoading(true);
     try {
       const res = await SupportService.getTickets({ status, priority, search, page, limit: 10 });
@@ -31,13 +32,16 @@ export default function SupportTicket() {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchTickets();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, priority, search, page]);
 
   const handleReply = async (ticketId, message) => {
     await SupportService.replyTicket(ticketId, message);
     const updated = await SupportService.getTicketById(ticketId);
     setSelectedTicket(updated);
+     
     fetchTickets();
   };
 
@@ -45,6 +49,7 @@ export default function SupportTicket() {
     await SupportService.updateTicketStatus(ticketId, newStatus);
     const updated = await SupportService.getTicketById(ticketId);
     setSelectedTicket(updated);
+     
     fetchTickets();
   };
 

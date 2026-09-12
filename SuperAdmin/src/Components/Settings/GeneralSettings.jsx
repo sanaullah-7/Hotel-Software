@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSuperAdmin } from '../../Context/SuperAdminContext.jsx';
-import { Sun, Moon, Globe } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 export default function GeneralSettings() {
   const { theme, toggleTheme } = useSuperAdmin();

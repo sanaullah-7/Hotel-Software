@@ -1,7 +1,7 @@
 import DataTable from '../Common/DataTable.jsx';
 import StatusBadge from '../Common/StatusBadge.jsx';
 import { formatDate } from '../../utils/ForamteDate.js';
-import { Check, X, Eye, FileText } from 'lucide-react';
+import { Check, X, Eye } from 'lucide-react';
 
 export default function ApprovalTable({
   approvals = [],

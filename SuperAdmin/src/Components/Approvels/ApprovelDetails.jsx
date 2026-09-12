@@ -1,5 +1,5 @@
 import StatusBadge from '../Common/StatusBadge.jsx';
-import { Building2, MapPin, Mail, Phone, FileText, CheckCircle, XCircle, Calendar, Hash } from 'lucide-react';
+import {  MapPin, FileText, CheckCircle, XCircle, Calendar, Hash } from 'lucide-react';
 import { formatDate } from '../../utils/ForamteDate.js';
 
 export default function ApprovelDetails({ approval, onApprove, onReject }) {

@@ -9,6 +9,7 @@ export function useManager(initialParams = {}) {
   const [params, setParams] = useState(initialParams);
 
   const fetchManagers = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -23,16 +24,19 @@ export function useManager(initialParams = {}) {
   }, [params]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchManagers();
   }, [fetchManagers]);
 
   const activateManager = async (id) => {
     await ManagerService.activateManager(id);
+     
     fetchManagers();
   };
 
   const suspendManager = async (id, reason) => {
     await ManagerService.suspendManager(id, reason);
+     
     fetchManagers();
   };
 

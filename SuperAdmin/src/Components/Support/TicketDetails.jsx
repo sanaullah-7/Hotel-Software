@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Drawer from '../Common/Drawer.jsx';
 import TicketStatusBadge from './TicketStatusBadge.jsx';
-import { Send, Building2, User, Mail, Calendar, AlertCircle } from 'lucide-react';
+import { Send, Building2, Calendar } from 'lucide-react';
 
 export default function TicketDetails({ ticket, isOpen, onClose, onReply, onStatusChange }) {
   const [replyText, setReplyText] = useState('');

@@ -7,7 +7,7 @@ import Pagination from '../../Components/Common/Pagination.jsx';
 import PageHeader from '../../Components/Common/pageHeader.jsx';
 import EmptyState from '../../Components/Common/EmptyState.jsx';
 import ErrorState from '../../Components/Common/ErrorState.jsx';
-import LoadingSkeleton from '../../Components/Common/Skeleton.jsx';
+
 import { Hotel } from 'lucide-react';
 import { DEFAULT_PAGE_SIZE } from '../../utils/constants.js';
 
@@ -30,6 +30,7 @@ export default function Hotels() {
   const [error,    setError]    = useState('');
 
   const fetchData = useCallback(async () => {
+     
     setLoading(true);
     setError('');
     try {
@@ -43,9 +44,11 @@ export default function Hotels() {
     }
   }, [page, pageSize, status, search]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
 
   // Reset to page 1 when filters change
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(1); }, [status, search]);
 
   return (
@@ -72,6 +75,7 @@ export default function Hotels() {
       ) : (
         <>
           <HotelTable data={data} loading={loading} onRefresh={fetchData} />
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           <Pagination page={page} total={total} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
         </>
       )}

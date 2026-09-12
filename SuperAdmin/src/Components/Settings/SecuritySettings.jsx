@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Key, Lock } from 'lucide-react';
+import { Shield, Key } from 'lucide-react';
 
 export default function SecuritySettings() {
   const [currentPassword, setCurrentPassword] = useState('');

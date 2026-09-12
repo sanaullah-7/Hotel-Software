@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AnalyticsService } from '../Services/RevenueService.js';
 
-export function useRevenue(initialParams = {}) {
+export function useRevenue(/*  */) {
   const [stats, setStats] = useState(null);
   const [revenueHistory, setRevenueHistory] = useState([]);
   const [transactions, setTransactions] = useState([]);
@@ -9,6 +9,7 @@ export function useRevenue(initialParams = {}) {
   const [error, setError] = useState(null);
 
   const fetchRevenue = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -28,6 +29,7 @@ export function useRevenue(initialParams = {}) {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchRevenue();
   }, [fetchRevenue]);
 

@@ -1,6 +1,6 @@
 import Drawer from '../Common/Drawer.jsx';
 import StatusBadge from '../Common/StatusBadge.jsx';
-import { User, Mail, Phone, Building2, Calendar, Clock, Shield } from 'lucide-react';
+import {  Mail, Phone, Building2, Calendar, Clock, Shield } from 'lucide-react';
 import { formatDate } from '../../utils/ForamteDate.js';
 
 export default function UserDetails({ user, isOpen, onClose }) {

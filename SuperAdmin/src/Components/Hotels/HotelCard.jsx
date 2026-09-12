@@ -1,5 +1,5 @@
 import HotelStatusBadge from './HotelStatusBadge.jsx';
-import { Building2, MapPin, Phone, Mail, Star, Bed } from 'lucide-react';
+import {  MapPin, Phone, Mail, Star, Bed } from 'lucide-react';
 
 export default function HotelCard({ hotel, onView }) {
   return (

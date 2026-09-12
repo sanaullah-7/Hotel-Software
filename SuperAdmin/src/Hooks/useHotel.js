@@ -9,6 +9,7 @@ export function useHotel(initialParams = {}) {
   const [params, setParams] = useState(initialParams);
 
   const fetchHotels = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -23,26 +24,31 @@ export function useHotel(initialParams = {}) {
   }, [params]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchHotels();
   }, [fetchHotels]);
 
   const approveHotel = async (id) => {
     await HotelService.approveHotel(id);
+     
     fetchHotels();
   };
 
   const rejectHotel = async (id, reason) => {
     await HotelService.rejectHotel(id, reason);
+     
     fetchHotels();
   };
 
   const suspendHotel = async (id, reason) => {
     await HotelService.suspendHotel(id, reason);
+     
     fetchHotels();
   };
 
   const activateHotel = async (id) => {
     await HotelService.activateHotel(id);
+     
     fetchHotels();
   };
 

@@ -9,6 +9,7 @@ export function useUsers(initialParams = {}) {
   const [params, setParams] = useState(initialParams);
 
   const fetchUsers = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -23,16 +24,19 @@ export function useUsers(initialParams = {}) {
   }, [params]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers();
   }, [fetchUsers]);
 
   const activateUser = async (id) => {
     await UserService.activateUser(id);
+     
     fetchUsers();
   };
 
   const suspendUser = async (id, reason) => {
     await UserService.suspendUser(id, reason);
+     
     fetchUsers();
   };
 

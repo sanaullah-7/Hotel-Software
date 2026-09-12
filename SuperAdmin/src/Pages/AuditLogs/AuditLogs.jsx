@@ -50,6 +50,7 @@ export default function AuditLogs() {
   const [error,      setError]      = useState('');
 
   const fetchData = useCallback(async () => {
+     
     setLoading(true); setError('');
     try {
       const res = await AuditLogService.getLogs({ page, limit: DEFAULT_PAGE_SIZE, action, entityType, search });
@@ -58,7 +59,9 @@ export default function AuditLogs() {
     finally { setLoading(false); }
   }, [page, action, entityType, search]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchData(); }, [fetchData]);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(1); }, [action, entityType, search]);
 
   return (

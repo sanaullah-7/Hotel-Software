@@ -9,6 +9,7 @@ export function useAuditLog(initialParams = {}) {
   const [params, setParams] = useState(initialParams);
 
   const fetchLogs = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -23,6 +24,7 @@ export function useAuditLog(initialParams = {}) {
   }, [params]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLogs();
   }, [fetchLogs]);
 

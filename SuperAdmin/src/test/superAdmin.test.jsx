@@ -5,7 +5,7 @@ import { UserService } from '../Services/UserService.js';
 import { SubscriptionService } from '../Services/SubscriptionService.js';
 import { formatCurrency } from '../utils/formatCurrency.js';
 import { formatDate } from '../utils/ForamteDate.js';
-import { hasPermission, ROLE_PERMISSIONS } from '../utils/Permission.js';
+import { hasPermission } from '../utils/Permission.js';
 
 describe('Super Admin Utility Functions', () => {
   it('formats PKR currency with symbol and comma separation', () => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { HotelService } from '../../Services/HotelService.js';
 import { useSuperAdmin } from '../../Context/SuperAdminContext.jsx';
 import StatusBadge from '../../Components/Common/StatusBadge.jsx';
@@ -21,13 +21,17 @@ export default function HotelDetails() {
   const [actionLoading, setActionLoading] = useState(false);
 
   const fetchHotel = useCallback(async () => {
+     
     setLoading(true); setError('');
     try { setHotel(await HotelService.getHotelById(id)); }
     catch (e) { setError(e.message || 'Failed to load hotel details.'); }
     finally { setLoading(false); }
   }, [id]);
 
-  useEffect(() => { fetchHotel(); }, [fetchHotel]);
+  useEffect(() => { 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchHotel(); 
+  }, [fetchHotel]);
 
   const handleAction = async () => {
     if (!confirm) return;

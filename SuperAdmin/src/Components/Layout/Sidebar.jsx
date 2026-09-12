@@ -2,7 +2,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Hotel, Users, CheckSquare, CreditCard,
   DollarSign, BarChart2, Bell, Shield, Settings, ChevronRight,
-  LogOut, User, MessageSquare, Activity, ChevronLeft, ChevronDown,
+  LogOut, MessageSquare, ChevronLeft, ChevronDown,
   ChevronUp, Building2
 } from 'lucide-react';
 import { useSuperAdmin } from '../../Context/SuperAdminContext.jsx';

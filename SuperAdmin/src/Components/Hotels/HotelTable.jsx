@@ -7,7 +7,7 @@ import { HotelService } from '../../Services/HotelService.js';
 import { useSuperAdmin } from '../../Context/SuperAdminContext.jsx';
 import { formatDate } from '../../utils/ForamteDate.js';
 
-export default function HotelTable({ data, loading, onRefresh }) {
+export default function HotelTable({ data, onRefresh }) {
   const navigate = useNavigate();
   const { toast } = useSuperAdmin();
   const [confirm, setConfirm] = useState(null); // { type, hotel }

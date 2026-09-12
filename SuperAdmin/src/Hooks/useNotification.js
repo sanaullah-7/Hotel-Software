@@ -9,6 +9,7 @@ export function useNotification() {
   const { setUnreadCount } = useSuperAdmin();
 
   const fetchNotifications = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -24,16 +25,19 @@ export function useNotification() {
   }, [setUnreadCount]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchNotifications();
   }, [fetchNotifications]);
 
   const markAsRead = async (id) => {
     await NotificationService.markAsRead(id);
+     
     fetchNotifications();
   };
 
   const markAllAsRead = async () => {
     await NotificationService.markAllAsRead();
+     
     fetchNotifications();
   };
 

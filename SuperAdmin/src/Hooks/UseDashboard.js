@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AnalyticsService } from '../Services/RevenueService.js';
 import { HotelService } from '../Services/HotelService.js';
-import { UserService } from '../Services/UserService.js';
 import { ApprovalService } from '../Services/ApprovlService.js';
 
 export function useDashboard() {
@@ -12,6 +11,7 @@ export function useDashboard() {
   const [pendingApprovals, setPendingApprovals] = useState([]);
 
   const fetchDashboardData = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -32,6 +32,7 @@ export function useDashboard() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchDashboardData();
   }, [fetchDashboardData]);
 

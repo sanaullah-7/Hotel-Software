@@ -11,6 +11,7 @@ export function useSubscription(initialParams = {}) {
   const [params, setParams] = useState(initialParams);
 
   const fetchData = useCallback(async () => {
+     
     setLoading(true);
     setError(null);
     try {
@@ -31,11 +32,13 @@ export function useSubscription(initialParams = {}) {
   }, [params]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchData();
   }, [fetchData]);
 
   const updateSubscription = async (id, updateData) => {
     await SubscriptionService.updateSubscription(id, updateData);
+     
     fetchData();
   };
 
