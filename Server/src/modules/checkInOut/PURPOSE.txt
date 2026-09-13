@@ -1,0 +1,1 @@
+Guest ke actual check-in aur check-out process ka logic — jab guest hotel pohanch jaye ya chala jaye tab status update karna.

@@ -1,0 +1,1 @@
+Fixed values yahan define hoti hain jo app mein baar baar use hoti hain — jese roles list, hotel/booking/room/payment kay possible statuses, aur HTTP status codes. Koi bhi hardcoded string/number yahan se import karo, seedha code mein mat likho.

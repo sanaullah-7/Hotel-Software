@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Eye, CheckCircle, XCircle, Ban, RefreshCw, MoreHorizontal, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatusBadge from '../Common/StatusBadge.jsx';
@@ -14,6 +14,14 @@ export default function HotelTable({ data, onRefresh }) {
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
+
+  useEffect(() => {
+    const handleOutsideClick = () => setOpenDropdown(null);
+    if (openDropdown !== null) {
+      document.addEventListener('click', handleOutsideClick);
+    }
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [openDropdown]);
 
   const handleAction = useCallback(async () => {
     if (!confirm) return;
@@ -52,9 +60,12 @@ export default function HotelTable({ data, onRefresh }) {
               <th>Hotel</th>
               <th>Manager</th>
               <th>City</th>
+              <th>Rooms</th>
+              <th>Rating</th>
+              <th>Revenue</th>
               <th>Status</th>
               <th>Registered</th>
-              <th style={{ width: 180 }}>Actions</th>
+              <th style={{ width: 100 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -69,12 +80,24 @@ export default function HotelTable({ data, onRefresh }) {
                   <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>{hotel.managerEmail}</div>
                 </td>
                 <td style={{ fontSize: 13 }}>{hotel.city}</td>
+                <td style={{ fontSize: 13 }}>{hotel.totalRooms}</td>
+                <td>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 500 }}>
+                    <span style={{ color: '#f59e0b' }}>★</span> {hotel.rating}
+                  </div>
+                </td>
+                <td style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-success)' }}>
+                  ${(hotel.revenue || 0).toLocaleString()}
+                </td>
                 <td><StatusBadge status={hotel.status} /></td>
                 <td style={{ fontSize: 12.5, color: 'var(--color-text-muted)' }}>{formatDate(hotel.createdAt)}</td>
                 <td>
                   <div style={{ position: 'relative' }}>
                     <button 
-                      onClick={() => setOpenDropdown(openDropdown === hotel.id ? null : hotel.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdown(openDropdown === hotel.id ? null : hotel.id);
+                      }}
                       style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--color-text-secondary)' }}
                     >
                       <MoreHorizontal size={18} />

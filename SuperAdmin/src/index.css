@@ -569,7 +569,7 @@ input, select, textarea { font-family: inherit; }
 }
 
 .sa-table th {
-  padding: 0.75rem 2rem;
+  padding: 0.5rem 1rem;
   text-align: left;
   font-weight: 600;
   font-size: var(--font-size-xs);
@@ -584,7 +584,7 @@ input, select, textarea { font-family: inherit; }
 .sa-table th.sortable:hover { color: var(--color-text-primary); }
 
 .sa-table td {
-  padding: 0.875rem 2rem;
+  padding: 0.625rem 1rem;
   color: var(--color-text-primary);
   border-bottom: 1px solid var(--color-border);
   vertical-align: middle;

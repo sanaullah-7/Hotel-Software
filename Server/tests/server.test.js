@@ -13,7 +13,7 @@
 import { describe, it, expect } from 'vitest';
 // Iska kaam hai hamare Express API ko request bhejna.
 import request from 'supertest';
-import app from '../app.js';
+import app from '../src/app.js';
 
 describe('Hotel Software Backend API', () => {
   it('should return API running message on GET /', async () => {

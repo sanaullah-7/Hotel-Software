@@ -9,12 +9,14 @@
   "scripts": {
     "lint": "eslint .",
     "test": "vitest run",
-    "start": "nodemon server.js"
+    "start": "nodemon src/Server.js"
   },
   "dependencies": {
+    "chalk": "^4.1.2",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "mongoose": "^9.9.5",
+    "morgan": "^1.12.0",
     "nodemon": "^3.1.14"
   },
   "devDependencies": {
