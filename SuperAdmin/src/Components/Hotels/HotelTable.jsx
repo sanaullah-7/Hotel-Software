@@ -65,7 +65,7 @@ export default function HotelTable({ data, onRefresh }) {
               <th>Revenue</th>
               <th>Status</th>
               <th>Registered</th>
-              <th style={{ width: 100 }}>Actions</th>
+              <th style={{ width: 70 }}>Actions</th>
             </tr>
           </thead>
           <tbody>

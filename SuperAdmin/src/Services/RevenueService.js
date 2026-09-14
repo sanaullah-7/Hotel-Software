@@ -92,11 +92,11 @@ export const AnalyticsService = {
     if (USE_MOCK) {
       await delay(400);
       return [
-        { id: 1, type: 'approval',    message: 'Pearl Continental Lahore approved',         time: new Date(Date.now() - 2*3600000).toISOString(),  icon: 'check' },
-        { id: 2, type: 'registration',message: 'New registration: Crown Plaza Quetta',       time: new Date(Date.now() - 5*3600000).toISOString(),  icon: 'building' },
-        { id: 3, type: 'user',        message: 'Manager Bilal Hussain registered',            time: new Date(Date.now() - 8*3600000).toISOString(),  icon: 'user' },
-        { id: 4, type: 'suspension',  message: 'Ramada Multan account suspended',             time: new Date(Date.now() - 24*3600000).toISOString(), icon: 'alert' },
-        { id: 5, type: 'subscription',message: 'Serena Hotel upgraded to Enterprise plan',    time: new Date(Date.now() - 48*3600000).toISOString(), icon: 'star' },
+        { id: 1, type: 'approval',    title: 'Hotel Approved',     message: 'Pearl Continental Lahore has been successfully approved for operations.', user: 'Admin System', time: new Date(Date.now() - 2*3600000).toISOString(), target: 'Pearl Continental' },
+        { id: 2, type: 'registration',title: 'New Registration',   message: 'Crown Plaza Quetta applied for hotel registration.',                    user: 'System',       time: new Date(Date.now() - 5*3600000).toISOString(), target: 'Crown Plaza' },
+        { id: 3, type: 'user',        title: 'Manager Onboarded',  message: 'Manager Bilal Hussain has completed the onboarding flow.',              user: 'System',       time: new Date(Date.now() - 8*3600000).toISOString(), target: 'Bilal Hussain' },
+        { id: 4, type: 'suspension',  title: 'Account Suspended',  message: 'Ramada Multan suspended due to terms of service violation.',            user: 'System Admin', time: new Date(Date.now() - 24*3600000).toISOString(), target: 'Ramada Multan' },
+        { id: 5, type: 'subscription',title: 'Plan Upgraded',      message: 'Serena Hotel successfully upgraded their plan to Enterprise.',          user: 'Sara Ali',     time: new Date(Date.now() - 48*3600000).toISOString(), target: 'Serena Hotel' },
       ];
     }
     return request('GET', '/analytics/recent-activity');

@@ -14,8 +14,29 @@ export default function RecentRegistration({ data = [] }) {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 13, fontWeight: 600, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
-              <p style={{ fontSize: 11.5, color: 'var(--color-text-muted)', margin: 0 }}>{item.managerName} · {item.city} · {timeAgo(item.registeredAt)}</p>
+              <p style={{ fontSize: 11.5, color: 'var(--color-text-muted)', margin: 0 }}>{item.managerName} • {item.phone}</p>
             </div>
+            
+            {/* Extended Info to Fill Space */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 32, paddingRight: 24, paddingLeft: 16 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 80 }}>
+                <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--color-text-muted)', letterSpacing: '0.05em', fontWeight: 600 }}>Location</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-primary)' }}>{item.city}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 90 }}>
+                <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--color-text-muted)', letterSpacing: '0.05em', fontWeight: 600 }}>Registered</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-primary)', whiteSpace: 'nowrap' }}>{timeAgo(item.createdAt || item.registeredAt)}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 80 }}>
+                <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--color-text-muted)', letterSpacing: '0.05em', fontWeight: 600 }}>Plan</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-primary)' }}>{item.subscriptionPlan || 'STANDARD'}</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 70 }}>
+                <span style={{ fontSize: 10, textTransform: 'uppercase', color: 'var(--color-text-muted)', letterSpacing: '0.05em', fontWeight: 600 }}>Capacity</span>
+                <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-text-primary)' }}>{item.totalRooms || 0} <span style={{ fontSize: 11, color: 'var(--color-text-muted)' }}>Rms</span></span>
+              </div>
+            </div>
+
             <StatusBadge status={item.status} size="sm" />
           </div>
         ))}
