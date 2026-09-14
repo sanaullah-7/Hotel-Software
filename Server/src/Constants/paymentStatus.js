@@ -1,1 +1,0 @@
-paymentStatus.js

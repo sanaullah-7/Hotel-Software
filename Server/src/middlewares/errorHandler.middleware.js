@@ -1,7 +1,7 @@
 import { ENV } from "../config/env.js";
 
 
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res) => {
   // "Server terminal mein batao ke kis HTTP request/URL par error aaya aur actual error kya tha."
   console.error(
     // e.g : [Server Error] GET /api/hotels/123:
