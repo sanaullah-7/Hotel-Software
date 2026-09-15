@@ -1,1 +1,18 @@
 Chote chote helper functions yahan hain jo baar baar use hotay hain — jese standard API response format, error banana, async function wrapper, JWT token generate karna, aur pagination logic.
+ApiError.js bohat important hai. Ye hamare backend mein errors ko standard format mein handle karne ke liye hai.
+ApiError hota kya hai?
+
+Normally JavaScript mein error banate hain:
+
+throw new Error("User not found");
+
+Lekin API mein hume sirf message nahi chahiye.
+
+Hume ye bhi pata hona chahiye:
+
+HTTP status code → 404
+Message          → User not found
+Success          → false
+Additional errors → [...]
+
+Isliye hum apni custom error class banate hain:

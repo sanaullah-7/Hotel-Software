@@ -1,1 +1,2 @@
 Request aur response kay beech mein chalne wale functions yahan hain — login check (auth), role check (rbac), hotel ownership check, input validation, file upload handling, rate limiting, 404 handling, aur error handling. Har route inme se zaroorat kay hisab se use karega.
+auth.middleware.js:Yahan try/catch justified hai, kyunke JWT library specific errors throw karti hai jinhein hum identify karke better messages dena chahte hain.

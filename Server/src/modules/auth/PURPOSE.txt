@@ -1,1 +1,5 @@
 Login, signup, OTP verification aur authentication se related sara logic yahan hai. Account create/login/token generate karne ka kaam yahi module karega.
+document.cookie
+to HttpOnly refresh token ko JavaScript access nahi kar sakta.
+Iska fayda?
+Agar kisi situation mein website par XSS vulnerability ho aur malicious JavaScript run ho jaye, to attacker ke liye HttpOnly refresh token ko document.cookie se read karna mushkil hota hai.
