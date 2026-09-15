@@ -1,12 +1,12 @@
-
+import { AuthProvider } from './context/AuthContext';
+import AppRoutes from './routes/AppRoutes';
 
 function App() {
- 
   return (
-    <>
-      <div className="text-center bg-blue-300 text-5xl p-10">Hotel Software Mangement</div>
-    </>
-  )
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;
