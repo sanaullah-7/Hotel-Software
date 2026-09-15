@@ -1,0 +1,1 @@
+Booking complete honay kay baad invoice generate karne ka logic — guest ko bill/receipt dena.

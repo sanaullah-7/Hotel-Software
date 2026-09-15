@@ -1,0 +1,1 @@
+Jab koi guest booking kar raha ho to us waqt kay liye room temporarily lock hota hai taky do log ek hi room ek hi time pe book na kar saken (double-booking rokne ke liye).

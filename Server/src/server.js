@@ -1,25 +1,31 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
 import app from './app.js';
-import connectDB from './config/db.config.js';
+import connectDB from './config/db.js';
+import { ENV } from "./config/env.js";
+import logger from "./config/logger.js";
 
-
-console.log(process.env.MONGO_URI)
-
-const PORT = process.env.PORT || 5000;
-async function startServer() {
-  try {
-    // Connect to the database
-    await connectDB();
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+//  const  PORT = process.env.PORT || 7000;
+ 
+// 1. Pehle Database Connect karein
+connectDB()
+  .then(() => {
+    // 2. DB Connection kamyab hone ke baad server start hoga
+    app.listen(ENV.PORT, () => {  
+      logger.info(`Server Running on PORT http://localhost:${ENV.PORT}`);
     });
+   
+  })
+  .catch((error) => {
+    logger.error("Database connection failed:", error.message); 
+  });
 
-  } catch (error) {
-    console.error("Error starting the server:", error);
-    process.exit(1); // Exit the process with failure
-  }
-}
 
-startServer();
+  // chatgpt
+//   const startServer = async () => {
+//   await connectDatabase();
+
+//   app.listen(env.PORT, () => {
+//     console.log(
+//       `Server started on port ${env.PORT}`
+//     );
+//   });
+// };

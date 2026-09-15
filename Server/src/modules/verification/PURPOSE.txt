@@ -1,0 +1,1 @@
+Provider (hotel owner) ke documents upload aur admin se verify honay ka process yahan hai — documents ka record aur verification history dono yahan store hoti hai.

@@ -1,0 +1,1 @@
+Hotel kay room types (jese Deluxe, Standard, Family Suite) define karne ka logic — price, capacity, description waghera.

@@ -1,0 +1,1 @@
+Hotel staff members ka data aur unko manage karne (add/edit/remove) ka logic yahan hai — jese receptionist, manager waghera jo hotel provider apne staff mein add karta hai.
