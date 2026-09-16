@@ -1,4 +1,6 @@
 import Sidebar from './Sidebar';
+import Topbar from './Topbar';
+import AppBreadcrumbs from './AppBreadcrumbs';
 
 export default function DashboardLayout({ children }) {
   return (
@@ -10,8 +12,14 @@ export default function DashboardLayout({ children }) {
       
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col min-w-0 h-full">
-        {/* We can add a Topbar here in the future */}
-        <div className="flex-1 p-4 md:p-6 overflow-y-auto overflow-x-hidden">
+        {/* Topbar */}
+        <Topbar />
+        
+        {/* Page Content Wrapper */}
+        <div className="flex-1 min-h-0 px-3 md:px-4 pt-1 pb-3 md:pt-2 md:pb-4 overflow-y-auto overflow-x-hidden">
+          <div className="-mb-3">
+            <AppBreadcrumbs />
+          </div>
           {children}
         </div>
       </main>
