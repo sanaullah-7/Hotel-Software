@@ -17,9 +17,6 @@ export default function DashboardLayout({ children }) {
         
         {/* Page Content Wrapper */}
         <div className="flex-1 min-h-0 px-3 md:px-4 pt-1 pb-3 md:pt-2 md:pb-4 overflow-y-auto overflow-x-hidden">
-          <div className="-mb-3">
-            <AppBreadcrumbs />
-          </div>
           {children}
         </div>
       </main>

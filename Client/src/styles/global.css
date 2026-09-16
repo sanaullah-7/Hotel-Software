@@ -16,6 +16,27 @@
   --text-secondary: #6b7280; /* matches Tailwind gray-500 */
 }
 
+/* Restaurant category filters use one consistent selected state. */
+.menu-category-chip {
+  background-color: var(--bg-paper);
+  border-color: #e5e7eb;
+  color: var(--text-secondary);
+}
+
+.menu-category-chip:hover {
+  border-color: var(--primary-main);
+  color: var(--primary-main);
+}
+
+.menu-category-chip.is-active,
+.menu-category-chip.is-active:hover {
+  background-color: var(--primary-main);
+  border-color: var(--primary-main);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgb(27 127 67 / 0.25);
+  transform: scale(1.03);
+}
+
 /* Base resets & layout application */
 body {
   background-color: var(--bg-default);

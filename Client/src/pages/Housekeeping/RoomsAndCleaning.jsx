@@ -1,9 +1,21 @@
 import React, { useState } from 'react';
-import { 
-  Search, Add, Bed, CleaningServices, CheckCircle, VerifiedUser,
-  BuildCircle, Warning, Edit, Delete, ChevronLeft, ChevronRight,
-  MoreVert, TaskAlt, Block, NotificationsActive, Cancel
-} from '@mui/icons-material';
+import Search from '@mui/icons-material/Search';
+import Add from '@mui/icons-material/Add';
+import Bed from '@mui/icons-material/Bed';
+import CleaningServices from '@mui/icons-material/CleaningServices';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import VerifiedUser from '@mui/icons-material/VerifiedUser';
+import BuildCircle from '@mui/icons-material/BuildCircle';
+import Warning from '@mui/icons-material/Warning';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import MoreVert from '@mui/icons-material/MoreVert';
+import TaskAlt from '@mui/icons-material/TaskAlt';
+import Block from '@mui/icons-material/Block';
+import NotificationsActive from '@mui/icons-material/NotificationsActive';
+import Cancel from '@mui/icons-material/Cancel';
 import { IconButton, Menu, MenuItem, Dialog, Select, FormControl, InputLabel } from '@mui/material';
 
 const STATUS_TABS = ['All Rooms', 'Dirty', 'Cleaning', 'Inspection Required', 'Clean / Ready', 'Occupied', 'DND', 'Out of Order'];
