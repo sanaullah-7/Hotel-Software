@@ -23,6 +23,26 @@ import RoomsAndCleaning from '../pages/Housekeeping/RoomsAndCleaning';
 import Inspection from '../pages/Housekeeping/Inspection';
 import StaffAssignment from '../pages/Housekeeping/StaffAssignment';
 
+// HR Module Pages
+import AllStaff from '../pages/HR/Staff/AllStaff';
+import AddStaff from '../pages/HR/Staff/AddStaff';
+import EditStaff from '../pages/HR/Staff/EditStaff';
+import StaffProfile from '../pages/HR/Staff/StaffProfile';
+import LeaveRequests from '../pages/HR/LeaveRequests/LeaveRequests';
+import AttendanceSheet from '../pages/HR/Attendance/AttendanceSheet';
+import TodaysAttendance from '../pages/HR/Attendance/TodaysAttendance';
+import EmployeeSalary from '../pages/HR/Salary/EmployeeSalary';
+
+// Reports Module Pages
+import StocksExpenseRevenue from '../pages/Reports/StocksExpenseRevenue';
+import OccupancyReport from '../pages/Reports/OccupancyReport';
+import ExpenseVsRevenue from '../pages/Reports/ExpenseVsRevenue';
+import ExpenseManagement from '../pages/Reports/ExpenseManagement';
+
+// Settings Module Pages
+import HotelProfile from '../pages/Settings/HotelProfile';
+import Policies from '../pages/Settings/Policies';
+
 export default function AppRoutes() {
   return (
     <Router>
@@ -162,6 +182,26 @@ export default function AppRoutes() {
             </DashboardLayout>
           } 
         />
+
+        {/* HR Sub-Routes */}
+        <Route path="/hr/staff" element={<DashboardLayout><AllStaff /></DashboardLayout>} />
+        <Route path="/hr/staff/add" element={<DashboardLayout><AddStaff /></DashboardLayout>} />
+        <Route path="/hr/staff/:id" element={<DashboardLayout><StaffProfile /></DashboardLayout>} />
+        <Route path="/hr/staff/:id/edit" element={<DashboardLayout><EditStaff /></DashboardLayout>} />
+        <Route path="/hr/leave-requests" element={<DashboardLayout><LeaveRequests /></DashboardLayout>} />
+        <Route path="/hr/attendance" element={<DashboardLayout><AttendanceSheet /></DashboardLayout>} />
+        <Route path="/hr/attendance/today" element={<DashboardLayout><TodaysAttendance /></DashboardLayout>} />
+        <Route path="/hr/employee-salary" element={<DashboardLayout><EmployeeSalary /></DashboardLayout>} />
+
+        {/* Reports Sub-Routes */}
+        <Route path="/reports/stocks-expense-revenue" element={<DashboardLayout><StocksExpenseRevenue /></DashboardLayout>} />
+        <Route path="/reports/occupancy" element={<DashboardLayout><OccupancyReport /></DashboardLayout>} />
+        <Route path="/reports/expense-vs-revenue" element={<DashboardLayout><ExpenseVsRevenue /></DashboardLayout>} />
+        <Route path="/reports/expense-management" element={<DashboardLayout><ExpenseManagement /></DashboardLayout>} />
+
+        {/* Settings Sub-Routes */}
+        <Route path="/settings/hotel-profile" element={<DashboardLayout><HotelProfile /></DashboardLayout>} />
+        <Route path="/settings/policies" element={<DashboardLayout><Policies /></DashboardLayout>} />
       </Routes>
     </Router>
   );

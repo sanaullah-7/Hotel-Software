@@ -30,6 +30,11 @@ export default function AppBreadcrumbs() {
     );
   }
 
+  // Remove the breadcrumb feature entirely from all Human Resources pages
+  if (pathnames[0] === 'hr') {
+    return null;
+  }
+
   return (
     <div>
       <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">

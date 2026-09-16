@@ -7,8 +7,19 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  optimizeDeps: {
+    include: [
+      '@mui/material',
+      '@mui/icons-material',
+      '@emotion/react',
+      '@emotion/styled',
+      'jspdf',
+      'jspdf-autotable',
+      'xlsx'
+    ]
+  },
   // Vitest ko batao ke frontend/React tests kis environment mein aur kis setup ke saath run karne hain.
-   test: {
+  test: {
     // React browser mein chalta hai. Test ke waqt actual browser open nahi karna chahte.
     // jsdom ek fake browser environment provide karta hai.
     environment: "jsdom",
