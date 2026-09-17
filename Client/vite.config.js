@@ -7,6 +7,16 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  optimizeDeps: {
+    include: [
+      '@mui/material',
+      '@mui/icons-material',
+      '@emotion/react',
+      '@emotion/styled',
+      'jspdf',
+      'jspdf-autotable',
+      'xlsx'
+    ]
   // Memory optimization: limit chunk size and pre-bundle only what's needed
   optimizeDeps: {
     include: [

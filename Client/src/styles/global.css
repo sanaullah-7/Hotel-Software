@@ -55,3 +55,87 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
+.personal-information-section {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 12px;
+  padding-top: 36px;
+}
+
+.personal-information-section > .flex {
+  margin-top: 0;
+  margin-bottom: 30px;
+  gap: 14px;
+}
+
+.personal-information-section > .flex > div:first-child {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 14px;
+}
+
+.personal-information-section > .flex > div:first-child svg {
+  width: 26px;
+  height: 26px;
+}
+
+.personal-information-section > .flex h3 {
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.personal-information-section .MuiFormControl-root {
+  margin-bottom: 0;
+}
+
+.personal-information-section .MuiOutlinedInput-root {
+  min-height: 84px;
+  border-radius: 6px;
+}
+
+.personal-information-section .MuiOutlinedInput-notchedOutline {
+  border-color: #7d8490;
+}
+
+.personal-information-section .MuiOutlinedInput-input {
+  padding: 23px 18px;
+  font-size: 24px;
+  line-height: 1.5;
+  color: #293241;
+}
+
+.personal-information-section .MuiInputLabel-root {
+  font-size: 20px;
+  color: #293241;
+}
+
+.personal-information-section .MuiInputLabel-shrink {
+  background: #fff;
+  padding: 0 4px;
+}
+
+.personal-information-section .MuiInputAdornment-root {
+  margin-right: 14px;
+}
+
+.personal-information-section .MuiInputAdornment-root svg {
+  width: 30px;
+  height: 30px;
+  color: #707985;
+}
+
+@media (max-width: 600px) {
+  .personal-information-section {
+    padding-top: 24px;
+  }
+
+  .personal-information-section > .flex h3 {
+    font-size: 20px;
+  }
+
+  .personal-information-section .MuiOutlinedInput-input {
+    font-size: 19px;
+  }
+}
