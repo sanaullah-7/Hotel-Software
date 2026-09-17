@@ -362,36 +362,6 @@ export default function GuestComplaint() {
             </tbody>
           </table>
         </div>
-
-        {/* Pagination Footer */}
-        <div className="p-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-          <div>
-            Showing <span className="font-semibold text-gray-800">{filteredComplaints.length > 0 ? startIndex + 1 : 0}</span> to{' '}
-            <span className="font-semibold text-gray-800">
-              {Math.min(startIndex + rowsPerPage, filteredComplaints.length)}
-            </span>{' '}
-            of <span className="font-semibold text-gray-800">{filteredComplaints.length}</span> tickets
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft sx={{ fontSize: 16 }} />
-            </button>
-            <span className="font-semibold text-gray-800 px-1">
-              {currentPage} of {totalPages}
-            </span>
-            <button
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ChevronRight sx={{ fontSize: 16 }} />
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

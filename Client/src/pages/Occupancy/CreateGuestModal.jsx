@@ -45,9 +45,34 @@ const inputSx = {
   '& .MuiInputLabel-root': { fontSize: '13px' },
 };
 
-export default function CreateGuestModal({ open, onClose, room }) {
+export default function CreateGuestModal({ open, onClose, onSave, room }) {
   const [tab, setTab] = useState(0);
   const roomLabel = room ? `${room.type} - Room ${room.number}` : '';
+
+  const [formData, setFormData] = React.useState({
+    name: '',
+    id: '',
+    vip: false,
+  });
+
+  React.useEffect(() => {
+    if (open) {
+      setFormData({
+        name: room?.guest?.name || '',
+        id: room?.guest?.id || '',
+        vip: room?.guest?.vip || false,
+      });
+      setTab(0);
+    }
+  }, [open, room]);
+
+  const handleSave = () => {
+    if (onSave) {
+      onSave(formData);
+    } else {
+      onClose();
+    }
+  };
 
   return (
     <Dialog
@@ -66,7 +91,7 @@ export default function CreateGuestModal({ open, onClose, room }) {
       {/* HEADER */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #5c67f2 0%, #7c3aed 100%)',
+          background: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)',
           px: 3,
           py: 2,
           display: 'flex',
@@ -90,7 +115,7 @@ export default function CreateGuestModal({ open, onClose, room }) {
           </Box>
           <Box>
             <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '16px', lineHeight: 1.2 }}>
-              Add New Guest
+              {room?.guest ? 'Edit Guest Details' : 'Add New Guest'}
             </Typography>
             <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px' }}>
               {roomLabel}
@@ -132,27 +157,34 @@ export default function CreateGuestModal({ open, onClose, room }) {
 
             <TextField
               fullWidth label="Full Name*" size="small" sx={inputSx}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               InputProps={{ endAdornment: <InputAdornment position="end"><BadgeIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
             />
 
             <TextField
               fullWidth label="Email Address*" size="small" sx={inputSx}
+              defaultValue={room?.guest?.name ? `${room.guest.name.toLowerCase().replace(' ','')}@example.com` : ''}
               InputProps={{ endAdornment: <InputAdornment position="end"><EmailIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
             />
 
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
                 fullWidth label="Phone Number*" size="small" sx={inputSx}
+                defaultValue={room?.guest?.name ? '+1-555-1234' : ''}
                 InputProps={{ endAdornment: <InputAdornment position="end"><PhoneIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
               />
               <TextField
                 fullWidth label="ID Number" size="small" sx={inputSx}
+                value={formData.id}
+                onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                 InputProps={{ endAdornment: <InputAdornment position="end"><CreditCardIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
               />
             </Box>
 
             <TextField
               fullWidth label="Address*" size="small" multiline rows={3} sx={inputSx}
+              defaultValue={room?.guest?.name ? '123 Elm Street, Springfield' : ''}
               InputProps={{ endAdornment: <InputAdornment position="end" sx={{ alignSelf: 'flex-start', mt: 1 }}><LocationOnIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
             />
 
@@ -189,6 +221,26 @@ export default function CreateGuestModal({ open, onClose, room }) {
                 InputLabelProps={{ shrink: true }} sx={inputSx}
                 InputProps={{ endAdornment: <InputAdornment position="end"><CalendarMonthIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
               />
+              <div className="flex flex-col gap-1 w-full">
+                <span className="text-[10px] font-semibold text-gray-500 pl-0.5">
+                  Check-in Date*
+                </span>
+                <TextField
+                  fullWidth type="date" size="small"
+                  sx={inputSx}
+                  InputProps={{ endAdornment: <InputAdornment position="end"><CalendarMonthIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
+                />
+              </div>
+              <div className="flex flex-col gap-1 w-full">
+                <span className="text-[10px] font-semibold text-gray-500 pl-0.5">
+                  Check-out Date*
+                </span>
+                <TextField
+                  fullWidth type="date" size="small"
+                  sx={inputSx}
+                  InputProps={{ endAdornment: <InputAdornment position="end"><CalendarMonthIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
+                />
+              </div>
             </Box>
 
             <TextField
@@ -289,16 +341,17 @@ export default function CreateGuestModal({ open, onClose, room }) {
             variant="contained"
             size="small"
             startIcon={<BadgeIcon sx={{ fontSize: 14 }} />}
+            onClick={handleSave}
             sx={{
               textTransform: 'none',
               fontSize: '13px',
-              backgroundColor: '#c4c9d4',
+              backgroundColor: '#2e7d32',
               color: 'white',
               fontWeight: 500,
               borderRadius: '8px',
               px: 2,
               boxShadow: 'none',
-              '&:hover': { backgroundColor: '#5c67f2', boxShadow: 'none' }
+              '&:hover': { backgroundColor: '#1b5e20', boxShadow: 'none' }
             }}
           >
             Save Guest Details

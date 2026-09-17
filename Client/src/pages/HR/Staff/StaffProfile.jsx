@@ -1,20 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button, Grid, Chip, Divider } from '@mui/material';
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import PageHeader from '../../../components/common/PageHeader';
-import { mockStaff } from '../../../utils/mockData';
+import { getStoredStaff, deleteStaffMember } from './staffStore';
 
 export default function StaffProfile() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [staff, setStaff] = useState(null);
 
   useEffect(() => {
-    const staffMember = mockStaff.find(s => s.id === parseInt(id));
+    const staffList = getStoredStaff();
+    const staffMember = staffList.find(s => String(s.id) === String(id) || String(s.empId) === String(id));
     setStaff(staffMember);
   }, [id]);
 
-  if (!staff) return <div className="p-px">Loading...</div>;
+  const handleDelete = () => {
+    deleteStaffMember(id);
+    navigate('/hr/staff');
+  };
+
+  if (!staff) return <div className="p-4 text-gray-500">Staff member not found.</div>;
 
   return (
     <div className="p-px">
@@ -33,6 +40,7 @@ export default function StaffProfile() {
             variant="outlined" 
             color="error"
             startIcon={<DeleteIcon />} 
+            onClick={handleDelete}
           >
             Delete Staff
           </Button>

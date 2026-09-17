@@ -32,7 +32,7 @@ function TabPanel({ children, value, index }) {
       aria-labelledby={`report-tab-${index}`}
     >
       {value === index && (
-        <Box sx={{ pt: 3 }}>
+        <Box sx={{ pt: 1 }}>
           {children}
         </Box>
       )}
@@ -46,6 +46,10 @@ export default function ReportsPage() {
 
   // Map URL tab param to index
   const getTabIndex = (tabKey) => {
+    if (tabKey === 'revenue-report' || tabKey === 'revenue') return 2;
+    if (tabKey === 'stock-report' || tabKey === 'stock') return 0;
+    if (tabKey === 'expense-report' || tabKey === 'expense') return 1;
+    if (tabKey === 'occupancy-report' || tabKey === 'occupancy') return 3;
     const index = TAB_CONFIG.findIndex(t => t.key === tabKey);
     return index >= 0 ? index : 0;
   };
@@ -62,67 +66,8 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="p-6">
-      <PageHeader title="Reports" />
-
-      {/* Tabs Navigation */}
-      <div className="bg-white rounded-xl shadow-sm mb-6 overflow-hidden">
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          variant="scrollable"
-          scrollButtons="auto"
-          allowScrollButtonsMobile
-          sx={{
-            minHeight: '52px',
-            borderBottom: '1px solid #e5e7eb',
-            '& .MuiTabs-indicator': {
-              backgroundColor: '#1b7f43',
-              height: '3px',
-              borderRadius: '3px 3px 0 0',
-            },
-            '& .MuiTab-root': {
-              minHeight: '52px',
-              textTransform: 'none',
-              fontWeight: 600,
-              fontSize: '0.875rem',
-              color: '#64748b',
-              letterSpacing: '0.01em',
-              padding: '12px 20px',
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                color: '#1b7f43',
-                backgroundColor: '#f0fdf4',
-              },
-              '&.Mui-selected': {
-                color: '#1b7f43',
-                fontWeight: 700,
-              },
-            },
-            '& .MuiTabs-scrollButtons': {
-              color: '#64748b',
-              '&.Mui-disabled': { opacity: 0.3 },
-            },
-          }}
-        >
-          {TAB_CONFIG.map((tabItem, index) => (
-            <Tab
-              key={tabItem.key}
-              icon={tabItem.icon}
-              iconPosition="start"
-              label={tabItem.label}
-              id={`report-tab-${index}`}
-              aria-controls={`report-tabpanel-${index}`}
-              sx={{
-                gap: '8px',
-                '& .MuiTab-iconWrapper': {
-                  marginRight: '0px',
-                },
-              }}
-            />
-          ))}
-        </Tabs>
-      </div>
+    <div className="pt-0  pb-3">
+      
 
       {/* Tab Panels */}
       <TabPanel value={activeTab} index={0}>

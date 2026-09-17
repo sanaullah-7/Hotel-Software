@@ -1,168 +1,337 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Button, MenuItem, Select, InputLabel, FormControl, Grid } from '@mui/material';
-import PageHeader from '../../../components/common/PageHeader';
-import CustomTextField from '../../../components/forms/FormFields';
-import { mockStaff } from '../../../utils/mockData';
+import { useNavigate, useParams, Link } from 'react-router-dom';
+import {
+  TextField,
+  MenuItem,
+  InputAdornment,
+  IconButton,
+  Avatar
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import MailOutlineIcon from '@mui/icons-material/MailOutlined';
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
+import { getStoredStaff, updateStaffMember } from './staffStore';
+
+const inputStyle = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '7px',
+    backgroundColor: '#ffffff',
+    fontSize: '14.5px',
+    color: '#1e293b',
+    '& fieldset': {
+      borderColor: '#e2e8f0',
+      borderWidth: '1.2px',
+    },
+    '&:hover fieldset': {
+      borderColor: '#cbd5e1',
+    },
+    '&.Mui-focused fieldset': {
+      borderColor: '#5d5fef',
+      borderWidth: '1.5px',
+    },
+    '&.Mui-focused': {
+      boxShadow: '0 0 0 3px rgba(93, 95, 239, 0.12)',
+    },
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: '14px',
+    color: '#64748b',
+    '&.Mui-focused': {
+      color: '#5d5fef',
+      fontWeight: 500,
+    },
+  },
+  '& .MuiInputLabel-shrink': {
+    transform: 'translate(14px, -9px) scale(0.85)',
+    backgroundColor: '#ffffff',
+    padding: '0 4px',
+  },
+};
+
+const designationsList = [
+  'Cook',
+  'Kitchen Manager',
+  'Casino Host',
+  'Driver',
+  'Purchase Officer',
+  'Receptionist',
+  'Hotel Manager',
+  'Assistant Manager',
+  'Front Desk Officer',
+  'Head Chef',
+  'Sous Chef',
+  'Housekeeping Supervisor',
+  'Room Attendant',
+  'Concierge',
+  'Security Guard',
+  'Maintenance Technician',
+  'Bartender',
+  'Waiter/Waitress'
+];
 
 export default function EditStaff() {
   const navigate = useNavigate();
   const { id } = useParams();
-  
+
+  const [staff, setStaff] = useState(null);
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    gender: '',
-    dob: '',
+    name: '',
+    designation: '',
     phone: '',
     email: '',
-    address: '',
-    empId: '',
-    department: '',
-    designation: '',
     joiningDate: '',
-    status: 'Active',
-    shift: '',
-    shiftTime: '',
-    basicSalary: '',
-    salaryType: '',
-    paymentMethod: '',
-    username: '',
-    password: '',
-    confirmPassword: ''
+    address: ''
   });
 
+  const [dateFocused, setDateFocused] = useState(false);
+  const [errors, setErrors] = useState({});
+
   useEffect(() => {
-    // Mock fetch existing staff by ID
-    const staffMember = mockStaff.find(s => s.id === parseInt(id));
-    if (staffMember) {
-      const nameParts = staffMember.name.split(' ');
-      setFormData(prev => ({
-        ...prev,
-        firstName: nameParts[0] || '',
-        lastName: nameParts.slice(1).join(' ') || '',
-        phone: staffMember.phone || '',
-        email: staffMember.email || '',
-        empId: staffMember.empId || '',
-        department: staffMember.department || '',
-        designation: staffMember.designation || '',
-        joiningDate: staffMember.joiningDate || '',
-        status: staffMember.status || 'Active',
-        shift: staffMember.shift || '',
-        shiftTime: staffMember.shiftTime || '',
-      }));
+    const staffList = getStoredStaff();
+    const current = staffList.find(s => String(s.id) === String(id) || String(s.empId) === String(id));
+    if (current) {
+      setStaff(current);
+      setFormData({
+        name: current.name || '',
+        designation: current.designation || '',
+        phone: current.phone || '',
+        email: current.email || '',
+        joiningDate: current.joiningDate || '',
+        address: current.address || ''
+      });
     }
   }, [id]);
 
-  const handleInputChange = (e) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => {
-      const updated = { ...prev, [name]: value };
-      if (name === 'shift') {
-        if (value === 'Morning') updated.shiftTime = '08:00 AM - 04:00 PM';
-        else if (value === 'Evening') updated.shiftTime = '04:00 PM - 12:00 AM';
-        else updated.shiftTime = '';
-      }
-      return updated;
-    });
+    setFormData(prev => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }));
+    }
   };
 
-  const handleSave = () => {
+  const handleSave = (e) => {
+    e.preventDefault();
+    const newErrors = {};
+    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.designation) newErrors.designation = 'Designation is required';
+    if (!formData.phone.trim()) newErrors.phone = 'Mobile is required';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Invalid email';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    updateStaffMember(id, {
+      name: formData.name.trim(),
+      designation: formData.designation,
+      phone: formData.phone.trim(),
+      email: formData.email.trim(),
+      joiningDate: formData.joiningDate,
+      address: formData.address.trim()
+    });
+
     navigate('/hr/staff');
   };
 
+  if (!staff) {
+    return (
+      <div className="p-8 text-center text-gray-500">
+        Staff member not found.
+      </div>
+    );
+  }
+
   return (
-    <div className="p-px">
-      <PageHeader title="Edit Staff" breadcrumb="Human Resources / Staff / Edit Staff" />
-      
-      <div className="bg-white rounded-xl shadow-sm p-px mt-6 max-w-5xl">
-        <form noValidate autoComplete="off">
-          
-          <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Personal Information</h3>
-          <Grid container spacing={3} className="mb-6">
-            <Grid item xs={12} sm={6}>
-              <CustomTextField label="First Name" name="firstName" value={formData.firstName} onChange={handleInputChange} required />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <CustomTextField label="Last Name" name="lastName" value={formData.lastName} onChange={handleInputChange} required />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth className="mb-4">
-                <InputLabel>Gender</InputLabel>
-                <Select name="gender" value={formData.gender} label="Gender" onChange={handleInputChange}>
-                  <MenuItem value="Male">Male</MenuItem>
-                  <MenuItem value="Female">Female</MenuItem>
-                  <MenuItem value="Other">Other</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <CustomTextField label="Date of Birth" name="dob" type="date" value={formData.dob} onChange={handleInputChange} InputLabelProps={{ shrink: true }} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <CustomTextField label="Phone" name="phone" value={formData.phone} onChange={handleInputChange} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <CustomTextField label="Email" name="email" type="email" value={formData.email} onChange={handleInputChange} />
-            </Grid>
-            <Grid item xs={12}>
-              <CustomTextField label="Address" name="address" value={formData.address} onChange={handleInputChange} multiline rows={2} />
-            </Grid>
-          </Grid>
+    <div className="min-h-[80vh] flex items-center justify-center p-4 sm:p-6 bg-slate-50/50">
+      <div className="w-full max-w-[650px] bg-white rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12)] border border-gray-100">
+        
+        {/* Header Bar matching Luxuria exact design */}
+        <div className="bg-[#5d5fef] px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            <Avatar
+              src={staff.avatar || `https://i.pravatar.cc/150?u=${staff.id}`}
+              alt={staff.name}
+              sx={{
+                width: 44,
+                height: 44,
+                border: '2px solid rgba(255,255,255,0.85)',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+              }}
+            />
+            <h2 className="text-white text-[18px] font-bold tracking-tight leading-snug">
+              {formData.name || staff.name}
+            </h2>
+          </div>
 
-          <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Employment Information</h3>
-          <Grid container spacing={3} className="mb-6">
-            <Grid item xs={12} sm={6}>
-              <CustomTextField label="Employee ID" name="empId" value={formData.empId} onChange={handleInputChange} required disabled />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth className="mb-4">
-                <InputLabel>Department</InputLabel>
-                <Select name="department" value={formData.department} label="Department" onChange={handleInputChange}>
-                  <MenuItem value="Management">Management</MenuItem>
-                  <MenuItem value="Front Office">Front Office</MenuItem>
-                  <MenuItem value="Housekeeping">Housekeeping</MenuItem>
-                  <MenuItem value="Kitchen">Kitchen</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <CustomTextField label="Designation" name="designation" value={formData.designation} onChange={handleInputChange} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <CustomTextField label="Joining Date" name="joiningDate" type="date" value={formData.joiningDate} onChange={handleInputChange} InputLabelProps={{ shrink: true }} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth className="mb-4">
-                <InputLabel>Shift</InputLabel>
-                <Select name="shift" value={formData.shift} label="Shift" onChange={handleInputChange}>
-                  <MenuItem value="Morning">Morning</MenuItem>
-                  <MenuItem value="Evening">Evening</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <CustomTextField label="Shift Time" name="shiftTime" value={formData.shiftTime} onChange={handleInputChange} placeholder="e.g. 08:00 AM - 04:00 PM" disabled={!formData.shift} />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth className="mb-4">
-                <InputLabel>Employment Status</InputLabel>
-                <Select name="status" value={formData.status} label="Employment Status" onChange={handleInputChange}>
-                  <MenuItem value="Active">Active</MenuItem>
-                  <MenuItem value="Inactive">Inactive</MenuItem>
-                  <MenuItem value="On Leave">On Leave</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+          {/* Close button */}
+          <button
+            type="button"
+            onClick={() => navigate('/hr/staff')}
+            aria-label="Close"
+            className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all duration-150 cursor-pointer"
+          >
+            <CloseIcon sx={{ fontSize: 18 }} />
+          </button>
+        </div>
 
-          <div className="flex gap-4">
-            <Button variant="contained" onClick={handleSave} sx={{ backgroundColor: '#1b7f43', '&:hover': { backgroundColor: '#146635' } }}>
-              Update Staff
-            </Button>
-            <Button variant="outlined" color="inherit" onClick={() => navigate('/hr/staff')}>
+        {/* Form Body */}
+        <form onSubmit={handleSave} noValidate className="p-6">
+          <div className="space-y-4">
+            {/* Row 1: Name & Designation */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <TextField
+                  fullWidth
+                  label="Name*"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  error={Boolean(errors.name)}
+                  helperText={errors.name}
+                  sx={inputStyle}
+                />
+              </div>
+
+              <div>
+                <TextField
+                  fullWidth
+                  select
+                  label="Designation*"
+                  name="designation"
+                  value={formData.designation}
+                  onChange={handleChange}
+                  error={Boolean(errors.designation)}
+                  helperText={errors.designation}
+                  sx={inputStyle}
+                >
+                  {designationsList.map((item) => (
+                    <MenuItem key={item} value={item}>{item}</MenuItem>
+                  ))}
+                  {formData.designation && !designationsList.includes(formData.designation) && (
+                    <MenuItem value={formData.designation}>{formData.designation}</MenuItem>
+                  )}
+                </TextField>
+              </div>
+            </div>
+
+            {/* Row 2: Mobile & Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <TextField
+                  fullWidth
+                  label="Mobile*"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleChange}
+                  error={Boolean(errors.phone)}
+                  helperText={errors.phone}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <PhoneOutlinedIcon sx={{ color: '#1e293b', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={inputStyle}
+                />
+              </div>
+
+              <div>
+                <TextField
+                  fullWidth
+                  label="Email*"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={Boolean(errors.email)}
+                  helperText={errors.email}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <MailOutlineIcon sx={{ color: '#1e293b', fontSize: 20 }} />
+                      </InputAdornment>
+                    ),
+                  }}
+                  sx={inputStyle}
+                />
+              </div>
+            </div>
+
+            {/* Row 3: Joining date */}
+            <div>
+              <TextField
+                fullWidth
+                label="Joining date*"
+                name="joiningDate"
+                type={dateFocused || formData.joiningDate ? 'date' : 'text'}
+                onFocus={() => setDateFocused(true)}
+                onBlur={() => setDateFocused(false)}
+                value={formData.joiningDate}
+                onChange={handleChange}
+                InputLabelProps={{
+                  shrink: Boolean(dateFocused || formData.joiningDate)
+                }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        size="small"
+                        edge="end"
+                        tabIndex={-1}
+                        onClick={(e) => {
+                          const input = e.currentTarget.closest('.MuiOutlinedInput-root')?.querySelector('input');
+                          if (input) {
+                            input.focus();
+                            if (input.showPicker) input.showPicker();
+                          }
+                        }}
+                      >
+                        <CalendarTodayOutlinedIcon sx={{ color: '#1e293b', fontSize: 19 }} />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={inputStyle}
+              />
+            </div>
+
+            {/* Row 4: Address multiline */}
+            <div>
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                label="Address"
+                name="address"
+                value={formData.address}
+                onChange={handleChange}
+                sx={inputStyle}
+              />
+            </div>
+          </div>
+
+          {/* Footer Buttons matching Luxuria pill design */}
+          <div className="pt-6 flex items-center gap-3">
+            <button
+              type="submit"
+              className="px-7 py-2 rounded-full bg-white hover:bg-[#5d5fef] text-[#5d5fef] hover:text-white font-semibold text-sm border border-gray-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md transition-all duration-200 cursor-pointer"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/hr/staff')}
+              className="px-7 py-2 rounded-full bg-white hover:bg-red-500 text-red-500 hover:text-white font-semibold text-sm border border-red-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md transition-all duration-200 cursor-pointer"
+            >
               Cancel
-            </Button>
+            </button>
           </div>
         </form>
       </div>

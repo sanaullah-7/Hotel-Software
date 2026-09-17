@@ -1,160 +1,275 @@
-import React, { useState } from 'react';
-import { Grid, TextField } from '@mui/material';
+import React from 'react';
 import {
-  TrendingUp as RevenueIcon,
-  TrendingDown as ExpenseIcon,
-  AccountBalance as NetIcon
+  HomeOutlined as HomeIcon,
+  Payments as RevenueIcon,
+  ReceiptLong as ExpenseIcon,
+  Savings as ProfitIcon,
+  Percent as MarginIcon,
 } from '@mui/icons-material';
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip
 } from 'recharts';
-import StatSummaryCard from '../../../components/common/StatSummaryCard';
-import DataGridTable from '../../../components/tables/DataGridTable';
-import { mockExpenseVsRevenueData } from '../../../utils/mockData';
 
-const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload) return null;
-  return (
-    <div className="bg-white rounded-lg shadow-lg border border-gray-100 p-3">
-      <p className="font-semibold text-gray-800 text-sm mb-1">{label}</p>
-      {payload.map((entry, index) => (
-        <p key={index} className="text-xs" style={{ color: entry.color || entry.stroke }}>
-          {entry.name}: ${entry.value.toLocaleString()}
-        </p>
-      ))}
-    </div>
-  );
+// Monthly Performance Data (Revenue vs Operating Expense)
+const monthlyTrendsData = [
+  { name: 'Jan', revenue: 44000, expense: 26000 },
+  { name: 'Feb', revenue: 55000, expense: 22000 },
+  { name: 'Mar', revenue: 41000, expense: 36000 },
+  { name: 'Apr', revenue: 67000, expense: 25000 },
+  { name: 'May', revenue: 22000, expense: 45000 },
+  { name: 'Jun', revenue: 43000, expense: 37000 },
+  { name: 'Jul', revenue: 21000, expense: 64000 },
+  { name: 'Aug', revenue: 41000, expense: 50000 },
+  { name: 'Sep', revenue: 56000, expense: 58000 },
+  { name: 'Oct', revenue: 27000, expense: 35000 },
+  { name: 'Nov', revenue: 43000, expense: 39000 },
+  { name: 'Dec', revenue: 50000, expense: 28000 },
+];
+
+// Custom Tooltip for Spline Area Chart
+const CustomAreaTooltip = ({ active, payload, label }) => {
+  if (active && payload && payload.length) {
+    const rev = payload[0]?.value || 0;
+    const exp = payload[1]?.value || 0;
+    const diff = rev - exp;
+    return (
+      <div className="bg-white p-3 rounded-xl shadow-xl border border-gray-100 text-xs font-sans min-w-[200px]">
+        <p className="font-bold text-gray-800 mb-2 border-b border-gray-100 pb-1">{label}</p>
+        <div className="flex items-center justify-between gap-4 py-0.5 text-gray-600 font-medium">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#00b894]"></span>
+            Total Revenue:
+          </span>
+          <span className="font-bold text-gray-900">${rev.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center justify-between gap-4 py-0.5 text-gray-600 font-medium">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ff7875]"></span>
+            Total Operating Expense:
+          </span>
+          <span className="font-bold text-gray-900">${exp.toLocaleString()}</span>
+        </div>
+        <div className="flex items-center justify-between gap-4 pt-1.5 mt-1 border-t border-gray-100 text-gray-600 font-medium">
+          <span>Profit Gap:</span>
+          <span className={`font-bold ${diff >= 0 ? 'text-[#00b894]' : 'text-[#ff4d4f]'}`}>
+            {diff >= 0 ? '+' : '-'}${Math.abs(diff).toLocaleString()}
+          </span>
+        </div>
+      </div>
+    );
+  }
+  return null;
 };
 
 export default function ExpenseVsRevenueTab() {
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
-
-  const totalRevenue = mockExpenseVsRevenueData.reduce((sum, m) => sum + m.revenue, 0);
-  const totalExpense = mockExpenseVsRevenueData.reduce((sum, m) => sum + m.expense, 0);
-  const netProfit = totalRevenue - totalExpense;
-
-  const columns = [
-    { label: 'Month', field: 'name', render: (row) => <span className="font-semibold text-gray-800">{row.name}</span> },
-    { label: 'Revenue', field: 'revenue', render: (row) => <span className="font-medium text-emerald-600">${row.revenue.toLocaleString()}</span> },
-    { label: 'Expense', field: 'expense', render: (row) => <span className="font-medium text-red-500">${row.expense.toLocaleString()}</span> },
-    { label: 'Net Profit', field: 'netProfit', render: (row) => (
-      <span className={`font-bold ${row.netProfit >= 0 ? 'text-[#1b7f43]' : 'text-red-600'}`}>
-        ${row.netProfit.toLocaleString()}
-      </span>
-    )},
-    { label: 'Profit Margin', field: 'profitMargin', render: (row) => (
-      <div className="flex items-center gap-2">
-        <div className="w-16 h-2 bg-gray-100 rounded-full overflow-hidden">
-          <div 
-            className="h-full rounded-full transition-all" 
-            style={{ 
-              width: `${Math.min(row.profitMargin, 100)}%`, 
-              backgroundColor: row.profitMargin >= 40 ? '#1b7f43' : row.profitMargin >= 30 ? '#f59e0b' : '#ef4444' 
-            }} 
-          />
-        </div>
-        <span className="font-semibold text-gray-700 text-sm">{row.profitMargin}%</span>
-      </div>
-    )},
-  ];
-
   return (
-    <div className="space-y-6">
-      {/* Header with Date Filters */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-bold text-gray-800">Expense vs Revenue Comparison</h3>
-          <p className="text-sm text-gray-500">Compare expense and revenue trends over time</p>
+    <div className="w-full space-y-2 pb-2 font-sans">
+      
+
+      {/* 2. Top Metric KPI Cards (2x2 Grid) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* Card 1: TOTAL REVENUE (YTD) */}
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
+                TOTAL REVENUE (YTD)
+              </span>
+              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1.5">
+                $1,842,500
+              </div>
+              <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-bold inline-flex items-center gap-1 mb-1">
+                ↗ +15.2%
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-[#e0edff] flex items-center justify-center text-[#2563eb] shrink-0">
+              <RevenueIcon sx={{ fontSize: 24 }} />
+            </div>
+          </div>
+          {/* Progress Bar */}
+          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-4 mb-2">
+            <div className="h-full bg-[#3b5998] rounded-full" style={{ width: '85%' }}></div>
+          </div>
+          <div className="text-sm text-gray-500 font-normal">
+            85% of annual target achieved
+          </div>
         </div>
-        <div className="flex gap-3">
-          <TextField
-            size="small"
-            type="date"
-            label="From"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
-          />
-          <TextField
-            size="small"
-            type="date"
-            label="To"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px' } }}
-          />
+
+        {/* Card 2: TOTAL EXPENSES (YTD) */}
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
+                TOTAL EXPENSES (YTD)
+              </span>
+              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1.5">
+                $642,800
+              </div>
+              <span className="rounded-full px-2.5 py-0.5 bg-[#fee2e2] text-[#ef4444] text-xs font-bold inline-flex items-center gap-1 mb-1">
+                ↘ -5.4%
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-[#ffe4e6] flex items-center justify-center text-[#f43f5e] shrink-0">
+              <ExpenseIcon sx={{ fontSize: 24 }} />
+            </div>
+          </div>
+          {/* Progress Bar */}
+          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-4 mb-2">
+            <div className="h-full bg-[#3b5998] rounded-full" style={{ width: '42%' }}></div>
+          </div>
+          <div className="text-sm text-gray-500 font-normal">
+            42% of budget utilized
+          </div>
+        </div>
+
+        {/* Card 3: NET PROFIT */}
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
+                NET PROFIT
+              </span>
+              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1.5">
+                $1,199,700
+              </div>
+              <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-bold inline-flex items-center gap-1 mb-1">
+                ↗ +12.8%
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
+              <ProfitIcon sx={{ fontSize: 24 }} />
+            </div>
+          </div>
+          {/* Progress Bar */}
+          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-4 mb-2">
+            <div className="h-full bg-[#3b5998] rounded-full" style={{ width: '65.1%' }}></div>
+          </div>
+          <div className="text-sm text-gray-500 font-normal">
+            Margin: 65.1%
+          </div>
+        </div>
+
+        {/* Card 4: OPERATING MARGIN */}
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+          <div className="flex items-start justify-between">
+            <div>
+              <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
+                OPERATING MARGIN
+              </span>
+              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1.5">
+                24.5%
+              </div>
+              <span className="rounded-full px-2.5 py-0.5 bg-[#f1f5f9] text-[#64748b] text-xs font-bold inline-flex items-center gap-1 mb-1">
+                → Stable
+              </span>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-[#ede9fe] flex items-center justify-center text-[#7c3aed] shrink-0">
+              <MarginIcon sx={{ fontSize: 24 }} />
+            </div>
+          </div>
+          {/* Progress Bar */}
+          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-4 mb-2">
+            <div className="h-full bg-[#3b5998] rounded-full" style={{ width: '24.5%' }}></div>
+          </div>
+          <div className="text-sm text-gray-500 font-normal">
+            Against industry avg: 22%
+          </div>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <StatSummaryCard title="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} icon={<RevenueIcon />} />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <StatSummaryCard title="Total Expenses" value={`$${totalExpense.toLocaleString()}`} icon={<ExpenseIcon />} />
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <StatSummaryCard title="Net Profit" value={`$${netProfit.toLocaleString()}`} icon={<NetIcon />} />
-        </Grid>
-      </Grid>
+      {/* 3. Revenue vs Expense Trends (Dual Area Spline Chart) */}
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h3 className="text-[18px] font-bold text-[#1e293b]">
+              Revenue vs Expense Trends
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Monthly performance comparison and profitability gap
+            </p>
+          </div>
 
-      {/* Dual Area Chart */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-1">Revenue vs Expense Trend</h3>
-        <p className="text-sm text-gray-500 mb-4">Monthly overlay of revenue and expenses</p>
-        <div className="h-[380px]">
+          {/* Legend & Options */}
+          <div className="flex items-center gap-5">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#00b894]"></span>
+              <span className="text-xs font-semibold text-gray-700">Total Revenue</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#ff7875]"></span>
+              <span className="text-xs font-semibold text-gray-700">Total Operating Expense</span>
+            </div>
+            <button className="text-gray-400 hover:text-gray-600 transition-colors p-1" title="Chart options">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Chart */}
+        <div className="w-full h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={mockExpenseVsRevenueData} margin={{ top: 10, right: 30, left: 20, bottom: 0 }}>
+            <AreaChart data={monthlyTrendsData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
               <defs>
-                <linearGradient id="colorRevenueEVR" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#1b7f43" stopOpacity={0.25}/>
-                  <stop offset="95%" stopColor="#1b7f43" stopOpacity={0.02}/>
+                <linearGradient id="colorRevTrends" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#00b894" stopOpacity={0.25} />
+                  <stop offset="90%" stopColor="#00b894" stopOpacity={0.0} />
                 </linearGradient>
-                <linearGradient id="colorExpenseEVR" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.25}/>
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0.02}/>
+                <linearGradient id="colorExpTrends" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ff7875" stopOpacity={0.15} />
+                  <stop offset="90%" stopColor="#ff7875" stopOpacity={0.0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend iconType="circle" wrapperStyle={{ fontSize: '13px' }} />
-              <Area type="monotone" dataKey="revenue" name="Revenue" stroke="#1b7f43" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenueEVR)" dot={{ r: 4, fill: '#1b7f43' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
-              <Area type="monotone" dataKey="expense" name="Expense" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorExpenseEVR)" dot={{ r: 4, fill: '#ef4444' }} activeDot={{ r: 6, stroke: '#fff', strokeWidth: 2 }} />
+              <XAxis
+                dataKey="name"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#64748b', fontSize: 13, fontWeight: 500 }}
+                dy={10}
+              />
+              <YAxis
+                domain={[20000, 70000]}
+                ticks={[20000, 30000, 40000, 50000, 60000, 70000]}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: '#64748b', fontSize: 12 }}
+                tickFormatter={(val) => `$${val / 1000}k`}
+              />
+              <RechartsTooltip content={<CustomAreaTooltip />} />
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="#00b894"
+                strokeWidth={3}
+                fillOpacity={1}
+                fill="url(#colorRevTrends)"
+                activeDot={{ r: 6, fill: '#00b894', stroke: '#ffffff', strokeWidth: 2 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="expense"
+                stroke="#ff7875"
+                strokeWidth={3}
+                fillOpacity={1}
+                fill="url(#colorExpTrends)"
+                activeDot={{ r: 6, fill: '#ff7875', stroke: '#ffffff', strokeWidth: 2 }}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Bar Chart - Side by Side Comparison */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-1">Monthly Comparison</h3>
-        <p className="text-sm text-gray-500 mb-4">Revenue vs Expense side by side per month</p>
-        <div className="h-[350px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={mockExpenseVsRevenueData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend iconType="circle" wrapperStyle={{ fontSize: '13px' }} />
-              <Bar dataKey="revenue" name="Revenue" fill="#1b7f43" radius={[4, 4, 0, 0]} barSize={20} />
-              <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} barSize={20} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Comparison Table */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h3 className="text-lg font-bold text-gray-800 mb-1">Detailed Comparison</h3>
-        <p className="text-sm text-gray-500 mb-4">Monthly breakdown with profit margins</p>
-        <DataGridTable columns={columns} data={mockExpenseVsRevenueData} />
+      {/* 4. Footer */}
+      <div className="pt-2 text-left text-sm text-gray-500 font-normal">
+        Copyright © 2026 Design By <span className="text-gray-700 font-semibold">Tech Titans</span>
       </div>
     </div>
   );

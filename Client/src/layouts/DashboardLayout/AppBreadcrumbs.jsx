@@ -10,7 +10,26 @@ export default function AppBreadcrumbs() {
   const pathnames = location.pathname.split('/').filter((x) => x);
 
   // Helper to format path segments into readable text
+  const customSegmentLabels = {
+    'rates-pricing': 'Rates & Pricing',
+    'rate-plans': 'Rate Plans',
+    'taxes-fees': 'Taxes & Fees',
+    'payment-billing': 'Payment & Billing',
+    'invoices': 'Invoices',
+    'payment-history': 'Payment History',
+    'pending-payments': 'Pending Payments',
+    'refunds': 'Refunds',
+    'front-office': 'Front Office',
+    'operations-alerts': 'Operations Alerts',
+    'check-in-out': 'Check-In / Out',
+    'registration-forms': 'Registration Forms',
+    'guest-complaint': 'Guest Complaints',
+    'rooms-cleaning': 'Rooms & Cleaning',
+    'staff-assignment': 'Staff Assignment'
+  };
+
   const formatName = (name) => {
+    if (customSegmentLabels[name]) return customSegmentLabels[name];
     return name
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -20,7 +39,7 @@ export default function AppBreadcrumbs() {
   if (pathnames.length === 0) {
     // We are on the root/dashboard, breadcrumb could be just "Dashboard"
     return (
-      <div>
+      <div className="mb-3.5">
         <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
           <Typography sx={{ color: 'text.primary', fontSize: '13px', fontWeight: 600 }}>
             Dashboard
@@ -30,13 +49,13 @@ export default function AppBreadcrumbs() {
     );
   }
 
-  // Remove the breadcrumb feature entirely from all Human Resources pages
-  if (pathnames[0] === 'hr') {
+  // Remove the breadcrumb feature entirely from HR, Reports and Events pages
+  if (pathnames[0] === 'hr' || pathnames[0] === 'reports' || pathnames[0] === 'events') {
     return null;
   }
 
   return (
-    <div>
+    <div className="mb-3.5">
       <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
         <Link 
           component={RouterLink}

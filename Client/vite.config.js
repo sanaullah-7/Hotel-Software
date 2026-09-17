@@ -7,8 +7,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  // Memory optimization: limit chunk size and pre-bundle only what's needed
   optimizeDeps: {
     include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
       '@mui/material',
       '@mui/icons-material',
       '@emotion/react',
@@ -16,7 +20,14 @@ export default defineConfig({
       'jspdf',
       'jspdf-autotable',
       'xlsx'
-    ]
+    ],
+    esbuildOptions: {
+      target: 'es2020',
+    },
+  },
+  build: {
+    target: 'es2020',
+    chunkSizeWarningLimit: 1000,
   },
   // Vitest ko batao ke frontend/React tests kis environment mein aur kis setup ke saath run karne hain.
   test: {
@@ -25,6 +36,6 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     //"Vitest, test run karne se pehle ye setup.js file chala dena."
-    setupFiles: "./src/test/setup.js", 
+    setupFiles: "./src/test/setup.js",
   },
 })

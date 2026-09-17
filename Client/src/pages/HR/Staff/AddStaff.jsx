@@ -1,3 +1,32 @@
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import TagIcon from '@mui/icons-material/Tag';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import WcIcon from '@mui/icons-material/Wc';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import PublicIcon from '@mui/icons-material/Public';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import TranslateIcon from '@mui/icons-material/Translate';
+import WorkHistoryOutlinedIcon from '@mui/icons-material/WorkHistoryOutlined';
+import BusinessIcon from '@mui/icons-material/Business';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
+import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccountOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import SmartphoneOutlinedIcon from '@mui/icons-material/SmartphoneOutlined';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import ContactPhoneOutlinedIcon from '@mui/icons-material/ContactPhoneOutlined';
+import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -9,37 +38,9 @@ import {
   Alert,
   Snackbar
 } from '@mui/material';
+import { addStaffMember } from './staffStore';
 
 // Material Icons matching Luxuria Design
-import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
-import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
-import TagIcon from '@mui/icons-material/Tag';
-import WcIcon from '@mui/icons-material/Wc';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import PublicIcon from '@mui/icons-material/Public';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import TranslateIcon from '@mui/icons-material/Translate';
-import WorkHistoryOutlinedIcon from '@mui/icons-material/WorkHistoryOutlined';
-import BusinessIcon from '@mui/icons-material/Business';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
-import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccountOutlined';
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
-import SmartphoneOutlinedIcon from '@mui/icons-material/SmartphoneOutlined';
-import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
-import ContactPhoneOutlinedIcon from '@mui/icons-material/ContactPhoneOutlined';
-import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
-import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
-import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
-import CloseIcon from '@mui/icons-material/Close';
-import AutorenewIcon from '@mui/icons-material/Autorenew';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 
 // Section Header with pastel icon badge - Compact padding
 const SectionHeader = ({ icon: Icon, title, badgeBg = '#eef2ff', iconColor = '#5d5fef' }) => (
@@ -268,31 +269,12 @@ export default function AddStaff() {
   // Form Validation & Submit
   const validateForm = () => {
     const errors = {};
-    if (!formData.fullName.trim()) errors.fullName = 'Full Name is required';
-    if (!formData.empId.trim()) errors.empId = 'Employee ID is required';
-    if (!formData.gender) errors.gender = 'Please select a gender';
-    if (!formData.dob) errors.dob = 'Date of Birth is required';
-    if (!formData.nationality.trim()) errors.nationality = 'Nationality is required';
-    if (!formData.maritalStatus) errors.maritalStatus = 'Please select marital status';
-    if (!formData.designation) errors.designation = 'Please select designation';
-    if (!formData.department) errors.department = 'Please select department';
-    if (!formData.joiningDate) errors.joiningDate = 'Joining Date is required';
-    if (!formData.empType) errors.empType = 'Please select employee type';
-    if (!formData.shift) errors.shift = 'Please select shift';
-    if (!formData.salary) errors.salary = 'Salary / Rate is required';
-    if (!formData.employmentStatus) errors.employmentStatus = 'Please select employment status';
-    if (!formData.mobile.trim()) errors.mobile = 'Mobile Phone is required';
-    if (!formData.email.trim()) {
-      errors.email = 'Email Address is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    if (!formData.fullName || !formData.fullName.trim()) {
+      errors.fullName = 'Full Name is required';
+    }
+    if (formData.email && formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = 'Invalid email address';
     }
-    if (!formData.address.trim()) errors.address = 'Address is required';
-    if (!formData.experience) errors.experience = 'Experience is required';
-    if (!formData.education) errors.education = 'Education is required';
-    if (!formData.emergencyName.trim()) errors.emergencyName = 'Emergency contact name is required';
-    if (!formData.emergencyPhone.trim()) errors.emergencyPhone = 'Emergency contact phone is required';
-    if (!formData.emergencyRelation) errors.emergencyRelation = 'Relationship is required';
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -303,24 +285,27 @@ export default function AddStaff() {
     if (!validateForm()) {
       setSnackbar({
         open: true,
-        message: 'Please fill in all required fields marked with *',
+        message: 'Please provide at least a Full Name for the staff member',
         severity: 'error'
       });
       return;
     }
 
     setIsSubmitting(true);
+    // Persist new staff member to localStorage
+    const savedStaff = addStaffMember(formData);
+
     setTimeout(() => {
       setIsSubmitting(false);
       setSnackbar({
         open: true,
-        message: `Staff member "${formData.fullName}" (${formData.empId}) successfully registered!`,
+        message: `Staff member "${savedStaff.name}" (${savedStaff.empId}) successfully registered!`,
         severity: 'success'
       });
       setTimeout(() => {
         navigate('/hr/staff');
-      }, 1200);
-    }, 600);
+      }, 700);
+    }, 400);
   };
 
   return (

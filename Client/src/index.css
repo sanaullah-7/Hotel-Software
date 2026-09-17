@@ -13,9 +13,9 @@
    -------------------------------------------------------------------------- */
 :root {
   /* Brand Colors */
-  --color-primary: #1a2b49;
-  --color-primary-light: #2f4573;
-  --color-primary-dark: #0f1b30;
+  --color-primary: #1b7f43;
+  --color-primary-light: #28a75a;
+  --color-primary-dark: #12572e;
   --color-secondary: #c9a15a;
   --color-secondary-light: #dcb87c;
 
@@ -288,3 +288,40 @@ p {
     padding: var(--spacing-md);
   }
 }
+
+/* --------------------------------------------------------------------------
+   11. PRINT STYLES
+   -------------------------------------------------------------------------- */
+@media print {
+  aside,
+  header,
+  nav,
+  button,
+  .MuiDialogActions-root,
+  .MuiIconButton-root,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .MuiDialog-container {
+    display: block !important;
+    position: static !important;
+  }
+
+  .MuiDialog-paper {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

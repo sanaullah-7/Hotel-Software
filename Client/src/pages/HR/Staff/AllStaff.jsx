@@ -1,4 +1,17 @@
-import React, { useState } from 'react';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
+import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
+import EditIcon from '@mui/icons-material/Edit';
+import SearchIcon from '@mui/icons-material/Search';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import CalculateIcon from '@mui/icons-material/Calculate';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Button, 
@@ -12,30 +25,50 @@ import {
   FormControlLabel,
   Tooltip
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import CalculateIcon from '@mui/icons-material/Calculate';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
-import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
-import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
-import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
-import EditIcon from '@mui/icons-material/Edit';
-import HomeIcon from '@mui/icons-material/Home';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import DataGridTable from '../../../components/tables/DataGridTable';
 import PageHeader from '../../../components/common/PageHeader';
-import { mockStaff } from '../../../utils/mockData';
+import { getStoredStaff, deleteStaffMember, bulkDeleteStaff } from './staffStore';
+import EditStaffModal from './EditStaffModal';
 
 export default function AllStaff() {
   const [searchTerm, setSearchTerm] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState(null);
   
-  const [staffData, setStaffData] = useState(mockStaff);
+  const [staffData, setStaffData] = useState(() => getStoredStaff());
   const [selectedIds, setSelectedIds] = useState([]);
+
+  // Edit Staff Modal state
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingStaff, setEditingStaff] = useState(null);
+
+  const handleOpenEdit = (staff) => {
+    setEditingStaff(staff);
+    setEditModalOpen(true);
+  };
+
+  const handleCloseEdit = () => {
+    setEditModalOpen(false);
+    setEditingStaff(null);
+  };
+
+  const handleEditSuccess = (updatedStaff) => {
+    setStaffData(prev => prev.map(s => String(s.id) === String(updatedStaff.id) ? { ...s, ...updatedStaff } : s));
+  };
+
+  // Auto-sync staff from localStorage on mount and when changed
+  useEffect(() => {
+    const syncStaff = () => {
+      setStaffData(getStoredStaff());
+    };
+    syncStaff();
+    window.addEventListener('storage', syncStaff);
+    window.addEventListener('luxuria_staff_updated', syncStaff);
+    return () => {
+      window.removeEventListener('storage', syncStaff);
+      window.removeEventListener('luxuria_staff_updated', syncStaff);
+    };
+  }, []);
 
   // Column visibility state
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
@@ -74,12 +107,19 @@ export default function AllStaff() {
   };
 
   const handleBulkDelete = () => {
-    setStaffData(prev => prev.filter(staff => !selectedIds.includes(staff.id || staff.empId)));
+    const updated = bulkDeleteStaff(selectedIds);
+    setStaffData(updated);
     setSelectedIds([]);
   };
 
+  const handleDeleteStaff = (id) => {
+    const updated = deleteStaffMember(id);
+    setStaffData(updated);
+    setSelectedIds(prev => prev.filter(selId => selId !== id));
+  };
+
   const handleRefresh = () => {
-    setStaffData([...mockStaff]);
+    setStaffData(getStoredStaff());
     setSelectedIds([]);
     setSearchTerm('');
   };
@@ -110,58 +150,79 @@ export default function AllStaff() {
   };
 
   const filteredStaff = staffData.filter(staff => {
-    const matchesSearch = staff.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          staff.empId.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
+    const term = (searchTerm || '').toLowerCase().trim();
+    if (!term) return true;
+    const matchesName = (staff.name || '').toLowerCase().includes(term);
+    const matchesEmpId = (staff.empId || '').toLowerCase().includes(term);
+    const matchesDept = (staff.department || '').toLowerCase().includes(term);
+    const matchesDesig = (staff.designation || '').toLowerCase().includes(term);
+    return matchesName || matchesEmpId || matchesDept || matchesDesig;
   });
 
   const columns = [
     { label: 'Name', field: 'name', render: (row) => (
-      <div className="flex items-center gap-2 whitespace-nowrap">
-        <Avatar src={`https://i.pravatar.cc/150?u=${row.id}`} alt={row.name} sx={{ width: 28, height: 28 }} />
-        <span className="text-sm font-medium text-gray-700">{row.name}</span>
+      <div className="flex items-center gap-2">
+        <Avatar src={row.avatar || `https://i.pravatar.cc/150?u=${row.id}`} alt={row.name} sx={{ width: 28, height: 28, flexShrink: 0 }} />
+        <Link to={`/hr/staff/${row.id}`} className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors truncate max-w-[140px]" title={row.name}>
+          {row.name}
+        </Link>
       </div>
     )},
     { label: 'Designation', field: 'designation', render: (row) => (
-      <span className="text-xs text-gray-700 whitespace-nowrap">{row.designation}</span>
+      <span className="text-xs text-gray-700 truncate block max-w-[120px]" title={row.designation}>{row.designation}</span>
     )},
     { label: 'Mobile', field: 'phone', render: (row) => (
       <div className="flex items-center gap-1 text-xs text-gray-700 whitespace-nowrap">
-        <PhoneOutlinedIcon fontSize="small" sx={{ color: '#22c55e', fontSize: '1rem' }} />
+        <PhoneOutlinedIcon fontSize="small" sx={{ color: '#22c55e', fontSize: '0.95rem', flexShrink: 0 }} />
         <span>{row.phone}</span>
       </div>
     )},
     { label: 'Email', field: 'email', render: (row) => (
-      <div className="flex items-center gap-1 text-xs text-gray-700 whitespace-nowrap">
-        <MailOutlinedIcon fontSize="small" sx={{ color: '#ef4444', fontSize: '1rem' }} />
-        <span>{row.email}</span>
+      <div className="flex items-center gap-1 text-xs text-gray-700">
+        <MailOutlinedIcon fontSize="small" sx={{ color: '#ef4444', fontSize: '0.95rem', flexShrink: 0 }} />
+        <span className="truncate max-w-[140px]" title={row.email}>{row.email}</span>
       </div>
     )},
     { label: 'Joining Date', field: 'joiningDate', render: (row) => (
       <div className="flex items-center gap-1 text-xs text-gray-700 whitespace-nowrap">
-        <CalendarTodayOutlinedIcon fontSize="small" sx={{ color: '#4b5563', fontSize: '1rem' }} />
+        <CalendarTodayOutlinedIcon fontSize="small" sx={{ color: '#4b5563', fontSize: '0.95rem', flexShrink: 0 }} />
         <span>{row.joiningDate}</span>
       </div>
     )},
     { label: 'Address', field: 'address', render: (row) => (
-      <div className="flex items-center gap-1 text-xs text-gray-700 whitespace-nowrap">
-        <LocationOnOutlinedIcon fontSize="small" sx={{ color: '#3b82f6', fontSize: '1rem' }} />
-        <span>{row.address}</span>
+      <div className="flex items-center gap-1 text-xs text-gray-700">
+        <LocationOnOutlinedIcon fontSize="small" sx={{ color: '#3b82f6', fontSize: '0.95rem', flexShrink: 0 }} />
+        <span className="truncate max-w-[150px]" title={row.address}>{row.address}</span>
       </div>
     )},
-    { label: 'Actions', field: 'actions', alwaysVisible: true, render: (row) => (
-      <IconButton size="small" component={Link} to={`/hr/staff/${row.id}/edit`} sx={{ color: '#6366f1' }}>
-        <EditIcon fontSize="small" />
-      </IconButton>
-    )},
+    { 
+      label: 'Actions', 
+      field: 'actions', 
+      alwaysVisible: true, 
+      sx: { pr: 2 },
+      render: (row) => (
+        <div className="flex items-center gap-1 whitespace-nowrap pr-2">
+          <Tooltip title="Edit Staff">
+            <IconButton size="small" onClick={() => handleOpenEdit(row)} sx={{ color: '#6366f1', p: '4px' }}>
+              <EditIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Delete Staff">
+            <IconButton size="small" onClick={() => handleDeleteStaff(row.id)} sx={{ color: '#ef4444', p: '4px' }}>
+              <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Tooltip>
+        </div>
+      )
+    },
   ];
 
   const activeColumns = columns.filter(col => col.alwaysVisible || visibleColumns[col.field]);
 
   return (
-    <div className="px-px pt-4 pb-0">
+    <div className="px-px pt-4 pb-0 w-full overflow-x-hidden">
 
-      <div className="bg-white rounded-xl shadow-sm p-px mt-px">
+      <div className="bg-white rounded-xl shadow-sm p-px mt-px w-full overflow-x-hidden">
         {/* Top Bar */}
         <div className="flex justify-between items-center mb-1 pb-2 border-b border-gray-100">
           <div className="flex items-center gap-4 pt-4 pl-4">
@@ -223,7 +284,7 @@ export default function AllStaff() {
       </div>
 
       {/* Table */}
-      <div>
+      <div className="w-full overflow-x-hidden">
         <DataGridTable 
           columns={activeColumns} 
           data={filteredStaff} 
@@ -231,6 +292,7 @@ export default function AllStaff() {
           flat={true} 
           selected={selectedIds}
           onSelectionChange={setSelectedIds}
+          noHorizontalScroll={true}
         />
       </div>
 
@@ -262,6 +324,14 @@ export default function AllStaff() {
           </MenuItem>
         ))}
       </Menu>
+
+      {/* Edit Staff Modal Dialog matching Luxuria exact design */}
+      <EditStaffModal
+        open={editModalOpen}
+        onClose={handleCloseEdit}
+        staff={editingStaff}
+        onSaveSuccess={handleEditSuccess}
+      />
 
       </div>
     </div>

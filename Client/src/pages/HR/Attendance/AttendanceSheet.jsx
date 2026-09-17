@@ -310,14 +310,14 @@ export default function AttendanceSheet() {
   };
 
   return (
-    <div className="w-full px-0.5 sm:px-1 py-3 max-w-[1600px] mx-auto transition-all">
+    <div className="w-full px-0.5 sm:px-1 py-1 max-w-[1600px] mx-auto transition-all">
 
       {/* 2. Top 4 Metric Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 mb-5">
         {/* Present Card */}
         <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
           <div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-none">
+            <h3 className="text-2xl sm:text-xl font-bold text-slate-800 leading-none">
               {stats.present}
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2">Present</p>
@@ -330,7 +330,7 @@ export default function AttendanceSheet() {
         {/* Leave Card */}
         <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
           <div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-none">
+            <h3 className="text-2xl sm:text-xl font-bold text-slate-800 leading-none">
               {stats.leave}
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2">Leave</p>
@@ -343,7 +343,7 @@ export default function AttendanceSheet() {
         {/* Holiday Card */}
         <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
           <div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-none">
+            <h3 className="text-2xl sm:text-xl font-bold text-slate-800 leading-none">
               {stats.holiday}
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2">Holiday</p>
@@ -356,7 +356,7 @@ export default function AttendanceSheet() {
         {/* Weekend Days Card */}
         <div className="bg-white rounded-xl p-4 sm:p-5 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
           <div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-none">
+            <h3 className="text-2xl sm:text-xl font-bold text-slate-800 leading-none">
               {stats.weekend}
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 font-medium mt-2">Weekend Days</p>

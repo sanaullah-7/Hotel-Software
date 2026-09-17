@@ -1,232 +1,53 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useMemo, useState } from 'react';
 import {
-  IconButton,
-  Tooltip,
+  Alert,
   Checkbox,
   Dialog,
   DialogContent,
-  TextField,
+  FormControlLabel,
+  IconButton,
+  InputAdornment,
   MenuItem,
   Popover,
-  FormControlLabel,
   Snackbar,
-  Alert,
-  InputAdornment
+  TextField,
+  Tooltip
 } from '@mui/material';
-
-// Material Icons
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import MailOutlineOutlinedIcon from '@mui/icons-material/MailOutlineOutlined';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import CloseIcon from '@mui/icons-material/Close';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
-import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
-import TagOutlinedIcon from '@mui/icons-material/TagOutlined';
-import AttachMoneyOutlinedIcon from '@mui/icons-material/AttachMoneyOutlined';
-import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import MailOutlineOutlinedIcon from '@mui/icons-material/MailOutlineOutlined';
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
-
-// PDF Export Dependencies
+import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
+import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
+import TagOutlinedIcon from '@mui/icons-material/TagOutlined';
+import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { mockSalaries } from '../../../utils/mockData';
 
-// Initial dataset matching Luxuria template exactly
-const initialSalaryList = [
-  {
-    id: 1,
-    empId: 'EMP-001',
-    name: 'John Doe',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Front Office',
-    role: 'Manager',
-    salary: 2574,
-    bonus: 200,
-    deductions: 100,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 2,
-    empId: 'EMP-002',
-    name: 'Sarah Smith',
-    avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Administration',
-    role: 'Administrator',
-    salary: 3587,
-    bonus: 300,
-    deductions: 150,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 3,
-    empId: 'EMP-003',
-    name: 'Rajesh',
-    avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Food & Beverage',
-    role: 'Executive Chef',
-    salary: 7897,
-    bonus: 500,
-    deductions: 200,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 4,
-    empId: 'EMP-004',
-    name: 'Jay Soni',
-    avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Maintenance',
-    role: 'Technician',
-    salary: 2697,
-    bonus: 150,
-    deductions: 80,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 5,
-    empId: 'EMP-005',
-    name: 'Rajesh',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Security',
-    role: 'Security Head',
-    salary: 6587,
-    bonus: 400,
-    deductions: 200,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 6,
-    empId: 'EMP-006',
-    name: 'John Doe',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Front Office',
-    role: 'Front Desk Lead',
-    salary: 8256,
-    bonus: 600,
-    deductions: 250,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 7,
-    empId: 'EMP-007',
-    name: 'Cara Stevens',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Housekeeping',
-    role: 'Housekeeping Lead',
-    salary: 7112,
-    bonus: 350,
-    deductions: 150,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 8,
-    empId: 'EMP-008',
-    name: 'Mark Hay',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Security',
-    role: 'Guard',
-    salary: 8256,
-    bonus: 500,
-    deductions: 300,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 9,
-    empId: 'EMP-009',
-    name: 'Angelica Ramos',
-    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Food & Beverage',
-    role: 'Bartender',
-    salary: 7758,
-    bonus: 450,
-    deductions: 200,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 10,
-    empId: 'EMP-010',
-    name: 'Jacob Ryan',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Housekeeping',
-    role: 'Supervisor',
-    salary: 6665,
-    bonus: 350,
-    deductions: 150,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 11,
-    empId: 'EMP-011',
-    name: 'Emily Watson',
-    avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Administration',
-    role: 'HR Officer',
-    salary: 4200,
-    bonus: 300,
-    deductions: 100,
-    paymentStatus: 'Paid'
-  },
-  {
-    id: 12,
-    empId: 'EMP-012',
-    name: 'Ashton Cox',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&auto=format&fit=crop&q=80',
-    email: 'test@email.com',
-    department: 'Front Office',
-    role: 'Receptionist',
-    salary: 3100,
-    bonus: 200,
-    deductions: 80,
-    paymentStatus: 'Paid'
-  }
-];
+const departmentsList = ['All', 'Management', 'Front Office', 'Housekeeping', 'Kitchen'];
+const rolesList = ['Manager', 'Receptionist', 'Housekeeper', 'Chef', 'Staff'];
 
-const departmentsList = [
-  'All',
-  'Front Office',
-  'Administration',
-  'Food & Beverage',
-  'Maintenance',
-  'Security',
-  'Housekeeping'
-];
-
-const rolesList = [
-  'Manager',
-  'Administrator',
-  'Executive Chef',
-  'Technician',
-  'Security Head',
-  'Front Desk Lead',
-  'Housekeeping Lead',
-  'Guard',
-  'Bartender',
-  'Supervisor',
-  'HR Officer',
-  'Receptionist'
-];
+const initialSalaryList = mockSalaries.map((salary) => ({
+  ...salary,
+  role: salary.designation || 'Staff',
+  salary: salary.salary ?? salary.basicSalary ?? 0,
+  bonus: salary.bonus ?? salary.allowances ?? 0,
+  avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(salary.name)}&background=5d5fef&color=fff`
+}));
 
 export default function EmployeeSalary() {
   // Main Data State

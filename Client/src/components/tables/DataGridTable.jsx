@@ -6,7 +6,18 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
  * A generic reusable Table wrapper using MUI's standard Table components.
  * Later, this can be swapped with @mui/x-data-grid for advanced data tables.
  */
-export default function DataGridTable({ columns, data, selectable = false, flat = false, selected = null, onSelectionChange = null }) {
+export default function DataGridTable({ 
+  columns, 
+  data, 
+  selectable = false, 
+  flat = false, 
+  selected = null, 
+  onSelectionChange = null,
+  noHorizontalScroll = false,
+  minWidth = 650,
+  tableSx = {},
+  containerSx = {}
+}) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [internalSelected, setInternalSelected] = useState([]);
@@ -70,8 +81,24 @@ export default function DataGridTable({ columns, data, selectable = false, flat 
   }
 
   return (
-    <TableContainer component={flat ? 'div' : Paper} className={`${flat ? '' : 'shadow-sm border border-gray-200'} rounded-lg overflow-x-auto`}>
-      <Table sx={{ minWidth: 650 }} size="small" aria-label="simple table">
+    <TableContainer 
+      component={flat ? 'div' : Paper} 
+      className={`${flat ? '' : 'shadow-sm border border-gray-200'} rounded-lg ${noHorizontalScroll ? 'overflow-x-hidden' : 'overflow-x-auto'}`}
+      sx={{
+        ...(noHorizontalScroll ? { overflowX: 'hidden', maxWidth: '100%' } : {}),
+        ...containerSx
+      }}
+    >
+      <Table 
+        sx={{ 
+          minWidth: noHorizontalScroll ? '100%' : minWidth, 
+          width: '100%',
+          ...(noHorizontalScroll ? { tableLayout: 'auto' } : {}),
+          ...tableSx 
+        }} 
+        size="small" 
+        aria-label="simple table"
+      >
         <TableHead className={`${flat ? 'bg-white border-b border-gray-100' : 'bg-gray-50 border-b border-gray-200'}`}>
           <TableRow>
             {selectable && (
@@ -90,7 +117,7 @@ export default function DataGridTable({ columns, data, selectable = false, flat 
               </TableCell>
             )}
             {columns.map((col, index) => (
-              <TableCell key={index} className="font-bold text-gray-700">
+              <TableCell key={index} className="font-bold text-gray-700" sx={col.headerSx || col.sx}>
                 {col.label}
               </TableCell>
             ))}
@@ -119,7 +146,7 @@ export default function DataGridTable({ columns, data, selectable = false, flat 
                   </TableCell>
                 )}
                 {columns.map((col, colIndex) => (
-                  <TableCell key={colIndex} className="text-gray-600">
+                  <TableCell key={colIndex} className="text-gray-600" sx={col.cellSx || col.sx}>
                     {col.render ? col.render(row) : row[col.field]}
                   </TableCell>
                 ))}

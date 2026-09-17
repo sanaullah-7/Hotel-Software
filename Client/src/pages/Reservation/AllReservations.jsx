@@ -1,17 +1,18 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Search, Download, MoreVert, Visibility, Print, Cancel, Add, Inventory2, KeyboardArrowDown,
-  Edit, Delete, CheckCircle, Logout, ChevronLeft, ChevronRight 
+import React, { useState, useRef, useEffect } from 'react';
+import { FormControl, InputLabel, Select, MenuItem, Popover, IconButton, Menu } from '@mui/material';
+import {
+  Search, FilterList, AddCircleOutlined, Refresh,
+  TableChart, PictureAsPdf, MoreHoriz,
+  EditOutlined, DeleteOutlined, LogoutOutlined, CancelOutlined,
+  Close, FaceOutlined, CalendarTodayOutlined,
+  EmailOutlined, PhoneOutlined, Person, SubjectOutlined, LocalOfferOutlined,
+  Inventory2, KeyboardArrowDown, ChevronLeft, ChevronRight, CheckCircle, MoreVert, Download, Logout, Edit, Delete
 } from '@mui/icons-material';
-import { 
-  Menu, MenuItem, IconButton, Popover 
-} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 function InventoryCell({ items = [] }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-
   if (!items || items.length === 0) {
     return <span className="text-[12px] text-gray-400">—</span>;
   }
@@ -311,7 +312,6 @@ export default function AllReservations() {
                 <ChevronLeft fontSize="small" />
               </button>
               
-              {/* Page Numbers */}
               {[...Array(totalPages)].map((_, i) => (
                 <button
                   key={i}
@@ -337,7 +337,7 @@ export default function AllReservations() {
           </div>
         )}
       </div>
-
+      
       {/* Action Menu Popup */}
       <Menu
         anchorEl={anchorEl}
@@ -351,16 +351,16 @@ export default function AllReservations() {
         }}
       >
         <MenuItem onClick={handleActionClose} sx={{ fontSize: '13px', py: 1, borderRadius: '8px', mb: 0.5 }}>
-          <Edit sx={{ fontSize: 16, mr: 1.5, color: '#3b82f6' }} /> Edit
+          <EditOutlined sx={{ fontSize: 16, mr: 1.5, color: '#3b82f6' }} /> Edit
         </MenuItem>
         <MenuItem onClick={handleActionClose} sx={{ fontSize: '13px', py: 1, borderRadius: '8px', mb: 0.5 }}>
           <CheckCircle sx={{ fontSize: 16, mr: 1.5, color: '#1b7f43' }} /> Check In
         </MenuItem>
         <MenuItem onClick={handleActionClose} sx={{ fontSize: '13px', py: 1, borderRadius: '8px', mb: 0.5 }}>
-          <Logout sx={{ fontSize: 16, mr: 1.5, color: '#f59e0b' }} /> Check Out
+          <LogoutOutlined sx={{ fontSize: 16, mr: 1.5, color: '#f59e0b' }} /> Check Out
         </MenuItem>
         <MenuItem onClick={handleActionClose} sx={{ fontSize: '13px', py: 1, borderRadius: '8px', color: '#dc2626', '&:hover': { backgroundColor: '#fef2f2' } }}>
-          <Delete sx={{ fontSize: 16, mr: 1.5 }} /> Delete
+          <DeleteOutlined sx={{ fontSize: 16, mr: 1.5 }} /> Delete
         </MenuItem>
       </Menu>
     </div>
