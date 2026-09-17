@@ -73,10 +73,11 @@ export default function Sidebar() {
   ];
 
   const reportsSubItems = [
-    { label: 'Stocks, Expense, Revenue Report', id: 'stocks-expense-revenue', path: '/reports/stocks-expense-revenue' },
+    { label: 'Stock', id: 'stock', path: '/reports/stock' },
+    { label: 'Expense', id: 'expense', path: '/reports/expense' },
+    { label: 'Revenue Report', id: 'revenue', path: '/reports/revenue' },
     { label: 'Occupancy Report', id: 'occupancy', path: '/reports/occupancy' },
-    { label: 'Expense vs Revenue', id: 'expense-vs-revenue', path: '/reports/expense-vs-revenue' },
-    { label: 'Expense Management', id: 'expense-management', path: '/reports/expense-management' },
+    { label: 'Expense Vs Revenue', id: 'expense-vs-revenue', path: '/reports/expense-vs-revenue' },
   ];
 
   const settingsSubItems = [

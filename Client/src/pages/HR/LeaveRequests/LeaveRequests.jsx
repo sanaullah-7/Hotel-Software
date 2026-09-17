@@ -509,10 +509,10 @@ export default function LeaveRequests() {
     <div className="w-full bg-[#f8fafc] px-0.5 sm:px-1 py-2">
 
       {/* 1. Page Title & Breadcrumbs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-3.5 px-1">
+      {/* <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-3.5 px-1">
         <h1 className="text-xl font-bold text-gray-800 tracking-tight">Leave Requests</h1>
 
-        {/* Breadcrumb matching Luxuria */}
+       
         <nav className="flex items-center text-xs sm:text-sm font-medium text-gray-500 space-x-1.5">
           <Link to="/" className="flex items-center text-gray-400 hover:text-[#5d5fef] transition-colors">
             <HomeOutlinedIcon sx={{ fontSize: 17 }} />
@@ -524,7 +524,7 @@ export default function LeaveRequests() {
           <span className="text-gray-300">•</span>
           <span className="text-gray-900 font-semibold">Leave Requests</span>
         </nav>
-      </div>
+      </div> */}
 
       {/* 2. Main White Table Card Container */}
       <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] px-2.5 sm:px-4 py-3.5 sm:py-4">
@@ -565,7 +565,7 @@ export default function LeaveRequests() {
                   className="!bg-red-50 !text-red-600 hover:!bg-red-100"
                   sx={{ width: 34, height: 34, borderRadius: '8px' }}
                 >
-                  <DeleteOutlinedIcon sx={{ fontSize: 19 }} />
+                  <DeleteOutlinedIcon fontSize='small' />
                 </IconButton>
               </Tooltip>
             )}
@@ -584,7 +584,7 @@ export default function LeaveRequests() {
                   '&:hover': { backgroundColor: '#e2e8f0' }
                 }}
               >
-                <FilterListIcon sx={{ fontSize: 19 }} />
+                <FilterListIcon fontSize="small"   />
               </IconButton>
             </Tooltip>
 
@@ -602,7 +602,7 @@ export default function LeaveRequests() {
                   '&:hover': { backgroundColor: '#16a34a' }
                 }}
               >
-                <AddIcon sx={{ fontSize: 20 }} />
+                <AddIcon fontSize="small"  />
               </IconButton>
             </Tooltip>
 
@@ -620,7 +620,7 @@ export default function LeaveRequests() {
                   '&:hover': { backgroundColor: '#e2e8f0' }
                 }}
               >
-                <RefreshIcon sx={{ fontSize: 19 }} />
+                <RefreshIcon fontSize="small"  />
               </IconButton>
             </Tooltip>
 
@@ -638,7 +638,7 @@ export default function LeaveRequests() {
                   '&:hover': { backgroundColor: '#0369a1' }
                 }}
               >
-                <TableChartIcon sx={{ fontSize: 18 }} />
+                <TableChartIcon fontSize="small" />
               </IconButton>
             </Tooltip>
 
@@ -656,7 +656,7 @@ export default function LeaveRequests() {
                   '&:hover': { backgroundColor: '#dc2626' }
                 }}
               >
-                <PictureAsPdfIcon sx={{ fontSize: 18 }} />
+                <PictureAsPdfIcon fontSize="small"  />
               </IconButton>
             </Tooltip>
           </div>

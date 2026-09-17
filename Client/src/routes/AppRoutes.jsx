@@ -34,10 +34,7 @@ import TodaysAttendance from '../pages/HR/Attendance/TodaysAttendance';
 import EmployeeSalary from '../pages/HR/Salary/EmployeeSalary';
 
 // Reports Module Pages
-import StocksExpenseRevenue from '../pages/Reports/StocksExpenseRevenue';
-import OccupancyReport from '../pages/Reports/OccupancyReport';
-import ExpenseVsRevenue from '../pages/Reports/ExpenseVsRevenue';
-import ExpenseManagement from '../pages/Reports/ExpenseManagement';
+import ReportsPage from '../pages/Reports/ReportsPage';
 
 // Settings Module Pages
 import HotelProfile from '../pages/Settings/HotelProfile';
@@ -194,10 +191,8 @@ export default function AppRoutes() {
         <Route path="/hr/employee-salary" element={<DashboardLayout><EmployeeSalary /></DashboardLayout>} />
 
         {/* Reports Sub-Routes */}
-        <Route path="/reports/stocks-expense-revenue" element={<DashboardLayout><StocksExpenseRevenue /></DashboardLayout>} />
-        <Route path="/reports/occupancy" element={<DashboardLayout><OccupancyReport /></DashboardLayout>} />
-        <Route path="/reports/expense-vs-revenue" element={<DashboardLayout><ExpenseVsRevenue /></DashboardLayout>} />
-        <Route path="/reports/expense-management" element={<DashboardLayout><ExpenseManagement /></DashboardLayout>} />
+        <Route path="/reports" element={<Navigate to="/reports/stock" replace />} />
+        <Route path="/reports/:tab" element={<DashboardLayout><ReportsPage /></DashboardLayout>} />
 
         {/* Settings Sub-Routes */}
         <Route path="/settings/hotel-profile" element={<DashboardLayout><HotelProfile /></DashboardLayout>} />
