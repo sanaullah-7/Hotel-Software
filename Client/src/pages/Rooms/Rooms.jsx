@@ -1,4 +1,3 @@
-import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { FilterList, Add, Refresh, Calculate, PictureAsPdf, EditOutlined, DeleteOutlined, Close, Search, KeyboardArrowLeft, KeyboardArrowRight, AddCircle, TableChart, ViewWeek, AddCircleOutlined, PhoneOutlined } from '@mui/icons-material';;;;;
@@ -12,10 +11,8 @@ import CheckCircle from '@mui/icons-material/CheckCircle';
 import Bed from '@mui/icons-material/Bed';
 import CleaningServices from '@mui/icons-material/CleaningServices';
 import BuildCircle from '@mui/icons-material/BuildCircle';
-import Search from '@mui/icons-material/Search';
 import FormatListBulleted from '@mui/icons-material/FormatListBulleted';
 import GridView from '@mui/icons-material/GridView';
-import Add from '@mui/icons-material/Add';
 import Wifi from '@mui/icons-material/Wifi';
 import Tv from '@mui/icons-material/Tv';
 import AcUnit from '@mui/icons-material/AcUnit';
@@ -32,6 +29,7 @@ import Delete from '@mui/icons-material/Delete';
 import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import ChevronRight from '@mui/icons-material/ChevronRight';
 import { IconButton } from '@mui/material';
+import { useState } from 'react';
 
 const initialRooms = [
   { id: 1, roomNo: '101', roomImage: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop', roomType: 'Delux', acNonAc: 'AC', meal: 'All', capacity: 2, status: 'Booked', rent: 25, mobile: '1234567890' },

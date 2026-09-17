@@ -12,7 +12,6 @@ import GuestComplaint from '../pages/FrontOffice/GuestComplaint';
 // Reservation Module Pages
 import AddReservation from '../pages/Reservation/AddReservation';
 import AllReservations from '../pages/Reservation/AllReservations';
-import EditReservation from '../pages/Reservation/EditReservation';
 import CancelledBookings from '../pages/Reservation/CancelledBookings';
 import GroupReservations from '../pages/Reservation/GroupReservations';
 // Rooms Module Pages
@@ -126,14 +125,7 @@ export default function AppRoutes() {
           path="/reservation" 
           element={<Navigate to="/reservation/new" replace />} 
         />
-                  <Route 
-            path="/reservation/edit" 
-            element={
-              <DashboardLayout>
-                <EditReservation />
-              </DashboardLayout>
-            } 
-          />
+                  
           <Route 
             path="/reservation/new" 
           element={

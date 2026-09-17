@@ -35,7 +35,6 @@ import {
   VpnKey as VpnKeyIcon,
   CleaningServices as CleaningServicesIcon
 } from '@mui/icons-material';
-import React, { useState } from 'react';
 import Login from '@mui/icons-material/Login';
 import Logout from '@mui/icons-material/Logout';
 import Search from '@mui/icons-material/Search';
@@ -69,7 +68,7 @@ const STATUS_ICONS = {
   Reserved: BookmarkIcon,
 };
 
-const avatarUrl = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`;
+const avatarUrl = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=A700&color=fff`;
 
 const initialGuests = [
   { id: 'BK-1001', name: 'John Doe', email: 'john.doe@example.com', room: '101', roomType: 'Deluxe', checkIn: '5/20/24', checkOut: '5/22/24', status: 'Pending' },
@@ -844,36 +843,28 @@ export default function CheckInOut() {
       {/* SUMMARY CARDS */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-2">
-          <div className="w-10 h-10 rounded-[12px] bg-[#f3e8ff] flex items-center justify-center shrink-0">
-            <GroupsIcon className="text-[#a855f7]" sx={{ fontSize: 20 }} />
-          </div>
+          
           <div className="flex flex-col">
             <span className="text-gray-500 font-semibold text-[11px]">Total Guests</span>
             <span className="text-lg font-bold text-gray-900 leading-tight">{totalGuests}</span>
           </div>
         </div>
         <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[12px] bg-[#dcfce7] flex items-center justify-center shrink-0">
-            <LoginIcon className="text-[#16a34a]" sx={{ fontSize: 20 }} />
-          </div>
+         
           <div className="flex flex-col">
             <span className="text-gray-500 font-semibold text-[11px]">Checked In</span>
             <span className="text-lg font-bold text-gray-900 leading-tight">{checkedInCount}</span>
           </div>
         </div>
         <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[12px] bg-[#e0e7ff] flex items-center justify-center shrink-0">
-            <LogoutIcon className="text-[#4f46e5]" sx={{ fontSize: 20 }} />
-          </div>
+         
           <div className="flex flex-col">
             <span className="text-gray-500 font-semibold text-[11px]">Checked Out</span>
             <span className="text-lg font-bold text-gray-900 leading-tight">{checkedOutCount}</span>
           </div>
         </div>
         <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[12px] bg-[#fef3c7] flex items-center justify-center shrink-0">
-            <PendingActionsIcon className="text-[#d97706]" sx={{ fontSize: 20 }} />
-          </div>
+        
           <div className="flex flex-col">
             <span className="text-gray-500 font-semibold text-[11px]">Pending</span>
             <span className="text-lg font-bold text-gray-900 leading-tight">{pendingCount}</span>
@@ -926,7 +917,7 @@ export default function CheckInOut() {
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
                 <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Booking ID</th>
-                <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Guest Name</th>
+                <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Guest Name/Email</th>
                 <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Room</th>
                 <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Stay Period</th>
                 <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide whitespace-nowrap">Status</th>

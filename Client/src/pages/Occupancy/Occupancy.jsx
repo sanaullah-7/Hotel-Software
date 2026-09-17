@@ -28,24 +28,6 @@ import {
   InputLabel,
   Button
 } from '@mui/material';
-import React, { useState } from 'react';
-import BedIcon from '@mui/icons-material/Bed';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PersonIcon from '@mui/icons-material/Person';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import SearchIcon from '@mui/icons-material/Search';
-import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
-import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import WifiIcon from '@mui/icons-material/Wifi';
-import AcUnitIcon from '@mui/icons-material/AcUnit';
-import LocalBarIcon from '@mui/icons-material/LocalBar';
-import EventIcon from '@mui/icons-material/Event';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import BuildIcon from '@mui/icons-material/Build';
-import EventBusyIcon from '@mui/icons-material/EventBusy';
-import { TextField, MenuItem, Button, InputAdornment } from '@mui/material';
 import CreateGuestModal from './CreateGuestModal';
 import GuestDetailsModal from './GuestDetailsModal';
 
@@ -214,19 +196,16 @@ export default function Occupancy() {
       {/* SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
         <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#eef0ff] text-[#5c67f2] mr-4 shrink-0"><BedIcon /></div>
+
           <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.length}</div><div className="text-[13px] text-gray-500 font-medium">Total Rooms</div></div>
         </div>
         <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#eaf7ee] text-[#1b7f43] mr-4 shrink-0"><CheckCircleIcon /></div>
           <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.filter(r => r.status === 'AVAILABLE').length}</div><div className="text-[13px] text-gray-500 font-medium">Available</div></div>
         </div>
         <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#fce8e8] text-[#e53935]   mr-4 shrink-0"><PersonIcon /></div>
           <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.filter(r => r.status === 'OCCUPIED').length}</div><div className="text-[13px] text-gray-500 font-medium">Occupied</div></div>
         </div>
         <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#eaf3fd] text-[#1976d2] mr-4 shrink-0"><BarChartIcon /></div>
           <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{Math.round((rooms.filter(r => r.status === 'OCCUPIED').length / rooms.length) * 100)}%</div><div className="text-[13px] text-gray-500 font-medium">Occupancy Rate</div></div>
         </div>
       </div>
@@ -356,14 +335,14 @@ export default function Occupancy() {
                     </td>
                     <td className="py-2 px-3 text-[12px]" style={{ color: room.housekeepingColor }}>
                       <div className="flex items-center gap-1.5">
-                        <CleaningServicesIcon sx={{ fontSize: 15 }} /> {room.housekeeping}
+                      {room.housekeeping}
                       </div>
                     </td>
                     <td className="py-2 px-3">
                       {room.guest ? (
                         <div className="flex flex-col gap-0.5">
                           <div className="flex items-center gap-1.5 font-semibold text-gray-800 text-[12px]">
-                            <PersonIcon sx={{ fontSize: 14, color: '#5c67f2' }} />
+                        <PersonIcon sx={{ fontSize: 16, color: '#9ca3af' }} />
                             {room.guest.name}
                           </div>
 

@@ -14,14 +14,6 @@ import {
   BarChart as ReportsIcon,
   Settings as SettingsIcon
 } from '@mui/icons-material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import FrontOfficeIcon from '@mui/icons-material/Laptop';
-import BookingIcon from '@mui/icons-material/EventNote';
-import RoomIcon from '@mui/icons-material/Bed';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import HousekeepingIcon from '@mui/icons-material/CleaningServices';
-import MaintenanceIcon from '@mui/icons-material/Build';
 import RestaurantIcon from '@mui/icons-material/RestaurantMenu';
 import AssistantIcon from '@mui/icons-material/AutoAwesome';
 
@@ -73,7 +65,6 @@ export default function Sidebar() {
   const reservationSubItems = [
     { label: 'All Booking', id: 'all-bookings', path: '/reservation/all' },
     { label: 'Add Booking', id: 'add-booking', path: '/reservation/new' },
-    { label: 'Edit Booking', id: 'edit-booking', path: '/reservation/edit' },
     { label: 'Cancel Booking', id: 'cancel-booking', path: '/reservation/cancelled' },
     { label: 'Group Booking', id: 'group-booking', path: '/reservation/group' },
   ];
@@ -602,60 +593,38 @@ export default function Sidebar() {
             </div>
           </li>
 
-          {/* HR Dropdown Menu Item */}
+          {/* Human Resources Dropdown Menu Item */}
           <li>
             <button
               onClick={handleToggleHR}
               title={!isOpen ? "Human Resources" : undefined}
               className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
-                isHRActive 
-                  ? 'bg-[#f0f9f4]' 
-          {/* Restaurant Dropdown Menu Item */}
-          <li>
-            <button
-              onClick={handleToggleRestaurant}
-              title={!isOpen ? "Restaurant" : undefined}
-              className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
-                isRestaurantActive
+                isHRActive
                   ? 'bg-[#f0f9f4]'
                   : 'hover:bg-gray-50'
               } ${isOpen ? 'justify-between' : 'justify-center'}`}
             >
               <div className="flex items-center min-w-0">
                 <div className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-colors ${
-                  isHRActive 
-                    ? 'bg-[#e5f4eb] text-[#1b7f43]' 
-                    : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
-                }`}>
-                  <HRIcon sx={{ fontSize: 20 }} />
-                  isRestaurantActive
+                  isHRActive
                     ? 'bg-[#e5f4eb] text-[#1b7f43]'
                     : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
                 }`}>
-                  <RestaurantIcon sx={{ fontSize: 20 }} />
+                  <HRIcon sx={{ fontSize: 20 }} />
                 </div>
-
                 <span className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
                   isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                 } ${isHRActive ? 'font-bold text-gray-900' : 'text-gray-600 font-medium'}`}>
                   Human Resources
-                } ${isRestaurantActive ? 'font-bold text-gray-900' : 'text-gray-600 font-medium'}`}>
-                  Restaurant
                 </span>
               </div>
-
               {isOpen && (
                 <div className="pr-1 shrink-0">
-                  <ChevronRightIcon 
-                    fontSize="small" 
-                    className={`transition-transform duration-300 ease-in-out ${
-                      isHRActive ? 'text-[#1b7f43]' : 'text-gray-400'
-                    } ${isHROpen ? 'rotate-90' : 'rotate-0'}`} 
                   <ChevronRightIcon
                     fontSize="small"
                     className={`transition-transform duration-300 ease-in-out ${
-                      isRestaurantActive ? 'text-[#1b7f43]' : 'text-gray-400'
-                    } ${isRestaurantOpen ? 'rotate-90' : 'rotate-0'}`}
+                      isHRActive ? 'text-[#1b7f43]' : 'text-gray-400'
+                    } ${isHROpen ? 'rotate-90' : 'rotate-0'}`}
                   />
                 </div>
               )}
@@ -669,16 +638,16 @@ export default function Sidebar() {
                     const isSelected = location.pathname === subItem.path;
                     return (
                       <Link key={subItem.id} to={subItem.path} className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
-                          isSelected ? 'bg-[#dcefe5] text-[#1b7f43]' : 'hover:bg-white/60 text-slate-600 hover:text-slate-900'
+                          isSelected
+                            ? 'bg-white shadow-sm text-gray-900 font-bold'
+                            : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'
                         }`}>
                         {isSelected ? (
                           <div className="w-2.5 h-2.5 rounded-full bg-[#1b7f43] ring-3 ring-[#1b7f43]/20 mr-3 shrink-0 transition-all duration-200"></div>
                         ) : (
                           <div className="w-2 h-2 rounded-full bg-[#3b82f6] mr-3 shrink-0 ml-0.5 transition-all duration-200"></div>
                         )}
-                        <span className={`text-[13px] whitespace-nowrap truncate ${isSelected ? 'font-bold text-[#1b7f43]' : 'font-semibold'}`}>
-                          {subItem.label}
-                        </span>
+                        <span className="text-[12px] whitespace-nowrap">{subItem.label}</span>
                       </Link>
                     );
                   })}
@@ -687,89 +656,61 @@ export default function Sidebar() {
             </div>
           </li>
 
-          {/* Reports Dropdown Menu Item */}
+          {/* Restaurant Dropdown Menu Item */}
           <li>
             <button
-              onClick={handleToggleReports}
-              title={!isOpen ? "Reports" : undefined}
+              onClick={handleToggleRestaurant}
+              title={!isOpen ? "Restaurant" : undefined}
               className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
-                isReportsActive 
-                  ? 'bg-[#f0f9f4]' 
+                isRestaurantActive
+                  ? 'bg-[#f0f9f4]'
                   : 'hover:bg-gray-50'
               } ${isOpen ? 'justify-between' : 'justify-center'}`}
             >
               <div className="flex items-center min-w-0">
                 <div className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-colors ${
-                  isReportsActive 
-                    ? 'bg-[#e5f4eb] text-[#1b7f43]' 
+                  isRestaurantActive
+                    ? 'bg-[#e5f4eb] text-[#1b7f43]'
                     : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
                 }`}>
-                  <ReportsIcon sx={{ fontSize: 20 }} />
+                  <RestaurantIcon sx={{ fontSize: 20 }} />
                 </div>
-
                 <span className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
                   isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
-                } ${isReportsActive ? 'font-bold text-gray-900' : 'text-gray-600 font-medium'}`}>
-                  Reports
+                } ${isRestaurantActive ? 'font-bold text-gray-900' : 'text-gray-600 font-medium'}`}>
+                  Restaurant
                 </span>
               </div>
-
               {isOpen && (
                 <div className="pr-1 shrink-0">
-                  <ChevronRightIcon 
-                    fontSize="small" 
+                  <ChevronRightIcon
+                    fontSize="small"
                     className={`transition-transform duration-300 ease-in-out ${
-                      isReportsActive ? 'text-[#1b7f43]' : 'text-gray-400'
-                    } ${isReportsOpen ? 'rotate-90' : 'rotate-0'}`} 
+                      isRestaurantActive ? 'text-[#1b7f43]' : 'text-gray-400'
+                    } ${isRestaurantOpen ? 'rotate-90' : 'rotate-0'}`}
                   />
                 </div>
               )}
             </button>
             <div className={`grid transition-all duration-300 ease-in-out ${
-                isOpen && isReportsOpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
+                isOpen && isRestaurantOpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
               }`}>
-              <div className="overflow-hidden">
-                <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
-                  {reportsSubItems.map((subItem) => {
-                    const isSelected = location.pathname === subItem.path;
-                    return (
-                      <Link key={subItem.id} to={subItem.path} className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
-                          isSelected ? 'bg-[#dcefe5] text-[#1b7f43]' : 'hover:bg-white/60 text-slate-600 hover:text-slate-900'
-                        }`}>
-
-            {/* Smooth Animated Sub-Items */}
-            <div
-              className={`grid transition-all duration-300 ease-in-out ${
-                isOpen && isRestaurantOpen
-                  ? 'grid-rows-[1fr] opacity-100 mt-1'
-                  : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
-              }`}
-            >
               <div className="overflow-hidden">
                 <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
                   {restaurantSubItems.map((subItem) => {
                     const isSelected = location.pathname === subItem.path;
                     return (
-                      <Link
-                        key={subItem.id}
-                        to={subItem.path}
-                        className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
+                      <Link key={subItem.id} to={subItem.path} className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
                           isSelected
-                            ? 'bg-[#dcefe5] text-[#1b7f43]'
-                            : 'hover:bg-white/60 text-slate-600 hover:text-slate-900'
-                        }`}
-                      >
+                            ? 'bg-white shadow-sm text-gray-900 font-bold'
+                            : 'text-gray-500 hover:text-gray-800 hover:bg-white/60'
+                        }`}>
                         {isSelected ? (
                           <div className="w-2.5 h-2.5 rounded-full bg-[#1b7f43] ring-3 ring-[#1b7f43]/20 mr-3 shrink-0 transition-all duration-200"></div>
                         ) : (
                           <div className="w-2 h-2 rounded-full bg-[#3b82f6] mr-3 shrink-0 ml-0.5 transition-all duration-200"></div>
                         )}
-                        <span className={`text-[13px] whitespace-nowrap truncate ${isSelected ? 'font-bold text-[#1b7f43]' : 'font-semibold'}`}>
-                        <span className={`text-[13px] whitespace-nowrap truncate ${
-                          isSelected ? 'font-bold text-[#1b7f43]' : 'font-semibold'
-                        }`}>
-                          {subItem.label}
-                        </span>
+                        <span className="text-[12px] whitespace-nowrap">{subItem.label}</span>
                       </Link>
                     );
                   })}
@@ -841,6 +782,7 @@ export default function Sidebar() {
                 </div>
               </div>
             </div>
+          </li>
           {/* AI Assistant Tab */}
           <li>
             <Link 

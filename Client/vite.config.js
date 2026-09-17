@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  optimizeDeps: {
+    optimizeDeps: {
     include: [
       '@mui/material',
       '@mui/icons-material',
@@ -15,15 +15,10 @@ export default defineConfig({
       '@emotion/styled',
       'jspdf',
       'jspdf-autotable',
-      'xlsx'
-    ]
-  // Memory optimization: limit chunk size and pre-bundle only what's needed
-  optimizeDeps: {
-    include: [
+      'xlsx',
       'react',
       'react-dom',
-      'react-router-dom',
-      '@mui/material',
+      'react-router-dom'
     ],
     esbuildOptions: {
       target: 'es2020',

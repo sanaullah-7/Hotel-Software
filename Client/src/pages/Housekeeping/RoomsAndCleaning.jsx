@@ -6,8 +6,6 @@ import {
   CalendarTodayOutlined, MeetingRoomOutlined, CleaningServicesOutlined, 
   EventOutlined, AccessTimeOutlined, PersonOutlined, FlagOutlined
 } from '@mui/icons-material';
-import React, { useState } from 'react';
-import Search from '@mui/icons-material/Search';
 import Add from '@mui/icons-material/Add';
 import Bed from '@mui/icons-material/Bed';
 import CleaningServices from '@mui/icons-material/CleaningServices';
@@ -24,7 +22,7 @@ import TaskAlt from '@mui/icons-material/TaskAlt';
 import Block from '@mui/icons-material/Block';
 import NotificationsActive from '@mui/icons-material/NotificationsActive';
 import Cancel from '@mui/icons-material/Cancel';
-import { IconButton, Menu, MenuItem, Dialog, Select, FormControl, InputLabel } from '@mui/material';
+import { IconButton, Menu, Dialog } from '@mui/material';
 
 const initialRecords = [
   { id: 1, roomNo: '101', floor: '1', guestName: 'John Doe', cleaningStatus: 'Scheduled', scheduledDate: '08-07-2024', scheduledTime: '09:00', assignedStaff: 'Alice Smith', completionTime: '', notes: 'No special instructions.', priority: 'Standard', cleaningType: 'Full Clean', lastCleanedDate: '08/06/2024', frequency: 'Daily' },
@@ -346,7 +344,6 @@ export default function RoomsAndCleaning() {
                 {visibleColumns['Floor'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Floor</th>}
                 {visibleColumns['Guest Name'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Guest Name</th>}
                 {visibleColumns['Cleaning Status'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Cleaning Status</th>}
-                {visibleColumns['Date'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Date</th>}
                 {visibleColumns['Assigned Staff'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Assigned Staff</th>}
                 {visibleColumns['Completion Time'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Completion Time</th>}
                 {visibleColumns['Notes'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Notes</th>}
@@ -377,13 +374,7 @@ export default function RoomsAndCleaning() {
                     </td>
                   )}
                   
-                  {visibleColumns['Date'] && (
-  <td className="py-3 px-1 text-[11px] text-gray-600">
-    <div className="flex items-center gap-1.5 whitespace-nowrap">
-      <span>{record.scheduledDate} <span className="text-gray-400 mx-1"><br /></span> {record.scheduledTime}</span>
-    </div>
-  </td>
-)}
+                 
                   {visibleColumns['Assigned Staff'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.assignedStaff}</td>}
                   {visibleColumns['Completion Time'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.completionTime}</td>}
                   {visibleColumns['Notes'] && <td className="py-3 px-1 text-[11px] text-gray-500 truncate max-w-[80px]" title={record.notes}>{record.notes}</td>}
