@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import Close from '@mui/icons-material/Close';
 import Restaurant from '@mui/icons-material/Restaurant';
+import Close from '@mui/icons-material/Close';
+import { useState, useEffect } from 'react';
 import { CATEGORIES } from '../restaurantStore';
 
 const EMPTY_FORM = {

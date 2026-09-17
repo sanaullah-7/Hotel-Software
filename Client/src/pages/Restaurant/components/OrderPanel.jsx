@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import Delete from '@mui/icons-material/Delete';
-import Print from '@mui/icons-material/Print';
 import Receipt from '@mui/icons-material/Receipt';
-import CreditCard from '@mui/icons-material/CreditCard';
+import Delete from '@mui/icons-material/Delete';
 import AttachMoney from '@mui/icons-material/AttachMoney';
+import CreditCard from '@mui/icons-material/CreditCard';
+import Print from '@mui/icons-material/Print';
+import React, { useState } from 'react';
 import { placeOrder } from '../restaurantStore';
 
 const TAX_RATE = 0.0525;

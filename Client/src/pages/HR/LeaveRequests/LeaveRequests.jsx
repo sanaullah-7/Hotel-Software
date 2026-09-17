@@ -1,3 +1,17 @@
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import SearchIcon from '@mui/icons-material/Search';
+import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import AddIcon from '@mui/icons-material/Add';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import TableChartIcon from '@mui/icons-material/TableChart';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import EditIcon from '@mui/icons-material/Edit';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -16,20 +30,6 @@ import {
 } from '@mui/material';
 
 // Icons
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
-import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import AddIcon from '@mui/icons-material/Add';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import TableChartIcon from '@mui/icons-material/TableChart';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import EditIcon from '@mui/icons-material/Edit';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
-import CloseIcon from '@mui/icons-material/Close';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 // Rich mock data matching Luxuria template
 const initialLeaveRequests = [

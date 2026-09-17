@@ -5,7 +5,6 @@ import Receipt from '@mui/icons-material/Receipt';
 import { getOrders, subscribeOrders } from './restaurantStore';
 import MenuTab from './tabs/MenuTab';
 import OrdersTab from './tabs/OrdersTab';
-
 const SUB_TABS = [
   { key: 'menu',   label: 'Menu',   path: '/restaurant/menu',   Icon: RestaurantMenu },
   { key: 'orders', label: 'Orders', path: '/restaurant/orders', Icon: Receipt        },

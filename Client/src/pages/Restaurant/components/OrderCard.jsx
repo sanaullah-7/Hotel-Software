@@ -1,8 +1,7 @@
-import React from 'react';
-import AccessTime from '@mui/icons-material/AccessTime';
-import TableRestaurant from '@mui/icons-material/TableRestaurant';
-import CreditCard from '@mui/icons-material/CreditCard';
+import Bed from '@mui/icons-material/Bed';
 import AttachMoney from '@mui/icons-material/AttachMoney';
+import CreditCard from '@mui/icons-material/CreditCard';
+import React from 'react';
 
 /**
  * Returns badge styles based on order status.

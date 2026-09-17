@@ -4,12 +4,6 @@ import {
   ArrowBack, Description, CheckCircle, RestartAlt, 
   Person, CalendarToday 
 } from '@mui/icons-material';
-import ArrowBack from '@mui/icons-material/ArrowBack';
-import Description from '@mui/icons-material/Description';
-import CheckCircle from '@mui/icons-material/CheckCircle';
-import RestartAlt from '@mui/icons-material/RestartAlt';
-import Person from '@mui/icons-material/Person';
-import CalendarToday from '@mui/icons-material/CalendarToday';
 import { 
   TextField, 
   Select, 

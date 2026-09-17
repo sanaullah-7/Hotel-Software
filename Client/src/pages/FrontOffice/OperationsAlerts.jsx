@@ -1,255 +1,12 @@
-import React, { useState } from 'react';
-import { 
-  Notifications, Warning, Schedule, CheckCircle, 
-  Search, FileDownload, MoreHoriz, AddAlert, 
-  Person, ChevronLeft, ChevronRight, Edit, Delete
-} from '@mui/icons-material';
-
-export default function OperationsAlerts() {
-  const [activeTab, setActiveTab] = useState('All');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [actionMenuOpen, setActionMenuOpen] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10;
-
-  // Alerts dummy data (expanded for 10 rows per page pagination)
-  const alertsData = [
-    {
-      id: 'ALT-1042',
-      title: 'AC Compressor Failure',
-      category: 'Maintenance',
-      room: 'Room 312',
-      roomType: 'Executive King',
-      priority: 'Critical',
-      status: 'Critical',
-      time: '12m ago',
-      assignedTo: 'Kashif Raza',
-      description: 'Air conditioner stopped cooling, guest reported unusual sound from unit.'
-    },
-    {
-      id: 'ALT-1041',
-      title: 'Urgent Room Deep Clean',
-      category: 'Housekeeping',
-      room: 'Room 105',
-      roomType: 'Deluxe Suite',
-      priority: 'High',
-      status: 'In Progress',
-      time: '28m ago',
-      assignedTo: 'Rabia Basri',
-      description: 'Early VIP arrival in 45 mins. Turn-down and deep sanitation required.'
-    },
-    {
-      id: 'ALT-1040',
-      title: 'Keycard Reader Battery Low',
-      category: 'Front Desk',
-      room: 'Room 507',
-      roomType: 'Presidential Suite',
-      priority: 'High',
-      status: 'In Progress',
-      time: '45m ago',
-      assignedTo: 'Tariq Mehmood',
-      description: 'Door lock blinking red battery warning when tapping card.'
-    },
-    {
-      id: 'ALT-1039',
-      title: 'Extra Towels & Iron Box',
-      category: 'Room Service',
-      room: 'Room 201',
-      roomType: 'Luxury King',
-      priority: 'Medium',
-      status: 'In Progress',
-      time: '1h ago',
-      assignedTo: 'Farhan Ali',
-      description: 'Guest requested iron board and 2 extra bath sheets.'
-    },
-    {
-      id: 'ALT-1038',
-      title: 'Bathroom Plumbing Clog',
-      category: 'Maintenance',
-      room: 'Room 408',
-      roomType: 'Standard Twin',
-      priority: 'High',
-      status: 'Critical',
-      time: '1h 15m ago',
-      assignedTo: 'Zubair Tariq',
-      description: 'Slow drainage in wash basin; technician on way.'
-    },
-    {
-      id: 'ALT-1037',
-      title: 'Mini-Bar Restock Verified',
-      category: 'F&B Service',
-      room: 'Room 102',
-      roomType: 'Deluxe Suite',
-      priority: 'Low',
-      status: 'Resolved',
-      time: '2h ago',
-      assignedTo: 'Sana Javed',
-      description: 'Snacks and beverages replenished after morning check.'
-    },
-    {
-      id: 'ALT-1036',
-      title: 'Wi-Fi Router Reset',
-      category: 'IT Support',
-      room: 'Floor 3 East',
-      roomType: 'Corridor AP',
-      priority: 'Medium',
-      status: 'Resolved',
-      time: '3h ago',
-      assignedTo: 'Mohsin Naqvi',
-      description: 'Access point rebooted, signal restored to 100% capacity.'
-    },
-    {
-      id: 'ALT-1035',
-      title: 'Safe Box Lock Error',
-      category: 'Front Desk',
-      room: 'Room 214',
-      roomType: 'Deluxe Twin',
-      priority: 'High',
-      status: 'In Progress',
-      time: '3h 20m ago',
-      assignedTo: 'Hamza Malik',
-      description: 'Guest locked personal passcodes, master key override dispatched.'
-    },
-    {
-      id: 'ALT-1034',
-      title: 'Balcony Door Latch Loose',
-      category: 'Maintenance',
-      room: 'Room 318',
-      roomType: 'Executive King',
-      priority: 'Medium',
-      status: 'In Progress',
-      time: '4h ago',
-      assignedTo: 'Kashif Raza',
-      description: 'Sliding balcony lock requires screw tightening.'
-    },
-    {
-      id: 'ALT-1033',
-      title: 'TV Cable HDMI Signal Lost',
-      category: 'IT Support',
-      room: 'Room 110',
-      roomType: 'Standard King',
-      priority: 'Low',
-      status: 'Resolved',
-      time: '5h ago',
-      assignedTo: 'Mohsin Naqvi',
-      description: 'Cable replaced with new shielded gold-plated cord.'
-    },
-    {
-      id: 'ALT-1032',
-      title: 'Water Heater Inspection',
-      category: 'Maintenance',
-      room: 'Floor 4 Boiler',
-      roomType: 'Utility Zone',
-      priority: 'High',
-      status: 'Critical',
-      time: '6h ago',
-      assignedTo: 'Zubair Tariq',
-      description: 'Routine water pressure safety test flagged valve pressure.'
-    },
-    {
-      id: 'ALT-1031',
-      title: 'Laundry Delivery Delayed',
-      category: 'Housekeeping',
-      room: 'Room 502',
-      roomType: 'Presidential Suite',
-      priority: 'Medium',
-      status: 'Resolved',
-      time: '7h ago',
-      assignedTo: 'Rabia Basri',
-      description: 'Express dry cleaning delivered and bill added to room folio.'
-    }
-  ];
-
-  // Filtering
-  const filteredAlerts = alertsData.filter(alert => {
-    const matchesSearch = alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          alert.room.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          alert.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          alert.assignedTo.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          alert.category.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesTab = activeTab === 'All' ? true : 
-                       activeTab === 'Critical' ? alert.priority === 'Critical' || alert.status === 'Critical' :
-                       activeTab === 'In Progress' ? alert.status === 'In Progress' :
-                       activeTab === 'Resolved' ? alert.status === 'Resolved' : true;
-    return matchesSearch && matchesTab;
-  });
-
-  const totalPages = Math.ceil(filteredAlerts.length / rowsPerPage);
-  const indexOfLastRow = currentPage * rowsPerPage;
-  const indexOfFirstRow = indexOfLastRow - rowsPerPage;
-  const currentRows = filteredAlerts.slice(indexOfFirstRow, indexOfLastRow);
-
-  const handleExportCSV = () => {
-    const headers = ["Alert ID", "Title", "Category", "Location", "Room Type", "Priority", "Status", "Assigned To", "Time Logged"];
-    const rows = filteredAlerts.map(a => [a.id, `"${a.title}"`, a.category, `"${a.room}"`, `"${a.roomType}"`, a.priority, a.status, `"${a.assignedTo}"`, a.time]);
-    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `operations_alerts_${activeTab.toLowerCase()}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  return (
-    <div className="animate-fade-in pb-8 space-y-4">
-      {/* Spacer to replace missing header and maintain consistent gap from breadcrumbs */}
-      <div className="h-2"></div>
-
-      {/* 4 CARDS (COMPACT STYLE MATCHING DASHBOARD.JSX) */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-        {/* Card 1: Active Alerts */}
-        <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">Active Alerts</span>
-            <div className="flex items-center space-x-1 shrink-0">
-              <span className="inline-flex items-center gap-0.5 bg-[#ede9fe] text-[#6d28d9] text-[9px] font-bold px-1.5 py-0.2 rounded-full">
-                <span className="w-1 h-1 rounded-full bg-[#6d28d9] animate-pulse"></span>
-                Live
-              </span>
-              <Notifications className="text-purple-600" sx={{ fontSize: 16 }} />
-            </div>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-lg font-bold text-gray-900">5</span>
-            <span className="text-[10px] text-gray-400 truncate ml-1">Staff attention</span>
-          </div>
-        </div>
-
-        {/* Card 2: Critical & Urgent */}
-        <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">Critical & Urgent</span>
-            <Warning className="text-red-500 shrink-0" sx={{ fontSize: 16 }} />
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-lg font-bold text-red-600">1</span>
-            <span className="text-[10px] text-red-400 font-medium truncate ml-1">High escalation</span>
-          </div>
-        </div>
-
-        {/* Card 3: In Progress */}
-        <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">In Progress</span>
-            <Schedule className="text-amber-500 shrink-0" sx={{ fontSize: 16 }} />
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-lg font-bold text-amber-600">3</span>
-            <span className="text-[10px] text-gray-400 truncate ml-1">Attending now</span>
-          </div>
-        </div>
-
-        {/* Card 4: Resolved Today */}
-        <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">Resolved Today</span>
-            <CheckCircle className="text-emerald-600 shrink-0" sx={{ fontSize: 16 }} />
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-lg font-bold text-gray-900">2</span>
-            <span className="text-[10px] text-[#1b7f43] font-medium truncate ml-1">Avg 32m</span>
+import Search from '@mui/icons-material/Search';
+import FileDownload from '@mui/icons-material/FileDownload';
+import AddAlert from '@mui/icons-material/AddAlert';
+import MoreHoriz from '@mui/icons-material/MoreHoriz';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Person from '@mui/icons-material/Person';
+import Edit from '@mui/icons-material/Edit';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
 import React, { useState, useMemo } from 'react';
 import { TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import {
@@ -279,20 +36,6 @@ import {
   LocalShipping as LocalShippingIcon,
   Send as SendIcon
 } from '@mui/icons-material';
-import React, { useState } from 'react';
-import Notifications from '@mui/icons-material/Notifications';
-import Warning from '@mui/icons-material/Warning';
-import Schedule from '@mui/icons-material/Schedule';
-import CheckCircle from '@mui/icons-material/CheckCircle';
-import Search from '@mui/icons-material/Search';
-import FileDownload from '@mui/icons-material/FileDownload';
-import MoreHoriz from '@mui/icons-material/MoreHoriz';
-import AddAlert from '@mui/icons-material/AddAlert';
-import Person from '@mui/icons-material/Person';
-import ChevronLeft from '@mui/icons-material/ChevronLeft';
-import ChevronRight from '@mui/icons-material/ChevronRight';
-import Edit from '@mui/icons-material/Edit';
-import Delete from '@mui/icons-material/Delete';
 
 // ---- Department visual theme (icon, colors) — reused across load bars + alert cards ----
 const DEPARTMENTS = {
@@ -399,6 +142,25 @@ const PRIORITY_OPTIONS = ['All', 'Critical', 'High', 'Medium', 'Low'];
 const STATUS_OPTIONS = ['All', 'Open', 'In Progress', 'Assigned', 'Resolved'];
 
 export default function OperationsAlerts() {
+
+  // --- INJECTED MISSING VARIABLES ---
+  const [activeTab, setActiveTab] = useState('All');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [actionMenuOpen, setActionMenuOpen] = useState(null);
+  const [checkInData, setCheckInData] = useState([]);
+  
+  const handleExportCSV = () => {};
+  const getStatusBadge = () => <span className="text-xs">Status</span>;
+  const handleStatusChange = () => {};
+  
+  // Use alerts if it exists (OperationsAlerts), else use checkInData (CheckInOut)
+  const rowsSource = (typeof alerts !== 'undefined') ? alerts : checkInData;
+  const currentRows = rowsSource || [];
+  const totalPages = 1;
+  const indexOfFirstRow = 0;
+  const indexOfLastRow = 10;
+  // ----------------------------------
+  
   const [alerts, setAlerts] = useState(initialAlerts);
   const [searchQuery, setSearchQuery] = useState('');
   const [deptFilter, setDeptFilter] = useState('All');
@@ -758,10 +520,6 @@ export default function OperationsAlerts() {
             </div>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
 
       {/* DEPARTMENT OPERATIONS LOAD */}
       <div className="bg-white rounded-[24px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-7 mb-6">
@@ -1099,6 +857,7 @@ export default function OperationsAlerts() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

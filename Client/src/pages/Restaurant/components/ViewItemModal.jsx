@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import Close from '@mui/icons-material/Close';
 import Edit from '@mui/icons-material/Edit';
+import Close from '@mui/icons-material/Close';
 import FormatListBulleted from '@mui/icons-material/FormatListBulleted';
-import AttachMoney from '@mui/icons-material/AttachMoney';
 import CalendarToday from '@mui/icons-material/CalendarToday';
 import LabelImportant from '@mui/icons-material/LabelImportant';
+import React, { useState, useEffect } from 'react';
 import { CATEGORIES } from '../restaurantStore';
 
 export default function ViewItemModal({ isOpen, onClose, onEdit, item }) {

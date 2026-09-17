@@ -28,24 +28,7 @@ import {
   InputLabel,
   Button
 } from '@mui/material';
-import React, { useState } from 'react';
-import BedIcon from '@mui/icons-material/Bed';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import PersonIcon from '@mui/icons-material/Person';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import SearchIcon from '@mui/icons-material/Search';
-import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
-import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import WifiIcon from '@mui/icons-material/Wifi';
-import AcUnitIcon from '@mui/icons-material/AcUnit';
-import LocalBarIcon from '@mui/icons-material/LocalBar';
-import EventIcon from '@mui/icons-material/Event';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import BuildIcon from '@mui/icons-material/Build';
-import EventBusyIcon from '@mui/icons-material/EventBusy';
-import { TextField, MenuItem, Button, InputAdornment } from '@mui/material';
+
 import CreateGuestModal from './CreateGuestModal';
 import GuestDetailsModal from './GuestDetailsModal';
 
@@ -58,72 +41,7 @@ const initialRooms = [
   { number: 106, type: 'Suite', floor: 1, status: 'BOOKED', statusColor: '#f59e0b', bed: 'Queen Bed', adults: 2, children: 2, maxOccupancy: 4, price: 420, housekeeping: 'Clean', housekeepingColor: '#1b7f43', amenities: ['wifi', 'ac', 'bar'], guest: { name: 'Emily Brown', vip: false, id: 'EM456BR789', checkIn: null, checkOut: null } },
 ];
 
-const statusIcon = { OCCUPIED: <PersonIcon sx={{ fontSize: 13 }} />, AVAILABLE: <CheckCircleIcon sx={{ fontSize: 13 }} />, CLEANING: <CleaningServicesIcon sx={{ fontSize: 13 }} />, RESERVED: <Event sx={{ fontSize: 13 }} />, MAINTENANCE: <BuildIcon sx={{ fontSize: 13 }} />, BOOKED: <EventBusyIcon sx={{ fontSize: 13 }} /> };
 
-export default function Occupancy() {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState(null);
-
-  const openModal = (room) => { setSelectedRoom(room); setModalOpen(true); };
-  const closeModal = () => { setModalOpen(false); setSelectedRoom(null); };
-
-  return (
-    <div className="animate-fade-in pb-8 space-y-4">
-      {/* HEADER SECTION */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 pt-2">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900">Occupancy</h1>
-        </div>
-      </div>
-
-      {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#eef0ff] text-[#5c67f2] mr-4 shrink-0"><BedIcon /></div>
-          <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">20</div><div className="text-[13px] text-gray-500 font-medium">Total Rooms</div></div>
-        </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#eaf7ee] text-[#1b7f43] mr-4 shrink-0"><CheckCircleIcon /></div>
-          <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">10</div><div className="text-[13px] text-gray-500 font-medium">Available</div></div>
-        </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#fce8e8] text-[#e53935] mr-4 shrink-0"><PersonIcon /></div>
-          <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">7</div><div className="text-[13px] text-gray-500 font-medium">Occupied</div></div>
-        </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#eaf3fd] text-[#1976d2] mr-4 shrink-0"><BarChartIcon /></div>
-          <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">35%</div><div className="text-[13px] text-gray-500 font-medium">Occupancy Rate</div></div>
-        </div>
-      </div>
-
-      {/* SEARCH AND FILTERS ROW */}
-      <div className="flex flex-wrap xl:flex-nowrap gap-2 mt-6 items-center w-full">
-        <TextField
-          variant="outlined" size="small" placeholder="Search..."
-          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: 'text.secondary', ml: -0.5, mr: 0.5 }} /></InputAdornment> }}
-          sx={{ minWidth: 160, flexGrow: 1, '& .MuiInputBase-root': { height: '32px', backgroundColor: 'white', fontSize: '12px' }, '& .MuiOutlinedInput-input': { padding: '0 8px' } }}
-        />
-        {[
-          { label: 'Status', minWidth: 90, items: ['All Status'] },
-          { label: 'Room Type', minWidth: 100, items: ['All Types'] },
-          { label: 'Floor', minWidth: 90, items: ['All Floors'] },
-          { label: 'Bed Size', minWidth: 105, items: ['All Beds'] },
-          { label: 'Housekeeping', minWidth: 115, items: ['All Status'] },
-        ].map(f => (
-          <TextField key={f.label} select size="small" label={f.label} defaultValue="all"
-            sx={{ minWidth: f.minWidth, '& .MuiInputBase-root': { height: '32px', backgroundColor: 'white', fontSize: '12px' }, '& .MuiSelect-select': { padding: '0 24px 0 8px !important', display: 'flex', alignItems: 'center' }, '& .MuiInputLabel-root': { fontSize: '13px', top: '-5px' }, '& .MuiInputLabel-shrink': { top: '0px' } }}
-          >
-            <MenuItem value="all" sx={{ fontSize: 12 }}>{f.items[0]}</MenuItem>
-          </TextField>
-        ))}
-        <TextField type="date" size="small" label="Check-in From" InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 140, '& .MuiInputBase-root': { height: '32px', backgroundColor: 'white' }, '& .MuiOutlinedInput-input': { padding: '0px 8px', fontSize: '12px', height: '32px', boxSizing: 'border-box' }, '& .MuiInputLabel-root.MuiInputLabel-shrink': { fontSize: '11px', transform: 'translate(14px, -8px) scale(1)' } }}
-        />
-        <TextField type="date" size="small" label="Check-out To" InputLabelProps={{ shrink: true }}
-          sx={{ minWidth: 140, '& .MuiInputBase-root': { height: '32px', backgroundColor: 'white' }, '& .MuiOutlinedInput-input': { padding: '0px 8px', fontSize: '12px', height: '32px', boxSizing: 'border-box' }, '& .MuiInputLabel-root.MuiInputLabel-shrink': { fontSize: '11px', transform: 'translate(14px, -8px) scale(1)' } }}
-        />
-        <Button variant="outlined" color="error" size="small" startIcon={<FilterAltOffIcon sx={{ fontSize: 16 }} />}
-          sx={{ height: '32px', textTransform: 'none', fontSize: '12px', minWidth: 75, px: 1, backgroundColor: 'white' }}
 const statusIcon = { 
   OCCUPIED: <PersonIcon sx={{ fontSize: 16 }} />, 
   AVAILABLE: <CheckCircleIcon sx={{ fontSize: 16 }} />, 
@@ -374,7 +292,6 @@ export default function Occupancy() {
 
       {/* ROOM CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-        {rooms.map(room => (
         {filteredRooms.map(room => (
           <div key={room.number} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col">
             {/* Card Header */}
@@ -437,7 +354,6 @@ export default function Occupancy() {
             <div className="mt-auto">
               {room.guest ? (
                 <button
-                  onClick={() => openModal(room)}
                   onClick={() => openDetailsModal(room)}
                   className="w-full flex items-center justify-center gap-2 text-white text-[13px] font-semibold py-2.5 rounded-lg transition-all"
                   style={{ backgroundColor: '#1b5e20', background: 'linear-gradient(135deg, #2e7d32, #1b5e20)' }}
@@ -458,11 +374,7 @@ export default function Occupancy() {
         ))}
       </div>
 
-      {/* CREATE GUEST MODAL */}
-      <CreateGuestModal open={modalOpen} onClose={closeModal} room={selectedRoom} />
-    </div>
-  );
-}
+
       {/* MODALS */}
       <CreateGuestModal open={modalOpen} onClose={closeModal} onSave={handleSaveGuest} room={selectedRoom} />
       <GuestDetailsModal open={detailsModalOpen} onClose={closeDetailsModal} onEdit={handleEditGuest} room={selectedRoom} />

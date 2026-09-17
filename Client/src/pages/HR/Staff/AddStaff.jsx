@@ -1,3 +1,32 @@
+import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
+import TagIcon from '@mui/icons-material/Tag';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
+import WcIcon from '@mui/icons-material/Wc';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import PublicIcon from '@mui/icons-material/Public';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import TranslateIcon from '@mui/icons-material/Translate';
+import WorkHistoryOutlinedIcon from '@mui/icons-material/WorkHistoryOutlined';
+import BusinessIcon from '@mui/icons-material/Business';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
+import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccountOutlined';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import SmartphoneOutlinedIcon from '@mui/icons-material/SmartphoneOutlined';
+import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
+import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
+import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import ContactPhoneOutlinedIcon from '@mui/icons-material/ContactPhoneOutlined';
+import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
+import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import CloseIcon from '@mui/icons-material/Close';
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -11,35 +40,6 @@ import {
 } from '@mui/material';
 
 // Material Icons matching Luxuria Design
-import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
-import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
-import TagIcon from '@mui/icons-material/Tag';
-import WcIcon from '@mui/icons-material/Wc';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import PublicIcon from '@mui/icons-material/Public';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import TranslateIcon from '@mui/icons-material/Translate';
-import WorkHistoryOutlinedIcon from '@mui/icons-material/WorkHistoryOutlined';
-import BusinessIcon from '@mui/icons-material/Business';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
-import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccountOutlined';
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
-import SmartphoneOutlinedIcon from '@mui/icons-material/SmartphoneOutlined';
-import MailOutlinedIcon from '@mui/icons-material/MailOutlined';
-import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import SchoolOutlinedIcon from '@mui/icons-material/SchoolOutlined';
-import ContactPhoneOutlinedIcon from '@mui/icons-material/ContactPhoneOutlined';
-import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
-import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
-import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
-import CloseIcon from '@mui/icons-material/Close';
-import AutorenewIcon from '@mui/icons-material/Autorenew';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
-import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
 
 // Section Header with pastel icon badge - Compact padding
 const SectionHeader = ({ icon: Icon, title, badgeBg = '#eef2ff', iconColor = '#5d5fef' }) => (
