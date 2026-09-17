@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ArrowBack, Save, UploadFile, CalendarMonth, AccessTime,
-  Person, Hotel, CreditCard, NoteAlt
-} from '@mui/icons-material';
+import ArrowBack from '@mui/icons-material/ArrowBack';
+import Save from '@mui/icons-material/Save';
+import UploadFile from '@mui/icons-material/UploadFile';
+import CalendarMonth from '@mui/icons-material/CalendarMonth';
+import AccessTime from '@mui/icons-material/AccessTime';
+import Person from '@mui/icons-material/Person';
+import Hotel from '@mui/icons-material/Hotel';
+import CreditCard from '@mui/icons-material/CreditCard';
+import NoteAlt from '@mui/icons-material/NoteAlt';
 import {
   TextField, MenuItem, FormControl, InputLabel, Select
 } from '@mui/material';
