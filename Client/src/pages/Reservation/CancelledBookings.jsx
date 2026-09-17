@@ -250,10 +250,10 @@ export default function CancelledBookings() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col p-6 min-h-screen">
+    <div className="w-full h-full flex flex-col pt-1 min-h-screen">
       
       {/* Top Header */}
-      <div className="bg-white rounded-t-xl p-4 flex items-center justify-between border-b border-gray-100">
+      <div className="bg-white rounded-[6px] p-2 flex items-center justify-between border-b border-gray-100">
         <div className="flex items-center gap-4">
           <h1 className="text-[16px] font-bold text-gray-700 whitespace-nowrap">Cancelled Bookings</h1>
           <div className="relative">
@@ -310,41 +310,41 @@ export default function CancelledBookings() {
       {/* Table Section */}
       <div className="bg-white rounded-b-xl shadow-sm border border-gray-100 flex-1 overflow-hidden flex flex-col">
         <div className="flex-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <table className="w-full text-left whitespace-nowrap min-w-max">
+          <table className="w-full text-left whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-100 bg-white">
-                {visibleColumns['First Name'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">First Name</th>}
-                {visibleColumns['Package'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Package</th>}
-                {visibleColumns['Room Type'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Room Type</th>}
-                {visibleColumns['Status'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Status</th>}
-                {visibleColumns['Check In'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Check In</th>}
-                {visibleColumns['Payment'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Payment</th>}
-                {visibleColumns['Cancellation Date'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Cancellation Date</th>}
-                {visibleColumns['Refund Status'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Refund Status</th>}
-                {visibleColumns['Cancellation Fee'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Cancellation Fee</th>}
-                {visibleColumns['Actions'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Actions</th>}
+                {visibleColumns['First Name'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">First Name</th>}
+                {visibleColumns['Package'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Package</th>}
+                {visibleColumns['Room Type'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Room Type</th>}
+                {visibleColumns['Status'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Status</th>}
+                {visibleColumns['Check In'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Check In</th>}
+                {visibleColumns['Payment'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Payment</th>}
+                {visibleColumns['Cancellation Date'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Cancellation Date</th>}
+                {visibleColumns['Refund Status'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Refund Status</th>}
+                {visibleColumns['Cancellation Fee'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Cancellation Fee</th>}
+                {visibleColumns['Actions'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {filteredBookings.map((booking) => (
                 <tr key={booking.id} onClick={() => openViewModal(booking)} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer">
                   {visibleColumns['First Name'] && (
-                    <td className="py-3 px-6 flex items-center gap-3">
+                    <td className="py-3 px-2 flex items-center gap-3">
                       <img src={booking.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover shadow-sm" />
                       <span className="text-[13px] text-gray-700 font-medium">{booking.firstName} {booking.lastName}</span>
                     </td>
                   )}
-                  {visibleColumns['Package'] && <td className="py-3 px-6 text-[13px] text-gray-600">{booking.package}</td>}
-                  {visibleColumns['Room Type'] && <td className="py-3 px-6 text-[13px] text-gray-600">{booking.roomType}</td>}
+                  {visibleColumns['Package'] && <td className="py-3 px-2 text-[13px] text-gray-600">{booking.package}</td>}
+                  {visibleColumns['Room Type'] && <td className="py-3 px-2 text-[13px] text-gray-600">{booking.roomType}</td>}
                   {visibleColumns['Status'] && (
-                    <td className="py-3 px-6">
+                    <td className="py-3 px-2">
                       <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${statusStyles[booking.status]}`}>
                         {booking.status}
                       </span>
                     </td>
                   )}
                   {visibleColumns['Check In'] && (
-                    <td className="py-3 px-6 text-[13px] text-gray-600">
+                    <td className="py-3 px-2 text-[13px] text-gray-600">
                       <div className="flex items-center gap-1.5">
                         <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
                         {booking.checkIn}
@@ -352,12 +352,12 @@ export default function CancelledBookings() {
                     </td>
                   )}
                   {visibleColumns['Payment'] && (
-                    <td className="py-3 px-6 text-[13px] text-gray-600 font-medium">
+                    <td className="py-3 px-2 text-[13px] text-gray-600 font-medium">
                       {booking.payment}
                     </td>
                   )}
                   {visibleColumns['Cancellation Date'] && (
-                    <td className="py-3 px-6 text-[13px] text-gray-600">
+                    <td className="py-3 px-2 text-[13px] text-gray-600">
                       <div className="flex items-center gap-1.5">
                         <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
                         {booking.cancellationDate}
@@ -365,15 +365,15 @@ export default function CancelledBookings() {
                     </td>
                   )}
                   {visibleColumns['Refund Status'] && (
-                    <td className="py-3 px-6">
+                    <td className="py-3 px-2">
                       <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${refundStyles[booking.refundStatus]}`}>
                         {booking.refundStatus}
                       </span>
                     </td>
                   )}
-                  {visibleColumns['Cancellation Fee'] && <td className="py-3 px-6 text-[13px] text-gray-600">{booking.cancellationFee}</td>}
+                  {visibleColumns['Cancellation Fee'] && <td className="py-3 px-2 text-[13px] text-gray-600">{booking.cancellationFee}</td>}
                   {visibleColumns['Actions'] && (
-                    <td className="py-3 px-6 relative">
+                    <td className="py-3 px-2 relative">
                       <div className="flex items-center gap-3">
                         <button onClick={(e) => { e.stopPropagation(); openEditModal(booking); }} className="text-[var(--primary-main)] hover:text-green-700 transition-colors" title="Edit">
                           <EditOutlined sx={{ fontSize: 18 }} />
@@ -398,7 +398,7 @@ export default function CancelledBookings() {
         </div>
         
         {/* Pagination placeholder */}
-        <div className="flex items-center justify-end px-6 py-4 border-t border-gray-100 bg-white gap-4">
+        <div className="flex items-center justify-end px-2 py-4 border-t border-gray-100 bg-white gap-4">
           <div className="flex items-center gap-2">
             <span className="text-[12px] text-gray-500">Items per page:</span>
             <select className="border border-gray-200 rounded px-2 py-1 text-[12px] text-gray-700 outline-none">
@@ -498,10 +498,10 @@ export default function CancelledBookings() {
               </div>
               
               <div className="flex items-center gap-3 mt-8">
-                <button type="submit" disabled={!form.firstName || !form.lastName || !form.email || !form.mobile} className="px-6 py-2 rounded-full bg-green-50 text-[var(--primary-main)] border border-green-200 font-bold text-[13.5px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                <button type="submit" disabled={!form.firstName || !form.lastName || !form.email || !form.mobile} className="px-2 py-2 rounded-full bg-green-50 text-[var(--primary-main)] border border-green-200 font-bold text-[13.5px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
                   Save
                 </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13.5px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-2 py-2 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13.5px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
                   Cancel
                 </button>
               </div>
@@ -522,10 +522,10 @@ export default function CancelledBookings() {
             </div>
             
             <div className="flex justify-center gap-3">
-              <button onClick={handleDelete} className="px-6 py-2.5 rounded-full bg-[#c0392b] text-white font-bold text-sm hover:bg-[#a93226] transition-colors cursor-pointer">
+              <button onClick={handleDelete} className="px-2 py-2.5 rounded-full bg-[#c0392b] text-white font-bold text-sm hover:bg-[#a93226] transition-colors cursor-pointer">
                 Delete
               </button>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-6 py-2.5 rounded-full bg-[#1b7f43] text-white font-bold text-sm hover:bg-[#156736] transition-colors cursor-pointer">
+              <button onClick={() => setIsDeleteModalOpen(false)} className="px-2 py-2.5 rounded-full bg-[#1b7f43] text-white font-bold text-sm hover:bg-[#156736] transition-colors cursor-pointer">
                 Cancel
               </button>
             </div>
@@ -538,7 +538,7 @@ export default function CancelledBookings() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsViewModalOpen(false)}>
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-[800px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Header */}
-            <div className="bg-[var(--primary-main)] px-6 py-5 flex items-center justify-between">
+            <div className="bg-[var(--primary-main)] px-2 py-5 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <img src={viewingBooking.avatar} alt="avatar" className="w-12 h-12 rounded-full border-2 border-white object-cover" />
                 <div className="flex flex-col">

@@ -1,11 +1,7 @@
 import React, { useState } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { 
-  FilterList, Add, Refresh, Calculate, PictureAsPdf,
-  EditOutlined, DeleteOutlined, Close, Search, KeyboardArrowLeft, KeyboardArrowRight,
-  Settings, CloudUploadOutlined
-} from '@mui/icons-material';
+import { FilterList, Add, Refresh, Calculate, PictureAsPdf, EditOutlined, DeleteOutlined, Close, Search, KeyboardArrowLeft, KeyboardArrowRight, CloudUploadOutlined, AddCircle, TableChart, ViewWeek, AddCircleOutlined } from '@mui/icons-material';;;;
 import { 
   TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment,
   Checkbox, Menu 
@@ -165,12 +161,12 @@ export default function RoomTypes() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-transparent p-6 flex flex-col">
+    <div className="w-full bg-transparent pt-1 flex flex-col">
       
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col overflow-hidden">
+      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 flex-1 flex flex-col overflow-hidden">
         
         {/* Header Bar */}
-        <div className="px-5 py-4 flex items-center justify-between border-b border-gray-100">
+        <div className="p-2 flex items-center justify-between border-b border-gray-100">
           <div className="flex items-center gap-4">
             <h2 className="text-[16px] font-bold text-gray-700">Room Types</h2>
             <div className="relative">
@@ -185,22 +181,43 @@ export default function RoomTypes() {
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={(e) => setColumnsMenuAnchor(e.currentTarget)} 
-              className="text-[#3b82f6] hover:bg-blue-50 p-1.5 rounded-full transition-colors cursor-pointer"
-            >
-              <FilterList sx={{ fontSize: 22 }} />
-            </button>
-            <button onClick={handleOpenAdd} className="text-[#10b981] hover:bg-green-50 p-1.5 rounded-full transition-colors cursor-pointer border border-[#10b981]">
-              <Add sx={{ fontSize: 18 }} />
-            </button>
-            <button onClick={() => setRooms(initialRoomTypes)} className="text-[#64748b] hover:bg-slate-50 p-1.5 rounded-full transition-colors cursor-pointer">
-              <Refresh sx={{ fontSize: 22 }} />
-            </button>
-            <button onClick={handleExportCSV} className="text-[#3b82f6] hover:bg-blue-50 p-1.5 rounded-full transition-colors cursor-pointer" title="Export CSV"><Calculate sx={{ fontSize: 22 }} /></button>
-            <button onClick={handleExportPDF} className="text-[#ef4444] hover:bg-red-50 p-1.5 rounded-full transition-colors cursor-pointer" title="Export PDF"><PictureAsPdf sx={{ fontSize: 22 }} /></button>
-          </div>
+          <div className="flex items-center gap-2">
+              <button 
+                onClick={(e) => setColumnsMenuAnchor(e.currentTarget)} 
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
+                title="Filter"
+              >
+                <FilterList sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+              </button>
+              <button 
+                onClick={handleOpenAdd}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
+                title="Add"
+              >
+                <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#1b7f43]" />
+              </button>
+              <button 
+                onClick={() => setRooms(initialRoomTypes)}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
+                title="Refresh"
+              >
+                <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+              </button>
+              <button 
+                onClick={handleExportCSV} 
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+                title="Export CSV"
+              >
+                <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
+              </button>
+              <button 
+                onClick={handleExportPDF} 
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" 
+                title="Export PDF"
+              >
+                <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
+              </button>
+            </div>
         </div>
 
         {/* Column Visibility Menu */}
@@ -339,13 +356,6 @@ export default function RoomTypes() {
         </div>
       </div>
 
-      {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6">
-        <button className="w-12 h-12 bg-[#86efac] text-[#16a34a] rounded-full flex items-center justify-center shadow-lg hover:brightness-95 transition-all cursor-pointer">
-          <Settings />
-        </button>
-      </div>
-
       {/* Simple ADD Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsAddModalOpen(false)}>
@@ -395,10 +405,10 @@ export default function RoomTypes() {
               </div>
               
               <div className="flex items-center gap-3 mt-8">
-                <button type="submit" className="px-6 py-2.5 rounded-full border border-transparent bg-green-50 text-[var(--primary-main)] border-green-200 font-bold text-[13px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm">
+                <button type="submit" className="px-2 py-2.5 rounded-full border border-transparent bg-green-50 text-[var(--primary-main)] border-green-200 font-bold text-[13px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm">
                   Save
                 </button>
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-6 py-2.5 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
+                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-2 py-2.5 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
                   Cancel
                 </button>
               </div>
@@ -411,7 +421,7 @@ export default function RoomTypes() {
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsEditModalOpen(false)}>
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-[900px] h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="bg-[var(--primary-main)] px-6 py-4 flex items-center justify-between shrink-0">
+            <div className="bg-[var(--primary-main)] px-2 py-4 flex items-center justify-between shrink-0">
               <div className="flex flex-col text-white">
                 <h2 className="text-[18px] font-bold">Edit Room - #{editForm.roomNo}</h2>
                 <p className="text-white/80 text-[12.5px] mt-0.5">Update room specifications, amenities, and operational settings</p>
@@ -540,11 +550,11 @@ export default function RoomTypes() {
 
             </form>
             
-            <div className="bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-end gap-3 shrink-0">
-              <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-6 py-2.5 rounded-xl border border-transparent bg-red-50 text-red-600 font-bold text-[13.5px] hover:bg-red-100 transition-colors cursor-pointer shadow-sm">
+            <div className="bg-white border-t border-gray-200 px-2 py-4 flex items-center justify-end gap-3 shrink-0">
+              <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-2 py-2.5 rounded-xl border border-transparent bg-red-50 text-red-600 font-bold text-[13.5px] hover:bg-red-100 transition-colors cursor-pointer shadow-sm">
                 Cancel
               </button>
-              <button type="submit" className="px-6 py-2.5 rounded-xl border border-transparent bg-[var(--primary-main)] text-white font-bold text-[13.5px] hover:brightness-110 transition-all cursor-pointer shadow-sm">
+              <button type="submit" className="px-2 py-2.5 rounded-xl border border-transparent bg-[var(--primary-main)] text-white font-bold text-[13.5px] hover:brightness-110 transition-all cursor-pointer shadow-sm">
                 Update Room
               </button>
             </div>
@@ -565,10 +575,10 @@ export default function RoomTypes() {
             </div>
             
             <div className="flex justify-center gap-3">
-              <button onClick={handleDelete} className="px-6 py-2.5 rounded-full bg-[#c2410c] text-white font-bold text-[14px] hover:bg-[#9a3412] transition-colors cursor-pointer shadow-sm">
+              <button onClick={handleDelete} className="px-2 py-2.5 rounded-full bg-[#c2410c] text-white font-bold text-[14px] hover:bg-[#9a3412] transition-colors cursor-pointer shadow-sm">
                 Delete
               </button>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-6 py-2.5 rounded-full bg-[#166534] text-white font-bold text-[14px] hover:bg-[#14532d] transition-colors cursor-pointer shadow-sm">
+              <button onClick={() => setIsDeleteModalOpen(false)} className="px-2 py-2.5 rounded-full bg-[#166534] text-white font-bold text-[14px] hover:bg-[#14532d] transition-colors cursor-pointer shadow-sm">
                 Cancel
               </button>
             </div>

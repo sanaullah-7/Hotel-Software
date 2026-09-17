@@ -37,7 +37,7 @@ export default function RoomsAndCleaning() {
   // Columns Menu state
   const [visibleColumns, setVisibleColumns] = useState({
     'Room No': true, Floor: true, 'Guest Name': true,
-    'Cleaning Status': true, 'Scheduled Date': true, 'Scheduled Time': true,
+    'Cleaning Status': true, 'Date': true,
     'Assigned Staff': true, 'Completion Time': true, Notes: true,
     Priority: true, 'Cleaning Type': true, 'Last Cleaned Date': true, Frequency: true, Actions: true
   });
@@ -85,7 +85,7 @@ export default function RoomsAndCleaning() {
     
     setVisibleColumns({
       'Room No': true, Floor: true, 'Guest Name': true,
-      'Cleaning Status': true, 'Scheduled Date': true, 'Scheduled Time': true,
+      'Cleaning Status': true, 'Date': true,
       'Assigned Staff': true, 'Completion Time': true, Notes: true,
       Priority: true, 'Cleaning Type': true, 'Last Cleaned Date': true, Frequency: true, Actions: true
     });
@@ -108,8 +108,7 @@ export default function RoomsAndCleaning() {
         else if (col === 'Floor') val = r.floor;
         else if (col === 'Guest Name') val = r.guestName;
         else if (col === 'Cleaning Status') val = r.cleaningStatus;
-        else if (col === 'Scheduled Date') val = r.scheduledDate;
-        else if (col === 'Scheduled Time') val = r.scheduledTime;
+        else if (col === 'Date') val = r.scheduledDate + ' ' + r.scheduledTime;
         else if (col === 'Assigned Staff') val = r.assignedStaff;
         else if (col === 'Completion Time') val = r.completionTime;
         else if (col === 'Notes') val = r.notes;
@@ -162,8 +161,7 @@ export default function RoomsAndCleaning() {
         else if (col === 'Floor') val = r.floor;
         else if (col === 'Guest Name') val = r.guestName;
         else if (col === 'Cleaning Status') val = r.cleaningStatus;
-        else if (col === 'Scheduled Date') val = r.scheduledDate;
-        else if (col === 'Scheduled Time') val = r.scheduledTime;
+        else if (col === 'Date') val = r.scheduledDate + ' ' + r.scheduledTime;
         else if (col === 'Assigned Staff') val = r.assignedStaff;
         else if (col === 'Completion Time') val = r.completionTime;
         else if (col === 'Notes') val = r.notes;
@@ -261,10 +259,10 @@ export default function RoomsAndCleaning() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col p-6 min-h-screen">
+    <div className="w-full h-full flex flex-col pt-1 min-h-screen">
       
       {/* Top Header */}
-      <div className="bg-white rounded-t-xl p-4 flex items-center justify-between border-b border-gray-100">
+      <div className="bg-white rounded-[6px] p-2 flex items-center justify-between border-b border-gray-100">
         <div className="flex items-center gap-4">
           <h1 className="text-[16px] font-bold text-gray-700 whitespace-nowrap">Room Cleaning</h1>
           <div className="relative">
@@ -286,7 +284,7 @@ export default function RoomsAndCleaning() {
             </button>
             {showColumnsMenu && (
               <div className="absolute right-0 top-10 w-48 bg-transparent shadow-[0_4px_20px_rgba(0,0,0,0.1)] rounded-md border border-gray-100 z-50 py-2 animate-fade-in">
-                <div className="px-4 py-2 border-b border-gray-100 text-[12px] font-bold text-gray-700">Show/Hide Column</div>
+                <div className="px-4 py-2 border-b border-gray-100 text-[11px] font-bold text-gray-700">Show/Hide Column</div>
                 <div className="max-h-[250px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-[var(--primary-main)] [&::-webkit-scrollbar-thumb]:rounded-full">
                   {Object.keys(visibleColumns).map(col => (
                     <label key={col} className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer gap-3 text-[13px] text-gray-700 transition-colors">
@@ -321,24 +319,23 @@ export default function RoomsAndCleaning() {
       {/* Table Section */}
       <div className="bg-white rounded-b-xl shadow-sm border border-gray-100 flex-1 overflow-hidden flex flex-col">
         <div className="flex-1 overflow-x-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar]:h-2">
-          <table className="w-full text-left whitespace-nowrap min-w-max">
+          <table className="w-full text-left whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-100 bg-white">
                 
-                {visibleColumns['Room No'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Room No</th>}
-                {visibleColumns['Floor'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Floor</th>}
-                {visibleColumns['Guest Name'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Guest Name</th>}
-                {visibleColumns['Cleaning Status'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Cleaning Status</th>}
-                {visibleColumns['Scheduled Date'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Scheduled Date</th>}
-                {visibleColumns['Scheduled Time'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Scheduled Time</th>}
-                {visibleColumns['Assigned Staff'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Assigned Staff</th>}
-                {visibleColumns['Completion Time'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Completion Time</th>}
-                {visibleColumns['Notes'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Notes</th>}
-                {visibleColumns['Priority'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Priority</th>}
-                {visibleColumns['Cleaning Type'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Cleaning Type</th>}
-                {visibleColumns['Last Cleaned Date'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Last Cleaned Date</th>}
-                {visibleColumns['Frequency'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Frequency</th>}
-                {visibleColumns['Actions'] && <th className="py-4 px-4 text-[12px] font-bold text-gray-700">Actions</th>}
+                {visibleColumns['Room No'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Room</th>}
+                {visibleColumns['Floor'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Floor</th>}
+                {visibleColumns['Guest Name'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Guest Name</th>}
+                {visibleColumns['Cleaning Status'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Cleaning Status</th>}
+                {visibleColumns['Date'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Date</th>}
+                {visibleColumns['Assigned Staff'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Assigned Staff</th>}
+                {visibleColumns['Completion Time'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Completion Time</th>}
+                {visibleColumns['Notes'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Notes</th>}
+                {visibleColumns['Priority'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Priority</th>}
+                {visibleColumns['Cleaning Type'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Cleaning Type</th>}
+                {visibleColumns['Last Cleaned Date'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Last Cleaned Date</th>}
+                {visibleColumns['Frequency'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Frequency</th>}
+                {visibleColumns['Actions'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -349,51 +346,50 @@ export default function RoomsAndCleaning() {
                   className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer ${index % 2 !== 0 ? 'bg-gray-50/30' : ''}`}
                 >
                   
-                  {visibleColumns['Room No'] && <td className="py-3 px-4 text-[12px] text-gray-600">{record.roomNo}</td>}
-                  {visibleColumns['Floor'] && <td className="py-3 px-4 text-[12px] text-gray-600">{record.floor}</td>}
-                  {visibleColumns['Guest Name'] && <td className="py-3 px-4 text-[12px] text-gray-600">{record.guestName}</td>}
+                  {visibleColumns['Room No'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.roomNo}</td>}
+                  {visibleColumns['Floor'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.floor}</td>}
+                  {visibleColumns['Guest Name'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.guestName}</td>}
                   
                   {visibleColumns['Cleaning Status'] && (
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium ${statusStyles[record.cleaningStatus]}`}>
+                    <td className="py-3 px-1">
+                      <span className={`px-1 py-0.5 rounded-[4px] text-[11px] font-medium ${statusStyles[record.cleaningStatus]}`}>
                         {record.cleaningStatus}
                       </span>
                     </td>
                   )}
                   
-                  {visibleColumns['Scheduled Date'] && (
-                    <td className="py-3 px-4 text-[12px] text-gray-600 flex items-center gap-1.5">
-                      <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-500" />
-                      {record.scheduledDate}
-                    </td>
-                  )}
-                  {visibleColumns['Scheduled Time'] && <td className="py-3 px-4 text-[12px] text-gray-600">{record.scheduledTime}</td>}
-                  {visibleColumns['Assigned Staff'] && <td className="py-3 px-4 text-[12px] text-gray-600">{record.assignedStaff}</td>}
-                  {visibleColumns['Completion Time'] && <td className="py-3 px-4 text-[12px] text-gray-600">{record.completionTime}</td>}
-                  {visibleColumns['Notes'] && <td className="py-3 px-4 text-[12px] text-gray-500 truncate max-w-[120px]" title={record.notes}>{record.notes}</td>}
+                  {visibleColumns['Date'] && (
+  <td className="py-3 px-1 text-[11px] text-gray-600">
+    <div className="flex items-center gap-1.5 whitespace-nowrap">
+      <span>{record.scheduledDate} <span className="text-gray-400 mx-1"><br /></span> {record.scheduledTime}</span>
+    </div>
+  </td>
+)}
+                  {visibleColumns['Assigned Staff'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.assignedStaff}</td>}
+                  {visibleColumns['Completion Time'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.completionTime}</td>}
+                  {visibleColumns['Notes'] && <td className="py-3 px-1 text-[11px] text-gray-500 truncate max-w-[80px]" title={record.notes}>{record.notes}</td>}
                   
                   {visibleColumns['Priority'] && (
-                    <td className="py-3 px-4">
-                      <span className={`px-2 py-0.5 rounded-[4px] text-[11px] font-medium ${priorityStyles[record.priority]}`}>
+                    <td className="py-3 px-1">
+                      <span className={`px-1 py-0.5 rounded-[4px] text-[11px] font-medium ${priorityStyles[record.priority]}`}>
                         {record.priority}
                       </span>
                     </td>
                   )}
 
-                  {visibleColumns['Cleaning Type'] && <td className="py-3 px-4 text-[12px] text-gray-600">{record.cleaningType}</td>}
+                  {visibleColumns['Cleaning Type'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.cleaningType}</td>}
                   
                   {visibleColumns['Last Cleaned Date'] && (
-                    <td className="py-3 px-4 text-[12px] text-gray-600">
+                    <td className="py-3 px-1 text-[11px] text-gray-600">
                       <div className="flex items-center gap-1.5">
-                        <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-500" />
                         {record.lastCleanedDate}
                       </div>
                     </td>
                   )}
-                  {visibleColumns['Frequency'] && <td className="py-3 px-4 text-[12px] text-gray-600">{record.frequency}</td>}
+                  {visibleColumns['Frequency'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.frequency}</td>}
 
                   {visibleColumns['Actions'] && (
-                    <td className="py-3 px-4 relative">
+                    <td className="py-3 px-1 relative">
                       <div className="flex items-center gap-3">
                         <button onClick={(e) => { e.stopPropagation(); openEditModal(record); }} className="text-blue-400 hover:text-blue-600 transition-colors cursor-pointer" title="Edit">
                           <EditOutlined sx={{ fontSize: 16 }} />
@@ -418,17 +414,17 @@ export default function RoomsAndCleaning() {
         </div>
         
         {/* Pagination placeholder */}
-        <div className="flex items-center justify-end px-6 py-4 border-t border-gray-100 bg-white">
+        <div className="flex items-center justify-end px-1 py-4 border-t border-gray-100 bg-white">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-[12px] text-gray-500">Items per page:</span>
-              <select className="border border-gray-200 rounded px-2 py-1 text-[12px] text-gray-700 outline-none">
+              <span className="text-[11px] text-gray-500">Items per page:</span>
+              <select className="border border-gray-200 rounded px-1 py-1 text-[11px] text-gray-700 outline-none">
                 <option>10</option>
                 <option>20</option>
                 <option>50</option>
               </select>
             </div>
-            <span className="text-[12px] text-gray-500">1 - {filteredRecords.length} of 16</span>
+            <span className="text-[11px] text-gray-500">1 - {filteredRecords.length} of 16</span>
             <div className="flex items-center gap-1">
               <button className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50">&lt;</button>
               <button className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50">&gt;</button>
@@ -486,10 +482,10 @@ export default function RoomsAndCleaning() {
               </div>
               
               <div className="flex items-center gap-3 mt-8">
-                <button type="submit" className="px-6 py-2 rounded-full bg-green-50 text-[var(--primary-main)] border border-green-200 font-bold text-[13.5px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm">
+                <button type="submit" className="px-1 py-2 rounded-full bg-green-50 text-[var(--primary-main)] border border-green-200 font-bold text-[13.5px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm">
                   Save
                 </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13.5px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-1 py-2 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13.5px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
                   Cancel
                 </button>
               </div>
@@ -574,7 +570,7 @@ export default function RoomsAndCleaning() {
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Cleaning Status</p>
-                    <span className={`px-2.5 py-1 rounded-[4px] text-[12px] font-medium ${statusStyles[viewRecord.cleaningStatus]}`}>
+                    <span className={`px-1.5 py-1 rounded-[4px] text-[11px] font-medium ${statusStyles[viewRecord.cleaningStatus]}`}>
                       {viewRecord.cleaningStatus}
                     </span>
                   </div>
@@ -620,7 +616,7 @@ export default function RoomsAndCleaning() {
                   </div>
                   <div>
                     <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Priority</p>
-                    <span className={`px-2.5 py-1 rounded-[4px] text-[12px] font-medium ${priorityStyles[viewRecord.priority]}`}>
+                    <span className={`px-1.5 py-1 rounded-[4px] text-[11px] font-medium ${priorityStyles[viewRecord.priority]}`}>
                       {viewRecord.priority}
                     </span>
                   </div>
@@ -635,6 +631,3 @@ export default function RoomsAndCleaning() {
     </div>
   );
 }
-
-
-

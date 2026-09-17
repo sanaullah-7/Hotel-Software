@@ -823,11 +823,11 @@ export default function CheckInOut() {
   };
 
   return (
-    <div className="animate-fade-in pb-8 space-y-4">
+    <div className="animate-fade-in pt-1 pb-2">
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#f3e8ff] flex items-center justify-center shrink-0">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-2">
+          <div className="w-10 h-10 rounded-[12px] bg-[#f3e8ff] flex items-center justify-center shrink-0">
             <GroupsIcon className="text-[#a855f7]" sx={{ fontSize: 20 }} />
           </div>
           <div className="flex flex-col">
@@ -835,8 +835,8 @@ export default function CheckInOut() {
             <span className="text-lg font-bold text-gray-900 leading-tight">{totalGuests}</span>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#dcfce7] flex items-center justify-center shrink-0">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-[12px] bg-[#dcfce7] flex items-center justify-center shrink-0">
             <LoginIcon className="text-[#16a34a]" sx={{ fontSize: 20 }} />
           </div>
           <div className="flex flex-col">
@@ -844,8 +844,8 @@ export default function CheckInOut() {
             <span className="text-lg font-bold text-gray-900 leading-tight">{checkedInCount}</span>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#e0e7ff] flex items-center justify-center shrink-0">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-[12px] bg-[#e0e7ff] flex items-center justify-center shrink-0">
             <LogoutIcon className="text-[#4f46e5]" sx={{ fontSize: 20 }} />
           </div>
           <div className="flex flex-col">
@@ -853,8 +853,8 @@ export default function CheckInOut() {
             <span className="text-lg font-bold text-gray-900 leading-tight">{checkedOutCount}</span>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#fef3c7] flex items-center justify-center shrink-0">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-[12px] bg-[#fef3c7] flex items-center justify-center shrink-0">
             <PendingActionsIcon className="text-[#d97706]" sx={{ fontSize: 20 }} />
           </div>
           <div className="flex flex-col">
@@ -865,11 +865,11 @@ export default function CheckInOut() {
       </div>
 
       {/* MAIN CARD */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden mt-2">
         {/* Header */}
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between gap-3">
+        <div className="p-2 border-b border-gray-100 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#ecfdf5] flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-[12px] bg-[#ecfdf5] flex items-center justify-center shrink-0">
               <ChecklistRtlIcon style={{ color: PRIMARY }} sx={{ fontSize: 20 }} />
             </div>
             <div>
@@ -887,7 +887,7 @@ export default function CheckInOut() {
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-gray-100 flex items-center gap-3">
+        <div className="p-2 border-b border-gray-100 flex items-center gap-3">
           <div className="relative flex-1">
             <SearchIcon sx={{ fontSize: 18 }} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
             <input

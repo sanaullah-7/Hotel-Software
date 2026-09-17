@@ -93,7 +93,7 @@ export default function CreateGuestModal({ open, onClose, onSave, room }) {
         sx={{
           background: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)',
           px: 3,
-          py: 2,
+          py: 1,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',

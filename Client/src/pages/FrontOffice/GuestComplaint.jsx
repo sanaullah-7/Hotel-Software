@@ -240,13 +240,13 @@ export default function GuestComplaint() {
   );
 
   return (
-    <div className="p-4 sm:p-6 w-full max-w-[1400px] mx-auto animate-fade-in relative min-h-screen">
+    <div className="pt-1 w-full animate-fade-in relative">
       
       {/* Main Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-visible relative">
+      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-visible relative">
         
         {/* Header Options */}
-        <div className="flex flex-col md:flex-row items-center justify-between p-4 border-b border-gray-100 gap-4 overflow-visible">
+        <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b border-gray-100 gap-4 overflow-visible">
           <div className="flex items-center gap-4 w-full md:w-auto">
             <h2 className="text-gray-600 font-semibold text-[17px] whitespace-nowrap">Guest Complaint Management</h2>
             <div className="relative w-full md:w-64 flex-1">

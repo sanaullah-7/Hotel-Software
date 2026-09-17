@@ -28,10 +28,10 @@ import LostAndFound from '../pages/Housekeeping/LostAndFound';
 import InspectionChecklist from '../pages/Housekeeping/InspectionChecklist';
 
 // Guests Module
-import Guests from '../pages/guests/Guests';
+import Guests from '../pages/Guests/Guests';
 
 // Occupancy Module
-import Occupancy from '../pages/occupancy/Occupancy';
+import Occupancy from '../pages/Occupancy/Occupancy';
 
 export default function AppRoutes() {
   return (

@@ -39,6 +39,105 @@ const initialTasks = [
     priority: 'Low',
     status: 'Completed',
     notes: 'No notes available'
+  },
+  {
+    id: 4,
+    roomNo: '401',
+    taskType: 'Deep Clean',
+    assignedStaff: 'Emily Davis',
+    startTime: '11:00',
+    endTime: '12:30',
+    priority: 'High',
+    status: 'Pending',
+    notes: 'VIP guest arrival'
+  },
+  {
+    id: 5,
+    roomNo: '110',
+    taskType: 'Quick Clean',
+    assignedStaff: 'Michael Lee',
+    startTime: '13:00',
+    endTime: '13:30',
+    priority: 'Low',
+    status: 'In Progress',
+    notes: 'Towel refresh'
+  },
+  {
+    id: 6,
+    roomNo: '215',
+    taskType: 'Full Clean',
+    assignedStaff: 'Sarah Wilson',
+    startTime: '14:00',
+    endTime: '15:00',
+    priority: 'Medium',
+    status: 'Pending',
+    notes: 'Regular check-out'
+  },
+  {
+    id: 7,
+    roomNo: '305',
+    taskType: 'Turn Down',
+    assignedStaff: 'John Doe',
+    startTime: '19:00',
+    endTime: '19:30',
+    priority: 'Low',
+    status: 'Completed',
+    notes: 'Evening service'
+  },
+  {
+    id: 8,
+    roomNo: '105',
+    taskType: 'Full Clean',
+    assignedStaff: 'Jane Smith',
+    startTime: '15:30',
+    endTime: '16:30',
+    priority: 'High',
+    status: 'Delayed',
+    notes: 'Guest requested later time'
+  },
+  {
+    id: 9,
+    roomNo: '501',
+    taskType: 'Deep Clean',
+    assignedStaff: 'Emily Davis',
+    startTime: '08:00',
+    endTime: '10:00',
+    priority: 'High',
+    status: 'In Progress',
+    notes: 'VIP check-in today'
+  },
+  {
+    id: 10,
+    roomNo: '312',
+    taskType: 'Full Clean',
+    assignedStaff: 'Robert Brown',
+    startTime: '10:00',
+    endTime: '11:00',
+    priority: 'Medium',
+    status: 'Pending',
+    notes: 'Standard service'
+  },
+  {
+    id: 11,
+    roomNo: '418',
+    taskType: 'Turn Down',
+    assignedStaff: 'Jane Smith',
+    startTime: '18:30',
+    endTime: '19:00',
+    priority: 'Low',
+    status: 'Completed',
+    notes: 'Refresh towels'
+  },
+  {
+    id: 12,
+    roomNo: '108',
+    taskType: 'Quick Clean',
+    assignedStaff: 'Michael Lee',
+    startTime: '12:00',
+    endTime: '12:30',
+    priority: 'Medium',
+    status: 'Pending',
+    notes: 'Guest requested early'
   }
 ];
 
@@ -108,6 +207,16 @@ export default function CleaningSchedule() {
     setTaskToDelete(null);
   };
 
+    const getStatusBorderColor = (status) => {
+    switch (status) {
+      case 'Pending': return '#ea580c';
+      case 'In Progress': return '#3b82f6';
+      case 'Completed': return '#16a34a';
+      case 'Delayed': return '#dc2626';
+      default: return '#9ca3af';
+    }
+  };
+
   const getStatusStyles = (status) => {
     switch (status) {
       case 'Pending': return 'bg-[#fff7ed] text-[#ea580c]';
@@ -145,27 +254,26 @@ export default function CleaningSchedule() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-transparent p-6 flex flex-col gap-6">
+    <div className="w-full bg-transparent pt-1 flex flex-col gap-1.5">
       
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[20px] font-bold text-gray-800">Today's Cleaning Schedule</h1>
-          <p className="text-[13px] text-gray-500 mt-1">Manage all cleaning tasks for today</p>
         </div>
         <button 
           onClick={handleOpenNew}
-          className="bg-[var(--primary-main)] text-white px-4 py-2.5 rounded-md text-[13px] font-bold shadow-sm hover:bg-green-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+          className="bg-[var(--primary-main)] text-white px-2 py-1.5 rounded-md text-[13px] font-bold shadow-sm hover:bg-green-700 transition-colors flex items-center gap-1.5 cursor-pointer"
         >
           <span>+</span> Add New Task
         </button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
         
         {/* Pending */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#fff7ed] flex items-center justify-center text-[#ea580c]">
             <AccessTimeOutlined />
           </div>
@@ -176,7 +284,7 @@ export default function CleaningSchedule() {
         </div>
 
         {/* In Progress */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#eff6ff] flex items-center justify-center text-[#3b82f6]">
             <SyncOutlined />
           </div>
@@ -187,7 +295,7 @@ export default function CleaningSchedule() {
         </div>
 
         {/* Completed */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#f0fdf4] flex items-center justify-center text-[#16a34a]">
             <CheckCircleOutlined />
           </div>
@@ -198,7 +306,7 @@ export default function CleaningSchedule() {
         </div>
 
         {/* Delayed */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#fef2f2] flex items-center justify-center text-[#dc2626]">
             <WarningAmberOutlined />
           </div>
@@ -210,12 +318,12 @@ export default function CleaningSchedule() {
 
       </div>
 
-      {/* Task Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* Task Cards Grid */}   
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
         {tasks.map((task) => (
-          <div key={task.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col relative">
+          <div key={task.id} className="bg-white rounded-[6px] shadow-sm border border-gray-100 p-3.5 flex flex-col relative h-fit border-t-[4px]" style={{ borderTopColor: getStatusBorderColor(task.status) }}>
             
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between mb-2.5">
               <div>
                 <h3 className="text-[16px] font-bold text-gray-800">Room {task.roomNo}</h3>
                 <p className="text-[12px] text-gray-400 mt-0.5">{task.taskType}</p>
@@ -229,27 +337,27 @@ export default function CleaningSchedule() {
               </span>
             </div>
 
-            <div className="border-t border-gray-50 pt-4 space-y-4 flex-1">
+            <div className="border-t border-gray-50 pt-2.5 space-y-2.5 ">
               
-              <div className="flex gap-3 items-start">
+              <div className="flex gap-2.5 items-start">
                 <PersonOutlined className="text-gray-400" sx={{ fontSize: 18 }} />
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Assigned Staff</p>
-                  <p className="text-[13px] font-bold text-gray-700 mt-0.5">{task.assignedStaff || 'Unassigned'}</p>
+                  <p className="text-[13px] font-bold text-gray-700">{task.assignedStaff || 'Unassigned'}</p>
                 </div>
               </div>
 
-              <div className="flex gap-3 items-start">
+              <div className="flex gap-2.5 items-start">
                 <AccessTimeOutlined className="text-gray-400" sx={{ fontSize: 18 }} />
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Time Slot</p>
-                  <p className="text-[13px] font-bold text-gray-700 mt-0.5">
+                  <p className="text-[13px] font-bold text-gray-700">
                     {formatTime(task.startTime)} - {formatTime(task.endTime)}
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-3 items-start">
+              <div className="flex gap-2.5 items-start">
                 <PriorityHighOutlined className={getPriorityColor(task.priority)} sx={{ fontSize: 18 }} />
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Priority</p>
@@ -259,11 +367,11 @@ export default function CleaningSchedule() {
                 </div>
               </div>
 
-              <div className="flex gap-3 items-start">
+              <div className="flex gap-2.5 items-start">
                 <EventNoteOutlined className="text-gray-400" sx={{ fontSize: 18 }} />
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Notes</p>
-                  <p className="text-[13px] font-medium text-gray-500 italic mt-0.5 line-clamp-2">
+                  <p className="text-[13px] font-medium text-gray-500 italic line-clamp-2">
                     {task.notes || 'No notes available'}
                   </p>
                 </div>
@@ -271,7 +379,7 @@ export default function CleaningSchedule() {
 
             </div>
 
-            <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-gray-50">
+            <div className="flex items-center justify-end gap-3 mt-2.5 pt-2.5 border-t border-gray-50">
               <button onClick={() => handleOpenEdit(task)} className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer">
                 <EditOutlined sx={{ fontSize: 20 }} />
               </button>

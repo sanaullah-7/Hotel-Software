@@ -26,7 +26,7 @@ const initialInspections = [
     status: 'Failed',
     inspectionDate: '2026-02-01',
     score: 65,
-    comments: 'Dust found under the bed. Bathroom mirror not cleaned properly.'
+    comments: 'Dust found under the bed.'
   },
   {
     id: 3,
@@ -47,6 +47,86 @@ const initialInspections = [
     inspectionDate: '2026-02-03',
     score: 0,
     comments: 'Awaiting inspector availability.'
+  },
+  {
+    id: 5,
+    roomNo: '305',
+    roomType: 'Suite',
+    inspector: 'John Smith',
+    status: 'Passed',
+    inspectionDate: '2026-02-04',
+    score: 98,
+    comments: 'Perfect condition.'
+  },
+  {
+    id: 6,
+    roomNo: '110',
+    roomType: 'Deluxe',
+    inspector: 'Jane Doe',
+    status: 'Failed',
+    inspectionDate: '2026-02-03',
+    score: 55,
+    comments: 'Carpet needs vacuuming.'
+  },
+  {
+    id: 7,
+    roomNo: '402',
+    roomType: 'Standard',
+    inspector: 'Mike Ross',
+    status: 'Pending',
+    inspectionDate: '2026-02-05',
+    score: 0,
+    comments: 'Scheduled for tomorrow morning.'
+  },
+  {
+    id: 8,
+    roomNo: '215',
+    roomType: 'Suite',
+    inspector: 'Sarah Connor',
+    status: 'Passed',
+    inspectionDate: '2026-02-01',
+    score: 92,
+    comments: 'Very clean, all amenities present.'
+  },
+  {
+    id: 9,
+    roomNo: '501',
+    roomType: 'Penthous',
+    inspector: 'John Smith',
+    status: 'Pending',
+    inspectionDate: '2026-02-06',
+    score: 0,
+    comments: 'VIP arrival tomorrow.'
+  },
+  {
+    id: 10,
+    roomNo: '105',
+    roomType: 'Deluxe',
+    inspector: 'Jane Doe',
+    status: 'Passed',
+    inspectionDate: '2026-02-02',
+    score: 96,
+    comments: 'Immaculate condition.'
+  },
+  {
+    id: 11,
+    roomNo: '312',
+    roomType: 'Standard',
+    inspector: 'Sarah Connor',
+    status: 'Failed',
+    inspectionDate: '2026-02-04',
+    score: 45,
+    comments: 'AC not working, bathroom lights.'
+  },
+  {
+    id: 12,
+    roomNo: '418',
+    roomType: 'Suite',
+    inspector: 'Mike Ross',
+    status: 'Passed',
+    inspectionDate: '2026-02-01',
+    score: 90,
+    comments: 'Passed with minor marks.'
   }
 ];
 
@@ -106,6 +186,15 @@ export default function InspectionChecklist() {
     setRecordToDelete(null);
   };
 
+    const getStatusBorderColor = (status) => {
+    switch (status) {
+      case 'Passed': return '#16a34a';
+      case 'Failed': return '#ef4444';
+      case 'Pending': return '#f97316';
+      default: return '#9ca3af';
+    }
+  };
+
   const getStatusStyles = (status) => {
     switch (status) {
       case 'Passed': return 'bg-[#dcfce7] text-[#16a34a]';
@@ -151,27 +240,26 @@ export default function InspectionChecklist() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-transparent p-6 flex flex-col gap-6">
+    <div className="w-full bg-transparent pt-1 flex flex-col gap-2.5">
       
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[20px] font-bold text-gray-800">Inspection Checklist</h1>
-          <p className="text-[13px] text-gray-500 mt-1">Manage room inspection tasks and scores</p>
         </div>
         <button 
           onClick={handleOpenNew}
-          className="bg-[var(--primary-main)] text-white px-4 py-2.5 rounded-md text-[13px] font-bold shadow-sm hover:bg-green-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+          className="bg-[var(--primary-main)] text-white px-2 py-1.5 rounded-md text-[13px] font-bold shadow-sm hover:bg-green-700 transition-colors flex items-center gap-1.5 cursor-pointer"
         >
           <span>+</span> New Inspection
         </button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
         
         {/* Total Inspections */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#ede9fe] flex items-center justify-center text-[#8b5cf6]">
             <AssignmentOutlined />
           </div>
@@ -182,7 +270,7 @@ export default function InspectionChecklist() {
         </div>
 
         {/* Passed */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#dcfce7] flex items-center justify-center text-[#16a34a]">
             <CheckCircleOutlined />
           </div>
@@ -193,7 +281,7 @@ export default function InspectionChecklist() {
         </div>
 
         {/* Failed */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#fee2e2] flex items-center justify-center text-[#ef4444]">
             <CancelOutlined />
           </div>
@@ -204,7 +292,7 @@ export default function InspectionChecklist() {
         </div>
 
         {/* Average Score */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#ffedd5] flex items-center justify-center text-[#f97316]">
             <BarChartOutlined />
           </div>
@@ -217,14 +305,14 @@ export default function InspectionChecklist() {
       </div>
 
       {/* Inspection Cards Grid - 4 per row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
         {inspections.map((record) => (
-          <div key={record.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col relative">
+          <div key={record.id} className="bg-white rounded-[6px] shadow-sm border border-gray-100 p-3.5 flex flex-col relative h-fit border-t-[4px]" style={{ borderTopColor: getStatusBorderColor(record.status) }}>
             
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between mb-2.5">
               <div>
                 <h3 className="text-[15px] font-bold text-gray-800">Room {record.roomNo} ({record.roomType})</h3>
-                <p className="text-[12px] text-gray-500 mt-1">Inspector: {record.inspector}</p>
+                <p className="text-[12px] text-gray-500 mt-0.5">Inspector: {record.inspector}</p>
               </div>
               <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 ${getStatusStyles(record.status)}`}>
                 {record.status === 'Passed' && <CheckCircleOutlined sx={{ fontSize: 12 }} />}
@@ -234,13 +322,13 @@ export default function InspectionChecklist() {
               </span>
             </div>
 
-            <div className="border-t border-gray-50 pt-4 space-y-4 flex-1">
+            <div className="border-t border-gray-50 pt-2.5 space-y-2.5">
               
-              <div className="flex gap-3 items-start">
+              <div className="flex gap-2.5 items-start">
                 <CalendarTodayOutlined className="text-gray-400" sx={{ fontSize: 18 }} />
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Inspection Date</p>
-                  <p className="text-[13px] font-bold text-gray-700 mt-0.5">{record.inspectionDate || '-'}</p>
+                  <p className="text-[13px] font-bold text-gray-700">{record.inspectionDate || '-'}</p>
                 </div>
               </div>
 
@@ -260,11 +348,11 @@ export default function InspectionChecklist() {
                 </div>
               </div>
 
-              <div className="flex gap-3 items-start">
+              <div className="flex gap-2.5 items-start">
                 <CommentOutlined className="text-gray-400" sx={{ fontSize: 18 }} />
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Comments</p>
-                  <p className="text-[13px] font-medium text-gray-600 italic mt-0.5 line-clamp-3">
+                  <p className="text-[13px] font-medium text-gray-600 italic line-clamp-3">
                     {record.comments || 'No comments'}
                   </p>
                 </div>
@@ -272,7 +360,7 @@ export default function InspectionChecklist() {
 
             </div>
 
-            <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-gray-50">
+            <div className="flex items-center justify-end gap-3 mt-2.5 pt-2.5 border-t border-gray-50">
               <button onClick={() => handleOpenEdit(record)} className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer">
                 <EditOutlined sx={{ fontSize: 20 }} />
               </button>
@@ -333,7 +421,7 @@ export default function InspectionChecklist() {
                     <MenuItem value="Standard">Standard</MenuItem>
                     <MenuItem value="Deluxe">Deluxe</MenuItem>
                     <MenuItem value="Suite">Suite</MenuItem>
-                    <MenuItem value="Penthouse">Penthouse</MenuItem>
+                    <MenuItem value="Penthouse">Penthous</MenuItem>
                   </Select>
                 </FormControl>
 

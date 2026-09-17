@@ -309,10 +309,10 @@ export default function AllBookings() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col p-6 min-h-screen">
+    <div className="w-full h-full flex flex-col pt-1">
       
       {/* Top Header */}
-      <div className="bg-white rounded-t-xl p-4 flex items-center justify-between border-b border-gray-100">
+      <div className="bg-white rounded-[6px] p-2 flex items-center justify-between border-b border-gray-100">
         <div className="flex items-center gap-4">
           <h1 className="text-[16px] font-bold text-gray-700">Bookings</h1>
           <div className="relative">
@@ -369,41 +369,41 @@ export default function AllBookings() {
       {/* Main Table Content */}
       <div className="bg-white rounded-b-xl shadow-sm flex-1 flex flex-col">
         <div className="overflow-x-auto w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <table className="w-full text-left whitespace-nowrap min-w-max">
+          <table className="w-full text-left whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-100 bg-white">
-                {visibleColumns['Name'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Name</th>}
-                {visibleColumns['Package'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Package</th>}
-                {visibleColumns['Room Type'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Room Type</th>}
-                {visibleColumns['Status'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Status</th>}
-                {visibleColumns['Check In'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Check In</th>}
-                {visibleColumns['Check Out'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Check Out</th>}
-                {visibleColumns['Payment'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Payment</th>}
-                {visibleColumns['Email'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Email</th>}
-                {visibleColumns['Mobile'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b]">Mobile</th>}
-                {visibleColumns['Actions'] && <th className="py-4 px-6 text-[13px] font-bold text-[#1e293b] text-center">Actions</th>}
+                {visibleColumns['Name'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Name</th>}
+                {visibleColumns['Package'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Package</th>}
+                {visibleColumns['Room Type'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Room Type</th>}
+                {visibleColumns['Status'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Status</th>}
+                {visibleColumns['Check In'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Check In</th>}
+                {visibleColumns['Check Out'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Check Out</th>}
+                {visibleColumns['Payment'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Payment</th>}
+                {visibleColumns['Email'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Email</th>}
+                {visibleColumns['Mobile'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Mobile</th>}
+                {visibleColumns['Actions'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b] text-center">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {filteredBookings.map((booking) => (
                 <tr key={booking.id} onClick={() => openViewModal(booking)} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer">
                   {visibleColumns['Name'] && (
-                    <td className="py-3 px-6 flex items-center gap-3">
+                    <td className="py-3 px-2 flex items-center gap-3">
                       <img src={booking.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover shadow-sm" />
                       <span className="text-[13px] text-gray-700 font-medium">{booking.name}</span>
                     </td>
                   )}
-                  {visibleColumns['Package'] && <td className="py-3 px-6 text-[13px] text-gray-600">{booking.package}</td>}
-                  {visibleColumns['Room Type'] && <td className="py-3 px-6 text-[13px] text-gray-600">{booking.roomType}</td>}
+                  {visibleColumns['Package'] && <td className="py-3 px-2 text-[13px] text-gray-600">{booking.package}</td>}
+                  {visibleColumns['Room Type'] && <td className="py-3 px-2 text-[13px] text-gray-600">{booking.roomType}</td>}
                   {visibleColumns['Status'] && (
-                    <td className="py-3 px-6">
+                    <td className="py-3 px-2">
                       <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${statusStyles[booking.status]}`}>
                         {booking.status}
                       </span>
                     </td>
                   )}
                   {visibleColumns['Check In'] && (
-                    <td className="py-3 px-6 text-[13px] text-gray-600">
+                    <td className="py-3 px-2 text-[13px] text-gray-600">
                       <div className="flex items-center gap-1.5">
                         <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
                         {booking.checkIn}
@@ -411,7 +411,7 @@ export default function AllBookings() {
                     </td>
                   )}
                   {visibleColumns['Check Out'] && (
-                    <td className="py-3 px-6 text-[13px] text-gray-600">
+                    <td className="py-3 px-2 text-[13px] text-gray-600">
                       <div className="flex items-center gap-1.5">
                         <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
                         {booking.checkOut}
@@ -419,14 +419,14 @@ export default function AllBookings() {
                     </td>
                   )}
                   {visibleColumns['Payment'] && (
-                    <td className="py-3 px-6">
+                    <td className="py-3 px-2">
                       <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${paymentStyles[booking.payment]}`}>
                         {booking.payment}
                       </span>
                     </td>
                   )}
                   {visibleColumns['Email'] && (
-                    <td className="py-3 px-6 text-[13px] text-gray-600">
+                    <td className="py-3 px-2 text-[13px] text-gray-600">
                       <div className="flex items-center gap-1.5">
                         <EmailOutlined sx={{ fontSize: 14 }} className="text-red-400" />
                         {booking.email}
@@ -434,7 +434,7 @@ export default function AllBookings() {
                     </td>
                   )}
                   {visibleColumns['Mobile'] && (
-                    <td className="py-3 px-6 text-[13px] text-gray-600">
+                    <td className="py-3 px-2 text-[13px] text-gray-600">
                       <div className="flex items-center gap-1.5">
                         <PhoneOutlined sx={{ fontSize: 14 }} className="text-green-500" />
                         {booking.mobile}
@@ -442,7 +442,7 @@ export default function AllBookings() {
                     </td>
                   )}
                   {visibleColumns['Actions'] && (
-                    <td className="py-3 px-6 relative text-center">
+                    <td className="py-3 px-2 relative text-center">
                       <button onClick={(e) => toggleMenu(e, booking.id)} className="text-gray-700 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center mx-auto transition-colors">
                         <MoreHoriz sx={{ fontSize: 20 }} />
                       </button>
@@ -502,7 +502,7 @@ export default function AllBookings() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsViewModalOpen(false)}>
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-[800px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Header */}
-            <div className="bg-[var(--primary-main)] px-6 py-5 flex items-center justify-between">
+            <div className="bg-[var(--primary-main)] px-2 py-5 flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <img src={viewingBooking.avatar} alt="Avatar" className="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover" />
                 <div className="flex flex-col">
@@ -774,16 +774,16 @@ export default function AllBookings() {
               </div>
             </div>
 
-            <div className="px-6 py-4 flex gap-3 border-t border-gray-100">
+            <div className="px-2 py-4 flex gap-3 border-t border-gray-100">
               <button 
                 onClick={handleSaveBooking}
                 disabled={!isFormValid}
-                className="px-6 py-2 rounded-full text-[13.5px] font-bold shadow-sm transition-colors cursor-pointer border"
+                className="px-2 py-2 rounded-full text-[13.5px] font-bold shadow-sm transition-colors cursor-pointer border"
                 style={isFormValid ? { backgroundColor: '#ffffff', color: '#1b7f43', borderColor: '#e2e8f0' } : { backgroundColor: '#e2e8f0', color: '#94a3b8', borderColor: 'transparent', cursor: 'not-allowed' }}
               >
                 Save
               </button>
-              <button onClick={() => setIsBookingModalOpen(false)} className="px-6 py-2 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13.5px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
+              <button onClick={() => setIsBookingModalOpen(false)} className="px-2 py-2 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13.5px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
                 Cancel
               </button>
             </div>
@@ -804,10 +804,10 @@ export default function AllBookings() {
             </div>
 
             <div className="flex justify-center gap-4">
-              <button onClick={handleDelete} className="px-6 py-2 rounded-full bg-[#c23e3e] hover:bg-red-700 text-white font-bold text-[14px] transition-colors shadow-sm">
+              <button onClick={handleDelete} className="px-2 py-2 rounded-full bg-[#c23e3e] hover:bg-red-700 text-white font-bold text-[14px] transition-colors shadow-sm">
                 Delete
               </button>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-6 py-2 rounded-full bg-[#0a6c32] hover:bg-green-800 text-white font-bold text-[14px] transition-colors shadow-sm">
+              <button onClick={() => setIsDeleteModalOpen(false)} className="px-2 py-2 rounded-full bg-[#0a6c32] hover:bg-green-800 text-white font-bold text-[14px] transition-colors shadow-sm">
                 Cancel
               </button>
             </div>

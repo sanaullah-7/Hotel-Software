@@ -23,7 +23,7 @@ const initialItems = [
     status: 'Returned',
     foundDate: '2026-01-28',
     finderName: 'Jane Smith',
-    description: 'Thin gold bracelet found near bedside'
+    description: 'Thin gold bracelet'
   },
   {
     id: 3,
@@ -42,6 +42,78 @@ const initialItems = [
     foundDate: '2026-01-30',
     finderName: 'Maria Garcia',
     description: 'Brown leather wallet with ID cards'
+  },
+  {
+    id: 5,
+    itemName: 'Silver Watch',
+    location: 'Gym',
+    status: 'Found',
+    foundDate: '2026-02-05',
+    finderName: 'Alice Green',
+    description: 'Men\'s silver wristwatch'
+  },
+  {
+    id: 6,
+    itemName: 'Black Backpack',
+    location: 'Lobby',
+    status: 'Claimed',
+    foundDate: '2026-02-04',
+    finderName: 'David Lee',
+    description: 'Contains books and a water bottle'
+  },
+  {
+    id: 7,
+    itemName: 'Diamond Ring',
+    location: '402',
+    status: 'Returned',
+    foundDate: '2026-02-01',
+    finderName: 'Sarah Connor',
+    description: 'Gold ring with small diamond'
+  },
+  {
+    id: 8,
+    itemName: 'Winter Coat',
+    location: 'Restaurant',
+    status: 'Disposed',
+    foundDate: '2025-11-20',
+    finderName: 'Tom White',
+    description: 'Unclaimed over 60 days'
+  },
+  {
+    id: 9,
+    itemName: 'Laptop Charger',
+    location: 'Conference Room',
+    status: 'Found',
+    foundDate: '2026-02-06',
+    finderName: 'Maria Garcia',
+    description: 'Black Dell 65W charger'
+  },
+  {
+    id: 10,
+    itemName: 'AirPods Pro',
+    location: 'Pool Area',
+    status: 'Claimed',
+    foundDate: '2026-02-05',
+    finderName: 'John Doe',
+    description: 'White case with blue cover'
+  },
+  {
+    id: 11,
+    itemName: 'Umbrella',
+    location: 'Lobby',
+    status: 'Returned',
+    foundDate: '2026-02-03',
+    finderName: 'Alice Green',
+    description: 'Large black golf umbrella'
+  },
+  {
+    id: 12,
+    itemName: 'Reading Glasses',
+    location: 'Restaurant',
+    status: 'Found',
+    foundDate: '2026-02-07',
+    finderName: 'Tom White',
+    description: 'Black frame, left on table 12'
   }
 ];
 
@@ -100,6 +172,16 @@ export default function LostAndFound() {
     setItemToDelete(null);
   };
 
+    const getStatusBorderColor = (status) => {
+    switch (status) {
+      case 'Found': return '#3b82f6';
+      case 'Returned': return '#16a34a';
+      case 'Claimed': return '#ea580c';
+      case 'Disposed': return '#64748b';
+      default: return '#9ca3af';
+    }
+  };
+
   const getStatusStyles = (status) => {
     switch (status) {
       case 'Found': return 'bg-[#eff6ff] text-[#3b82f6]';
@@ -128,27 +210,26 @@ export default function LostAndFound() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-transparent p-6 flex flex-col gap-6">
+    <div className="w-full bg-transparent pt-1 flex flex-col gap-1.5">
       
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[20px] font-bold text-gray-800">Lost & Found Management</h1>
-          <p className="text-[13px] text-gray-500 mt-1">Track all lost and found items across the property</p>
         </div>
         <button 
           onClick={handleOpenNew}
-          className="bg-[var(--primary-main)] text-white px-4 py-2.5 rounded-md text-[13px] font-bold shadow-sm hover:bg-green-700 transition-colors flex items-center gap-1.5 cursor-pointer"
+          className="bg-[var(--primary-main)] text-white px-2 py-1.5 rounded-md text-[13px] font-bold shadow-sm hover:bg-green-700 transition-colors flex items-center gap-1.5 cursor-pointer"
         >
           <span>+</span> Add New Item
         </button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
         
         {/* Total Items */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#f3e8ff] flex items-center justify-center text-[#9333ea]">
             <Inventory2Outlined />
           </div>
@@ -159,7 +240,7 @@ export default function LostAndFound() {
         </div>
 
         {/* Unclaimed */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#eff6ff] flex items-center justify-center text-[#3b82f6]">
             <SearchOutlined />
           </div>
@@ -170,7 +251,7 @@ export default function LostAndFound() {
         </div>
 
         {/* Claimed / Returned */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#f0fdf4] flex items-center justify-center text-[#16a34a]">
             <CheckCircleOutlined />
           </div>
@@ -181,7 +262,7 @@ export default function LostAndFound() {
         </div>
 
         {/* Disposed / Expired */}
-        <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-[#f1f5f9] flex items-center justify-center text-[#64748b]">
             <DeleteOutlineOutlined />
           </div>
@@ -194,11 +275,11 @@ export default function LostAndFound() {
       </div>
 
       {/* Task Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5">
         {items.map((item) => (
-          <div key={item.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex flex-col relative">
+          <div key={item.id} className="bg-white rounded-[6px] shadow-sm border border-gray-100 p-3.5 flex flex-col relative h-fit border-t-[4px]" style={{ borderTopColor: getStatusBorderColor(item.status) }}>
             
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between mb-2.5">
               <div>
                 <h3 className="text-[15px] font-bold text-gray-800">{item.itemName}</h3>
                 <p className="text-[12px] text-gray-500 mt-1 flex items-center gap-1">
@@ -210,31 +291,31 @@ export default function LostAndFound() {
               </span>
             </div>
 
-            <div className="border-t border-gray-50 pt-4 space-y-4 flex-1 mt-2">
+            <div className="border-t border-gray-50 pt-2.5 space-y-2.5  mt-1">
               
-              <div className="flex gap-3 items-start">
+              <div className="flex gap-2.5 items-start">
                 <CalendarTodayOutlined className="text-gray-400" sx={{ fontSize: 18 }} />
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Found Date</p>
-                  <p className="text-[13px] font-bold text-gray-700 mt-0.5">{item.foundDate || '-'}</p>
+                  <p className="text-[13px] font-bold text-gray-700">{item.foundDate || '-'}</p>
                 </div>
               </div>
 
-              <div className="flex gap-3 items-start">
+              <div className="flex gap-2.5 items-start">
                 <PersonOutlined className="text-gray-400" sx={{ fontSize: 18 }} />
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Finder</p>
-                  <p className="text-[13px] font-bold text-gray-700 mt-0.5">
+                  <p className="text-[13px] font-bold text-gray-700">
                     {item.finderName || '-'}
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-3 items-start">
+              <div className="flex gap-2.5 items-start">
                 <EventNoteOutlined className="text-gray-400" sx={{ fontSize: 18 }} />
                 <div>
                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Description</p>
-                  <p className="text-[13px] font-medium text-gray-500 italic mt-0.5 line-clamp-2">
+                  <p className="text-[13px] font-medium text-gray-500 italic line-clamp-2">
                     {item.description || 'No description available'}
                   </p>
                 </div>
@@ -242,7 +323,7 @@ export default function LostAndFound() {
 
             </div>
 
-            <div className="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-gray-50">
+            <div className="flex items-center justify-end gap-3 mt-2.5 pt-2.5 border-t border-gray-50">
               <button onClick={() => handleOpenEdit(item)} className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer">
                 <EditOutlined sx={{ fontSize: 20 }} />
               </button>
