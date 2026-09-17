@@ -42,6 +42,11 @@ import ExpenseManagement from '../pages/Reports/ExpenseManagement';
 // Settings Module Pages
 import HotelProfile from '../pages/Settings/HotelProfile';
 import Policies from '../pages/Settings/Policies';
+// Restaurant Module Pages
+import Restaurant from '../pages/Restaurant/Restaurant';
+
+// Assistant Module
+import LuxuriaAssistant from '../pages/Assistant/LuxuriaAssistant';
 
 export default function AppRoutes() {
   return (
@@ -202,6 +207,36 @@ export default function AppRoutes() {
         {/* Settings Sub-Routes */}
         <Route path="/settings/hotel-profile" element={<DashboardLayout><HotelProfile /></DashboardLayout>} />
         <Route path="/settings/policies" element={<DashboardLayout><Policies /></DashboardLayout>} />
+        {/* Restaurant Sub-Routes */}
+        <Route
+          path="/restaurant"
+          element={<Navigate to="/restaurant/menu" replace />}
+        />
+        <Route
+          path="/restaurant/menu"
+          element={
+            <DashboardLayout>
+              <Restaurant />
+            </DashboardLayout>
+          }
+        />
+        <Route
+          path="/restaurant/orders"
+          element={
+            <DashboardLayout>
+              <Restaurant />
+            </DashboardLayout>
+          }
+        />
+        {/* Assistant Route */}
+        <Route
+          path="/ai-assistant"
+          element={
+            <DashboardLayout>
+              <LuxuriaAssistant />
+            </DashboardLayout>
+          }
+        />
       </Routes>
     </Router>
   );

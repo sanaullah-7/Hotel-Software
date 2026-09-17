@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
-import {
-  ReportProblem, CheckCircle, PendingActions, 
-  Search, FileDownload, MoreHoriz, Add,
-  SentimentVeryDissatisfied, Room, Person, Phone,
-  ChevronLeft, ChevronRight, AccessTime, Edit, Delete
-} from '@mui/icons-material';
+import ReportProblem from '@mui/icons-material/ReportProblem';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import PendingActions from '@mui/icons-material/PendingActions';
+import Search from '@mui/icons-material/Search';
+import FileDownload from '@mui/icons-material/FileDownload';
+import MoreHoriz from '@mui/icons-material/MoreHoriz';
+import Add from '@mui/icons-material/Add';
+import SentimentVeryDissatisfied from '@mui/icons-material/SentimentVeryDissatisfied';
+import Room from '@mui/icons-material/Room';
+import Person from '@mui/icons-material/Person';
+import Phone from '@mui/icons-material/Phone';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import AccessTime from '@mui/icons-material/AccessTime';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
 
 export default function GuestComplaint() {
   const [activeTab, setActiveTab] = useState('All');

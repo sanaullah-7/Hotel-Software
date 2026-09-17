@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import { 
-  Notifications, Warning, Schedule, CheckCircle, 
-  Search, FileDownload, MoreHoriz, AddAlert, 
-  Person, ChevronLeft, ChevronRight, Edit, Delete
-} from '@mui/icons-material';
+import Notifications from '@mui/icons-material/Notifications';
+import Warning from '@mui/icons-material/Warning';
+import Schedule from '@mui/icons-material/Schedule';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Search from '@mui/icons-material/Search';
+import FileDownload from '@mui/icons-material/FileDownload';
+import MoreHoriz from '@mui/icons-material/MoreHoriz';
+import AddAlert from '@mui/icons-material/AddAlert';
+import Person from '@mui/icons-material/Person';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
 
 export default function OperationsAlerts() {
   const [activeTab, setActiveTab] = useState('All');
