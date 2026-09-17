@@ -11,14 +11,12 @@ import {
   ListItemIcon,
   Select,
 } from '@mui/material';
-import {
-  Search as SearchIcon,
-  NotificationsNone as NotificationsIcon,
-  Person as PersonIcon,
-  Edit as EditIcon,
-  SettingsBackupRestore as RestoreIcon,
-  Logout as LogoutIcon,
-} from '@mui/icons-material';
+import SearchIcon from '@mui/icons-material/Search';
+import NotificationsIcon from '@mui/icons-material/NotificationsNone';
+import PersonIcon from '@mui/icons-material/Person';
+import EditIcon from '@mui/icons-material/Edit';
+import RestoreIcon from '@mui/icons-material/SettingsBackupRestore';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 const Topbar = () => {
   // State for profile menu

@@ -15,26 +15,24 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import {
-  Close as CloseIcon,
-  Person as PersonIcon,
-  Badge as BadgeIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
-  CreditCard as CreditCardIcon,
-  LocationOn as LocationOnIcon,
-  Flag as FlagIcon,
-  CalendarMonth as CalendarMonthIcon,
-  ConfirmationNumber as ConfirmationNumberIcon,
-  Store as StoreIcon,
-  Payment as PaymentIcon,
-  AttachMoney as AttachMoneyIcon,
-  Notes as NotesIcon,
-  Star as StarIcon,
-  WorkspacePremium as VipIcon,
-  Bed as BedIcon,
-  BookmarkBorder as BookmarkIcon,
-} from '@mui/icons-material';
+import CloseIcon from '@mui/icons-material/Close';
+import PersonIcon from '@mui/icons-material/Person';
+import BadgeIcon from '@mui/icons-material/Badge';
+import EmailIcon from '@mui/icons-material/Email';
+import PhoneIcon from '@mui/icons-material/Phone';
+import CreditCardIcon from '@mui/icons-material/CreditCard';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import FlagIcon from '@mui/icons-material/Flag';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
+import StoreIcon from '@mui/icons-material/Store';
+import PaymentIcon from '@mui/icons-material/Payment';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import NotesIcon from '@mui/icons-material/Notes';
+import StarIcon from '@mui/icons-material/Star';
+import VipIcon from '@mui/icons-material/WorkspacePremium';
+import BedIcon from '@mui/icons-material/Bed';
+import BookmarkIcon from '@mui/icons-material/BookmarkBorder';
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {

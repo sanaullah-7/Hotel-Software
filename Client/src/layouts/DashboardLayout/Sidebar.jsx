@@ -9,8 +9,21 @@ import {
   ChevronRight as ChevronRightIcon, 
   ChevronLeft as ChevronLeftIcon,
   CleaningServices as HousekeepingIcon,
-  Build as MaintenanceIcon
+  Build as MaintenanceIcon,
+  People as HRIcon,
+  BarChart as ReportsIcon,
+  Settings as SettingsIcon
 } from '@mui/icons-material';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import FrontOfficeIcon from '@mui/icons-material/Laptop';
+import BookingIcon from '@mui/icons-material/EventNote';
+import RoomIcon from '@mui/icons-material/Bed';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import HousekeepingIcon from '@mui/icons-material/CleaningServices';
+import MaintenanceIcon from '@mui/icons-material/Build';
+import RestaurantIcon from '@mui/icons-material/RestaurantMenu';
+import AssistantIcon from '@mui/icons-material/AutoAwesome';
 
 export default function Sidebar() {
   const location = useLocation();
@@ -20,6 +33,11 @@ export default function Sidebar() {
   const isRoomsPath = location.pathname.startsWith('/rooms');
   const isHousekeepingPath = location.pathname.startsWith('/housekeeping');
   const isMaintenancePath = location.pathname.startsWith('/maintenance');
+  const isHRPath = location.pathname.startsWith('/hr');
+  const isReportsPath = location.pathname.startsWith('/reports');
+  const isSettingsPath = location.pathname.startsWith('/settings');
+  const isRestaurantPath = location.pathname.startsWith('/restaurant');
+  const isAssistantPath = location.pathname.startsWith('/ai-assistant');
 
   // State to manage if the sidebar is open or closed
   const [isOpen, setIsOpen] = useState(true);
@@ -27,6 +45,10 @@ export default function Sidebar() {
   const [isReservationOpen, setIsReservationOpen] = useState(isReservationPath);
   const [isHousekeepingOpen, setIsHousekeepingOpen] = useState(isHousekeepingPath);
   const [isRoomsOpen, setIsRoomsOpen] = useState(isRoomsPath);
+  const [isHROpen, setIsHROpen] = useState(isHRPath);
+  const [isReportsOpen, setIsReportsOpen] = useState(isReportsPath);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(isSettingsPath);
+  const [isRestaurantOpen, setIsRestaurantOpen] = useState(isRestaurantPath);
 
   const isDashboardActive = location.pathname === '/';
   const isFrontOfficeActive = isFrontOfficePath;
@@ -35,6 +57,11 @@ export default function Sidebar() {
   const isRoomsActive = isRoomsPath;
   const isHousekeepingActive = isHousekeepingPath;
   const isMaintenanceActive = isMaintenancePath;
+  const isHRActive = isHRPath;
+  const isReportsActive = isReportsPath;
+  const isSettingsActive = isSettingsPath;
+  const isRestaurantActive = isRestaurantPath;
+  const isAssistantActive = isAssistantPath;
 
   
   const frontOfficeSubItems = [
@@ -73,6 +100,26 @@ export default function Sidebar() {
       setIsRoomsOpen(prev => !prev);
     }
   };
+  const hrSubItems = [
+    { label: 'All Staff', id: 'all-staff', path: '/hr/staff' },
+    { label: 'Add Staff', id: 'add-staff', path: '/hr/staff/add' },
+    { label: 'Leave Requests', id: 'leave-requests', path: '/hr/leave-requests' },
+    { label: 'Attendance Sheet', id: 'attendance-sheet', path: '/hr/attendance' },
+    { label: 'Today\'s Attendance', id: 'todays-attendance', path: '/hr/attendance/today' },
+    { label: 'Employee Salary', id: 'employee-salary', path: '/hr/employee-salary' },
+  ];
+
+  const reportsSubItems = [
+    { label: 'Stocks, Expense, Revenue Report', id: 'stocks-expense-revenue', path: '/reports/stocks-expense-revenue' },
+    { label: 'Occupancy Report', id: 'occupancy', path: '/reports/occupancy' },
+    { label: 'Expense vs Revenue', id: 'expense-vs-revenue', path: '/reports/expense-vs-revenue' },
+    { label: 'Expense Management', id: 'expense-management', path: '/reports/expense-management' },
+  ];
+
+  const settingsSubItems = [
+    { label: 'Hotel Profile', id: 'hotel-profile', path: '/settings/hotel-profile' },
+    { label: 'Policies', id: 'policies', path: '/settings/policies' },
+  ];
 
   const handleToggleFrontOffice = () => {
     if (!isOpen) {
@@ -100,6 +147,46 @@ export default function Sidebar() {
       setIsHousekeepingOpen(prev => !prev);
     }
   };
+
+  const handleToggleHR = () => {
+    if (!isOpen) {
+      setIsOpen(true);
+      setIsHROpen(true);
+    } else {
+      setIsHROpen(prev => !prev);
+    }
+  };
+
+  const handleToggleReports = () => {
+    if (!isOpen) {
+      setIsOpen(true);
+      setIsReportsOpen(true);
+    } else {
+      setIsReportsOpen(prev => !prev);
+    }
+  };
+
+  const handleToggleSettings = () => {
+    if (!isOpen) {
+      setIsOpen(true);
+      setIsSettingsOpen(true);
+    } else {
+      setIsSettingsOpen(prev => !prev);
+    }
+  };
+  const handleToggleRestaurant = () => {
+    if (!isOpen) {
+      setIsOpen(true);
+      setIsRestaurantOpen(true);
+    } else {
+      setIsRestaurantOpen(prev => !prev);
+    }
+  };
+
+  const restaurantSubItems = [
+    { label: 'Menu',   id: 'menu',   path: '/restaurant/menu'   },
+    { label: 'Orders', id: 'orders', path: '/restaurant/orders' },
+  ];
 
 
   return (
@@ -513,6 +600,274 @@ export default function Sidebar() {
                 </div>
               </div>
             </div>
+          </li>
+
+          {/* HR Dropdown Menu Item */}
+          <li>
+            <button
+              onClick={handleToggleHR}
+              title={!isOpen ? "Human Resources" : undefined}
+              className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
+                isHRActive 
+                  ? 'bg-[#f0f9f4]' 
+          {/* Restaurant Dropdown Menu Item */}
+          <li>
+            <button
+              onClick={handleToggleRestaurant}
+              title={!isOpen ? "Restaurant" : undefined}
+              className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
+                isRestaurantActive
+                  ? 'bg-[#f0f9f4]'
+                  : 'hover:bg-gray-50'
+              } ${isOpen ? 'justify-between' : 'justify-center'}`}
+            >
+              <div className="flex items-center min-w-0">
+                <div className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-colors ${
+                  isHRActive 
+                    ? 'bg-[#e5f4eb] text-[#1b7f43]' 
+                    : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
+                }`}>
+                  <HRIcon sx={{ fontSize: 20 }} />
+                  isRestaurantActive
+                    ? 'bg-[#e5f4eb] text-[#1b7f43]'
+                    : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
+                }`}>
+                  <RestaurantIcon sx={{ fontSize: 20 }} />
+                </div>
+
+                <span className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
+                } ${isHRActive ? 'font-bold text-gray-900' : 'text-gray-600 font-medium'}`}>
+                  Human Resources
+                } ${isRestaurantActive ? 'font-bold text-gray-900' : 'text-gray-600 font-medium'}`}>
+                  Restaurant
+                </span>
+              </div>
+
+              {isOpen && (
+                <div className="pr-1 shrink-0">
+                  <ChevronRightIcon 
+                    fontSize="small" 
+                    className={`transition-transform duration-300 ease-in-out ${
+                      isHRActive ? 'text-[#1b7f43]' : 'text-gray-400'
+                    } ${isHROpen ? 'rotate-90' : 'rotate-0'}`} 
+                  <ChevronRightIcon
+                    fontSize="small"
+                    className={`transition-transform duration-300 ease-in-out ${
+                      isRestaurantActive ? 'text-[#1b7f43]' : 'text-gray-400'
+                    } ${isRestaurantOpen ? 'rotate-90' : 'rotate-0'}`}
+                  />
+                </div>
+              )}
+            </button>
+            <div className={`grid transition-all duration-300 ease-in-out ${
+                isOpen && isHROpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
+              }`}>
+              <div className="overflow-hidden">
+                <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
+                  {hrSubItems.map((subItem) => {
+                    const isSelected = location.pathname === subItem.path;
+                    return (
+                      <Link key={subItem.id} to={subItem.path} className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
+                          isSelected ? 'bg-[#dcefe5] text-[#1b7f43]' : 'hover:bg-white/60 text-slate-600 hover:text-slate-900'
+                        }`}>
+                        {isSelected ? (
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#1b7f43] ring-3 ring-[#1b7f43]/20 mr-3 shrink-0 transition-all duration-200"></div>
+                        ) : (
+                          <div className="w-2 h-2 rounded-full bg-[#3b82f6] mr-3 shrink-0 ml-0.5 transition-all duration-200"></div>
+                        )}
+                        <span className={`text-[13px] whitespace-nowrap truncate ${isSelected ? 'font-bold text-[#1b7f43]' : 'font-semibold'}`}>
+                          {subItem.label}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </li>
+
+          {/* Reports Dropdown Menu Item */}
+          <li>
+            <button
+              onClick={handleToggleReports}
+              title={!isOpen ? "Reports" : undefined}
+              className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
+                isReportsActive 
+                  ? 'bg-[#f0f9f4]' 
+                  : 'hover:bg-gray-50'
+              } ${isOpen ? 'justify-between' : 'justify-center'}`}
+            >
+              <div className="flex items-center min-w-0">
+                <div className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-colors ${
+                  isReportsActive 
+                    ? 'bg-[#e5f4eb] text-[#1b7f43]' 
+                    : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
+                }`}>
+                  <ReportsIcon sx={{ fontSize: 20 }} />
+                </div>
+
+                <span className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
+                } ${isReportsActive ? 'font-bold text-gray-900' : 'text-gray-600 font-medium'}`}>
+                  Reports
+                </span>
+              </div>
+
+              {isOpen && (
+                <div className="pr-1 shrink-0">
+                  <ChevronRightIcon 
+                    fontSize="small" 
+                    className={`transition-transform duration-300 ease-in-out ${
+                      isReportsActive ? 'text-[#1b7f43]' : 'text-gray-400'
+                    } ${isReportsOpen ? 'rotate-90' : 'rotate-0'}`} 
+                  />
+                </div>
+              )}
+            </button>
+            <div className={`grid transition-all duration-300 ease-in-out ${
+                isOpen && isReportsOpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
+              }`}>
+              <div className="overflow-hidden">
+                <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
+                  {reportsSubItems.map((subItem) => {
+                    const isSelected = location.pathname === subItem.path;
+                    return (
+                      <Link key={subItem.id} to={subItem.path} className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
+                          isSelected ? 'bg-[#dcefe5] text-[#1b7f43]' : 'hover:bg-white/60 text-slate-600 hover:text-slate-900'
+                        }`}>
+
+            {/* Smooth Animated Sub-Items */}
+            <div
+              className={`grid transition-all duration-300 ease-in-out ${
+                isOpen && isRestaurantOpen
+                  ? 'grid-rows-[1fr] opacity-100 mt-1'
+                  : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
+              }`}
+            >
+              <div className="overflow-hidden">
+                <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
+                  {restaurantSubItems.map((subItem) => {
+                    const isSelected = location.pathname === subItem.path;
+                    return (
+                      <Link
+                        key={subItem.id}
+                        to={subItem.path}
+                        className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
+                          isSelected
+                            ? 'bg-[#dcefe5] text-[#1b7f43]'
+                            : 'hover:bg-white/60 text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        {isSelected ? (
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#1b7f43] ring-3 ring-[#1b7f43]/20 mr-3 shrink-0 transition-all duration-200"></div>
+                        ) : (
+                          <div className="w-2 h-2 rounded-full bg-[#3b82f6] mr-3 shrink-0 ml-0.5 transition-all duration-200"></div>
+                        )}
+                        <span className={`text-[13px] whitespace-nowrap truncate ${isSelected ? 'font-bold text-[#1b7f43]' : 'font-semibold'}`}>
+                        <span className={`text-[13px] whitespace-nowrap truncate ${
+                          isSelected ? 'font-bold text-[#1b7f43]' : 'font-semibold'
+                        }`}>
+                          {subItem.label}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </li>
+
+          {/* Hotel Settings Dropdown Menu Item */}
+          <li>
+            <button
+              onClick={handleToggleSettings}
+              title={!isOpen ? "Hotel Settings" : undefined}
+              className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
+                isSettingsActive 
+                  ? 'bg-[#f0f9f4]' 
+                  : 'hover:bg-gray-50'
+              } ${isOpen ? 'justify-between' : 'justify-center'}`}
+            >
+              <div className="flex items-center min-w-0">
+                <div className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-colors ${
+                  isSettingsActive 
+                    ? 'bg-[#e5f4eb] text-[#1b7f43]' 
+                    : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
+                }`}>
+                  <SettingsIcon sx={{ fontSize: 20 }} />
+                </div>
+
+                <span className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
+                } ${isSettingsActive ? 'font-bold text-gray-900' : 'text-gray-600 font-medium'}`}>
+                  Hotel Settings
+                </span>
+              </div>
+
+              {isOpen && (
+                <div className="pr-1 shrink-0">
+                  <ChevronRightIcon 
+                    fontSize="small" 
+                    className={`transition-transform duration-300 ease-in-out ${
+                      isSettingsActive ? 'text-[#1b7f43]' : 'text-gray-400'
+                    } ${isSettingsOpen ? 'rotate-90' : 'rotate-0'}`} 
+                  />
+                </div>
+              )}
+            </button>
+            <div className={`grid transition-all duration-300 ease-in-out ${
+                isOpen && isSettingsOpen ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
+              }`}>
+              <div className="overflow-hidden">
+                <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
+                  {settingsSubItems.map((subItem) => {
+                    const isSelected = location.pathname === subItem.path;
+                    return (
+                      <Link key={subItem.id} to={subItem.path} className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
+                          isSelected ? 'bg-[#dcefe5] text-[#1b7f43]' : 'hover:bg-white/60 text-slate-600 hover:text-slate-900'
+                        }`}>
+                        {isSelected ? (
+                          <div className="w-2.5 h-2.5 rounded-full bg-[#1b7f43] ring-3 ring-[#1b7f43]/20 mr-3 shrink-0 transition-all duration-200"></div>
+                        ) : (
+                          <div className="w-2 h-2 rounded-full bg-[#3b82f6] mr-3 shrink-0 ml-0.5 transition-all duration-200"></div>
+                        )}
+                        <span className={`text-[13px] whitespace-nowrap truncate ${isSelected ? 'font-bold text-[#1b7f43]' : 'font-semibold'}`}>
+                          {subItem.label}
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          {/* AI Assistant Tab */}
+          <li>
+            <Link 
+              to="/ai-assistant"
+              title={!isOpen ? "AI Assistant" : undefined}
+              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+                isAssistantActive 
+                  ? 'bg-indigo-50 text-indigo-600' 
+                  : 'hover:bg-gray-50 text-gray-600'
+              } ${isOpen ? 'justify-between' : 'justify-center'}`}
+            >
+              <div className="flex items-center min-w-0">
+                <div className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-colors ${
+                  isAssistantActive 
+                    ? 'bg-indigo-100 text-indigo-600' 
+                    : 'text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
+                }`}>
+                  <AssistantIcon sx={{ fontSize: 19 }} />
+                </div>
+                
+                <span className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
+                } ${isAssistantActive ? 'text-indigo-900 font-bold' : 'text-gray-600 group-hover:text-gray-900 font-medium'}`}>
+                  AI Assistant
+                </span>
+              </div>
+            </Link>
           </li>
 
         </ul>

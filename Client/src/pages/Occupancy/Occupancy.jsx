@@ -28,6 +28,24 @@ import {
   InputLabel,
   Button
 } from '@mui/material';
+import React, { useState } from 'react';
+import BedIcon from '@mui/icons-material/Bed';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PersonIcon from '@mui/icons-material/Person';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import SearchIcon from '@mui/icons-material/Search';
+import FilterAltOffIcon from '@mui/icons-material/FilterAltOff';
+import CleaningServicesIcon from '@mui/icons-material/CleaningServices';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import WifiIcon from '@mui/icons-material/Wifi';
+import AcUnitIcon from '@mui/icons-material/AcUnit';
+import LocalBarIcon from '@mui/icons-material/LocalBar';
+import EventIcon from '@mui/icons-material/Event';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import BuildIcon from '@mui/icons-material/Build';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
+import { TextField, MenuItem, Button, InputAdornment } from '@mui/material';
 import CreateGuestModal from './CreateGuestModal';
 import GuestDetailsModal from './GuestDetailsModal';
 

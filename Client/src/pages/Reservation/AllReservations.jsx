@@ -7,6 +7,26 @@ import {
   Close, FaceOutlined, CalendarTodayOutlined,
   EmailOutlined, PhoneOutlined, Person, SubjectOutlined, LocalOfferOutlined
 } from '@mui/icons-material';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Search from '@mui/icons-material/Search';
+import Download from '@mui/icons-material/Download';
+import MoreVert from '@mui/icons-material/MoreVert';
+import Visibility from '@mui/icons-material/Visibility';
+import Print from '@mui/icons-material/Print';
+import Cancel from '@mui/icons-material/Cancel';
+import Add from '@mui/icons-material/Add';
+import Inventory2 from '@mui/icons-material/Inventory2';
+import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Logout from '@mui/icons-material/Logout';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import { 
+  Menu, MenuItem, IconButton, Popover 
+} from '@mui/material';
 
 const initialBookings = [
   { id: 1, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=11', package: 'All inclusive', roomType: 'Delux', status: 'Cancelled', checkIn: '02/25/2023', checkOut: '02/28/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },

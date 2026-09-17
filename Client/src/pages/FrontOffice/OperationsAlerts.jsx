@@ -27,6 +27,20 @@ import {
   LocalShipping as LocalShippingIcon,
   Send as SendIcon
 } from '@mui/icons-material';
+import React, { useState } from 'react';
+import Notifications from '@mui/icons-material/Notifications';
+import Warning from '@mui/icons-material/Warning';
+import Schedule from '@mui/icons-material/Schedule';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Search from '@mui/icons-material/Search';
+import FileDownload from '@mui/icons-material/FileDownload';
+import MoreHoriz from '@mui/icons-material/MoreHoriz';
+import AddAlert from '@mui/icons-material/AddAlert';
+import Person from '@mui/icons-material/Person';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
 
 // ---- Department visual theme (icon, colors) — reused across load bars + alert cards ----
 const DEPARTMENTS = {
