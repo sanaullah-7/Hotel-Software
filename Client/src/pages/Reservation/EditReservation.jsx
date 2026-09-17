@@ -1,47 +1,48 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ArrowBack from '@mui/icons-material/ArrowBack';
-import Save from '@mui/icons-material/Save';
-import UploadFile from '@mui/icons-material/UploadFile';
-import CalendarMonth from '@mui/icons-material/CalendarMonth';
-import AccessTime from '@mui/icons-material/AccessTime';
-import Person from '@mui/icons-material/Person';
-import Hotel from '@mui/icons-material/Hotel';
-import CreditCard from '@mui/icons-material/CreditCard';
-import NoteAlt from '@mui/icons-material/NoteAlt';
+import { 
+  ArrowBack, Save, UploadFile, CalendarMonth, AccessTime,
+  Person, Hotel, CreditCard, NoteAlt
+} from '@mui/icons-material';
 import {
   TextField, MenuItem, FormControl, InputLabel, Select
 } from '@mui/material';
 
-export default function AddReservation() {
+export default function EditReservation() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    gender: '',
-    mobile: '',
-    city: '',
-    idNumber: '',
-    nationality: '',
+    // Guest Info
+    firstName: 'Pooja',
+    lastName: 'Sarma',
+    email: 'test@example.com',
+    gender: 'Female',
+    mobile: '123456789',
+    city: 'Surat',
+    idNumber: 'P123456789',
+    nationality: 'Indian',
     
-    checkInDate: '2026-09-11',
-    checkOutDate: '2026-09-16',
-    room: '',
-    totalPerson: '',
-    numberOfRooms: '1',
-    purposeOfStay: '',
+    // Stay Details
+    checkInDate: '2020-02-17',
+    checkOutDate: '2020-02-19',
+    packageType: 'Business',
+    totalPerson: '3',
+    numberOfRooms: '2',
+    roomType: 'Delux',
+    arrivalTime: 'Evening (6:00 PM - 10:00 PM)',
+    purposeOfStay: 'Business',
 
-    paymentMethod: '',
-    discountCode: '',
-    bookingReference: 'BK362096OZ10IX',
-    emergencyContactName: '',
-    emergencyContactPhone: '',
+    // Payment & Booking
+    paymentMethod: 'Credit Card',
+    discountCode: 'SAVE10',
+    bookingReference: 'BK123456ABCD',
+    emergencyContactName: 'John Doe',
+    emergencyContactPhone: '987654321',
 
-    address: '',
-    specialRequests: '',
-    note: '',
+    // Additional Details
+    address: '101, Elanxa, New Yourk',
+    specialRequests: 'Non-smoking room, late check-in',
+    note: 'test commit fields',
   });
 
   const [selectedFile, setSelectedFile] = useState(null);
@@ -50,39 +51,6 @@ export default function AddReservation() {
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
       setSelectedFile(e.target.files[0]);
-    }
-  };
-
-  // Dummy list of already registered guests for the dropdown
-  const registeredGuests = [
-    { id: 1, firstName: 'Kamran', lastName: 'Akmal', email: 'kamran@example.com', gender: 'Male', mobile: '0311 1122334', city: 'Lahore', idNumber: '42101-1122334-1', nationality: 'Pakistani' },
-    { id: 2, firstName: 'Mahira', lastName: 'Khan', email: 'mahira@example.com', gender: 'Female', mobile: '0321 6655443', city: 'Karachi', idNumber: '42201-6655443-2', nationality: 'Pakistani' },
-    { id: 3, firstName: 'Cara', lastName: 'Stevens', email: 'cara.s2@example.com', gender: 'Female', mobile: '0321 8887654', city: 'London', idNumber: 'USA-9988221', nationality: 'British' }
-  ];
-
-  // Dummy list of available rooms for the dropdown
-  const availableRooms = [
-    { id: '101', number: '101', type: 'Standard' },
-    { id: '102', number: '102', type: 'Standard' },
-    { id: '205', number: '205', type: 'Deluxe' },
-    { id: '301', number: '301', type: 'Suite' },
-  ];
-
-  const handleGuestSelect = (e) => {
-    const selectedId = e.target.value;
-    const guest = registeredGuests.find(g => g.id === selectedId);
-    if (guest) {
-      setFormData(prev => ({
-        ...prev,
-        firstName: guest.firstName,
-        lastName: guest.lastName,
-        email: guest.email,
-        gender: guest.gender,
-        mobile: guest.mobile,
-        city: guest.city,
-        idNumber: guest.idNumber,
-        nationality: guest.nationality
-      }));
     }
   };
 
@@ -96,7 +64,6 @@ export default function AddReservation() {
 
   const handleSave = (e) => {
     e.preventDefault();
-    // In a real app, send to backend here
     navigate('/reservation/all');
   };
 
@@ -118,9 +85,8 @@ export default function AddReservation() {
   };
 
   return (
-    <div className="animate-fade-in pb-10 space-y-4 max-w-[1600px] mx-auto">
+    <div className="animate-fade-in pb-10 max-w-[1600px] mx-auto p-4 sm:p-6">
       
-
       {/* FORM CARD */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-4">
         <div className="p-6 md:p-8 bg-white">
@@ -133,23 +99,6 @@ export default function AddReservation() {
                   <Person sx={{ fontSize: 22, color: '#1b7f43' }} />
                   <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Guest Information</h3>
                 </div>
-                
-                {/* Auto-fill Dropdown */}
-                <FormControl size="small" sx={{ ...muiInputSx, minWidth: 220 }}>
-                  <InputLabel>Select / Insert Guest</InputLabel>
-                  <Select 
-                    label="Select / Insert Guest" 
-                    onChange={handleGuestSelect}
-                    defaultValue=""
-                  >
-                    <MenuItem value="" disabled><em>Select existing guest...</em></MenuItem>
-                    {registeredGuests.map(guest => (
-                      <MenuItem key={guest.id} value={guest.id}>
-                        {guest.firstName} {guest.lastName} ({guest.idNumber})
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <TextField required label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
@@ -182,24 +131,43 @@ export default function AddReservation() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex gap-2">
-                  <TextField type="date" label="Arrival Date" name="checkInDate" value={formData.checkInDate} onChange={handleChange} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
-                  <TextField type="date" label="Departure Date" name="checkOutDate" value={formData.checkOutDate} onChange={handleChange} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
+                  <TextField type="date" label="Check In Date" name="checkInDate" value={formData.checkInDate} onChange={handleChange} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
+                  <TextField type="date" label="Check Out Date" name="checkOutDate" value={formData.checkOutDate} onChange={handleChange} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
                 </div>
                 
                 <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Select Room</InputLabel>
-                  <Select name="room" value={formData.room} label="Select Room" onChange={handleChange}>
-                    {availableRooms.map(room => (
-                      <MenuItem key={room.id} value={room.id}>
-                        {room.number} - {room.type}
-                      </MenuItem>
-                    ))}
+                  <InputLabel>Select Package Type</InputLabel>
+                  <Select name="packageType" value={formData.packageType} label="Select Package Type" onChange={handleChange}>
+                    <MenuItem value="Business">Business</MenuItem>
+                    <MenuItem value="All inclusive">All inclusive</MenuItem>
+                    <MenuItem value="Wedding">Wedding</MenuItem>
                   </Select>
                 </FormControl>
 
                 <TextField required type="number" label="Total Person" name="totalPerson" value={formData.totalPerson} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
                 <TextField type="number" label="Number of Rooms" name="numberOfRooms" value={formData.numberOfRooms} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
                 
+                <FormControl size="small" fullWidth sx={muiInputSx}>
+                  <InputLabel>Select Room Type</InputLabel>
+                  <Select name="roomType" value={formData.roomType} label="Select Room Type" onChange={handleChange}>
+                    <MenuItem value="Standard">Standard</MenuItem>
+                    <MenuItem value="Delux">Delux</MenuItem>
+                    <MenuItem value="Super Delux">Super Delux</MenuItem>
+                    <MenuItem value="Suite">Suite</MenuItem>
+                    <MenuItem value="Vila">Vila</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <FormControl size="small" fullWidth sx={muiInputSx}>
+                  <InputLabel>Arrival Time</InputLabel>
+                  <Select name="arrivalTime" value={formData.arrivalTime} label="Arrival Time" onChange={handleChange}>
+                    <MenuItem value="Morning (8:00 AM - 12:00 PM)">Morning (8:00 AM - 12:00 PM)</MenuItem>
+                    <MenuItem value="Afternoon (12:00 PM - 6:00 PM)">Afternoon (12:00 PM - 6:00 PM)</MenuItem>
+                    <MenuItem value="Evening (6:00 PM - 10:00 PM)">Evening (6:00 PM - 10:00 PM)</MenuItem>
+                    <MenuItem value="Late Night (After 10:00 PM)">Late Night (After 10:00 PM)</MenuItem>
+                  </Select>
+                </FormControl>
+
                 <FormControl size="small" fullWidth sx={muiInputSx}>
                   <InputLabel>Purpose of Stay</InputLabel>
                   <Select name="purposeOfStay" value={formData.purposeOfStay} label="Purpose of Stay" onChange={handleChange}>
@@ -246,7 +214,7 @@ export default function AddReservation() {
               </div>
               <div className="flex flex-col gap-6">
                 <TextField label="Address" name="address" value={formData.address} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
-                <TextField label="Special Requests (Dietary requirements, accessibility needs, etc.)" name="specialRequests" value={formData.specialRequests} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
+                <TextField label="Special Requests" name="specialRequests" value={formData.specialRequests} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
                 
                 {/* File Upload Box */}
                 <div 
@@ -284,7 +252,7 @@ export default function AddReservation() {
                 className="px-6 py-2.5 text-sm font-bold text-white bg-[#1b7f43] hover:bg-[#156736] rounded-xl shadow-sm transition-all flex items-center gap-2"
               >
                 <Save sx={{ fontSize: 18 }} />
-                Save Reservation
+                Save Changes
               </button>
             </div>
           </form>

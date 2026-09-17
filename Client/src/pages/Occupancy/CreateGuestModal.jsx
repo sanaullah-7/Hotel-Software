@@ -43,9 +43,34 @@ const inputSx = {
   '& .MuiInputLabel-root': { fontSize: '13px' },
 };
 
-export default function CreateGuestModal({ open, onClose, room }) {
+export default function CreateGuestModal({ open, onClose, onSave, room }) {
   const [tab, setTab] = useState(0);
   const roomLabel = room ? `${room.type} - Room ${room.number}` : '';
+
+  const [formData, setFormData] = React.useState({
+    name: '',
+    id: '',
+    vip: false,
+  });
+
+  React.useEffect(() => {
+    if (open) {
+      setFormData({
+        name: room?.guest?.name || '',
+        id: room?.guest?.id || '',
+        vip: room?.guest?.vip || false,
+      });
+      setTab(0);
+    }
+  }, [open, room]);
+
+  const handleSave = () => {
+    if (onSave) {
+      onSave(formData);
+    } else {
+      onClose();
+    }
+  };
 
   return (
     <Dialog
@@ -64,7 +89,7 @@ export default function CreateGuestModal({ open, onClose, room }) {
       {/* HEADER */}
       <Box
         sx={{
-          background: 'linear-gradient(135deg, #5c67f2 0%, #7c3aed 100%)',
+          background: 'linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)',
           px: 3,
           py: 2,
           display: 'flex',
@@ -88,7 +113,7 @@ export default function CreateGuestModal({ open, onClose, room }) {
           </Box>
           <Box>
             <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '16px', lineHeight: 1.2 }}>
-              Add New Guest
+              {room?.guest ? 'Edit Guest Details' : 'Add New Guest'}
             </Typography>
             <Typography sx={{ color: 'rgba(255,255,255,0.75)', fontSize: '12px' }}>
               {roomLabel}
@@ -109,8 +134,8 @@ export default function CreateGuestModal({ open, onClose, room }) {
           backgroundColor: 'white',
           borderBottom: '1px solid #e8eaf6',
           '& .MuiTab-root': { fontSize: '13px', textTransform: 'none', fontWeight: 500, minWidth: 0, color: '#6b7280', py: 1.5 },
-          '& .Mui-selected': { color: '#5c67f2', fontWeight: 600 },
-          '& .MuiTabs-indicator': { backgroundColor: '#5c67f2', height: '2px' },
+          '& .Mui-selected': { color: '#2e7d32', fontWeight: 600 },
+          '& .MuiTabs-indicator': { backgroundColor: '#2e7d32', height: '2px' },
         }}
       >
         <Tab label="Personal Information" />
@@ -124,38 +149,45 @@ export default function CreateGuestModal({ open, onClose, room }) {
         {tab === 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <PersonIcon sx={{ fontSize: 16, color: '#5c67f2' }} />
+              <PersonIcon sx={{ fontSize: 16, color: '#2e7d32' }} />
               <Typography sx={{ fontWeight: 700, fontSize: '14px', color: '#1f2937' }}>Personal Details</Typography>
             </Box>
 
             <TextField
               fullWidth label="Full Name*" size="small" sx={inputSx}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               InputProps={{ endAdornment: <InputAdornment position="end"><BadgeIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
             />
 
             <TextField
               fullWidth label="Email Address*" size="small" sx={inputSx}
+              defaultValue={room?.guest?.name ? `${room.guest.name.toLowerCase().replace(' ','')}@example.com` : ''}
               InputProps={{ endAdornment: <InputAdornment position="end"><EmailIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
             />
 
             <Box sx={{ display: 'flex', gap: 2 }}>
               <TextField
                 fullWidth label="Phone Number*" size="small" sx={inputSx}
+                defaultValue={room?.guest?.name ? '+1-555-1234' : ''}
                 InputProps={{ endAdornment: <InputAdornment position="end"><PhoneIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
               />
               <TextField
                 fullWidth label="ID Number" size="small" sx={inputSx}
+                value={formData.id}
+                onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                 InputProps={{ endAdornment: <InputAdornment position="end"><CreditCardIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
               />
             </Box>
 
             <TextField
               fullWidth label="Address*" size="small" multiline rows={3} sx={inputSx}
+              defaultValue={room?.guest?.name ? '123 Elm Street, Springfield' : ''}
               InputProps={{ endAdornment: <InputAdornment position="end" sx={{ alignSelf: 'flex-start', mt: 1 }}><LocationOnIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
             />
 
             <TextField
-              select label="Nationality" size="small" defaultValue="" sx={{ width: '50%', ...inputSx }}
+              select label="Nationality" size="small" defaultValue={room?.guest?.name ? 'us' : ''} sx={{ width: '50%', ...inputSx }}
               InputProps={{ endAdornment: <InputAdornment position="end"><FlagIcon sx={{ fontSize: 18, color: '#9ca3af', mr: 2 }} /></InputAdornment> }}
             >
               <MenuItem value="">Select</MenuItem>
@@ -172,21 +204,31 @@ export default function CreateGuestModal({ open, onClose, room }) {
         {tab === 1 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <BookmarkIcon sx={{ fontSize: 16, color: '#5c67f2' }} />
+              <BookmarkIcon sx={{ fontSize: 16, color: '#2e7d32' }} />
               <Typography sx={{ fontWeight: 700, fontSize: '14px', color: '#1f2937' }}>Booking Information</Typography>
             </Box>
 
             <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                fullWidth type="date" label="Check-in Date*" size="small"
-                InputLabelProps={{ shrink: true }} sx={inputSx}
-                InputProps={{ endAdornment: <InputAdornment position="end"><CalendarMonthIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
-              />
-              <TextField
-                fullWidth type="date" label="Check-out Date*" size="small"
-                InputLabelProps={{ shrink: true }} sx={inputSx}
-                InputProps={{ endAdornment: <InputAdornment position="end"><CalendarMonthIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
-              />
+              <div className="flex flex-col gap-1 w-full">
+                <span className="text-[10px] font-semibold text-gray-500 pl-0.5">
+                  Check-in Date*
+                </span>
+                <TextField
+                  fullWidth type="date" size="small"
+                  sx={inputSx}
+                  InputProps={{ endAdornment: <InputAdornment position="end"><CalendarMonthIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
+                />
+              </div>
+              <div className="flex flex-col gap-1 w-full">
+                <span className="text-[10px] font-semibold text-gray-500 pl-0.5">
+                  Check-out Date*
+                </span>
+                <TextField
+                  fullWidth type="date" size="small"
+                  sx={inputSx}
+                  InputProps={{ endAdornment: <InputAdornment position="end"><CalendarMonthIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
+                />
+              </div>
             </Box>
 
             <TextField
@@ -229,7 +271,7 @@ export default function CreateGuestModal({ open, onClose, room }) {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
               <Box sx={{ display: 'flex', gap: 0.4 }}>
-                {[0,1,2].map(i => <Box key={i} sx={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#5c67f2' }} />)}
+                {[0,1,2].map(i => <Box key={i} sx={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#2e7d32' }} />)}
               </Box>
               <Typography sx={{ fontWeight: 700, fontSize: '14px', color: '#1f2937' }}>Additional Information</Typography>
             </Box>
@@ -246,7 +288,7 @@ export default function CreateGuestModal({ open, onClose, room }) {
             />
 
             <FormControlLabel
-              control={<Checkbox size="small" sx={{ color: '#5c67f2', '&.Mui-checked': { color: '#5c67f2' } }} />}
+              control={<Checkbox size="small" sx={{ color: '#2e7d32', '&.Mui-checked': { color: '#2e7d32' } }} />}
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <VipIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
@@ -271,8 +313,8 @@ export default function CreateGuestModal({ open, onClose, room }) {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <BedIcon sx={{ fontSize: 16, color: '#5c67f2' }} />
-          <Typography sx={{ fontSize: '12px', color: '#5c67f2', fontWeight: 600 }}>{roomLabel}</Typography>
+          <BedIcon sx={{ fontSize: 16, color: '#2e7d32' }} />
+          <Typography sx={{ fontSize: '12px', color: '#2e7d32', fontWeight: 600 }}>{roomLabel}</Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
           <Button
@@ -287,16 +329,17 @@ export default function CreateGuestModal({ open, onClose, room }) {
             variant="contained"
             size="small"
             startIcon={<BadgeIcon sx={{ fontSize: 14 }} />}
+            onClick={handleSave}
             sx={{
               textTransform: 'none',
               fontSize: '13px',
-              backgroundColor: '#c4c9d4',
+              backgroundColor: '#2e7d32',
               color: 'white',
               fontWeight: 500,
               borderRadius: '8px',
               px: 2,
               boxShadow: 'none',
-              '&:hover': { backgroundColor: '#5c67f2', boxShadow: 'none' }
+              '&:hover': { backgroundColor: '#1b5e20', boxShadow: 'none' }
             }}
           >
             Save Guest Details

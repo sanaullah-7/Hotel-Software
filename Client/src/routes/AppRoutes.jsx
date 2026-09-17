@@ -12,16 +12,26 @@ import GuestComplaint from '../pages/FrontOffice/GuestComplaint';
 // Reservation Module Pages
 import AddReservation from '../pages/Reservation/AddReservation';
 import AllReservations from '../pages/Reservation/AllReservations';
-import ReservationHistory from '../pages/Reservation/ReservationHistory';
-
+import EditReservation from '../pages/Reservation/EditReservation';
+import CancelledBookings from '../pages/Reservation/CancelledBookings';
+import GroupReservations from '../pages/Reservation/GroupReservations';
 // Rooms Module Pages
 import Rooms from '../pages/Rooms/Rooms';
+import RoomTypes from '../pages/Rooms/RoomTypes';
+import RatePricing from '../pages/Rooms/RatePricing';
 import AddRoom from '../pages/Rooms/AddRoom';
 
 // Housekeeping Module Pages
 import RoomsAndCleaning from '../pages/Housekeeping/RoomsAndCleaning';
-import Inspection from '../pages/Housekeeping/Inspection';
-import StaffAssignment from '../pages/Housekeeping/StaffAssignment';
+import CleaningSchedule from '../pages/Housekeeping/CleaningSchedule';
+import LostAndFound from '../pages/Housekeeping/LostAndFound';
+import InspectionChecklist from '../pages/Housekeeping/InspectionChecklist';
+
+// Guests Module
+import Guests from '../pages/guests/Guests';
+
+// Occupancy Module
+import Occupancy from '../pages/occupancy/Occupancy';
 
 // HR Module Pages
 import AllStaff from '../pages/HR/Staff/AllStaff';
@@ -116,8 +126,16 @@ export default function AppRoutes() {
           path="/reservation" 
           element={<Navigate to="/reservation/new" replace />} 
         />
-        <Route 
-          path="/reservation/new" 
+                  <Route 
+            path="/reservation/edit" 
+            element={
+              <DashboardLayout>
+                <EditReservation />
+              </DashboardLayout>
+            } 
+          />
+          <Route 
+            path="/reservation/new" 
           element={
             <DashboardLayout>
               <AddReservation />
@@ -132,20 +150,44 @@ export default function AppRoutes() {
             </DashboardLayout>
           } 
         />
-        <Route 
-          path="/reservation/history" 
-          element={
-            <DashboardLayout>
-              <ReservationHistory />
-            </DashboardLayout>
-          } 
-        />
-        {/* Rooms Sub-Routes */}
+                  <Route 
+            path="/reservation/cancelled" 
+            element={
+              <DashboardLayout>
+                <CancelledBookings />
+              </DashboardLayout>
+            } 
+          />
+                    <Route 
+            path="/reservation/group" 
+            element={
+              <DashboardLayout>
+                <GroupReservations />
+              </DashboardLayout>
+            } 
+          />
+          {/* Rooms Sub-Routes */}
         <Route 
           path="/rooms" 
           element={
             <DashboardLayout>
               <Rooms />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/rooms/room-types" 
+          element={
+            <DashboardLayout>
+              <RoomTypes />
+            </DashboardLayout>
+          } 
+        />
+        <Route 
+          path="/rooms/rate-pricing" 
+          element={
+            <DashboardLayout>
+              <RatePricing />
             </DashboardLayout>
           } 
         />
@@ -171,19 +213,50 @@ export default function AppRoutes() {
             </DashboardLayout>
           } 
         />
+
         <Route 
-          path="/housekeeping/inspection" 
+          path="/housekeeping/cleaning-schedule" 
           element={
             <DashboardLayout>
-              <Inspection />
+              <CleaningSchedule />
             </DashboardLayout>
           } 
         />
+
         <Route 
-          path="/housekeeping/staff-assignment" 
+          path="/housekeeping/lost-and-found" 
           element={
             <DashboardLayout>
-              <StaffAssignment />
+              <LostAndFound />
+            </DashboardLayout>
+          } 
+        />
+
+        <Route 
+          path="/housekeeping/inspection-checklist" 
+          element={
+            <DashboardLayout>
+              <InspectionChecklist />
+            </DashboardLayout>
+          } 
+        />
+
+        {/* Guests Sub-Routes */}
+        <Route 
+          path="/guests" 
+          element={
+            <DashboardLayout>
+              <Guests />
+            </DashboardLayout>
+          } 
+        />
+
+        {/* Occupancy Sub-Routes */}
+        <Route 
+          path="/occupancy" 
+          element={
+            <DashboardLayout>
+              <Occupancy />
             </DashboardLayout>
           } 
         />
@@ -241,3 +314,11 @@ export default function AppRoutes() {
     </Router>
   );
 }
+
+
+
+
+
+
+
+
