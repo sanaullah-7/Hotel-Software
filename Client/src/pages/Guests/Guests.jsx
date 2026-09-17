@@ -1,4 +1,15 @@
 import React, { useState } from 'react';
+import { 
+  Home as HomeIcon,
+  Search,
+  EmailOutlined,
+  PhoneOutlined,
+  ArrowUpward,
+  EditOutlined,
+  ChevronLeft,
+  ChevronRight,
+  FileDownload
+} from '@mui/icons-material';
 import HomeIcon from '@mui/icons-material/Home';
 import Search from '@mui/icons-material/Search';
 import EmailOutlined from '@mui/icons-material/EmailOutlined';

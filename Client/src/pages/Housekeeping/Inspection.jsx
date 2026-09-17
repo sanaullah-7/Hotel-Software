@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { 
+  Search, CheckCircle, Warning, Edit, VerifiedUser, PlayArrow, AssignmentInd, MoreVert, Cancel, AssignmentTurnedIn
+} from '@mui/icons-material';
 import Search from '@mui/icons-material/Search';
 import CheckCircle from '@mui/icons-material/CheckCircle';
 import Warning from '@mui/icons-material/Warning';

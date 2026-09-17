@@ -9,7 +9,7 @@
   "scripts": {
     "lint": "eslint .",
     "test": "vitest run",
-    "start": "nodemon src/Server.js"
+    "dev": "nodemon src/server.js"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

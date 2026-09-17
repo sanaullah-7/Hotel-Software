@@ -1,14 +1,9 @@
 ﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ArrowBack from '@mui/icons-material/ArrowBack';
-import Save from '@mui/icons-material/Save';
-import RestartAlt from '@mui/icons-material/RestartAlt';
-import Hotel from '@mui/icons-material/Hotel';
-import KingBed from '@mui/icons-material/KingBed';
-import SettingsSystemDaydream from '@mui/icons-material/SettingsSystemDaydream';
-import CleaningServices from '@mui/icons-material/CleaningServices';
-import Info from '@mui/icons-material/Info';
-import CloudUpload from '@mui/icons-material/CloudUpload';
+import { 
+  ArrowBack, Save, RestartAlt, Hotel, KingBed, 
+  SettingsSystemDaydream, CleaningServices, Info, CloudUpload
+} from '@mui/icons-material';
 import { 
   TextField, Select, MenuItem, InputLabel, FormControl, 
   Switch, FormControlLabel 
