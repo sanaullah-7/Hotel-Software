@@ -13,9 +13,9 @@
    -------------------------------------------------------------------------- */
 :root {
   /* Brand Colors */
-  --color-primary: #1a2b49;
-  --color-primary-light: #2f4573;
-  --color-primary-dark: #0f1b30;
+  --color-primary: #1b7f43;
+  --color-primary-light: #28a75a;
+  --color-primary-dark: #12572e;
   --color-secondary: #c9a15a;
   --color-secondary-light: #dcb87c;
 
@@ -323,3 +323,5 @@ p {
     width: 100% !important;
   }
 }
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

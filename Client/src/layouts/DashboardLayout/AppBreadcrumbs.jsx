@@ -30,6 +30,7 @@ export default function AppBreadcrumbs() {
 
   const formatName = (name) => {
     if (customSegmentLabels[name]) return customSegmentLabels[name];
+  const formatName = (name) => {
     return name
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -47,6 +48,11 @@ export default function AppBreadcrumbs() {
         </Breadcrumbs>
       </div>
     );
+  }
+
+  // Remove the breadcrumb feature entirely from all Human Resources pages
+  if (pathnames[0] === 'hr') {
+    return null;
   }
 
   return (

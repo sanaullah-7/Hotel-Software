@@ -4,6 +4,12 @@ import {
   Description, Search, FileDownload, Add, 
   Print, Visibility 
 } from '@mui/icons-material';
+import Description from '@mui/icons-material/Description';
+import Search from '@mui/icons-material/Search';
+import FileDownload from '@mui/icons-material/FileDownload';
+import Add from '@mui/icons-material/Add';
+import Print from '@mui/icons-material/Print';
+import Visibility from '@mui/icons-material/Visibility';
 
 export default function RegistrationForms() {
   const navigate = useNavigate();

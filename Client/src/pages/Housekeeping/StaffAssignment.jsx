@@ -2,6 +2,15 @@ import React, { useState } from 'react';
 import { 
   Search, PersonAdd, Delete, Edit, AssignmentInd, MoreVert, CheckCircle, Cancel, FileDownload
 } from '@mui/icons-material';
+import Search from '@mui/icons-material/Search';
+import PersonAdd from '@mui/icons-material/PersonAdd';
+import Delete from '@mui/icons-material/Delete';
+import Edit from '@mui/icons-material/Edit';
+import AssignmentInd from '@mui/icons-material/AssignmentInd';
+import MoreVert from '@mui/icons-material/MoreVert';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Cancel from '@mui/icons-material/Cancel';
+import FileDownload from '@mui/icons-material/FileDownload';
 import { IconButton, Menu, MenuItem, Dialog, Select, FormControl, InputLabel } from '@mui/material';
 
 import { getRooms, getStaff, saveRooms, saveStaff, computeStaffStats } from './hkStore';

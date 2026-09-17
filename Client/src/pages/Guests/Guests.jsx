@@ -10,6 +10,15 @@ import {
   ChevronRight,
   FileDownload
 } from '@mui/icons-material';
+import HomeIcon from '@mui/icons-material/Home';
+import Search from '@mui/icons-material/Search';
+import EmailOutlined from '@mui/icons-material/EmailOutlined';
+import PhoneOutlined from '@mui/icons-material/PhoneOutlined';
+import ArrowUpward from '@mui/icons-material/ArrowUpward';
+import EditOutlined from '@mui/icons-material/EditOutlined';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import FileDownload from '@mui/icons-material/FileDownload';
 
 export default function Guests() {
   const [searchQuery, setSearchQuery] = useState('');

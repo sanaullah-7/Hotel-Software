@@ -39,6 +39,15 @@ export default function AddReservation() {
     note: '',
   });
 
+  const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = React.useRef(null);
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
+
   // Dummy list of already registered guests for the dropdown
   const registeredGuests = [
     { id: 1, firstName: 'Kamran', lastName: 'Akmal', email: 'kamran@example.com', gender: 'Male', mobile: '0311 1122334', city: 'Lahore', idNumber: '42101-1122334-1', nationality: 'Pakistani' },
@@ -235,10 +244,21 @@ export default function AddReservation() {
                 <TextField label="Special Requests (Dietary requirements, accessibility needs, etc.)" name="specialRequests" value={formData.specialRequests} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
                 
                 {/* File Upload Box */}
-                <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer bg-[#fafafa]">
+                <div 
+                  className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer bg-[#fafafa]"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    onChange={handleFileChange} 
+                    className="hidden" 
+                  />
                   <UploadFile className="text-gray-400 mb-2" sx={{ fontSize: 32 }} />
                   <p className="text-sm font-semibold text-gray-700">Upload or drag and drop file here</p>
-                  <p className="text-xs text-gray-400 mt-1">No file chosen</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {selectedFile ? <span className="text-[#1b7f43] font-medium">{selectedFile.name}</span> : 'No file chosen'}
+                  </p>
                 </div>
 
                 <TextField label="Note" name="note" value={formData.note} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
