@@ -49,10 +49,10 @@ import PendingPayments from '../pages/PaymentBilling/PendingPayments';
 import Refunds from '../pages/PaymentBilling/Refunds';
 
 // Guests Module
-import Guests from '../pages/guests/Guests';
+import Guests from '../pages/Guests/Guests';
 
 // Occupancy Module
-import Occupancy from '../pages/occupancy/Occupancy';
+import Occupancy from '../pages/Occupancy/Occupancy';
 
 // HR Module Pages
 import AllStaff from '../pages/HR/Staff/AllStaff';

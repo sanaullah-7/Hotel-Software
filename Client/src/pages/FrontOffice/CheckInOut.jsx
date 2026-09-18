@@ -45,6 +45,22 @@ import {
   VpnKey as VpnKeyIcon,
   CleaningServices as CleaningServicesIcon
 } from '@mui/icons-material';
+import Login from '@mui/icons-material/Login';
+import Logout from '@mui/icons-material/Logout';
+import Search from '@mui/icons-material/Search';
+import FileDownload from '@mui/icons-material/FileDownload';
+import Phone from '@mui/icons-material/Phone';
+import MoreHoriz from '@mui/icons-material/MoreHoriz';
+import Bed from '@mui/icons-material/Bed';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Schedule from '@mui/icons-material/Schedule';
+import Key from '@mui/icons-material/Key';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
+import BookmarkBorder from '@mui/icons-material/BookmarkBorder';
+import HourglassEmpty from '@mui/icons-material/HourglassEmpty';
 
 const PRIMARY = 'var(--primary-main)';
 
@@ -62,7 +78,7 @@ const STATUS_ICONS = {
   Reserved: BookmarkIcon,
 };
 
-const avatarUrl = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=6366f1&color=fff`;
+const avatarUrl = (name) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=A700&color=fff`;
 
 const initialGuests = [
   { id: 'BK-1001', name: 'John Doe', email: 'john.doe@example.com', room: '101', roomType: 'Deluxe', checkIn: '5/20/24', checkOut: '5/22/24', status: 'Pending' },
@@ -910,38 +926,30 @@ export default function CheckInOut() {
             </span>
             <span className="text-[10px] text-gray-400 truncate ml-1">Confirmed</span>
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#f3e8ff] flex items-center justify-center shrink-0">
-            <GroupsIcon className="text-[#a855f7]" sx={{ fontSize: 20 }} />
-          </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-2">
+          
           <div className="flex flex-col">
             <span className="text-gray-500 font-semibold text-[11px]">Total Guests</span>
             <span className="text-lg font-bold text-gray-900 leading-tight">{totalGuests}</span>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#dcfce7] flex items-center justify-center shrink-0">
-            <LoginIcon className="text-[#16a34a]" sx={{ fontSize: 20 }} />
-          </div>
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
+         
           <div className="flex flex-col">
             <span className="text-gray-500 font-semibold text-[11px]">Checked In</span>
             <span className="text-lg font-bold text-gray-900 leading-tight">{checkedInCount}</span>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#e0e7ff] flex items-center justify-center shrink-0">
-            <LogoutIcon className="text-[#4f46e5]" sx={{ fontSize: 20 }} />
-          </div>
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
+         
           <div className="flex flex-col">
             <span className="text-gray-500 font-semibold text-[11px]">Checked Out</span>
             <span className="text-lg font-bold text-gray-900 leading-tight">{checkedOutCount}</span>
           </div>
         </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#fef3c7] flex items-center justify-center shrink-0">
-            <PendingActionsIcon className="text-[#d97706]" sx={{ fontSize: 20 }} />
-          </div>
+        <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
+        
           <div className="flex flex-col">
             <span className="text-gray-500 font-semibold text-[11px]">Pending</span>
             <span className="text-lg font-bold text-gray-900 leading-tight">{pendingCount}</span>
@@ -1018,117 +1026,153 @@ export default function CheckInOut() {
                 <th className="py-2.5 px-2 text-[11px] font-bold text-gray-700 whitespace-nowrap text-center">Actions</th>
               </tr>
             </thead>
-            <tbody>
-              {currentRows.length > 0 ? (
-                currentRows.map((row, index) => {
-                  const globalIdx = indexOfFirstRow + index;
-                  return (
-                    <tr key={index} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      {/* Room */}
-                      <td className="py-2.5 px-3 font-bold text-[12px] text-gray-800 whitespace-nowrap">
-                        {row.room}
-                      </td>
+          <tbody className="divide-y divide-gray-100">
+  {currentRows.map((row) => (
+    <tr key={row.id} className="hover:bg-gray-50">
+      
+      {/* Booking ID */}
+      <td className="py-3 px-3 text-sm font-medium text-gray-700">
+        {row.id}
+      </td>
 
-                      {/* Guest */}
-                      <td className="py-2.5 px-3 font-semibold text-[12px] text-gray-900 whitespace-nowrap">
-                        {row.guest}
-                      </td>
+      {/* Guest Name / Email */}
+      <td className="py-3 px-3">
+        <div className="flex items-center gap-2">
+          <img
+            src={avatarUrl(row.name)}
+            alt={row.name}
+            className="w-8 h-8 rounded-full"
+          />
 
-                      {/* Mobile */}
-                      <td className="py-2.5 px-3 whitespace-nowrap">
-                        <div className="flex items-center text-[11px] text-gray-600 font-medium">
-                          <Phone className="text-[#1b7f43] mr-1" sx={{ fontSize: 12 }} />
-                          {row.mobile}
-                        </div>
-                      </td>
+          <div>
+            <div className="text-sm font-semibold text-gray-800">
+              {row.name}
+            </div>
+            <div className="text-xs text-gray-500">
+              {row.email}
+            </div>
+          </div>
+        </div>
+      </td>
 
-                      {/* Check-in Time */}
-                      <td className="py-2.5 px-3 text-[11px] text-gray-600 whitespace-nowrap">
-                        {row.checkInTime}
-                      </td>
+      {/* Room */}
+      <td className="py-3 px-3">
+        <div className="text-sm font-medium text-gray-700">
+          {row.room}
+        </div>
+        <div className="text-xs text-gray-500">
+          {row.roomType}
+        </div>
+      </td>
 
-                      {/* Check-out Time */}
-                      <td className="py-2.5 px-3 text-[11px] text-gray-600 whitespace-nowrap">
-                        {row.checkOutTime}
-                      </td>
+      {/* Stay Period */}
+      <td className="py-3 px-3">
+        <div className="text-xs text-gray-700">
+          <span>{row.checkIn}</span>
+          <span className="mx-1 text-gray-400">→</span>
+          <span>{row.checkOut}</span>
+        </div>
+      </td>
 
-                      {/* Key Card Status */}
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className={`inline-block px-2 py-0.5 text-[10px] font-bold rounded ${
-                          row.keyCard === 'Issued' ? 'bg-green-50 text-green-700 border border-green-200' :
-                          row.keyCard === 'Returned' ? 'bg-gray-100 text-gray-600' : 
-                          'bg-amber-50 text-amber-700 border border-amber-200'
-                        }`}>
-                          {row.keyCard}
-                        </span>
-                      </td>
+      {/* Status */}
+      <td className="py-3 px-3">
+        <span
+          className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+            STATUS_STYLES[row.status] || 'bg-gray-100 text-gray-600'
+          }`}
+        >
+          {row.status}
+        </span>
+      </td>
 
-                      {/* Status: Check In, Check Out, Pending, Reserved */}
-                      <td className="py-2.5 px-3 text-center whitespace-nowrap">
-                        <span className={`inline-block px-2 py-0.5 text-[10px] font-bold rounded ${getStatusBadge(row.status)}`}>
-                          {row.status}
-                        </span>
-                      </td>
+      {/* Actions */}
+      <td className="py-3 px-2 text-center relative">
+        <button
+          type="button"
+          onClick={() =>
+            setActionMenuOpen(
+              actionMenuOpen === row.id ? null : row.id
+            )
+          }
+          className="p-1.5 rounded-lg hover:bg-gray-100"
+        >
+          <MoreHorizIcon fontSize="small" />
+        </button>
 
-                      {/* Actions with Popup: Check In, Check Out, Edit, Delete */}
-                      <td className="py-2.5 px-2 text-center relative whitespace-nowrap">
-                        <button 
-                          onClick={() => setActionMenuOpen(actionMenuOpen === globalIdx ? null : globalIdx)} 
-                          className="text-gray-400 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100 cursor-pointer"
-                        >
-                          <MoreHoriz fontSize="small" />
-                        </button>
+        {actionMenuOpen === row.id && (
+          <div className="absolute right-2 top-10 z-50 w-40 bg-white border border-gray-200 rounded-lg shadow-lg text-left">
+            
+            <button
+              type="button"
+              onClick={() => {
+                setViewGuest(row);
+                setActionMenuOpen(null);
+              }}
+              className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            >
+              <VisibilityIcon fontSize="small" />
+              View
+            </button>
 
-                        {actionMenuOpen === globalIdx && (
-                          <div className="absolute right-4 top-2 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] border border-gray-100 rounded-xl w-36 z-50 py-1 flex flex-col overflow-hidden animate-fade-in text-left">
-                            {/* Check In Action */}
-                            <button 
-                              onClick={() => handleStatusChange(globalIdx, 'Check In')}
-                              className="flex items-center px-3 py-1.5 text-[11px] font-medium text-[#1b7f43] hover:bg-gray-50 cursor-pointer"
-                            >
-                              <Login className="mr-2 text-[#1b7f43]" sx={{ fontSize: 14 }} /> Check In
-                            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setEditGuest(row);
+                setActionMenuOpen(null);
+              }}
+              className="w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+            >
+              <EditIcon fontSize="small" />
+              Edit
+            </button>
 
-                            {/* Check Out Action */}
-                            <button 
-                              onClick={() => handleStatusChange(globalIdx, 'Check Out')}
-                              className="flex items-center px-3 py-1.5 text-[11px] font-medium text-purple-600 hover:bg-gray-50 cursor-pointer"
-                            >
-                              <Logout className="mr-2 text-purple-600" sx={{ fontSize: 14 }} /> Check Out
-                            </button>
+            {row.status !== 'Checked In' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCheckInActionModal(row);
+                  setActionMenuOpen(null);
+                }}
+                className="w-full px-3 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2"
+              >
+                <LoginIcon fontSize="small" />
+                Check In
+              </button>
+            )}
 
-                            {/* Edit Action */}
-                            <button 
-                              onClick={() => {
-                                alert(`Edit details for guest: ${row.guest} (Room ${row.room})`);
-                                setActionMenuOpen(null);
-                              }}
-                              className="flex items-center px-3 py-1.5 text-[11px] font-medium text-gray-700 hover:bg-gray-50 cursor-pointer"
-                            >
-                              <Edit className="mr-2 text-gray-500" sx={{ fontSize: 14 }} /> Edit
-                            </button>
+            {row.status === 'Checked In' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCheckOutActionModal(row);
+                  setActionMenuOpen(null);
+                }}
+                className="w-full px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 flex items-center gap-2"
+              >
+                <LogoutIcon fontSize="small" />
+                Check Out
+              </button>
+            )}
 
-                            {/* Delete Action */}
-                            <button 
-                              onClick={() => handleDelete(globalIdx)}
-                              className="flex items-center px-3 py-1.5 text-[11px] font-medium text-red-600 hover:bg-red-50 cursor-pointer"
-                            >
-                              <Delete className="mr-2 text-red-500" sx={{ fontSize: 14 }} /> Delete
-                            </button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan="8" className="py-8 text-center text-gray-500 text-[12px]">
-                    No check-in/out records found matching your criteria.
-                  </td>
-                </tr>
-              )}
-            </tbody>
+            <button
+              type="button"
+              onClick={() => {
+                setDeleteGuest(row);
+                setActionMenuOpen(null);
+              }}
+              className="w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+            >
+              <DeleteIcon fontSize="small" />
+              Delete
+            </button>
+
+          </div>
+        )}
+      </td>
+
+    </tr>
+  ))}
+</tbody>
           </table>
       </div>
       </div>

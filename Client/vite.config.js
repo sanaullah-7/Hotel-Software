@@ -19,7 +19,10 @@ export default defineConfig({
       '@emotion/styled',
       'jspdf',
       'jspdf-autotable',
-      'xlsx'
+      'xlsx',
+      'react',
+      'react-dom',
+      'react-router-dom'
     ],
     esbuildOptions: {
       target: 'es2020',

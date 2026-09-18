@@ -79,7 +79,7 @@ export default function GuestDetailsModal({ open, onClose, onEdit, room }) {
       }}
     >
        {/* HEADER */}
-       <Box sx={{ backgroundColor: '#2e7d32', px: 3, py: 2.5, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+       <Box sx={{ backgroundColor: '#2e7d32', px: 3, py: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
              <Box sx={{ backgroundColor: 'rgba(255,255,255,0.15)', p: 1, borderRadius: 2, display: 'flex' }}>
                  <BedIcon sx={{ color: 'white' }} />

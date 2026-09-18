@@ -113,12 +113,12 @@ export default function AddReservation() {
   };
 
   return (
-    <div className="animate-fade-in pb-10 space-y-4 max-w-[1600px] mx-auto">
+    <div className="animate-fade-in max-w-[1600px] mx-auto pt-1">
       
 
       {/* FORM CARD */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-4">
-        <div className="p-6 md:p-8 bg-white">
+      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden mt-1">
+        <div className="p-2 md:p-8 bg-white">
           <form onSubmit={handleSave} className="space-y-6">
             
             {/* SECTION 1: GUEST INFORMATION */}

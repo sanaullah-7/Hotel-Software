@@ -59,7 +59,7 @@ export default function AddRoom() {
   };
 
   return (
-    <div className="space-y-4 max-w-[1600px] mx-auto pb-8 animate-fade-in">
+    <div className="max-w-[1600px] mx-auto animate-fade-in">
       <div className="h-2"></div>
       
       {/* Header section matching other forms */}
@@ -68,8 +68,8 @@ export default function AddRoom() {
       </div>
 
       {/* FORM CARD */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-4">
-        <div className="p-6 md:p-8 bg-white">
+      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden pt-1">
+        <div className="p-4 bg-white">
           <form onSubmit={handleSave} className="space-y-8">
             
             {/* SECTION 1: ROOM INFORMATION */}

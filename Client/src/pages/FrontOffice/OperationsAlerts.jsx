@@ -36,6 +36,19 @@ import {
   LocalShipping as LocalShippingIcon,
   Send as SendIcon
 } from '@mui/icons-material';
+import Notifications from '@mui/icons-material/Notifications';
+import Warning from '@mui/icons-material/Warning';
+import Schedule from '@mui/icons-material/Schedule';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Search from '@mui/icons-material/Search';
+import FileDownload from '@mui/icons-material/FileDownload';
+import MoreHoriz from '@mui/icons-material/MoreHoriz';
+import AddAlert from '@mui/icons-material/AddAlert';
+import Person from '@mui/icons-material/Person';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
 
 // ---- Department visual theme (icon, colors) — reused across load bars + alert cards ----
 const DEPARTMENTS = {
@@ -141,6 +154,34 @@ const initialAlerts = [
 const PRIORITY_OPTIONS = ['All', 'Critical', 'High', 'Medium', 'Low'];
 const STATUS_OPTIONS = ['All', 'Open', 'In Progress', 'Assigned', 'Resolved'];
 
+const muiSelectSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '8px',
+    backgroundColor: '#ffffff',
+    fontSize: '12px',
+    height: '32px',
+    color: '#1f2937',
+    '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' },
+    '&:hover fieldset': { borderColor: '#9ca3af' },
+    '&.Mui-focused fieldset': { borderColor: '#1b7f43', borderWidth: '1.5px' },
+  },
+  '& .MuiSelect-select': {
+    padding: '0 8px',
+    display: 'flex',
+    alignItems: 'center',
+    height: '32px',
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: '13px',
+    color: '#6b7280',
+    transform: 'translate(14px, 7px) scale(1)',
+    '&.Mui-focused': { color: '#1b7f43' }
+  },
+  '& .MuiInputLabel-root.MuiInputLabel-shrink': {
+    transform: 'translate(14px, -9px) scale(0.75)',
+  },
+};
+
 export default function OperationsAlerts() {
 
   // --- INJECTED MISSING VARIABLES ---
@@ -233,55 +274,47 @@ export default function OperationsAlerts() {
   };
 
   return (
-    <div className="p-6 min-h-screen">
+    <div className="pt-1 min-h-screen">
       {/* TOP SUMMARY CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-        <div className="bg-white rounded-[20px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-5 flex gap-4 items-start">
-          <div className="w-[52px] h-[52px] rounded-[16px] bg-[#edf7ed] flex items-center justify-center shrink-0 mt-1">
-            <NotificationsIcon className="text-[#2e7d32]" sx={{ fontSize: 26 }} />
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-2">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex gap-3 items-start">
+        
           <div className="flex flex-col w-full">
-            <div className="flex justify-between items-start w-full mb-1.5">
-              <span className="text-[#64748b] font-bold text-[12px] uppercase leading-tight">Active Alerts</span>
-              <span className="bg-[#edf7ed] text-[#2e7d32] text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1.5 mt-1 shrink-0">
+            <div className="flex justify-between items-start w-full mb-0.5">
+              <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mt-0.5">Active Alerts</span>
+              <span className="bg-[#edf7ed] text-[#2e7d32] text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#2e7d32] animate-pulse"></span>Live
               </span>
             </div>
-            <span className="text-[36px] font-black text-[#0f172a] leading-none mb-1.5 tracking-tight">{activeCount}</span>
-            <span className="text-[12px] text-[#94a3b8] font-medium leading-tight pr-4">Requires operational staff attention</span>
+            <span className="text-[24px] font-black text-[#0f172a] leading-none mb-0.5 tracking-tight">{activeCount}</span>
+            <span className="text-[10px] text-[#94a3b8] font-medium leading-tight">Requires operational staff attention</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-[20px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-5 flex gap-4 items-start">
-          <div className="w-[52px] h-[52px] rounded-[16px] bg-[#fef2f2] flex items-center justify-center shrink-0 mt-1">
-            <WarningIcon className="text-[#ef4444]" sx={{ fontSize: 26 }} />
-          </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex gap-3 items-start">
+          
           <div className="flex flex-col w-full">
-            <span className="text-[#64748b] font-bold text-[12px] uppercase leading-tight mb-1.5">Critical & Urgent</span>
-            <span className="text-[36px] font-black text-[#0f172a] leading-none mb-1.5 tracking-tight">{criticalCount}</span>
-            <span className="text-[12px] text-[#94a3b8] font-medium leading-tight pr-4">High escalation threshold</span>
+            <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">Critical & Urgent</span>
+            <span className="text-[24px] font-black text-[#0f172a] leading-none mb-0.5 tracking-tight">{criticalCount}</span>
+            <span className="text-[10px] text-[#94a3b8] font-medium leading-tight">High escalation threshold</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-[20px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-5 flex gap-4 items-start">
-          <div className="w-[52px] h-[52px] rounded-[16px] bg-[#fff7ed] flex items-center justify-center shrink-0 mt-1">
-            <PendingActionsIcon className="text-[#f97316]" sx={{ fontSize: 26 }} />
-          </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex gap-3 items-start">
+         
           <div className="flex flex-col w-full">
-            <span className="text-[#64748b] font-bold text-[12px] uppercase leading-tight mb-1.5">In Progress</span>
-            <span className="text-[36px] font-black text-[#0f172a] leading-none mb-1.5 tracking-tight">{inProgressCount}</span>
-            <span className="text-[12px] text-[#94a3b8] font-medium leading-tight pr-4">Staff actively attending</span>
+            <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">In Progress</span>
+            <span className="text-[24px] font-black text-[#0f172a] leading-none mb-0.5 tracking-tight">{inProgressCount}</span>
+            <span className="text-[10px] text-[#94a3b8] font-medium leading-tight">Staff actively attending</span>
           </div>
         </div>
 
-        <div className="bg-white rounded-[20px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-5 flex gap-4 items-start">
-          <div className="w-[52px] h-[52px] rounded-[16px] bg-[#ecfdf5] flex items-center justify-center shrink-0 mt-1">
-            <TaskAltIcon className="text-[#10b981]" sx={{ fontSize: 26 }} />
-          </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex gap-3 items-start">
+        
           <div className="flex flex-col w-full">
-            <span className="text-[#64748b] font-bold text-[12px] uppercase leading-tight mb-1.5">Resolved Today</span>
-            <span className="text-[36px] font-black text-[#0f172a] leading-none mb-1.5 tracking-tight">{resolvedCount}</span>
-            <span className="text-[12px] text-[#94a3b8] font-medium leading-tight pr-4">Avg. time: 32 mins</span>
+            <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">Resolved Today</span>
+            <span className="text-[24px] font-black text-[#0f172a] leading-none mb-0.5 tracking-tight">{resolvedCount}</span>
+            <span className="text-[10px] text-[#94a3b8] font-medium leading-tight">Avg. time: 32 mins</span>
           </div>
         </div>
       </div>
@@ -522,16 +555,15 @@ export default function OperationsAlerts() {
         )}
 
       {/* DEPARTMENT OPERATIONS LOAD */}
-      <div className="bg-white rounded-[24px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-7 mb-6">
-        <div className="flex justify-between items-center border-b border-gray-100 pb-5 mb-6">
+      <div className="bg-white rounded-[10px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-4 mb-2">
+        <div className="flex justify-between items-center border-b border-gray-100 mb-4">
           <div className="flex items-center gap-3">
-            <HubIcon sx={{ fontSize: 28 }} className="text-[#2e7d32]" />
             <h2 className="text-[20px] font-black text-[#0f172a]">Department Operations Load</h2>
           </div>
           <span className="text-[#64748b] font-medium text-[13px]">Click a department to filter active tickets</span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
           {departmentLoad.map(({ dept, active }) => {
             const theme = DEPARTMENTS[dept];
             const Icon = theme.icon;
@@ -545,9 +577,7 @@ export default function OperationsAlerts() {
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-[38px] h-[38px] rounded-[12px] flex items-center justify-center shrink-0" style={{ backgroundColor: theme.bg }}>
-                    <Icon sx={{ fontSize: 20 }} style={{ color: theme.color }} />
-                  </div>
+                  
                   <div className="flex flex-col min-w-0">
                     <span className="text-[#0f172a] font-black text-[14px] leading-tight truncate">{dept}</span>
                     <span className="text-[#64748b] font-medium text-[12px]">{active} active</span>
@@ -568,7 +598,7 @@ export default function OperationsAlerts() {
       {/* SEARCH BAR */}
       <div className="flex items-center gap-3 mb-3">
         <div className="relative flex-1">
-          <SearchIcon sx={{ fontSize: 18 }} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          
           <input
             type="text"
             value={searchQuery}
@@ -584,18 +614,18 @@ export default function OperationsAlerts() {
           onClick={() => setBroadcastOpen(true)}
           className="flex items-center gap-1.5 bg-[#2e7d32] hover:brightness-110 text-white px-4 py-2.5 rounded-xl text-[12.5px] font-bold shadow-sm transition-all shrink-0 cursor-pointer"
         >
-          <CampaignIcon sx={{ fontSize: 16 }} /> Broadcast Alert
+           Broadcast Alert
         </button>
       </div>
 
       {broadcastSentMsg && (
         <p className="text-[12px] font-semibold text-[#10b981] flex items-center gap-1.5 mb-3">
-          <CheckCircleIcon sx={{ fontSize: 14 }} /> {broadcastSentMsg}
+           {broadcastSentMsg}
         </p>
       )}
 
       {/* FILTER CHIPS + DROPDOWNS */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setDeptFilter('All')}
@@ -619,117 +649,107 @@ export default function OperationsAlerts() {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[9.5px] font-bold text-gray-400 uppercase pl-1">Priority</span>
-            <select
-              value={priorityFilter}
-              onChange={(e) => setPriorityFilter(e.target.value)}
-              className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-[12px] bg-white focus:outline-none focus:border-[#2e7d32] cursor-pointer"
-            >
-              {PRIORITY_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-            </select>
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[9.5px] font-bold text-gray-400 uppercase pl-1">Status</span>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-[12px] bg-white focus:outline-none focus:border-[#2e7d32] cursor-pointer"
-            >
-              {STATUS_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-            </select>
-          </div>
+          <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
+            <InputLabel>Priority</InputLabel>
+            <Select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} label="Priority">
+              {PRIORITY_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
+            </Select>
+          </FormControl>
+          <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
+            <InputLabel>Status</InputLabel>
+            <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} label="Status">
+              {STATUS_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
+            </Select>
+          </FormControl>
           <button
             onClick={handleReset}
-            className="flex items-center gap-1 px-3 py-1.5 mt-3.5 border border-gray-200 rounded-lg text-[12px] font-semibold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer shrink-0"
+            className="flex items-center gap-1 px-3 h-[32px] border border-gray-200 rounded-lg text-[12px] font-semibold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer shrink-0"
           >
-            <RestartAltIcon sx={{ fontSize: 14 }} /> Reset
+            Reset
           </button>
         </div>
       </div>
 
       {/* ALERTS LIST */}
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
         {filteredAlerts.map(alert => {
           const theme = DEPARTMENTS[alert.department];
           const Icon = theme.icon;
           const isResolved = alert.status === 'Resolved';
 
           return (
-            <div key={alert.id} className="bg-white rounded-[18px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-5">
-              {/* Header row */}
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div className="flex items-start gap-3 min-w-0">
-                  <div className="w-[38px] h-[38px] rounded-[12px] flex items-center justify-center shrink-0" style={{ backgroundColor: theme.bg }}>
-                    <Icon sx={{ fontSize: 20 }} style={{ color: theme.color }} />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="flex items-center flex-wrap gap-2">
-                      <h3 className="text-[14.5px] font-black text-[#0f172a] leading-tight">{alert.title}</h3>
-                      <span className="text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">{alert.id}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY_STYLES[alert.priority]}`}>{alert.priority}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[alert.status]}`}>{alert.status}</span>
+              <div key={alert.id} className="bg-white rounded-[6px] shadow-sm border border-gray-100 p-5">
+                {/* Header row */}
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div className="flex items-start gap-3 min-w-0">
+                    
+                    <div className="min-w-0">
+                      <div className="flex items-center flex-wrap gap-2">
+                        <h3 className="text-[14.5px] font-black text-[#0f172a] leading-tight">{alert.title}</h3>
+                        <span className="text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">{alert.id}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY_STYLES[alert.priority]}`}>{alert.priority}</span>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[alert.status]}`}>{alert.status}</span>
+                      </div>
+                      <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5 text-[11px] text-gray-500 font-medium">
+                        <span className="flex items-center gap-1">{alert.time}</span>
+                        <span className="flex items-center gap-1">{alert.location}</span>
+                        <span className="flex items-center gap-1">{alert.guest}</span>
+                        <span className="flex items-center gap-1">By {alert.reportedBy} ({alert.reportedAgo})</span>
+                      </div>
                     </div>
-                    <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5 text-[11px] text-gray-500 font-medium">
-                      <span className="flex items-center gap-1"><ScheduleIcon sx={{ fontSize: 13 }} className="text-gray-400" />{alert.time}</span>
-                      <span className="flex items-center gap-1"><RoomIcon sx={{ fontSize: 13 }} className="text-gray-400" />{alert.location}</span>
-                      <span className="flex items-center gap-1"><PersonIcon sx={{ fontSize: 13 }} className="text-gray-400" />{alert.guest}</span>
-                      <span className="flex items-center gap-1"><ForumIcon sx={{ fontSize: 13 }} className="text-gray-400" />By {alert.reportedBy} ({alert.reportedAgo})</span>
-                    </div>
                   </div>
+
+                  <span className="flex items-center gap-1.5 text-[10.5px] font-bold text-[#2e7d32] border border-[#c7d2fe] bg-[#edf7ed] px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap">
+                    {alert.assignedTo}
+                  </span>
                 </div>
 
-                <span className="flex items-center gap-1.5 text-[10.5px] font-bold text-[#2e7d32] border border-[#c7d2fe] bg-[#edf7ed] px-2.5 py-1 rounded-full shrink-0 whitespace-nowrap">
-                  <BadgeIcon sx={{ fontSize: 13 }} />{alert.assignedTo}
-                </span>
-              </div>
+                {/* Description */}
+                <p className="text-[12.5px] text-gray-500 leading-relaxed mb-3">{alert.description}</p>
 
-              {/* Description */}
-              <p className="text-[12.5px] text-gray-500 leading-relaxed mb-3">{alert.description}</p>
+                {/* Action Required box */}
+                <div className="bg-[#edf7ed] border border-[#e0e7ff] rounded-xl px-3.5 py-2.5 mb-3 flex items-start gap-2">
+                  
+                  <p className="text-[12px] text-[#4338ca] leading-snug">
+                    <span className="font-bold">Action Required:</span> {alert.action}
+                  </p>
+                </div>
 
-              {/* Action Required box */}
-              <div className="bg-[#edf7ed] border border-[#e0e7ff] rounded-xl px-3.5 py-2.5 mb-3 flex items-start gap-2">
-                <FlagIcon sx={{ fontSize: 15 }} className="text-[#2e7d32] mt-0.5 shrink-0" />
-                <p className="text-[12px] text-[#4338ca] leading-snug">
-                  <span className="font-bold">Action Required:</span> {alert.action}
-                </p>
-              </div>
-
-              {/* Footer row */}
-              <div className="flex items-center justify-between gap-3">
-                {isResolved ? (
-                  <span className="flex items-center gap-1.5 text-[12px] font-bold text-[#10b981]">
-                    <CheckCircleIcon sx={{ fontSize: 15 }} /> Resolved
-                  </span>
-                ) : alert.priority !== 'Critical' ? (
-                  <button
-                    onClick={() => handleEscalate(alert.id)}
-                    className="flex items-center gap-1 text-[11.5px] font-bold text-[#ef4444] hover:underline cursor-pointer"
-                  >
-                    <ReportProblemIcon sx={{ fontSize: 14 }} /> Escalate Urgency
-                  </button>
-                ) : <span />}
-
-                {!isResolved && (
-                  <div className="flex items-center gap-2">
-                    {alert.status !== 'In Progress' && (
-                      <button
-                        onClick={() => handleAcknowledge(alert.id)}
-                        className="flex items-center gap-1.5 bg-[#2e7d32] hover:brightness-110 text-white px-3.5 py-1.5 rounded-lg text-[11.5px] font-bold shadow-sm transition-all cursor-pointer"
-                      >
-                        <HandshakeIcon sx={{ fontSize: 14 }} /> Acknowledge &amp; Amend
-                      </button>
-                    )}
+                {/* Footer row */}
+                <div className="flex items-center justify-between gap-3">
+                  {isResolved ? (
+                    <span className="flex items-center gap-1.5 text-[12px] font-bold text-[#10b981]">
+                       Resolved
+                    </span>
+                  ) : alert.priority !== 'Critical' ? (
                     <button
-                      onClick={() => handleResolve(alert.id)}
-                      className="flex items-center gap-1.5 bg-[#10b981] hover:brightness-110 text-white px-3.5 py-1.5 rounded-lg text-[11.5px] font-bold shadow-sm transition-all cursor-pointer"
+                      onClick={() => handleEscalate(alert.id)}
+                      className="flex items-center gap-1 text-[11.5px] font-bold text-[#ef4444] hover:underline cursor-pointer"
                     >
-                      <TaskAltIcon sx={{ fontSize: 14 }} /> Mark Resolved
+                       Escalate Urgency
                     </button>
-                  </div>
-                )}
+                  ) : <span />}
+
+                  {!isResolved && (
+                    <div className="flex items-center gap-2">
+                      {alert.status !== 'In Progress' && (
+                        <button
+                          onClick={() => handleAcknowledge(alert.id)}
+                          className="flex items-center gap-1.5 bg-[#2e7d32] hover:brightness-110 text-white px-3.5 py-1.5 rounded-lg text-[11.5px] font-bold shadow-sm transition-all cursor-pointer"
+                        >
+                          Acknowledge
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleResolve(alert.id)}
+                        className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-white px-3.5 py-1.5 rounded-lg text-[11.5px] font-bold shadow-sm transition-all cursor-pointer"
+                      >
+                         Mark Resolved
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
           );
         })}
 
@@ -754,7 +774,7 @@ export default function OperationsAlerts() {
             <div className="bg-[#2e7d32] p-5 flex items-start justify-between">
               <div className="flex items-center gap-4">
                 <div className="w-[50px] h-[50px] rounded-full border border-white/30 bg-white/10 flex items-center justify-center shrink-0">
-                  <NotificationsIcon className="text-white" sx={{ fontSize: 24 }} />
+                  
                 </div>
                 <div className="flex flex-col">
                   <h2 className="text-white text-[18px] font-bold leading-tight mb-1">Dispatch Operations Alert</h2>
@@ -762,7 +782,7 @@ export default function OperationsAlerts() {
                 </div>
               </div>
               <button onClick={() => setBroadcastOpen(false)} className="text-white/70 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors cursor-pointer">
-                <CloseIcon sx={{ fontSize: 20 }} />
+                
               </button>
             </div>
 
@@ -774,7 +794,7 @@ export default function OperationsAlerts() {
                   <TextField 
                     fullWidth label="Alert Title / Summary*" variant="outlined" size="small"
                     value={alertTitle} onChange={(e) => setAlertTitle(e.target.value)}
-                    InputProps={{ startAdornment: <InputAdornment position="start"><CampaignIcon sx={{ fontSize: 18 }} /></InputAdornment> }}
+                    InputProps={{ startAdornment: <InputAdornment position="start"></InputAdornment> }}
                   />
                 </div>
                 <div className="hidden md:block"></div>
@@ -803,18 +823,18 @@ export default function OperationsAlerts() {
                 {/* Row 3 */}
                 <TextField 
                   fullWidth label="Room / Location (Optional)" variant="outlined" size="small"
-                  InputProps={{ startAdornment: <InputAdornment position="start"><RoomIcon sx={{ fontSize: 18 }} /></InputAdornment> }}
+                  InputProps={{ startAdornment: <InputAdornment position="start"></InputAdornment> }}
                 />
                 <TextField 
                   fullWidth label="Guest Name (Optional)" variant="outlined" size="small"
-                  InputProps={{ startAdornment: <InputAdornment position="start"><PersonIcon sx={{ fontSize: 18 }} /></InputAdornment> }}
+                  InputProps={{ startAdornment: <InputAdornment position="start"></InputAdornment> }}
                 />
 
                 {/* Row 4 */}
                 <div className="col-span-1">
                   <TextField 
                     fullWidth label="Assign To Staff / Team (...)" variant="outlined" size="small"
-                    InputProps={{ startAdornment: <InputAdornment position="start"><BadgeIcon sx={{ fontSize: 18 }} /></InputAdornment> }}
+                    InputProps={{ startAdornment: <InputAdornment position="start"></InputAdornment> }}
                   />
                 </div>
                 <div className="hidden md:block"></div>
@@ -823,7 +843,7 @@ export default function OperationsAlerts() {
                 <div className="col-span-1">
                   <TextField 
                     fullWidth label="Specific Action Required*" variant="outlined" size="small"
-                    InputProps={{ startAdornment: <InputAdornment position="start"><TaskAltIcon sx={{ fontSize: 18 }} /></InputAdornment> }}
+                    InputProps={{ startAdornment: <InputAdornment position="start"></InputAdornment> }}
                   />
                 </div>
                 <div className="hidden md:block"></div>
@@ -850,7 +870,7 @@ export default function OperationsAlerts() {
                 disabled={!alertTitle.trim()}
                 className="px-6 py-2.5 rounded-lg bg-[#2e7d32] hover:bg-[#1b5e20] disabled:opacity-50 text-white text-[13px] font-bold transition-colors cursor-pointer flex items-center gap-2"
               >
-                <SendIcon sx={{ fontSize: 16 }} />
+                
                 Broadcast Alert
               </button>
             </div>

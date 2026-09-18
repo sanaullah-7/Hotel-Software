@@ -1,10 +1,33 @@
 import React, { useState } from 'react';
-import { 
-  Search, Add, Bed, CleaningServices, CheckCircle, VerifiedUser,
-  BuildCircle, Warning, Edit, Delete, ChevronLeft, ChevronRight,
-  MoreVert, TaskAlt, Block, NotificationsActive, Cancel
+import {
+  Search,
+  Add,
+  Bed,
+  CleaningServices,
+  CheckCircle,
+  VerifiedUser,
+  BuildCircle,
+  Warning,
+  Edit,
+  Delete,
+  ChevronLeft,
+  ChevronRight,
+  MoreVert,
+  TaskAlt,
+  Block,
+  NotificationsActive,
+  Cancel
 } from '@mui/icons-material';
-import { IconButton, Menu, MenuItem, Dialog, Select, FormControl, InputLabel } from '@mui/material';
+
+import {
+  IconButton,
+  Menu,
+  MenuItem,
+  Dialog,
+  Select,
+  FormControl,
+  InputLabel
+} from '@mui/material';
 
 const STATUS_TABS = ['All Rooms', 'Dirty', 'Cleaning', 'Inspection Required', 'Clean / Ready', 'Occupied', 'DND', 'Out of Order'];
 
@@ -43,7 +66,7 @@ export default function RoomsAndCleaning() {
   const [searchQuery, setSearchQuery] = useState('');
   const [rooms, setRooms] = useState(getRooms());
   const [staff, setStaff] = useState(getStaff());
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] =   useState(null);
   const [selectedRoomId, setSelectedRoomId] = useState(null);
 
   const [blinkActive, setBlinkActive] = useState(false);

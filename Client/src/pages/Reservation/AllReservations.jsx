@@ -9,6 +9,21 @@ import {
   Inventory2, KeyboardArrowDown, ChevronLeft, ChevronRight, CheckCircle, MoreVert, Download, Logout, Edit, Delete
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import Download from '@mui/icons-material/Download';
+import MoreVert from '@mui/icons-material/MoreVert';
+import Visibility from '@mui/icons-material/Visibility';
+import Print from '@mui/icons-material/Print';
+import Cancel from '@mui/icons-material/Cancel';
+import Add from '@mui/icons-material/Add';
+import Inventory2 from '@mui/icons-material/Inventory2';
+import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Logout from '@mui/icons-material/Logout';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import { Menu, IconButton, Popover } from '@mui/material';
 
 function InventoryCell({ items = [] }) {
   const [anchorEl, setAnchorEl] = useState(null);

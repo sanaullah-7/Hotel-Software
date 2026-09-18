@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  FilterList, Add, Refresh, Calculate, PictureAsPdf,
-  EditOutlined, DeleteOutlined, Close, Search, KeyboardArrowLeft, KeyboardArrowRight,
-  Settings
-} from '@mui/icons-material';
+import { FilterList, Add, Refresh, Calculate, PictureAsPdf, EditOutlined, DeleteOutlined, Close, Search, KeyboardArrowLeft, KeyboardArrowRight, AddCircle, TableChart, ViewWeek, AddCircleOutlined } from '@mui/icons-material';;;;
 import { 
   TextField, FormControl, InputLabel, Select, MenuItem,
   Checkbox, Menu 
@@ -150,12 +146,12 @@ export default function RatePricing() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-transparent p-6 flex flex-col">
+    <div className="w-full bg-transparent pt-1 flex flex-col">
       
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 flex-1 flex flex-col overflow-hidden">
+      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 flex-1 flex flex-col overflow-hidden">
         
         {/* Header Bar */}
-        <div className="px-5 py-4 flex items-center justify-between border-b border-gray-100">
+        <div className="p-2 flex items-center justify-between border-b border-gray-100">
           <div className="flex items-center gap-4">
             <h2 className="text-[16px] font-bold text-gray-700">Room Rates</h2>
             <div className="relative">
@@ -170,26 +166,43 @@ export default function RatePricing() {
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={(e) => setColumnsMenuAnchor(e.currentTarget)} 
-              className="text-[#3b82f6] hover:bg-blue-50 p-1.5 rounded-full transition-colors cursor-pointer"
-            >
-              <FilterList sx={{ fontSize: 22 }} />
-            </button>
-            <button onClick={handleOpenAdd} className="text-[#10b981] hover:bg-green-50 p-1.5 rounded-full transition-colors cursor-pointer border border-[#10b981]">
-              <Add sx={{ fontSize: 18 }} />
-            </button>
-            <button onClick={() => setRates(initialRates)} className="text-[#64748b] hover:bg-slate-50 p-1.5 rounded-full transition-colors cursor-pointer">
-              <Refresh sx={{ fontSize: 22 }} />
-            </button>
-            <button onClick={handleExportCSV} className="text-[#3b82f6] hover:bg-blue-50 p-1.5 rounded-full transition-colors cursor-pointer" title="Export CSV">
-              <Calculate sx={{ fontSize: 22 }} />
-            </button>
-            <button onClick={handleExportPDF} className="text-[#ef4444] hover:bg-red-50 p-1.5 rounded-full transition-colors cursor-pointer" title="Export PDF">
-              <PictureAsPdf sx={{ fontSize: 22 }} />
-            </button>
-          </div>
+          <div className="flex items-center gap-2">
+              <button 
+                onClick={(e) => setColumnsMenuAnchor(e.currentTarget)} 
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
+                title="Filter"
+              >
+                <FilterList sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+              </button>
+              <button 
+                onClick={handleOpenAdd}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
+                title="Add"
+              >
+                <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#1b7f43]" />
+              </button>
+              <button 
+                onClick={() => setRates(initialRates)}
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
+                title="Refresh"
+              >
+                <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+              </button>
+              <button 
+                onClick={handleExportCSV} 
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+                title="Export CSV"
+              >
+                <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
+              </button>
+              <button 
+                onClick={handleExportPDF} 
+                className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" 
+                title="Export PDF"
+              >
+                <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
+              </button>
+            </div>
         </div>
 
         {/* Column Visibility Menu */}
@@ -249,14 +262,12 @@ export default function RatePricing() {
                   )}
                   {visibleColumns.effectiveDate && (
                     <td className="px-5 py-3 text-[13.5px] text-gray-600 flex items-center gap-2">
-                      <span className="material-icons-outlined text-[16px] text-gray-400">calendar_today</span>
                       {formatDate(rate.effectiveDate)}
                     </td>
                   )}
                   {visibleColumns.endDate && (
                     <td className="px-5 py-3 text-[13.5px] text-gray-600">
                       <div className="flex items-center gap-2">
-                        <span className="material-icons-outlined text-[16px] text-gray-400">calendar_today</span>
                         {formatDate(rate.endDate)}
                       </div>
                     </td>
@@ -329,12 +340,6 @@ export default function RatePricing() {
         </div>
       </div>
 
-      {/* Floating Action Button */}
-      <div className="fixed bottom-6 right-6">
-        <button className="w-12 h-12 bg-[#86efac] text-[#16a34a] rounded-full flex items-center justify-center shadow-lg hover:brightness-95 transition-all cursor-pointer">
-          <Settings />
-        </button>
-      </div>
 
       {/* Add / Edit Modal */}
       {isModalOpen && (
@@ -396,10 +401,10 @@ export default function RatePricing() {
               </div>
               
               <div className="flex items-center gap-3 mt-8">
-                <button type="submit" className="px-6 py-2.5 rounded-full border border-transparent bg-green-50 text-[var(--primary-main)] border-green-200 font-bold text-[13px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm">
+                <button type="submit" className="px-2 py-2.5 rounded-full border border-transparent bg-green-50 text-[var(--primary-main)] border-green-200 font-bold text-[13px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm">
                   Save
                 </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-2.5 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-2 py-2.5 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
                   Cancel
                 </button>
               </div>
@@ -421,10 +426,10 @@ export default function RatePricing() {
             </div>
             
             <div className="flex justify-center gap-3">
-              <button onClick={handleDelete} className="px-6 py-2.5 rounded-full bg-[#c2410c] text-white font-bold text-[14px] hover:bg-[#9a3412] transition-colors cursor-pointer shadow-sm">
+              <button onClick={handleDelete} className="px-2 py-2.5 rounded-full bg-[#c2410c] text-white font-bold text-[14px] hover:bg-[#9a3412] transition-colors cursor-pointer shadow-sm">
                 Delete
               </button>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-6 py-2.5 rounded-full bg-[#166534] text-white font-bold text-[14px] hover:bg-[#14532d] transition-colors cursor-pointer shadow-sm">
+              <button onClick={() => setIsDeleteModalOpen(false)} className="px-2 py-2.5 rounded-full bg-[#166534] text-white font-bold text-[14px] hover:bg-[#14532d] transition-colors cursor-pointer shadow-sm">
                 Cancel
               </button>
             </div>

@@ -5,6 +5,42 @@ import {
   SentimentVeryDissatisfied, Room, Person, Phone,
   ChevronLeft, ChevronRight, AccessTime, Edit, Delete
 } from '@mui/icons-material';
+import ReportProblem from '@mui/icons-material/ReportProblem';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import PendingActions from '@mui/icons-material/PendingActions';
+import FileDownload from '@mui/icons-material/FileDownload';
+import MoreHoriz from '@mui/icons-material/MoreHoriz';
+import Add from '@mui/icons-material/Add';
+import SentimentVeryDissatisfied from '@mui/icons-material/SentimentVeryDissatisfied';
+import Room from '@mui/icons-material/Room';
+import Phone from '@mui/icons-material/Phone';
+import ChevronLeft from '@mui/icons-material/ChevronLeft';
+import ChevronRight from '@mui/icons-material/ChevronRight';
+import AccessTime from '@mui/icons-material/AccessTime';
+import Edit from '@mui/icons-material/Edit';
+import Delete from '@mui/icons-material/Delete';
+
+const initialComplaints = [
+  { id: 1, date: '05/20/2024', guestName: 'John Doe', roomNo: '101', type: 'Plumbing', description: 'Leaking tap ...', priority: 'Medium', status: 'Open' },
+  { id: 2, date: '05/19/2024', guestName: 'Jane Smith', roomNo: '205', type: 'Housekeeping', description: 'Towels not r...', priority: 'Low', status: 'Resolved' },
+  { id: 3, date: '05/18/2024', guestName: 'Robert Brown', roomNo: '302', type: 'Electrical', description: 'Waitlight not...', priority: 'High', status: 'In Progress' },
+  { id: 4, date: '05/21/2024', guestName: 'Emily Johns...', roomNo: '105', type: 'Noise', description: 'Loud noise f...', priority: 'Medium', status: 'Open' },
+  { id: 5, date: '05/22/2024', guestName: 'Michael Wils...', roomNo: '210', type: 'Air Conditio...', description: 'AC not cooli...', priority: 'High', status: 'In Progress' },
+  { id: 6, date: '05/23/2024', guestName: 'Sarah Miller', roomNo: '315', type: 'Housekeeping', description: 'Room not cl...', priority: 'Medium', status: 'Open' },
+  { id: 7, date: '05/24/2024', guestName: 'David Ander...', roomNo: '118', type: 'Plumbing', description: 'Shower drai...', priority: 'High', status: 'Resolved' }
+];
+
+const priorityStyles = {
+  Low: 'bg-[#cffafe] text-[#06b6d4]',
+  Medium: 'bg-[#ffedd5] text-[#f97316]',
+  High: 'bg-[#fce7f3] text-[#ec4899]'
+};
+
+const statusStyles = {
+  Open: 'bg-[#fce7f3] text-[#ec4899]',
+  Resolved: 'bg-[#d1fae5] text-[#10b981]',
+  'In Progress': 'bg-[#ffedd5] text-[#f97316]'
+};
 
 export default function GuestComplaint() {
   const [activeTab, setActiveTab] = useState('All');

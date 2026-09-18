@@ -28,7 +28,6 @@ import {
   InputLabel,
   Button
 } from '@mui/material';
-
 import CreateGuestModal from './CreateGuestModal';
 import GuestDetailsModal from './GuestDetailsModal';
 
@@ -194,38 +193,39 @@ export default function Occupancy() {
     // FIX: removed the global `space-y-4` — it was auto-adding a margin-top to every
     // section, stacking on top of each section's own margin and making gaps inconsistent.
     // Each section below now controls its own top margin explicitly.
-    <div className="animate-fade-in pb-8">
+    <div className="animate-fade-in">
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#eef0ff] text-[#5c67f2] mr-4 shrink-0"><BedIcon /></div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
+        <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
+
           <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.length}</div><div className="text-[13px] text-gray-500 font-medium">Total Rooms</div></div>
         </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#eaf7ee] text-[#1b7f43] mr-4 shrink-0"><CheckCircleIcon /></div>
+        <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
           <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.filter(r => r.status === 'AVAILABLE').length}</div><div className="text-[13px] text-gray-500 font-medium">Available</div></div>
         </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#fce8e8] text-[#e53935] mr-4 shrink-0"><PersonIcon /></div>
+        <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
           <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.filter(r => r.status === 'OCCUPIED').length}</div><div className="text-[13px] text-gray-500 font-medium">Occupied</div></div>
         </div>
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center">
-          <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#eaf3fd] text-[#1976d2] mr-4 shrink-0"><BarChartIcon /></div>
+        <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
           <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{Math.round((rooms.filter(r => r.status === 'OCCUPIED').length / rooms.length) * 100)}%</div><div className="text-[13px] text-gray-500 font-medium">Occupancy Rate</div></div>
         </div>
       </div>
 
-      {/* SEARCH AND FILTERS ROW — mt-2 gives a small, tight gap right under the summary cards */}
-      <div className="flex flex-wrap gap-2 mt-2 items-end w-full">
-        <TextField
+      {/* ROOM CARDS & TABLE */}
+        <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5">
+          {/* Table Header with Filters */}
+          <div className="p-2.5 flex items-center justify-between border-b border-gray-100 gap-4 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="flex flex-nowrap items-end gap-2 shrink-0">
+              
+              <TextField
           variant="outlined" size="small" placeholder="Search rooms, guests..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: 'text.secondary', ml: -0.5, mr: 0.5 }} /></InputAdornment> }}
-          sx={{ minWidth: 200, flexBasis: 200, flexGrow: 1, maxWidth: 320, '& .MuiInputBase-root': { height: '32px', backgroundColor: 'white', fontSize: '12px', borderRadius: '8px' }, '& .MuiOutlinedInput-input': { padding: '0 8px' }, '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' }, '&:hover fieldset': { borderColor: '#9ca3af' }, '& .Mui-focused fieldset': { borderColor: '#1b7f43 !important', borderWidth: '1.5px !important' } }}
+          sx={{ minWidth: 150, flexBasis: 140, maxWidth: 160, '& .MuiInputBase-root': { height: '32px', backgroundColor: 'white', fontSize: '12px', borderRadius: '8px' }, '& .MuiOutlinedInput-input': { padding: '0 8px' }, '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' }, '&:hover fieldset': { borderColor: '#9ca3af' }, '& .Mui-focused fieldset': { borderColor: '#1b7f43 !important', borderWidth: '1.5px !important' } }}
         />
         
-        <FormControl size="small" sx={{ minWidth: 125, ...muiSelectSx }}>
+        <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
           <InputLabel>Status</InputLabel>
           <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} label="Status">
             {STATUS_OPTIONS.map(opt => (
@@ -238,35 +238,35 @@ export default function Occupancy() {
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 130, ...muiSelectSx }}>
+        <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
           <InputLabel>Room Type</InputLabel>
           <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} label="Room Type">
             {ROOM_TYPE_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 110, ...muiSelectSx }}>
+        <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
           <InputLabel>Floor</InputLabel>
           <Select value={floorFilter} onChange={(e) => setFloorFilter(e.target.value)} label="Floor">
             {FLOOR_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 120, ...muiSelectSx }}>
+        <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
           <InputLabel>Bed Size</InputLabel>
           <Select value={bedFilter} onChange={(e) => setBedFilter(e.target.value)} label="Bed Size">
             {BED_SIZE_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
           </Select>
         </FormControl>
 
-        <FormControl size="small" sx={{ minWidth: 135, ...muiSelectSx }}>
+        <FormControl size="small" sx={{ minWidth: 105, ...muiSelectSx }}>
           <InputLabel>Housekeeping</InputLabel>
           <Select value={hkFilter} onChange={(e) => setHkFilter(e.target.value)} label="Housekeeping">
             {HOUSEKEEPING_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
           </Select>
         </FormControl>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-0.1">
           <span className="text-[10px] font-semibold text-gray-500 pl-0.5">
             Check-in From
           </span>
@@ -275,7 +275,7 @@ export default function Occupancy() {
             sx={{ minWidth: 140, ...dateFieldSx }}
           />
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-0.1">
           <span className="text-[10px] font-semibold text-gray-500 pl-0.5">
             Check-out To
           </span>
@@ -288,94 +288,107 @@ export default function Occupancy() {
           onClick={handleClear}
           sx={{ height: '32px', textTransform: 'none', fontSize: '12px', minWidth: 75, px: 1, backgroundColor: 'white', borderRadius: '8px', borderColor: '#e5e7eb', color: '#ef4444', '&:hover': { backgroundColor: '#fef2f2', borderColor: '#ef4444' } }}
         >Clear</Button>
-      </div>
-
-      {/* ROOM CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-2">
-        {filteredRooms.map(room => (
-          <div key={room.number} className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col">
-            {/* Card Header */}
-            <div className="flex justify-between items-start mb-3">
-              <div>
-                <h2 className="text-xl font-bold text-gray-900 leading-none mb-0.5">{room.number}</h2>
-                <p className="text-xs text-gray-400 font-medium">{room.type} · Floor {room.floor}</p>
-              </div>
-              <span className="flex items-center gap-1 text-white text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: room.statusColor }}>
-                {room.status}
-              </span>
             </div>
+            
+          
+          </div>
 
-            {/* Room Info Grid */}
-            <div className="grid grid-cols-2 gap-y-2 text-[12px] text-gray-600 mb-3">
-              <div className="flex items-center gap-1.5"><BedIcon sx={{ fontSize: 15, color: '#9ca3af' }} />{room.bed}</div>
-              <div className="flex items-center gap-1.5"><PersonIcon sx={{ fontSize: 15, color: '#9ca3af' }} />{room.adults} Adult{room.adults !== 1 ? 's' : ''}{room.children > 0 ? `, ${room.children} Child` : ''} / {room.maxOccupancy}</div>
-              <div className="flex items-center gap-1.5"><AttachMoneyIcon sx={{ fontSize: 15, color: '#9ca3af' }} /><span className="font-bold text-gray-800">${room.price}</span><span className="text-[10px] text-gray-400">/night</span></div>
-              <div className="flex items-center gap-1.5" style={{ color: room.housekeepingColor }}>
-                <CleaningServicesIcon sx={{ fontSize: 15 }} />{room.housekeeping}
-              </div>
-            </div>
+          {/* Table */}
+          <div className="overflow-x-auto w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <table className="w-full text-left whitespace-nowrap">
+              <thead className="bg-gray-50/50">
+                <tr>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Type & Floor</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Bed</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Occupancy</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Price</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Housekeeping</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Guest</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredRooms.map(room => (
+                  <tr key={room.number} className="hover:bg-gray-50/30 transition-colors cursor-pointer" onClick={() => room.guest ? openDetailsModal(room) : openModal(room)}>
+                    <td className="py-2 px-3 text-[13px] font-bold text-gray-900">{room.number}</td>
+                    <td className="py-2 px-3">
+                      <div className="text-[12px] font-bold text-gray-800">{room.type}</div>
+                      <div className="text-[11px] text-gray-500">Floor {room.floor}</div>
+                    </td>
+                    <td className="py-2 px-3 text-[12px] text-gray-600">
+                      <div className="flex items-center gap-1.5"> {room.bed}</div>
+                    </td>
+                    <td className="py-2 px-3 text-[12px] text-gray-600">
+                      <div className="flex items-center gap-1.5">
+                        <PersonIcon sx={{ fontSize: 16, color: '#9ca3af' }} />
+                        {room.adults} Adult{room.adults !== 1 ? 's' : ''}{room.children > 0 ? `, ${room.children} Child` : ''}
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 text-[12px] text-gray-600">
+                      <span className="font-bold text-gray-800">${room.price}</span><span className="text-[10px] text-gray-400">/night</span>
+                    </td>
+                    <td className="py-2 px-3">
+                      <span className="inline-flex items-center gap-1 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {room.status}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3 text-[12px]" style={{ color: room.housekeepingColor }}>
+                      <div className="flex items-center gap-1.5">
+                      {room.housekeeping}
+                      </div>
+                    </td>
+                    <td className="py-2 px-3">
+                      {room.guest ? (
+                        <div className="flex flex-col gap-0.5">
+                          <div className="flex items-center gap-1.5 font-semibold text-gray-800 text-[12px]">
+                        <PersonIcon sx={{ fontSize: 16, color: '#9ca3af' }} />
+                            {room.guest.name}
+                          </div>
 
-            {/* Amenities */}
-            <div className="flex gap-2 text-gray-300 mb-3">
-              {room.amenities.includes('wifi') && <WifiIcon sx={{ fontSize: 16 }} />}
-              {room.amenities.includes('ac') && <AcUnitIcon sx={{ fontSize: 16 }} />}
-              {room.amenities.includes('bar') && <LocalBarIcon sx={{ fontSize: 16 }} />}
-            </div>
-
-            {/* Guest Info */}
-            {room.guest && (
-              <div className="bg-[#f4f6fc] rounded-lg p-2.5 border border-[#e5e7eb] mb-3 text-[12px]">
-                <div className="flex items-center gap-1.5 font-semibold text-gray-800 mb-1">
-                  <PersonIcon sx={{ fontSize: 14, color: '#5c67f2' }} />
-                  {room.guest.name}
-                  {room.guest.vip && <span className="bg-[#fef08a] text-[#854d0e] text-[9px] px-1.5 py-0.5 rounded font-bold ml-1">VIP</span>}
-                </div>
-                <div className="text-gray-400 text-[11px] flex items-center gap-1">
-                  <span className="bg-white border border-gray-200 px-1 py-0.5 rounded text-[9px]">ID</span>
-                  {room.guest.id}
-                </div>
-                {room.guest.checkIn && (
-                  <div className="text-[#5c67f2] text-[11px] mt-1 flex items-center gap-1">
-                    <EventIcon sx={{ fontSize: 13 }} />{room.guest.checkIn} → {room.guest.checkOut}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Note */}
-            {room.note && !room.guest && (
-              <p className="text-[11px] text-gray-400 italic mb-3">{room.note}</p>
-            )}
-            {room.note && room.guest && (
-              <p className="text-[11px] text-gray-400 italic mb-3">{room.note}</p>
-            )}
-
-            {/* Action Button */}
-            <div className="mt-auto">
-              {room.guest ? (
-                <button
-                  onClick={() => openDetailsModal(room)}
-                  className="w-full flex items-center justify-center gap-2 text-white text-[13px] font-semibold py-2.5 rounded-lg transition-all"
-                  style={{ backgroundColor: '#1b5e20', background: 'linear-gradient(135deg, #2e7d32, #1b5e20)' }}
-                >
-                  <VisibilityIcon sx={{ fontSize: 16 }} /> Guest Details
-                </button>
-              ) : (
-                <button
-                  onClick={() => openModal(room)}
-                  className="w-full flex items-center justify-center gap-2 text-white text-[13px] font-semibold py-2.5 rounded-lg transition-all"
-                  style={{ backgroundColor: '#1f3a4a', background: 'linear-gradient(135deg, #2c4a5a, #1f3a4a)' }}
-                >
-                  <PersonAddIcon sx={{ fontSize: 16 }} /> Add Guest
-                </button>
-              )}
+                        </div>
+                      ) : (
+                        <span className="text-[12px] text-gray-400 italic">No Guest</span>
+                      )}
+                    </td>
+                    <td className="py-2 px-3">
+                      <div className="flex items-center justify-center gap-2">
+                        {room.guest ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openDetailsModal(room); }}
+                            className="flex items-center justify-center gap-1.5 text-white text-[11px] font-semibold px-4 py-1.5 rounded-md transition-all cursor-pointer"
+                            style={{ backgroundColor: '#1b5e20', background: 'linear-gradient(135deg, #2e7d32, #1b5e20)' }}
+                          >
+                            <VisibilityIcon sx={{ fontSize: 14 }} /> Details
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openModal(room); }}
+                            className="flex items-center justify-center gap-1.5 text-white text-[11px] font-semibold px-1.5 py-1.5 rounded-md transition-all cursor-pointer"
+                            style={{ backgroundColor: '#1f3a4a', background: 'linear-gradient(135deg, #2c4a5a, #1f3a4a)' }}
+                          >
+                            <PersonAddIcon sx={{ fontSize: 14 }} /> Add Guest
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Footer Pagination */}
+          <div className="p-3 mt-auto flex items-center justify-between text-[12px] text-gray-600 border-t border-gray-100 bg-gray-50/30 rounded-b-[6px]">
+            <span>Showing {filteredRooms.length} of {rooms.length} rooms</span>
+            <div className="flex items-center gap-4">
+              <span className="text-gray-400 cursor-not-allowed">{'< Prev'}</span>
+              <span className="cursor-pointer hover:text-gray-900">{'Next >'}</span>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
 
-
-      {/* MODALS */}
+        {/* MODALS */}
       <CreateGuestModal open={modalOpen} onClose={closeModal} onSave={handleSaveGuest} room={selectedRoom} />
       <GuestDetailsModal open={detailsModalOpen} onClose={closeDetailsModal} onEdit={handleEditGuest} room={selectedRoom} />
     </div>
