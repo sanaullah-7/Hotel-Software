@@ -25,7 +25,12 @@ export default function AppBreadcrumbs() {
     'registration-forms': 'Registration Forms',
     'guest-complaint': 'Guest Complaints',
     'rooms-cleaning': 'Rooms & Cleaning',
-    'staff-assignment': 'Staff Assignment'
+    'staff-assignment': 'Staff Assignment',
+    'guest-charges': 'Guest Charges',
+    'charges': 'Guest Charges',
+    'missing': 'Missing Items',
+    'missing-items': 'Missing Items',
+    'stock': 'Stock'
   };
 
   const formatName = (name) => {

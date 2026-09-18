@@ -112,97 +112,75 @@ export default function Discounts() {
   const totalRedemptions = discounts.reduce((sum, d) => sum + (Number(d.currentRedemptions) || 0), 0);
 
   return (
-    <div className="space-y-4 max-w-[1600px] mx-auto pb-8 animate-fade-in">
-      <div className="h-1"></div>
-
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-gray-100 shadow-xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Discounts & Promotions</h1>
-            <span className="bg-[#e5f4eb] text-[#1b7f43] text-[11px] font-bold px-2.5 py-0.5 rounded-full">
-              {discounts.length} Deals Configured
-            </span>
-          </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Configure promotional coupon codes, seasonal percentage markdowns, and fixed cash voucher rules.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <button
-            onClick={handleOpenAddModal}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"
-          >
-            <Add sx={{ fontSize: 17 }} />
-            <span>Add Discount</span>
-          </button>
-        </div>
+    <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in">
+      {/* Top Action Bar (Heading Removed) */}
+      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+        <button
+          onClick={handleOpenAddModal}
+          className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+        >
+          + Add Discount
+        </button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Total Vouchers</span>
-            <LocalOffer className="text-indigo-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-gray-900">{totalDiscountsCount}</span>
+            <span className="text-lg font-bold text-gray-900">{totalDiscountsCount}</span>
             <span className="text-[10px] text-gray-400 font-medium">Configured</span>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Active Offers</span>
-            <CheckCircle className="text-emerald-600 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-emerald-700">{activeDiscountsCount}</span>
+            <span className="text-lg font-bold text-emerald-700">{activeDiscountsCount}</span>
             <span className="text-[10px] text-emerald-600 font-semibold">Redeemable</span>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Percentage Off</span>
-            <Percent className="text-purple-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-gray-900">{percentageDiscountsCount}</span>
+            <span className="text-lg font-bold text-gray-900">{percentageDiscountsCount}</span>
             <span className="text-[10px] text-purple-600 font-medium">% Deals</span>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Fixed Amount Off</span>
-            <LocalOffer className="text-amber-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-gray-900">{fixedDiscountsCount}</span>
+            <span className="text-lg font-bold text-gray-900">{fixedDiscountsCount}</span>
             <span className="text-[10px] text-amber-600 font-medium">PKR Vouchers</span>
           </div>
         </div>
 
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Total Redemptions</span>
-            <DateRange className="text-[#1b7f43] shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-gray-900">{totalRedemptions}</span>
+            <span className="text-lg font-bold text-gray-900">{totalRedemptions}</span>
             <span className="text-[10px] text-gray-400 font-medium">Used to date</span>
           </div>
         </div>
       </div>
 
       {/* Main Table Container */}
-      <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
         
         {/* Table Controls Header */}
-        <div className="p-4 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="p-3 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
           
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             {/* Search Input */}
@@ -287,19 +265,29 @@ export default function Discounts() {
 
         </div>
 
-        {/* Data Table */}
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse">
+        {/* Data Table - Strictly 100% width with NO horizontal scroll */}
+        <div className="w-full">
+          <table className="w-full table-fixed text-left border-collapse">
+            <colgroup>
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '18%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '5%' }} />
+            </colgroup>
             <thead>
-              <tr className="bg-gray-50/80 border-b border-gray-100 text-[10.5px] font-bold text-gray-500 uppercase tracking-wider">
-                <th className="py-2.5 px-3">Discount Name</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">Discount Code</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">Type</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">Value</th>
-                <th className="py-2.5 px-2.5">Applicable Rate Plan</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">Validity Period</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap text-center">Status</th>
-                <th className="py-2.5 px-2 text-right whitespace-nowrap w-16">Actions</th>
+              <tr className="bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                <th className="py-2.5 px-2">Discount Name</th>
+                <th className="py-2.5 px-2">Discount Code</th>
+                <th className="py-2.5 px-1.5">Type</th>
+                <th className="py-2.5 px-1.5">Value</th>
+                <th className="py-2.5 px-2">Applicable Rate Plan</th>
+                <th className="py-2.5 px-2">Validity Period</th>
+                <th className="py-2.5 px-1 text-center">Status</th>
+                <th className="py-2.5 px-1 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs">
@@ -307,11 +295,11 @@ export default function Discounts() {
                 <tr key={disc.id} className="hover:bg-gray-50/60 transition-colors">
                   
                   {/* Name & description */}
-                  <td className="py-2 px-3">
-                    <div>
-                      <span className="font-bold text-gray-900 block text-xs leading-tight">{disc.name}</span>
+                  <td className="py-2 px-2">
+                    <div className="min-w-0">
+                      <span className="font-bold text-gray-900 block text-xs leading-tight break-words">{disc.name}</span>
                       {disc.description && (
-                        <p className="text-[10.5px] text-gray-500 truncate max-w-[180px] mt-0.5">
+                        <p className="text-[10px] text-gray-500 truncate mt-0.5" title={disc.description}>
                           {disc.description}
                         </p>
                       )}
@@ -319,49 +307,48 @@ export default function Discounts() {
                   </td>
 
                   {/* Code Badge */}
-                  <td className="py-2 px-2.5 whitespace-nowrap">
-                    <span className="font-mono font-bold text-[11px] bg-emerald-50 text-[#1b7f43] px-2 py-0.5 rounded-md border border-[#1b7f43]/20 tracking-wider whitespace-nowrap">
+                  <td className="py-2 px-2">
+                    <span className="font-mono font-bold text-[10.5px] bg-emerald-50 text-[#1b7f43] px-1.5 py-0.5 rounded border border-[#1b7f43]/20 tracking-wider truncate inline-block max-w-full">
                       {disc.code}
                     </span>
                   </td>
 
                   {/* Type */}
-                  <td className="py-2 px-2.5 whitespace-nowrap">
-                    <span className="text-gray-700 font-semibold text-[11px]">
+                  <td className="py-2 px-1.5">
+                    <span className="text-gray-700 font-semibold text-[10.5px] truncate block">
                       {disc.discountType}
                     </span>
                   </td>
 
                   {/* Value */}
-                  <td className="py-2 px-2.5 whitespace-nowrap">
-                    <span className="font-extrabold text-xs text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md font-mono whitespace-nowrap">
+                  <td className="py-2 px-1.5">
+                    <span className="font-extrabold text-xs text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-mono truncate inline-block max-w-full">
                       {disc.discountType === 'Percentage' ? `${disc.discountValue}% Off` : `PKR ${Number(disc.discountValue).toLocaleString()}`}
                     </span>
                   </td>
 
                   {/* Applicable Rate Plan */}
-                  <td className="py-2 px-2.5">
-                    <div className="text-gray-800 font-medium">
-                      <span className="text-xs block leading-tight">{disc.applicableRatePlan}</span>
-                      <span className="text-[10px] text-gray-400 block">{disc.applicableRoomType}</span>
+                  <td className="py-2 px-2">
+                    <div className="text-gray-800 font-medium min-w-0">
+                      <span className="text-xs block leading-tight break-words">{disc.applicableRatePlan}</span>
+                      <span className="text-[9.5px] text-gray-400 block truncate">{disc.applicableRoomType}</span>
                     </div>
                   </td>
 
                   {/* Validity Date Range */}
-                  <td className="py-2 px-2.5 whitespace-nowrap">
-                    <div className="text-gray-700 text-[10.5px] font-mono whitespace-nowrap">
-                      <span className="font-medium">{disc.startDate}</span>
-                      <span className="text-gray-400 mx-1">→</span>
-                      <span className="font-medium">{disc.endDate}</span>
+                  <td className="py-2 px-2">
+                    <div className="text-gray-700 text-[10px] font-mono leading-tight">
+                      <span className="font-medium block truncate">{disc.startDate}</span>
+                      <span className="text-gray-400 block text-[9px]">to {disc.endDate}</span>
                     </div>
                   </td>
 
                   {/* Status */}
-                  <td className="py-2 px-2.5 whitespace-nowrap text-center">
+                  <td className="py-2 px-1 text-center">
                     <button
                       onClick={() => handleToggleStatus(disc)}
                       title="Click to toggle active status"
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all whitespace-nowrap ${
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold cursor-pointer transition-all ${
                         disc.status === 'Active'
                           ? 'bg-[#e5f4eb] text-[#1b7f43] hover:bg-[#d0ebd8] border border-[#1b7f43]/20'
                           : disc.status === 'Expired'
@@ -369,15 +356,15 @@ export default function Discounts() {
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
                       }`}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                         disc.status === 'Active' ? 'bg-[#1b7f43]' : disc.status === 'Expired' ? 'bg-amber-500' : 'bg-gray-400'
                       }`}></span>
-                      <span className="whitespace-nowrap">{disc.status}</span>
+                      <span>{disc.status}</span>
                     </button>
                   </td>
 
                   {/* Actions */}
-                  <td className="py-2 px-2 whitespace-nowrap text-right">
+                  <td className="py-2 px-1 text-right">
                     <div className="flex items-center justify-end gap-0.5">
                       <Tooltip title="Edit Discount">
                         <IconButton

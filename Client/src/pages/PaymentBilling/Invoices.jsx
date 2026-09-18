@@ -151,37 +151,26 @@ export default function Invoices() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Invoices</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Manage guest folios, monitor collection rates, and issue itemized statements
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="contained"
-            className="!bg-[#1b7f43] hover:!bg-[#156736] !text-white !font-semibold !normal-case !px-5 !py-2.5 !rounded-xl !shadow-sm cursor-pointer"
-            startIcon={<PaymentIcon />}
-            onClick={() => {
-              setSelectedInvoiceForPayment(null);
-              setIsRecordPaymentOpen(true);
-            }}
-          >
-            Record Payment
-          </Button>
-        </div>
+    <div className="space-y-2 pb-2 animate-fade-in">
+      {/* Top Action Bar (Heading Removed) */}
+      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+        <button
+          className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+          onClick={() => {
+            setSelectedInvoiceForPayment(null);
+            setIsRecordPaymentOpen(true);
+          }}
+        >
+          + Record Payment
+        </button>
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {/* Total Invoiced */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Total Invoiced</span>
-            <InvoiceIcon className="text-slate-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-base font-bold text-gray-900">${metrics.totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -190,10 +179,9 @@ export default function Invoices() {
         </div>
 
         {/* Collected Revenue */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Collected Revenue</span>
-            <PaidIcon className="text-emerald-600 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-base font-bold text-emerald-700">${metrics.totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -202,10 +190,9 @@ export default function Invoices() {
         </div>
 
         {/* Outstanding Balance */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Outstanding Balance</span>
-            <PendingIcon className="text-amber-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-base font-bold text-gray-900">${metrics.totalBalanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -214,10 +201,9 @@ export default function Invoices() {
         </div>
 
         {/* Overdue Invoices */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Overdue Invoices</span>
-            <WarningIcon className="text-red-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-base font-bold text-red-600">${metrics.overdueAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -227,7 +213,7 @@ export default function Invoices() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-64 shrink-0">
           <SearchIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" sx={{ fontSize: 16 }} />
           <input
@@ -248,15 +234,15 @@ export default function Invoices() {
         </div>
 
         {/* Status Filter Buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+        <div className="flex items-center gap-1 overflow-x-auto w-full md:w-auto pb-0.5 md:pb-0">
           {['All', 'Paid', 'Partially Paid', 'Unpaid', 'Overdue'].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                 statusFilter === status
-                  ? 'bg-[#1b7f43] text-white shadow-sm'
-                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  ? 'bg-[#1b7f43] text-white shadow-xs'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {status}
@@ -265,23 +251,36 @@ export default function Invoices() {
         </div>
       </div>
 
-      {/* Invoices Table Container */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse">
+      {/* Invoices Table Container - Strictly 100% width with NO horizontal scroll */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden w-full">
+        <div className="w-full">
+          <table className="w-full table-fixed text-left border-collapse">
+            <colgroup>
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '5%' }} />
+            </colgroup>
             <thead>
-              <tr className="bg-gray-50/75 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                <th className="py-2.5 px-2 whitespace-nowrap">Invoice #</th>
-                <th className="py-2.5 px-2 whitespace-nowrap">Issue / Due</th>
+              <tr className="bg-gray-50/75 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                <th className="py-2.5 px-2">Invoice #</th>
+                <th className="py-2.5 px-1.5">Issue / Due</th>
                 <th className="py-2.5 px-2">Guest Details</th>
-                <th className="py-2.5 px-2 whitespace-nowrap">Room</th>
-                <th className="py-2.5 px-1.5 text-right whitespace-nowrap">Subtotal</th>
-                <th className="py-2.5 px-1.5 text-right whitespace-nowrap">Tax & Fee</th>
-                <th className="py-2.5 px-1.5 text-right whitespace-nowrap">Total</th>
-                <th className="py-2.5 px-1.5 text-right whitespace-nowrap">Paid</th>
-                <th className="py-2.5 px-1.5 text-right whitespace-nowrap">Balance</th>
-                <th className="py-2.5 px-1.5 text-center whitespace-nowrap">Status</th>
-                <th className="py-2.5 px-1.5 text-center whitespace-nowrap w-16">Actions</th>
+                <th className="py-2.5 px-1.5">Room</th>
+                <th className="py-2.5 px-1 text-right">Subtotal</th>
+                <th className="py-2.5 px-1 text-right">Tax & Fee</th>
+                <th className="py-2.5 px-1 text-right">Total</th>
+                <th className="py-2.5 px-1 text-right">Paid</th>
+                <th className="py-2.5 px-1 text-right">Balance</th>
+                <th className="py-2.5 px-1 text-center">Status</th>
+                <th className="py-2.5 px-1 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs">
@@ -296,45 +295,47 @@ export default function Invoices() {
               ) : (
                 filteredInvoices.map((inv) => (
                   <tr key={inv.id} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="py-2 px-2 whitespace-nowrap">
-                      <span className="font-mono font-bold text-[#1b7f43] block text-xs whitespace-nowrap">
+                    <td className="py-2 px-2">
+                      <span className="font-mono font-bold text-[#1b7f43] block text-xs truncate">
                         {inv.id}
                       </span>
-                      <span className="block text-[10px] font-mono text-gray-400 whitespace-nowrap leading-tight">
+                      <span className="block text-[10px] font-mono text-gray-400 truncate leading-tight">
                         {inv.bookingId}
                       </span>
                     </td>
-                    <td className="py-2 px-2 whitespace-nowrap">
-                      <span className="font-medium text-gray-900 block text-xs whitespace-nowrap">{inv.issueDate}</span>
-                      <span className="text-[10px] text-gray-400 block whitespace-nowrap leading-tight">Due: {inv.dueDate}</span>
+                    <td className="py-2 px-1.5">
+                      <span className="font-medium text-gray-900 block text-xs truncate">{inv.issueDate}</span>
+                      <span className="text-[10px] text-gray-400 block truncate leading-tight">Due: {inv.dueDate}</span>
                     </td>
                     <td className="py-2 px-2">
-                      <span className="font-bold text-gray-900 block text-xs leading-tight">{inv.guestName}</span>
-                      <span className="text-[10px] text-gray-500 block truncate max-w-[120px]">{inv.guestEmail || 'Direct Check-in'}</span>
+                      <div className="min-w-0">
+                        <span className="font-bold text-gray-900 block text-xs leading-tight break-words">{inv.guestName}</span>
+                        <span className="text-[10px] text-gray-500 block truncate" title={inv.guestEmail || 'Direct Check-in'}>{inv.guestEmail || 'Direct Check-in'}</span>
+                      </div>
                     </td>
-                    <td className="py-2 px-2 whitespace-nowrap">
-                      <span className="font-semibold text-gray-800 block text-xs whitespace-nowrap">Room {inv.roomNumber}</span>
-                      <span className="text-[10px] text-gray-400 block whitespace-nowrap leading-tight">{inv.roomType}</span>
+                    <td className="py-2 px-1.5">
+                      <span className="font-semibold text-gray-800 block text-xs truncate">Room {inv.roomNumber}</span>
+                      <span className="text-[10px] text-gray-400 block truncate leading-tight">{inv.roomType}</span>
                     </td>
-                    <td className="py-2 px-1.5 text-right font-medium text-gray-600 font-mono whitespace-nowrap">
+                    <td className="py-2 px-1 text-right font-medium text-gray-600 font-mono text-xs truncate">
                       ${inv.subtotal?.toFixed(2)}
                     </td>
-                    <td className="py-2 px-1.5 text-right font-medium text-gray-600 font-mono whitespace-nowrap">
+                    <td className="py-2 px-1 text-right font-medium text-gray-600 font-mono text-xs truncate">
                       ${inv.taxesAndFees?.toFixed(2)}
                     </td>
-                    <td className="py-2 px-1.5 text-right font-bold text-gray-900 font-mono whitespace-nowrap">
+                    <td className="py-2 px-1 text-right font-bold text-gray-900 font-mono text-xs truncate">
                       ${inv.totalAmount?.toFixed(2)}
                     </td>
-                    <td className="py-2 px-1.5 text-right font-bold text-emerald-600 font-mono whitespace-nowrap">
+                    <td className="py-2 px-1 text-right font-bold text-emerald-600 font-mono text-xs truncate">
                       ${inv.paidAmount?.toFixed(2)}
                     </td>
-                    <td className="py-2 px-1.5 text-right font-bold text-red-600 font-mono whitespace-nowrap">
+                    <td className="py-2 px-1 text-right font-bold text-red-600 font-mono text-xs truncate">
                       ${inv.balanceDue?.toFixed(2)}
                     </td>
-                    <td className="py-2 px-1.5 text-center whitespace-nowrap">
+                    <td className="py-2 px-1 text-center">
                       {renderStatusBadge(inv.status)}
                     </td>
-                    <td className="py-2 px-1.5 text-center whitespace-nowrap">
+                    <td className="py-2 px-1 text-center">
                       <div className="flex items-center justify-center gap-0.5">
                         <Tooltip title="View Folio / Print">
                           <IconButton

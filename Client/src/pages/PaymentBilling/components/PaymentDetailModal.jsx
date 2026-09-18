@@ -53,94 +53,86 @@ export default function PaymentDetailModal({
   const refundableAmount = (payment.amount || 0) - (payment.refundedAmount || 0);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ className: '!rounded-2xl !p-2' }}>
-      <DialogTitle className="!flex !items-center !justify-between !pb-2 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-emerald-50 text-[#1b7f43] flex items-center justify-center">
-            <ReceiptIcon fontSize="small" />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 text-lg leading-tight">Payment Receipt</h3>
-            <p className="text-xs text-gray-500">Official transaction voucher & settlement proof</p>
-          </div>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ className: '!rounded-xl !p-1' }}>
+      <DialogTitle className="!flex !items-center !justify-between !p-3 !pb-2 border-b border-gray-100">
+        <div>
+          <h3 className="font-bold text-gray-900 text-base leading-tight">Payment Receipt</h3>
+          <p className="text-[11px] text-gray-500 mt-0.5">Official transaction voucher & settlement proof</p>
         </div>
         <IconButton size="small" onClick={onClose} className="!text-gray-400 hover:!text-gray-700">
-          <CloseIcon fontSize="small" />
+          <CloseIcon sx={{ fontSize: 18 }} />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent className="!pt-4 space-y-4">
+      <DialogContent className="!p-3.5 !pt-3 space-y-3">
         {/* Receipt Header Card */}
-        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-3.5 flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Transaction ID</p>
-            <p className="text-xl font-extrabold text-gray-900">{payment.id}</p>
-            <p className="text-xs text-gray-500 mt-0.5">Ref: {payment.transactionRef}</p>
+            <p className="text-[10px] font-semibold text-emerald-800 uppercase tracking-wider">Transaction ID</p>
+            <p className="text-lg font-extrabold text-gray-900">{payment.id}</p>
+            <p className="text-[10px] text-gray-500 mt-0.5">Ref: {payment.transactionRef}</p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-gray-500 mb-1">Status</p>
+            <p className="text-[10px] text-gray-500 mb-0.5">Status</p>
             {getStatusChip(payment.status)}
-            <p className="text-2xl font-extrabold text-emerald-700 mt-2">${payment.amount?.toFixed(2)}</p>
+            <p className="text-xl font-extrabold text-emerald-700 mt-1">${payment.amount?.toFixed(2)}</p>
           </div>
         </div>
 
         {/* Transaction Metadata Grid */}
-        <div className="grid grid-cols-2 gap-3 text-sm bg-gray-50 rounded-xl p-3.5 border border-gray-200">
+        <div className="grid grid-cols-2 gap-2 text-xs bg-gray-50 rounded-xl p-3 border border-gray-200">
           <div>
-            <span className="text-xs text-gray-500 block">Payment Date & Time</span>
+            <span className="text-[10px] text-gray-500 block">Payment Date & Time</span>
             <span className="font-semibold text-gray-900">{payment.paymentDate}</span>
           </div>
           <div>
-            <span className="text-xs text-gray-500 block">Payment Method</span>
-            <span className="font-semibold text-gray-900 flex items-center gap-1">
-              <CreditCardIcon fontSize="inherit" className="text-gray-500" />
+            <span className="text-[10px] text-gray-500 block">Payment Method</span>
+            <span className="font-semibold text-gray-900">
               {payment.paymentMethod}
             </span>
           </div>
           <div>
-            <span className="text-xs text-gray-500 block">Cashier / Handler</span>
+            <span className="text-[10px] text-gray-500 block">Cashier / Handler</span>
             <span className="font-semibold text-gray-900">{payment.cashier || 'Front Desk Staff'}</span>
           </div>
           <div>
-            <span className="text-xs text-gray-500 block">Gateway / Terminal</span>
+            <span className="text-[10px] text-gray-500 block">Gateway / Terminal</span>
             <span className="font-semibold text-gray-900">{payment.gateway || 'Main POS Terminal #1'}</span>
           </div>
         </div>
 
         {/* Traceability Details */}
-        <div className="space-y-3">
-          <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Traceability Details</h4>
+        <div className="space-y-2">
+          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Traceability Details</h4>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {/* Guest Info */}
-            <div className="border border-gray-200 rounded-xl p-3 bg-white">
-              <div className="flex items-center gap-2 mb-2 text-xs font-bold text-gray-700">
-                <PersonIcon fontSize="small" className="text-[#1b7f43]" />
+            <div className="border border-gray-200 rounded-xl p-2.5 bg-white">
+              <div className="mb-1 text-[11px] font-bold text-gray-700">
                 <span>Guest Information</span>
               </div>
-              <p className="text-sm font-semibold text-gray-900">{payment.guestName}</p>
-              {payment.guestEmail && <p className="text-xs text-gray-500">{payment.guestEmail}</p>}
-              {payment.guestPhone && <p className="text-xs text-gray-500">{payment.guestPhone}</p>}
+              <p className="text-xs font-semibold text-gray-900">{payment.guestName}</p>
+              {payment.guestEmail && <p className="text-[10px] text-gray-500">{payment.guestEmail}</p>}
+              {payment.guestPhone && <p className="text-[10px] text-gray-500">{payment.guestPhone}</p>}
             </div>
 
             {/* Room & Booking Info */}
-            <div className="border border-gray-200 rounded-xl p-3 bg-white">
-              <div className="flex items-center gap-2 mb-2 text-xs font-bold text-gray-700">
-                <HotelIcon fontSize="small" className="text-[#1b7f43]" />
+            <div className="border border-gray-200 rounded-xl p-2.5 bg-white">
+              <div className="mb-1 text-[11px] font-bold text-gray-700">
                 <span>Booking & Room</span>
               </div>
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-xs font-semibold text-gray-900">
                 Room {payment.roomNumber} ({payment.roomType})
               </p>
-              <p className="text-xs text-gray-600">Booking: <span className="font-mono">{payment.bookingId}</span></p>
-              <p className="text-xs text-gray-600">Invoice: <span className="font-mono font-bold text-[#1b7f43]">{payment.invoiceId}</span></p>
+              <p className="text-[10px] text-gray-600">Booking: <span className="font-mono">{payment.bookingId}</span></p>
+              <p className="text-[10px] text-gray-600">Invoice: <span className="font-mono font-bold text-[#1b7f43]">{payment.invoiceId}</span></p>
             </div>
           </div>
         </div>
 
         {/* Refund Status if applicable */}
         {payment.refundedAmount > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-900 space-y-1">
+          <div className="bg-red-50 border border-red-200 rounded-xl p-2.5 text-xs text-red-900 space-y-1">
             <div className="flex justify-between font-bold">
               <span>Total Refunded to Guest:</span>
               <span>${payment.refundedAmount.toFixed(2)}</span>
@@ -160,40 +152,33 @@ export default function PaymentDetailModal({
         )}
       </DialogContent>
 
-      <DialogActions className="!px-4 !py-3 border-t border-gray-100 flex items-center justify-between">
+      <DialogActions className="!px-3 !py-2.5 border-t border-gray-100 flex items-center justify-between">
         <div>
           {payment.status !== 'Refunded' && refundableAmount > 0 && onInitiateRefund && (
-            <Button
-              variant="outlined"
-              color="error"
-              size="small"
-              startIcon={<RefundIcon />}
+            <button
               onClick={() => {
                 onClose();
                 onInitiateRefund(payment);
               }}
-              className="!normal-case !font-semibold !rounded-lg"
+              className="px-3 py-1.5 border border-red-300 text-red-600 hover:bg-red-50 rounded-lg text-xs font-bold transition cursor-pointer"
             >
               Refund Payment
-            </Button>
+            </button>
           )}
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outlined"
+          <button
             onClick={handlePrint}
-            startIcon={<PrintIcon />}
-            className="!normal-case !border-gray-300 !text-gray-700 hover:!bg-gray-50 !font-semibold !rounded-lg"
+            className="px-3 py-1.5 border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-lg text-xs font-bold transition cursor-pointer"
           >
             Print Receipt
-          </Button>
-          <Button
-            variant="contained"
+          </button>
+          <button
             onClick={onClose}
-            className="!bg-[#1b7f43] hover:!bg-[#156736] !text-white !normal-case !font-semibold !rounded-lg cursor-pointer"
+            className="px-4 py-1.5 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-lg text-xs font-bold transition cursor-pointer"
           >
             Close
-          </Button>
+          </button>
         </div>
       </DialogActions>
     </Dialog>

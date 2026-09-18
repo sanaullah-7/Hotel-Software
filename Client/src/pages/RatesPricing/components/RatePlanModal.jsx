@@ -95,17 +95,16 @@ function RatePlanFormBody({ plan, onClose, onSave }) {
   return (
     <>
       {/* Form Content */}
-      <DialogContent sx={{ p: 4, backgroundColor: '#f9fafb' }}>
-        <form id="rate-plan-form" onSubmit={handleSubmit} className="space-y-6">
+      <DialogContent sx={{ p: 3, backgroundColor: '#f9fafb' }}>
+        <form id="rate-plan-form" onSubmit={handleSubmit} className="space-y-3.5">
           
           {/* Basic Information */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 text-gray-800">
-              <InfoOutlined sx={{ fontSize: 18, color: '#1b7f43' }} />
+          <div className="bg-white p-3.5 rounded-xl border border-gray-100 shadow-xs space-y-3">
+            <div className="pb-1.5 border-b border-gray-100 text-gray-800">
               <h3 className="text-xs font-bold uppercase tracking-wider">Basic Information</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="md:col-span-2">
                 <TextField
                   fullWidth
@@ -172,13 +171,12 @@ function RatePlanFormBody({ plan, onClose, onSave }) {
           </div>
 
           {/* Room & Meal Plan Information */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 text-gray-800">
-              <Bed sx={{ fontSize: 18, color: '#1b7f43' }} />
+          <div className="bg-white p-3.5 rounded-xl border border-gray-100 shadow-xs space-y-3">
+            <div className="pb-1.5 border-b border-gray-100 text-gray-800">
               <h3 className="text-xs font-bold uppercase tracking-wider">Room & Meal Inclusions</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <FormControl fullWidth size="small" sx={muiInputSx}>
                 <InputLabel>Room Type</InputLabel>
                 <Select
@@ -213,13 +211,12 @@ function RatePlanFormBody({ plan, onClose, onSave }) {
           </div>
 
           {/* Pricing Details */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 text-gray-800">
-              <MonetizationOn sx={{ fontSize: 18, color: '#1b7f43' }} />
+          <div className="bg-white p-3.5 rounded-xl border border-gray-100 shadow-xs space-y-3">
+            <div className="pb-1.5 border-b border-gray-100 text-gray-800">
               <h3 className="text-xs font-bold uppercase tracking-wider">Pricing Configuration</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
                 <TextField
                   fullWidth
@@ -268,13 +265,12 @@ function RatePlanFormBody({ plan, onClose, onSave }) {
           </div>
 
           {/* Policies & Restrictions */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 text-gray-800">
-              <Policy sx={{ fontSize: 18, color: '#1b7f43' }} />
+          <div className="bg-white p-3.5 rounded-xl border border-gray-100 shadow-xs space-y-3">
+            <div className="pb-1.5 border-b border-gray-100 text-gray-800">
               <h3 className="text-xs font-bold uppercase tracking-wider">Cancellation & Restrictions</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
                 <FormControl fullWidth size="small" sx={muiInputSx}>
                   <InputLabel>Cancellation Policy</InputLabel>
@@ -343,11 +339,11 @@ function RatePlanFormBody({ plan, onClose, onSave }) {
       </DialogContent>
 
       {/* Actions */}
-      <DialogActions sx={{ p: 3, backgroundColor: 'white', borderTop: '1px solid #f3f4f6', justifyContent: 'flex-end', gap: 1 }}>
+      <DialogActions sx={{ p: 2.5, backgroundColor: 'white', borderTop: '1px solid #f3f4f6', justifyContent: 'flex-end', gap: 1 }}>
         <button
           type="button"
           onClick={onClose}
-          className="px-5 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
+          className="px-4 py-1.5 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer"
         >
           Cancel
         </button>
@@ -355,9 +351,8 @@ function RatePlanFormBody({ plan, onClose, onSave }) {
         <button
           type="submit"
           form="rate-plan-form"
-          className="px-6 py-2 text-xs font-bold text-white bg-[#1b7f43] hover:bg-[#156736] rounded-xl shadow-sm transition cursor-pointer flex items-center gap-1.5"
+          className="px-5 py-1.5 text-xs font-bold text-white bg-[#1b7f43] hover:bg-[#156736] rounded-lg shadow-xs transition cursor-pointer"
         >
-          <CheckCircle sx={{ fontSize: 16 }} />
           {isEdit ? 'Save Changes' : 'Create Rate Plan'}
         </button>
       </DialogActions>
@@ -383,33 +378,28 @@ export default function RatePlanModal({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '20px',
+          borderRadius: '16px',
           overflow: 'hidden',
           boxShadow: '0 20px 50px rgba(0,0,0,0.15)'
         }
       }}
     >
       {/* Header */}
-      <div className="bg-[#1b7f43] p-5 text-white flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-xs">
-            <Sell sx={{ fontSize: 22 }} />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold tracking-tight">
-              {isEdit ? 'Edit Rate Plan' : 'Create New Rate Plan'}
-            </h2>
-            <p className="text-xs text-white/80 mt-0.5">
-              {isEdit ? `Modifying plan specifications for ${plan.code}` : 'Configure pricing tiers, room categories, and meal plans'}
-            </p>
-          </div>
+      <div className="bg-[#1b7f43] p-3.5 px-4 text-white flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-bold tracking-tight">
+            {isEdit ? 'Edit Rate Plan' : 'Create New Rate Plan'}
+          </h2>
+          <p className="text-[11px] text-white/80 mt-0.5">
+            {isEdit ? `Modifying plan specifications for ${plan.code}` : 'Configure pricing tiers, room categories, and meal plans'}
+          </p>
         </div>
         <IconButton
           onClick={onClose}
           size="small"
           sx={{ color: 'white', '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' } }}
         >
-          <Close sx={{ fontSize: 20 }} />
+          <Close sx={{ fontSize: 18 }} />
         </IconButton>
       </div>
 

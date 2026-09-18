@@ -137,37 +137,26 @@ export default function Refunds() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">Refunds</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Track guest reimbursements, cancellation refunds, disputes, and manager approvals
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <Button
-            variant="contained"
-            className="!bg-red-600 hover:!bg-red-700 !text-white !font-semibold !normal-case !px-5 !py-2.5 !rounded-xl !shadow-sm cursor-pointer"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setSelectedPaymentForRefund(null);
-              setIsProcessRefundOpen(true);
-            }}
-          >
-            Process Refund
-          </Button>
-        </div>
+    <div className="space-y-2 pb-2 animate-fade-in">
+      {/* Top Action Bar (Heading Removed) */}
+      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+        <button
+          className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+          onClick={() => {
+            setSelectedPaymentForRefund(null);
+            setIsProcessRefundOpen(true);
+          }}
+        >
+          + Process Refund
+        </button>
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {/* Total Refunded */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Total Refunded</span>
-            <RefundIcon className="text-rose-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-base font-bold text-gray-900">
@@ -178,10 +167,9 @@ export default function Refunds() {
         </div>
 
         {/* Settled Returns */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Settled Returns</span>
-            <ApprovedIcon className="text-emerald-600 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-xl font-bold text-emerald-700">
@@ -192,10 +180,9 @@ export default function Refunds() {
         </div>
 
         {/* Pending Review */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Pending Review</span>
-            <PendingIcon className="text-amber-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-base font-bold text-amber-600">
@@ -206,10 +193,9 @@ export default function Refunds() {
         </div>
 
         {/* Total Claims */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Total Claims</span>
-            <RefundIcon className="text-indigo-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-xl font-bold text-gray-900">
@@ -221,7 +207,7 @@ export default function Refunds() {
       </div>
 
       {/* Filter and Search */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] flex flex-col md:flex-row items-center justify-between gap-4">
+      <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-64 shrink-0">
           <SearchIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" sx={{ fontSize: 16 }} />
           <input
@@ -242,15 +228,15 @@ export default function Refunds() {
         </div>
 
         {/* Status Filter Buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+        <div className="flex items-center gap-1 overflow-x-auto w-full md:w-auto pb-0.5 md:pb-0">
           {['All', 'Completed', 'Pending Approval'].map((status) => (
             <button
               key={status}
               onClick={() => setStatusFilter(status)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
+              className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                 statusFilter === status
-                  ? 'bg-red-600 text-white shadow-sm'
-                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               {status}
@@ -260,21 +246,34 @@ export default function Refunds() {
       </div>
 
       {/* Refunds Table */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse">
+      {/* Refunds Table - Strictly 100% width with NO horizontal scroll */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden w-full">
+        <div className="w-full">
+          <table className="w-full table-fixed text-left border-collapse">
+            <colgroup>
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '6%' }} />
+            </colgroup>
             <thead>
-              <tr className="bg-gray-50/75 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                <th className="py-2.5 px-2 whitespace-nowrap">Refund ID</th>
-                <th className="py-2.5 px-1.5 whitespace-nowrap">Date</th>
-                <th className="py-2.5 px-1.5 whitespace-nowrap">Payment & Inv #</th>
+              <tr className="bg-gray-50/75 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                <th className="py-2.5 px-2">Refund ID</th>
+                <th className="py-2.5 px-1.5">Date</th>
+                <th className="py-2.5 px-1.5">Payment & Inv #</th>
                 <th className="py-2.5 px-2">Guest Details</th>
-                <th className="py-2.5 px-1.5 whitespace-nowrap">Room</th>
+                <th className="py-2.5 px-1.5">Room</th>
                 <th className="py-2.5 px-2">Reason</th>
                 <th className="py-2.5 px-1.5">Method</th>
-                <th className="py-2.5 px-1.5 text-right whitespace-nowrap">Amount</th>
-                <th className="py-2.5 px-1 text-center whitespace-nowrap">Status</th>
-                <th className="py-2.5 px-1 text-center whitespace-nowrap w-14">Actions</th>
+                <th className="py-2.5 px-1 text-right">Amount</th>
+                <th className="py-2.5 px-1 text-center">Status</th>
+                <th className="py-2.5 px-1 text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs">
@@ -289,46 +288,50 @@ export default function Refunds() {
               ) : (
                 filteredRefunds.map((r) => (
                   <tr key={r.id} className="hover:bg-gray-50/80 transition-colors">
-                    <td className="py-2 px-2 whitespace-nowrap">
-                      <span className="font-mono font-bold text-red-600 block text-xs whitespace-nowrap">
+                    <td className="py-2 px-2">
+                      <span className="font-mono font-bold text-red-600 block text-xs truncate">
                         {r.id}
                       </span>
                     </td>
-                    <td className="py-2 px-1.5 text-gray-700 text-[11px] font-medium whitespace-nowrap font-mono">
-                      {r.refundDate}
+                    <td className="py-2 px-1.5 text-gray-700 text-[10.5px] font-medium font-mono">
+                      <span className="block truncate">{r.refundDate}</span>
                     </td>
-                    <td className="py-2 px-1.5 whitespace-nowrap">
-                      <span className="font-mono font-semibold text-gray-900 block text-xs whitespace-nowrap">{r.paymentId}</span>
-                      <span className="text-[10px] font-mono text-gray-400 block whitespace-nowrap leading-tight">Inv: {r.invoiceId}</span>
-                    </td>
-                    <td className="py-2 px-2">
-                      <span className="font-bold text-gray-900 block text-xs leading-tight">{r.guestName}</span>
-                      <span className="text-[10px] text-gray-400 block truncate max-w-[110px]">By: {r.processedBy || 'Manager'}</span>
-                    </td>
-                    <td className="py-2 px-1.5 whitespace-nowrap">
-                      <span className="font-semibold text-gray-800 block text-xs whitespace-nowrap">Room {r.roomNumber}</span>
-                      <span className="text-[10px] text-gray-400 block whitespace-nowrap leading-tight">{r.roomType}</span>
+                    <td className="py-2 px-1.5">
+                      <span className="font-mono font-semibold text-gray-900 block text-xs truncate">{r.paymentId}</span>
+                      <span className="text-[10px] font-mono text-gray-400 block truncate leading-tight">Inv: {r.invoiceId}</span>
                     </td>
                     <td className="py-2 px-2">
-                      <span className="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-800 leading-snug">
-                        {r.reason}
-                      </span>
-                      {r.notes && (
-                        <span className="block text-[10px] text-gray-400 truncate max-w-[120px] mt-0.5">
-                          {r.notes}
+                      <div className="min-w-0">
+                        <span className="font-bold text-gray-900 block text-xs leading-tight break-words">{r.guestName}</span>
+                        <span className="text-[10px] text-gray-400 block truncate" title={r.processedBy || 'Manager'}>By: {r.processedBy || 'Manager'}</span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-1.5">
+                      <span className="font-semibold text-gray-800 block text-xs truncate">Room {r.roomNumber}</span>
+                      <span className="text-[10px] text-gray-400 block truncate leading-tight">{r.roomType}</span>
+                    </td>
+                    <td className="py-2 px-2">
+                      <div className="min-w-0">
+                        <span className="inline-block px-1.5 py-0.5 rounded text-[9.5px] font-medium bg-gray-100 text-gray-800 leading-tight truncate max-w-full">
+                          {r.reason}
                         </span>
-                      )}
+                        {r.notes && (
+                          <span className="block text-[9.5px] text-gray-400 truncate mt-0.5" title={r.notes}>
+                            {r.notes}
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="py-2 px-1.5 text-[10.5px] font-medium text-gray-700 leading-tight">
-                      {r.refundMethod}
+                    <td className="py-2 px-1.5 text-[10px] font-medium text-gray-700 leading-tight">
+                      <span className="block truncate">{r.refundMethod}</span>
                     </td>
-                    <td className="py-2 px-1.5 text-right font-extrabold text-red-600 text-xs font-mono whitespace-nowrap">
+                    <td className="py-2 px-1 text-right font-extrabold text-red-600 text-xs font-mono truncate">
                       ${r.amount?.toFixed(2)}
                     </td>
-                    <td className="py-2 px-1 text-center whitespace-nowrap">
+                    <td className="py-2 px-1 text-center">
                       {renderStatusBadge(r.status)}
                     </td>
-                    <td className="py-2 px-1 text-center whitespace-nowrap">
+                    <td className="py-2 px-1 text-center">
                       <div className="flex items-center justify-center gap-0.5">
                         <Tooltip title="View Refund Voucher">
                           <IconButton

@@ -34,6 +34,7 @@ import InspectionChecklist from '../pages/Housekeeping/InspectionChecklist';
 // Inventory Module Pages
 import AllInventory from '../pages/Inventory/AllInventory';
 import AddInventory from '../pages/Inventory/AddInventory';
+import GuestCharges from '../pages/Inventory/GuestCharges';
 import MissingInventory from '../pages/Inventory/MissingInventory';
 
 // Rates & Pricing Module Pages
@@ -119,8 +120,12 @@ export default function AppRoutes() {
 
         {/* Inventory Sub-Routes */}
         <Route path="/inventory" element={<DashboardLayout><AllInventory /></DashboardLayout>} />
-        <Route path="/inventory/add" element={<DashboardLayout><AddInventory /></DashboardLayout>} />
+        <Route path="/inventory/stock" element={<DashboardLayout><AllInventory /></DashboardLayout>} />
+        <Route path="/inventory/guest-charges" element={<DashboardLayout><GuestCharges /></DashboardLayout>} />
+        <Route path="/inventory/charges" element={<DashboardLayout><GuestCharges /></DashboardLayout>} />
+        <Route path="/inventory/add" element={<DashboardLayout><GuestCharges /></DashboardLayout>} />
         <Route path="/inventory/missing" element={<DashboardLayout><MissingInventory /></DashboardLayout>} />
+        <Route path="/inventory/missing-items" element={<DashboardLayout><MissingInventory /></DashboardLayout>} />
 
         {/* Rates & Pricing Sub-Routes */}
         <Route path="/rates-pricing" element={<Navigate to="/rates-pricing/rate-plans" replace />} />

@@ -191,47 +191,30 @@ export default function TaxesFees() {
   const percentageFeesCount = fees.filter(f => f.calculationType === 'Percentage').length;
 
   return (
-    <div className="space-y-4 max-w-[1600px] mx-auto pb-8 animate-fade-in">
-      <div className="h-1"></div>
-
-      {/* Top Header Card with Segmented Main Tab Switcher */}
-      <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Taxes & Fees</h1>
-            <span className="bg-[#e5f4eb] text-[#1b7f43] text-[11px] font-bold px-2.5 py-0.5 rounded-full">
-              {taxes.length + fees.length} Total Rules
-            </span>
-          </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Configure statutory government levies, VAT/GST parameters, and operational hotel service surcharges.
-          </p>
-        </div>
-
-        {/* Tab Switcher: [ Taxes ] [ Fees ] */}
-        <div className="flex items-center bg-gray-100 p-1 rounded-2xl self-start sm:self-auto border border-gray-200">
+    <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in">
+      {/* Top Segmented Main Tab Switcher (Heading Removed) */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center bg-gray-100 p-0.5 rounded-lg border border-gray-200">
           <button
             onClick={() => setActiveMainTab('taxes')}
-            className={`flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
               activeMainTab === 'taxes'
                 ? 'bg-white text-[#1b7f43] shadow-xs'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            <AccountBalance sx={{ fontSize: 16 }} />
-            <span>Taxes ({taxes.length})</span>
+            Taxes ({taxes.length})
           </button>
 
           <button
             onClick={() => setActiveMainTab('fees')}
-            className={`flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`px-3 py-1 rounded text-xs font-semibold transition-all cursor-pointer ${
               activeMainTab === 'fees'
                 ? 'bg-white text-[#1b7f43] shadow-xs'
                 : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            <ReceiptLong sx={{ fontSize: 16 }} />
-            <span>Fees ({fees.length})</span>
+            Fees ({fees.length})
           </button>
         </div>
       </div>
@@ -240,60 +223,56 @@ export default function TaxesFees() {
       {/* 1. TAXES TAB CONTENT */}
       {/* ======================================================== */}
       {activeMainTab === 'taxes' && (
-        <div className="space-y-4">
+        <div className="space-y-2">
           
           {/* Tax Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-              <div className="flex justify-between items-center mb-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-0.5">
                 <span className="text-gray-500 font-semibold text-[11px] truncate">Total Taxes</span>
-                <AccountBalance className="text-indigo-500 shrink-0" sx={{ fontSize: 17 }} />
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xl font-bold text-gray-900">{totalTaxesCount}</span>
+                <span className="text-lg font-bold text-gray-900">{totalTaxesCount}</span>
                 <span className="text-[10px] text-gray-400 font-medium">Configured</span>
               </div>
             </div>
 
-            <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-              <div className="flex justify-between items-center mb-1">
+            <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-0.5">
                 <span className="text-gray-500 font-semibold text-[11px] truncate">Active Taxes</span>
-                <CheckCircle className="text-emerald-600 shrink-0" sx={{ fontSize: 17 }} />
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xl font-bold text-emerald-700">{activeTaxesCount}</span>
+                <span className="text-lg font-bold text-emerald-700">{activeTaxesCount}</span>
                 <span className="text-[10px] text-emerald-600 font-semibold">Applied at Billing</span>
               </div>
             </div>
 
-            <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-              <div className="flex justify-between items-center mb-1">
+            <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-0.5">
                 <span className="text-gray-500 font-semibold text-[11px] truncate">Exclusive Taxes</span>
-                <Percent className="text-blue-500 shrink-0" sx={{ fontSize: 17 }} />
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xl font-bold text-gray-900">{exclusiveTaxesCount}</span>
+                <span className="text-lg font-bold text-gray-900">{exclusiveTaxesCount}</span>
                 <span className="text-[10px] text-blue-600 font-medium">Added to Invoice</span>
               </div>
             </div>
 
-            <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-              <div className="flex justify-between items-center mb-1">
+            <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-0.5">
                 <span className="text-gray-500 font-semibold text-[11px] truncate">Inclusive Taxes</span>
-                <Percent className="text-amber-500 shrink-0" sx={{ fontSize: 17 }} />
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xl font-bold text-gray-900">{inclusiveTaxesCount}</span>
+                <span className="text-lg font-bold text-gray-900">{inclusiveTaxesCount}</span>
                 <span className="text-[10px] text-amber-600 font-medium">In Base Price</span>
               </div>
             </div>
           </div>
 
           {/* Tax Table Card */}
-          <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
             
             {/* Controls Bar */}
-            <div className="p-4 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="p-3 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 {/* Search */}
                 <div className="relative w-full sm:w-64 shrink-0">
@@ -358,89 +337,98 @@ export default function TaxesFees() {
 
                 <button
                   onClick={handleOpenAddTax}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"
+                  className="px-3.5 py-1.5 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
                 >
-                  <Add sx={{ fontSize: 17 }} />
-                  <span>Add Tax</span>
+                  + Add Tax
                 </button>
               </div>
             </div>
 
-            {/* Taxes Data Table */}
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-left border-collapse">
+            {/* Taxes Data Table - Strictly 100% width with NO horizontal scroll */}
+            <div className="w-full">
+              <table className="w-full table-fixed text-left border-collapse">
+                <colgroup>
+                  <col style={{ width: '22%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '12%' }} />
+                  <col style={{ width: '13%' }} />
+                  <col style={{ width: '16%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '9%' }} />
+                  <col style={{ width: '6%' }} />
+                </colgroup>
                 <thead>
-                  <tr className="bg-gray-50/80 border-b border-gray-100 text-[10.5px] font-bold text-gray-500 uppercase tracking-wider">
-                    <th className="py-2.5 px-3">Tax Name</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap">Tax Code</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap">Calculation</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap">Rate / Value</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap">Application</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap">Nature</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap text-center">Status</th>
-                    <th className="py-2.5 px-2 text-right whitespace-nowrap w-16">Actions</th>
+                  <tr className="bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                    <th className="py-2.5 px-2">Tax Name</th>
+                    <th className="py-2.5 px-2">Tax Code</th>
+                    <th className="py-2.5 px-1.5">Calculation</th>
+                    <th className="py-2.5 px-1.5">Rate / Value</th>
+                    <th className="py-2.5 px-2">Application</th>
+                    <th className="py-2.5 px-1.5">Nature</th>
+                    <th className="py-2.5 px-1 text-center">Status</th>
+                    <th className="py-2.5 px-1 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-xs">
                   {paginatedTaxes.map((tax) => (
                     <tr key={tax.id} className="hover:bg-gray-50/60 transition-colors">
-                      <td className="py-2 px-3">
-                        <div>
-                          <span className="font-bold text-gray-900 block text-xs leading-tight">{tax.name}</span>
+                      <td className="py-2 px-2">
+                        <div className="min-w-0">
+                          <span className="font-bold text-gray-900 block text-xs leading-tight break-words">{tax.name}</span>
                           {tax.description && (
-                            <p className="text-[10.5px] text-gray-500 truncate max-w-[180px] mt-0.5">
+                            <p className="text-[10px] text-gray-500 truncate mt-0.5" title={tax.description}>
                               {tax.description}
                             </p>
                           )}
                         </div>
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap">
-                        <span className="font-mono font-bold text-[11px] bg-gray-100 text-gray-800 px-2 py-0.5 rounded-md border border-gray-200 whitespace-nowrap">
+                      <td className="py-2 px-2">
+                        <span className="font-mono font-bold text-[10.5px] bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded border border-gray-200 truncate inline-block max-w-full">
                           {tax.code}
                         </span>
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap text-gray-700 font-semibold text-[11px]">
+                      <td className="py-2 px-1.5 text-gray-700 font-semibold text-[10.5px] truncate">
                         {tax.calculationType}
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap">
-                        <span className="font-extrabold text-xs text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md font-mono whitespace-nowrap">
+                      <td className="py-2 px-1.5">
+                        <span className="font-extrabold text-xs text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-mono truncate inline-block max-w-full">
                           {tax.calculationType === 'Percentage' ? `${tax.value}%` : `PKR ${Number(tax.value).toLocaleString()}`}
                         </span>
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap">
-                        <span className="text-gray-800 font-medium text-xs">{tax.appliesTo}</span>
+                      <td className="py-2 px-2">
+                        <span className="text-gray-800 font-medium text-xs break-words">{tax.appliesTo}</span>
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap ${
+                      <td className="py-2 px-1.5">
+                        <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-bold max-w-full truncate ${
                           tax.taxNature === 'Exclusive'
                             ? 'bg-blue-50 text-blue-700 border border-blue-200'
                             : 'bg-amber-50 text-amber-700 border border-amber-200'
                         }`}>
-                          {tax.taxNature}
+                          <span className="truncate">{tax.taxNature}</span>
                         </span>
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap text-center">
+                      <td className="py-2 px-1 text-center">
                         <button
                           onClick={() => handleToggleTaxStatus(tax)}
                           title="Toggle Active Status"
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all whitespace-nowrap ${
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold cursor-pointer transition-all ${
                             tax.status === 'Active'
                               ? 'bg-[#e5f4eb] text-[#1b7f43] hover:bg-[#d0ebd8] border border-[#1b7f43]/20'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
                           }`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full ${tax.status === 'Active' ? 'bg-[#1b7f43]' : 'bg-gray-400'}`}></span>
-                          <span className="whitespace-nowrap">{tax.status}</span>
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${tax.status === 'Active' ? 'bg-[#1b7f43]' : 'bg-gray-400'}`}></span>
+                          <span>{tax.status}</span>
                         </button>
                       </td>
 
-                      <td className="py-2 px-2 whitespace-nowrap text-right">
+                      <td className="py-2 px-1 text-right">
                         <div className="flex items-center justify-end gap-0.5">
                           <Tooltip title="Edit Tax">
                             <IconButton
@@ -532,60 +520,56 @@ export default function TaxesFees() {
       {/* 2. FEES TAB CONTENT */}
       {/* ======================================================== */}
       {activeMainTab === 'fees' && (
-        <div className="space-y-4">
+        <div className="space-y-2">
           
           {/* Fee Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-              <div className="flex justify-between items-center mb-1">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-0.5">
                 <span className="text-gray-500 font-semibold text-[11px] truncate">Total Fees</span>
-                <ReceiptLong className="text-indigo-500 shrink-0" sx={{ fontSize: 17 }} />
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xl font-bold text-gray-900">{totalFeesCount}</span>
+                <span className="text-lg font-bold text-gray-900">{totalFeesCount}</span>
                 <span className="text-[10px] text-gray-400 font-medium">Configured</span>
               </div>
             </div>
 
-            <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-              <div className="flex justify-between items-center mb-1">
+            <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-0.5">
                 <span className="text-gray-500 font-semibold text-[11px] truncate">Active Fees</span>
-                <CheckCircle className="text-emerald-600 shrink-0" sx={{ fontSize: 17 }} />
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xl font-bold text-emerald-700">{activeFeesCount}</span>
+                <span className="text-lg font-bold text-emerald-700">{activeFeesCount}</span>
                 <span className="text-[10px] text-emerald-600 font-semibold">Live in Billing</span>
               </div>
             </div>
 
-            <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-              <div className="flex justify-between items-center mb-1">
+            <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-0.5">
                 <span className="text-gray-500 font-semibold text-[11px] truncate">Fixed Surcharges</span>
-                <MonetizationOn className="text-blue-500 shrink-0" sx={{ fontSize: 17 }} />
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xl font-bold text-gray-900">{fixedFeesCount}</span>
+                <span className="text-lg font-bold text-gray-900">{fixedFeesCount}</span>
                 <span className="text-[10px] text-blue-600 font-medium">PKR Flat Amount</span>
               </div>
             </div>
 
-            <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-              <div className="flex justify-between items-center mb-1">
+            <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+              <div className="flex justify-between items-center mb-0.5">
                 <span className="text-gray-500 font-semibold text-[11px] truncate">Percentage Fees</span>
-                <Percent className="text-amber-500 shrink-0" sx={{ fontSize: 17 }} />
               </div>
               <div className="flex items-baseline justify-between">
-                <span className="text-xl font-bold text-gray-900">{percentageFeesCount}</span>
+                <span className="text-lg font-bold text-gray-900">{percentageFeesCount}</span>
                 <span className="text-[10px] text-amber-600 font-medium">% Of Total Bill</span>
               </div>
             </div>
           </div>
 
           {/* Fee Table Card */}
-          <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
             
             {/* Controls Bar */}
-            <div className="p-4 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            <div className="p-3 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 {/* Search */}
                 <div className="relative w-full sm:w-64 shrink-0">
@@ -650,78 +634,86 @@ export default function TaxesFees() {
 
                 <button
                   onClick={handleOpenAddFee}
-                  className="flex items-center gap-1.5 px-4 py-2 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"
+                  className="px-3.5 py-1.5 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
                 >
-                  <Add sx={{ fontSize: 17 }} />
-                  <span>Add Fee</span>
+                  + Add Fee
                 </button>
               </div>
             </div>
 
-            {/* Fees Data Table */}
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-left border-collapse">
+            {/* Fees Data Table - Strictly 100% width with NO horizontal scroll */}
+            <div className="w-full">
+              <table className="w-full table-fixed text-left border-collapse">
+                <colgroup>
+                  <col style={{ width: '25%' }} />
+                  <col style={{ width: '12%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '18%' }} />
+                  <col style={{ width: '11%' }} />
+                  <col style={{ width: '6%' }} />
+                </colgroup>
                 <thead>
-                  <tr className="bg-gray-50/80 border-b border-gray-100 text-[10.5px] font-bold text-gray-500 uppercase tracking-wider">
-                    <th className="py-2.5 px-3">Fee Name</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap">Fee Code</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap">Calculation</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap">Value / Rate</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap">Application</th>
-                    <th className="py-2.5 px-2.5 whitespace-nowrap text-center">Status</th>
-                    <th className="py-2.5 px-2 text-right whitespace-nowrap w-16">Actions</th>
+                  <tr className="bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                    <th className="py-2.5 px-2">Fee Name</th>
+                    <th className="py-2.5 px-2">Fee Code</th>
+                    <th className="py-2.5 px-1.5">Calculation</th>
+                    <th className="py-2.5 px-1.5">Value / Rate</th>
+                    <th className="py-2.5 px-2">Application</th>
+                    <th className="py-2.5 px-1 text-center">Status</th>
+                    <th className="py-2.5 px-1 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 text-xs">
                   {paginatedFees.map((fee) => (
                     <tr key={fee.id} className="hover:bg-gray-50/60 transition-colors">
-                      <td className="py-2 px-3">
-                        <div>
-                          <span className="font-bold text-gray-900 block text-xs leading-tight">{fee.name}</span>
+                      <td className="py-2 px-2">
+                        <div className="min-w-0">
+                          <span className="font-bold text-gray-900 block text-xs leading-tight break-words">{fee.name}</span>
                           {fee.description && (
-                            <p className="text-[10.5px] text-gray-500 truncate max-w-[180px] mt-0.5">
+                            <p className="text-[10px] text-gray-500 truncate mt-0.5" title={fee.description}>
                               {fee.description}
                             </p>
                           )}
                         </div>
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap">
-                        <span className="font-mono font-bold text-[11px] bg-gray-100 text-gray-800 px-2 py-0.5 rounded-md border border-gray-200 whitespace-nowrap">
+                      <td className="py-2 px-2">
+                        <span className="font-mono font-bold text-[10.5px] bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded border border-gray-200 truncate inline-block max-w-full">
                           {fee.code}
                         </span>
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap text-gray-700 font-semibold text-[11px]">
+                      <td className="py-2 px-1.5 text-gray-700 font-semibold text-[10.5px] truncate">
                         {fee.calculationType}
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap">
-                        <span className="font-extrabold text-xs text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md font-mono whitespace-nowrap">
+                      <td className="py-2 px-1.5">
+                        <span className="font-extrabold text-xs text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-mono truncate inline-block max-w-full">
                           {fee.calculationType === 'Percentage' ? `${fee.value}%` : `PKR ${Number(fee.value).toLocaleString()}`}
                         </span>
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap">
-                        <span className="text-gray-800 font-medium text-xs">{fee.appliesTo}</span>
+                      <td className="py-2 px-2">
+                        <span className="text-gray-800 font-medium text-xs break-words">{fee.appliesTo}</span>
                       </td>
 
-                      <td className="py-2 px-2.5 whitespace-nowrap text-center">
+                      <td className="py-2 px-1 text-center">
                         <button
                           onClick={() => handleToggleFeeStatus(fee)}
                           title="Toggle Active Status"
-                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all whitespace-nowrap ${
+                          className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold cursor-pointer transition-all ${
                             fee.status === 'Active'
                               ? 'bg-[#e5f4eb] text-[#1b7f43] hover:bg-[#d0ebd8] border border-[#1b7f43]/20'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
                           }`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full ${fee.status === 'Active' ? 'bg-[#1b7f43]' : 'bg-gray-400'}`}></span>
-                          <span className="whitespace-nowrap">{fee.status}</span>
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${fee.status === 'Active' ? 'bg-[#1b7f43]' : 'bg-gray-400'}`}></span>
+                          <span>{fee.status}</span>
                         </button>
                       </td>
 
-                      <td className="py-2 px-2 whitespace-nowrap text-right">
+                      <td className="py-2 px-1 text-right">
                         <div className="flex items-center justify-end gap-0.5">
                           <Tooltip title="Edit Fee">
                             <IconButton

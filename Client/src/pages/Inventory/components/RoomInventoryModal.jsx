@@ -50,77 +50,56 @@ export default function RoomInventoryModal({ open, onClose, roomNumber, inventor
       fullWidth
       PaperProps={{
         sx: { 
-          borderRadius: '18px',
+          borderRadius: '16px',
           overflow: 'hidden',
           boxShadow: '0 20px 40px rgba(0,0,0,0.1)' 
         }
       }}
     >
       {/* Modal Header */}
-      <div className="bg-gradient-to-r from-emerald-800 to-[#1b7f43] p-5 text-white flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-sm">
-            <MeetingRoom sx={{ fontSize: 24 }} />
+      <div className="bg-[#1b7f43] p-3.5 px-5 text-white flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold tracking-tight">Room {roomNumber} Inventory</h2>
+            <span className="bg-white/20 text-white text-[11px] font-semibold px-2 py-0.5 rounded-md">
+              Physically Placed in Room
+            </span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold tracking-tight">Room {roomNumber} Inventory</h2>
-              <span className="bg-white/20 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full">
-                Physically Placed in Room
-              </span>
-            </div>
-            <p className="text-xs text-white/80 mt-0.5">
-              Live audit of stock, electronics & amenities assigned and stationed inside Room {roomNumber}
-            </p>
-          </div>
+          <p className="text-[11px] text-white/80 mt-0.5">
+            Live audit of stock, electronics & amenities assigned and stationed inside Room {roomNumber}
+          </p>
         </div>
         <IconButton 
           onClick={onClose} 
           size="small" 
           sx={{ color: 'white', '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' } }}
         >
-          <Close sx={{ fontSize: 20 }} />
+          <Close sx={{ fontSize: 18 }} />
         </IconButton>
       </div>
 
-      <DialogContent sx={{ p: 3, backgroundColor: '#f9fafb' }}>
+      <DialogContent sx={{ p: 2.5, backgroundColor: '#f9fafb' }}>
         {/* Quick Stats Banner */}
-        <div className="grid grid-cols-3 gap-3 mb-5">
-          <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-xs flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[#e5f4eb] text-[#1b7f43] flex items-center justify-center">
-              <Inventory2 sx={{ fontSize: 18 }} />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-gray-400 uppercase">Total In-Room Units</p>
-              <p className="text-base font-extrabold text-gray-900">{breakdown.totalItems} Placed</p>
-            </div>
+        <div className="grid grid-cols-3 gap-2.5 mb-3.5">
+          <div className="bg-white p-2.5 rounded-xl border border-gray-100 shadow-xs flex flex-col justify-between">
+            <p className="text-[10.5px] font-bold text-gray-500 uppercase">Total In-Room Units</p>
+            <p className="text-sm font-extrabold text-gray-900 mt-0.5">{breakdown.totalItems} Placed</p>
           </div>
 
-          <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-xs flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Category sx={{ fontSize: 18 }} />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-gray-400 uppercase">Categories</p>
-              <p className="text-base font-extrabold text-gray-900">{categories.length} Types</p>
-            </div>
+          <div className="bg-white p-2.5 rounded-xl border border-gray-100 shadow-xs flex flex-col justify-between">
+            <p className="text-[10.5px] font-bold text-gray-500 uppercase">Categories</p>
+            <p className="text-sm font-extrabold text-gray-900 mt-0.5">{categories.length} Types</p>
           </div>
 
-          <div className="bg-white p-3 rounded-xl border border-gray-100 shadow-xs flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
-              <MonetizationOn sx={{ fontSize: 18 }} />
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-gray-400 uppercase">Room Asset Value</p>
-              <p className="text-base font-extrabold text-emerald-700">${breakdown.totalValue.toFixed(2)}</p>
-            </div>
+          <div className="bg-white p-2.5 rounded-xl border border-gray-100 shadow-xs flex flex-col justify-between">
+            <p className="text-[10.5px] font-bold text-gray-500 uppercase">Room Asset Value</p>
+            <p className="text-sm font-extrabold text-emerald-700 mt-0.5">${breakdown.totalValue.toFixed(2)}</p>
           </div>
         </div>
 
         {/* Categorized List */}
         {categories.length === 0 ? (
-          <div className="bg-white rounded-xl p-8 text-center text-gray-500 border border-gray-100">
-            <Inventory2 sx={{ fontSize: 36, color: '#9ca3af', mb: 1 }} />
+          <div className="bg-white rounded-xl p-6 text-center text-gray-500 border border-gray-100">
             <p className="text-sm font-semibold">No inventory items assigned to Room {roomNumber}.</p>
             <p className="text-xs text-gray-400 mt-1">Use the "Add Inventory" page to assign items to this room.</p>
           </div>

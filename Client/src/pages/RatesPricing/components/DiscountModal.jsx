@@ -98,17 +98,16 @@ function DiscountFormBody({ discount, onClose, onSave }) {
 
   return (
     <>
-      <DialogContent sx={{ p: 4, backgroundColor: '#f9fafb' }}>
-        <form id="discount-form" onSubmit={handleSubmit} className="space-y-6">
+      <DialogContent sx={{ p: 3, backgroundColor: '#f9fafb' }}>
+        <form id="discount-form" onSubmit={handleSubmit} className="space-y-3.5">
           
           {/* Section 1: Basic Info */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 text-gray-800">
-              <InfoOutlined sx={{ fontSize: 18, color: '#1b7f43' }} />
+          <div className="bg-white p-3.5 rounded-xl border border-gray-100 shadow-xs space-y-3">
+            <div className="pb-1.5 border-b border-gray-100 text-gray-800">
               <h3 className="text-xs font-bold uppercase tracking-wider">Basic Voucher Information</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="md:col-span-2">
                 <TextField
                   fullWidth
@@ -176,13 +175,12 @@ function DiscountFormBody({ discount, onClose, onSave }) {
           </div>
 
           {/* Section 2: Discount Calculation */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 text-gray-800">
-              <Percent sx={{ fontSize: 18, color: '#1b7f43' }} />
+          <div className="bg-white p-3.5 rounded-xl border border-gray-100 shadow-xs space-y-3">
+            <div className="pb-1.5 border-b border-gray-100 text-gray-800">
               <h3 className="text-xs font-bold uppercase tracking-wider">Discount Calculation</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <FormControl fullWidth size="small" sx={muiInputSx}>
                 <InputLabel>Discount Type</InputLabel>
                 <Select
@@ -223,13 +221,12 @@ function DiscountFormBody({ discount, onClose, onSave }) {
           </div>
 
           {/* Section 3: Applicability */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 text-gray-800">
-              <LocalOffer sx={{ fontSize: 18, color: '#1b7f43' }} />
+          <div className="bg-white p-3.5 rounded-xl border border-gray-100 shadow-xs space-y-3">
+            <div className="pb-1.5 border-b border-gray-100 text-gray-800">
               <h3 className="text-xs font-bold uppercase tracking-wider">Applicability & Scope</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <FormControl fullWidth size="small" sx={muiInputSx}>
                 <InputLabel>Applicable Rate Plan</InputLabel>
                 <Select
@@ -266,13 +263,12 @@ function DiscountFormBody({ discount, onClose, onSave }) {
           </div>
 
           {/* Section 4: Validity & Usage */}
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-xs space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-100 text-gray-800">
-              <DateRange sx={{ fontSize: 18, color: '#1b7f43' }} />
+          <div className="bg-white p-3.5 rounded-xl border border-gray-100 shadow-xs space-y-3">
+            <div className="pb-1.5 border-b border-gray-100 text-gray-800">
               <h3 className="text-xs font-bold uppercase tracking-wider">Validity & Redemptions</h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               <div>
                 <TextField
                   fullWidth
@@ -339,11 +335,11 @@ function DiscountFormBody({ discount, onClose, onSave }) {
       </DialogContent>
 
       {/* Actions */}
-      <DialogActions sx={{ p: 3, backgroundColor: 'white', borderTop: '1px solid #f3f4f6', justifyContent: 'flex-end', gap: 1 }}>
+      <DialogActions sx={{ p: 2.5, backgroundColor: 'white', borderTop: '1px solid #f3f4f6', justifyContent: 'flex-end', gap: 1 }}>
         <button
           type="button"
           onClick={onClose}
-          className="px-5 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
+          className="px-4 py-1.5 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer"
         >
           Cancel
         </button>
@@ -351,9 +347,8 @@ function DiscountFormBody({ discount, onClose, onSave }) {
         <button
           type="submit"
           form="discount-form"
-          className="px-6 py-2 text-xs font-bold text-white bg-[#1b7f43] hover:bg-[#156736] rounded-xl shadow-sm transition cursor-pointer flex items-center gap-1.5"
+          className="px-5 py-1.5 text-xs font-bold text-white bg-[#1b7f43] hover:bg-[#156736] rounded-lg shadow-xs transition cursor-pointer"
         >
-          <CheckCircle sx={{ fontSize: 16 }} />
           {isEdit ? 'Save Changes' : 'Create Discount'}
         </button>
       </DialogActions>
@@ -379,33 +374,28 @@ export default function DiscountModal({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '20px',
+          borderRadius: '16px',
           overflow: 'hidden',
           boxShadow: '0 20px 50px rgba(0,0,0,0.15)'
         }
       }}
     >
       {/* Header */}
-      <div className="bg-[#1b7f43] p-5 text-white flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-xs">
-            <LocalOffer sx={{ fontSize: 22 }} />
-          </div>
-          <div>
-            <h2 className="text-lg font-bold tracking-tight">
-              {isEdit ? 'Edit Discount Voucher' : 'Create New Discount Voucher'}
-            </h2>
-            <p className="text-xs text-white/80 mt-0.5">
-              {isEdit ? `Updating promo terms for ${discount.code}` : 'Configure discount codes, rate plan markdown, and validity dates'}
-            </p>
-          </div>
+      <div className="bg-[#1b7f43] p-3.5 px-4 text-white flex items-center justify-between">
+        <div>
+          <h2 className="text-base font-bold tracking-tight">
+            {isEdit ? 'Edit Discount Voucher' : 'Create New Discount Voucher'}
+          </h2>
+          <p className="text-[11px] text-white/80 mt-0.5">
+            {isEdit ? `Updating promo terms for ${discount.code}` : 'Configure discount codes, rate plan markdown, and validity dates'}
+          </p>
         </div>
         <IconButton
           onClick={onClose}
           size="small"
           sx={{ color: 'white', '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' } }}
         >
-          <Close sx={{ fontSize: 20 }} />
+          <Close sx={{ fontSize: 18 }} />
         </IconButton>
       </div>
 

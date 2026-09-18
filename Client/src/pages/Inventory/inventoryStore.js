@@ -794,6 +794,161 @@ export const INITIAL_INVENTORY_ITEMS = [
   }
 ];
 
+export const CHARGE_TYPES = [
+  'All Types',
+  'Consumption',
+  'Damage',
+  'External Order',
+  'Other'
+];
+
+export const CHARGE_STATUSES = [
+  'All Statuses',
+  'Added to Folio',
+  'Pending',
+  'Paid',
+  'Invoiced'
+];
+
+export const INITIAL_GUEST_CHARGES = [
+  {
+    id: 'GC-1001',
+    guestName: 'Ahmed Khan',
+    roomNumber: '205',
+    chargeType: 'Consumption',
+    itemName: 'Coca-Cola (330ml Can)',
+    inventoryItemId: 'INV-2009',
+    quantity: 2,
+    unitPrice: 150,
+    amount: 300,
+    status: 'Added to Folio',
+    date: 'Today',
+    reportedDate: '2026-09-18',
+    folioId: 'FOL-205-01',
+    notes: 'Minibar consumption recorded during morning room turnaround.',
+    deductedFromStock: true
+  },
+  {
+    id: 'GC-1002',
+    guestName: 'Ahmed Khan',
+    roomNumber: '205',
+    chargeType: 'Damage',
+    itemName: 'King Luxury Fitted Bedsheet',
+    inventoryItemId: 'INV-1019',
+    quantity: 1,
+    unitPrice: 2500,
+    amount: 2500,
+    status: 'Pending',
+    date: 'Today',
+    reportedDate: '2026-09-18',
+    folioId: 'FOL-205-01',
+    notes: 'Permanent dye stain on bedsheet set. Pending guest billing authorization.',
+    deductedFromStock: true
+  },
+  {
+    id: 'GC-1003',
+    guestName: 'John Smith',
+    roomNumber: '302',
+    chargeType: 'External Order',
+    itemName: 'Pizza & Beverage Delivery',
+    inventoryItemId: null,
+    quantity: 1,
+    unitPrice: 2000,
+    amount: 2000,
+    status: 'Added to Folio',
+    date: 'Today',
+    reportedDate: '2026-09-18',
+    folioId: 'FOL-302-04',
+    notes: 'External restaurant delivery arranged via Front Desk concierge. No stock deduction.',
+    deductedFromStock: false
+  },
+  {
+    id: 'GC-1004',
+    guestName: 'Sarah Johnson',
+    roomNumber: '101',
+    chargeType: 'Consumption',
+    itemName: 'Organic Soap & Spa Amenity Set',
+    inventoryItemId: 'INV-1003',
+    quantity: 3,
+    unitPrice: 180,
+    amount: 540,
+    status: 'Added to Folio',
+    date: 'Yesterday',
+    reportedDate: '2026-09-17',
+    folioId: 'FOL-101-02',
+    notes: 'Extra guest vanity amenities provided on request.',
+    deductedFromStock: true
+  },
+  {
+    id: 'GC-1005',
+    guestName: 'David Miller',
+    roomNumber: '201',
+    chargeType: 'Damage',
+    itemName: 'Waffle Weave Bathrobe (L)',
+    inventoryItemId: 'INV-1016',
+    quantity: 1,
+    unitPrice: 3500,
+    amount: 3500,
+    status: 'Added to Folio',
+    date: '2026-09-15',
+    reportedDate: '2026-09-15',
+    folioId: 'FOL-201-03',
+    notes: 'Missing post-checkout bathrobe billed directly to incidental deposit (Incident MI-00025).',
+    deductedFromStock: true
+  },
+  {
+    id: 'GC-1006',
+    guestName: 'Elena Rostova',
+    roomNumber: '301',
+    chargeType: 'Damage',
+    itemName: 'Crystal Whiskey Tumbler Set (2pc)',
+    inventoryItemId: 'INV-1021',
+    quantity: 1,
+    unitPrice: 1600,
+    amount: 1600,
+    status: 'Paid',
+    date: '2026-09-14',
+    reportedDate: '2026-09-14',
+    folioId: 'FOL-301-01',
+    notes: 'Settled at reception upon early departure checkout.',
+    deductedFromStock: true
+  },
+  {
+    id: 'GC-1007',
+    guestName: 'Robert Vance',
+    roomNumber: '203',
+    chargeType: 'External Order',
+    itemName: 'Airport Executive Taxi Transfer',
+    inventoryItemId: null,
+    quantity: 1,
+    unitPrice: 4500,
+    amount: 4500,
+    status: 'Added to Folio',
+    date: '2026-09-13',
+    reportedDate: '2026-09-13',
+    folioId: 'FOL-203-05',
+    notes: 'Third-party limousine dispatch booked via Concierge desk.',
+    deductedFromStock: false
+  },
+  {
+    id: 'GC-1008',
+    guestName: 'Carlos Rodriguez',
+    roomNumber: '102',
+    chargeType: 'Other',
+    itemName: 'Express Laundry & Pressing Service',
+    inventoryItemId: null,
+    quantity: 1,
+    unitPrice: 1200,
+    amount: 1200,
+    status: 'Added to Folio',
+    date: '2026-09-12',
+    reportedDate: '2026-09-12',
+    folioId: 'FOL-102-02',
+    notes: 'Same-day steam dry cleaning charge.',
+    deductedFromStock: false
+  }
+];
+
 export const INITIAL_MISSING_INCIDENTS = [
   {
     id: 'MI-00024',
@@ -802,10 +957,14 @@ export const INITIAL_MISSING_INCIDENTS = [
     itemName: 'Smart TV Remote Controller',
     category: 'Electronics',
     roomNumber: '203',
+    location: 'Room 203',
+    expectedQty: 1,
     quantity: 1,
+    missingQty: 1,
     unitValue: 24.00,
     totalLoss: 24.00,
-    reportedDate: '2026-09-14',
+    condition: 'Missing',
+    reportedDate: 'Today',
     reportedBy: 'Housekeeping (Jane Smith)',
     reason: 'Not found in room during post-checkout inspection',
     status: 'Under Investigation',
@@ -816,9 +975,9 @@ export const INITIAL_MISSING_INCIDENTS = [
     resolutionDate: null,
     resolutionNotes: null,
     timeline: [
-      { date: '2026-09-14 11:30 AM', action: 'Incident Reported', user: 'Jane Smith (Housekeeper)', detail: 'Missing remote noticed while preparing room for next check-in.' },
-      { date: '2026-09-14 01:15 PM', action: 'Under Investigation', user: 'Sarah M. (Supervisor)', detail: 'Assigned inspection team to double check laundry hampers and luggage carts.' },
-      { date: '2026-09-14 03:40 PM', action: 'Guest Inquired', user: 'Front Desk Team', detail: 'Sent courteous email to guest inquiring if accidentally packed.' }
+      { date: '2026-09-18 11:30 AM', action: 'Incident Reported', user: 'Jane Smith (Housekeeper)', detail: 'Missing remote noticed while preparing room for next check-in.' },
+      { date: '2026-09-18 01:15 PM', action: 'Under Investigation', user: 'Sarah M. (Supervisor)', detail: 'Assigned inspection team to double check laundry hampers and luggage carts.' },
+      { date: '2026-09-18 03:40 PM', action: 'Guest Inquired', user: 'Front Desk Team', detail: 'Sent courteous email to guest inquiring if accidentally packed.' }
     ]
   },
   {
@@ -828,10 +987,14 @@ export const INITIAL_MISSING_INCIDENTS = [
     itemName: 'Waffle Weave Bathrobe (L)',
     category: 'Bathroom',
     roomNumber: '201',
+    location: 'Room 201',
+    expectedQty: 2,
     quantity: 1,
+    missingQty: 1,
     unitValue: 35.00,
     totalLoss: 35.00,
-    reportedDate: '2026-09-15',
+    condition: 'Missing',
+    reportedDate: 'Today',
     reportedBy: 'Housekeeping (Bilal K.)',
     reason: 'Bathrobe missing from wardrobe after checkout',
     status: 'Reported',
@@ -842,7 +1005,7 @@ export const INITIAL_MISSING_INCIDENTS = [
     resolutionDate: null,
     resolutionNotes: null,
     timeline: [
-      { date: '2026-09-15 10:15 AM', action: 'Incident Logged', user: 'Bilal K. (Housekeeper)', detail: 'Discovered during 10:00 AM turnaround cleaning.' }
+      { date: '2026-09-18 10:15 AM', action: 'Incident Logged', user: 'Bilal K. (Housekeeper)', detail: 'Discovered during 10:00 AM turnaround cleaning.' }
     ]
   },
   {
@@ -852,10 +1015,14 @@ export const INITIAL_MISSING_INCIDENTS = [
     itemName: 'Crystal Whiskey Tumbler Set (2pc)',
     category: 'Kitchen',
     roomNumber: '301',
+    location: 'Room 301',
+    expectedQty: 2,
     quantity: 1,
+    missingQty: 1,
     unitValue: 16.00,
     totalLoss: 16.00,
-    reportedDate: '2026-09-13',
+    condition: 'Broken / Missing',
+    reportedDate: 'Yesterday',
     reportedBy: 'Housekeeping (Ali R.)',
     reason: 'Broken in trash bin / missing glass',
     status: 'Replaced',
@@ -863,12 +1030,12 @@ export const INITIAL_MISSING_INCIDENTS = [
     guestName: 'Elena Rostova (Res #RES-398)',
     notes: 'Glass was accidentally broken by guest, charged to incidental folio $16.00 and replaced from storage.',
     resolutionType: 'Replaced',
-    resolutionDate: '2026-09-14',
+    resolutionDate: '2026-09-17',
     resolutionNotes: 'New boxed crystal glasses retrieved from central bar store and placed in 301.',
     timeline: [
-      { date: '2026-09-13 02:20 PM', action: 'Incident Reported', user: 'Ali R. (Housekeeper)', detail: 'Broken pieces found in bin during room service cleaning.' },
-      { date: '2026-09-13 04:00 PM', action: 'Under Investigation', user: 'Sarah M.', detail: 'Verified with guest account. Charge applied with guest consent.' },
-      { date: '2026-09-14 09:30 AM', action: 'Replacement Provided', user: 'Sarah M.', detail: 'Replaced from Central Pantry stock. Incident closed.' }
+      { date: '2026-09-17 02:20 PM', action: 'Incident Reported', user: 'Ali R. (Housekeeper)', detail: 'Broken pieces found in bin during room service cleaning.' },
+      { date: '2026-09-17 04:00 PM', action: 'Under Investigation', user: 'Sarah M.', detail: 'Verified with guest account. Charge applied with guest consent.' },
+      { date: '2026-09-17 09:30 AM', action: 'Replacement Provided', user: 'Sarah M.', detail: 'Replaced from Central Pantry stock. Incident closed.' }
     ]
   },
   {
@@ -878,10 +1045,14 @@ export const INITIAL_MISSING_INCIDENTS = [
     itemName: 'Ionic Hair Dryer 1800W',
     category: 'Electronics',
     roomNumber: '302',
+    location: 'Room 302',
+    expectedQty: 1,
     quantity: 1,
+    missingQty: 1,
     unitValue: 38.00,
     totalLoss: 38.00,
-    reportedDate: '2026-09-13',
+    condition: 'Missing',
+    reportedDate: '2026-09-15',
     reportedBy: 'Housekeeping (Jane Smith)',
     reason: 'Bathroom bracket empty',
     status: 'Recovered',
@@ -889,12 +1060,12 @@ export const INITIAL_MISSING_INCIDENTS = [
     guestName: 'Marcus Aurel (Res #RES-401)',
     notes: 'Found in hotel lost & found holding bag, was placed in wrong housekeeping cart during floor turn.',
     resolutionType: 'Recovered',
-    resolutionDate: '2026-09-14',
+    resolutionDate: '2026-09-16',
     resolutionNotes: 'Hair dryer verified, tested, sanitized, and returned to Room 302 bracket.',
     timeline: [
-      { date: '2026-09-13 09:00 AM', action: 'Reported Missing', user: 'Jane Smith', detail: 'Noted empty dryer bracket on wall.' },
-      { date: '2026-09-13 11:00 AM', action: 'Under Investigation', user: 'Tariq M. (Security)', detail: 'Reviewing cart logs.' },
-      { date: '2026-09-14 08:45 AM', action: 'Item Recovered', user: 'Tariq M.', detail: 'Found in cart 3B storage compartment and reinstalled.' }
+      { date: '2026-09-15 09:00 AM', action: 'Reported Missing', user: 'Jane Smith', detail: 'Noted empty dryer bracket on wall.' },
+      { date: '2026-09-15 11:00 AM', action: 'Under Investigation', user: 'Tariq M. (Security)', detail: 'Reviewing cart logs.' },
+      { date: '2026-09-16 08:45 AM', action: 'Item Recovered', user: 'Tariq M.', detail: 'Found in cart 3B storage compartment and reinstalled.' }
     ]
   },
   {
@@ -904,10 +1075,14 @@ export const INITIAL_MISSING_INCIDENTS = [
     itemName: 'Steam Iron & Stand Set',
     category: 'Amenities',
     roomNumber: '102',
+    location: 'Room 102',
+    expectedQty: 1,
     quantity: 1,
+    missingQty: 1,
     unitValue: 55.00,
     totalLoss: 55.00,
-    reportedDate: '2026-09-10',
+    condition: 'Damaged / Missing',
+    reportedDate: '2026-09-14',
     reportedBy: 'Housekeeping (Alice Green)',
     reason: 'Power cord damaged and detached',
     status: 'Written Off',
@@ -915,12 +1090,68 @@ export const INITIAL_MISSING_INCIDENTS = [
     guestName: 'Internal Maintenance',
     notes: 'Excessive wear and tear beyond economical repair. Deemed obsolete.',
     resolutionType: 'Written Off',
-    resolutionDate: '2026-09-12',
+    resolutionDate: '2026-09-15',
     resolutionNotes: 'Approved for electronic scrap write-off. Replaced with newer model in 102.',
     timeline: [
-      { date: '2026-09-10 03:10 PM', action: 'Damage / Loss Logged', user: 'Alice Green', detail: 'Cord burnt out.' },
-      { date: '2026-09-11 10:00 AM', action: 'Inspected by Tech', user: 'Maintenance Lead', detail: 'Repairs exceed replacement cost.' },
-      { date: '2026-09-12 02:00 PM', action: 'Written Off', user: 'Hassan K.', detail: 'Formally written off asset ledger.' }
+      { date: '2026-09-14 03:10 PM', action: 'Damage / Loss Logged', user: 'Alice Green', detail: 'Cord burnt out.' },
+      { date: '2026-09-14 10:00 AM', action: 'Inspected by Tech', user: 'Maintenance Lead', detail: 'Repairs exceed replacement cost.' },
+      { date: '2026-09-15 02:00 PM', action: 'Written Off', user: 'Hassan K.', detail: 'Formally written off asset ledger.' }
+    ]
+  },
+  {
+    id: 'MI-00029',
+    incidentNumber: 'MI-00029',
+    inventoryItemId: 'INV-1010',
+    itemName: 'Bath Towel (Egyptian Cotton)',
+    category: 'Linens',
+    roomNumber: '205',
+    location: 'Room 205',
+    expectedQty: 3,
+    quantity: 1,
+    missingQty: 1,
+    unitValue: 12.50,
+    totalLoss: 12.50,
+    condition: 'Missing',
+    reportedDate: 'Today',
+    reportedBy: 'Housekeeping',
+    reason: '1 of 3 bath towels unaccounted for at checkout inspection.',
+    status: 'Reported',
+    assignedTo: 'Housekeeping Supervisor',
+    guestName: 'Ahmed Khan (Res #RES-420)',
+    notes: 'Awaiting supervisor decision on guest charge.',
+    resolutionType: null,
+    resolutionDate: null,
+    resolutionNotes: null,
+    timeline: [
+      { date: '2026-09-18 10:00 AM', action: 'Logged Missing', user: 'Housekeeping', detail: 'Found missing during post checkout audit.' }
+    ]
+  },
+  {
+    id: 'MI-00030',
+    incidentNumber: 'MI-00030',
+    inventoryItemId: 'INV-1019',
+    itemName: 'King Luxury Fitted Bedsheet',
+    category: 'Linens',
+    roomNumber: '302',
+    location: 'Room 302',
+    expectedQty: 2,
+    quantity: 1,
+    missingQty: 1,
+    unitValue: 48.00,
+    totalLoss: 48.00,
+    condition: 'Missing',
+    reportedDate: 'Today',
+    reportedBy: 'Housekeeping',
+    reason: 'Extra bedsheet set missing from linen closet shelf.',
+    status: 'Under Investigation',
+    assignedTo: 'Duty Manager',
+    guestName: 'John Smith (Res #RES-418)',
+    notes: 'Investigating if sent to offsite laundry service.',
+    resolutionType: null,
+    resolutionDate: null,
+    resolutionNotes: null,
+    timeline: [
+      { date: '2026-09-18 09:30 AM', action: 'Audit Discrepancy', user: 'Housekeeping', detail: 'Expected 2, counted 1.' }
     ]
   }
 ];
@@ -928,6 +1159,7 @@ export const INITIAL_MISSING_INCIDENTS = [
 // LocalStorage helpers with automatic initialization
 const STORAGE_KEY_ITEMS = 'hotel_inventory_items_v2';
 const STORAGE_KEY_INCIDENTS = 'hotel_inventory_incidents_v2';
+const STORAGE_KEY_CHARGES = 'hotel_guest_charges_v2';
 
 export const getInventoryItems = () => {
   const data = localStorage.getItem(STORAGE_KEY_ITEMS);
@@ -1193,5 +1425,129 @@ export const getStorageReserveForItem = (item, allItems = []) => {
     };
   }
   return null;
+};
+
+// Guest Charges Store & Helpers
+export const getGuestCharges = () => {
+  const data = localStorage.getItem(STORAGE_KEY_CHARGES);
+  if (!data) {
+    localStorage.setItem(STORAGE_KEY_CHARGES, JSON.stringify(INITIAL_GUEST_CHARGES));
+    return INITIAL_GUEST_CHARGES;
+  }
+  try {
+    return JSON.parse(data);
+  } catch {
+    return INITIAL_GUEST_CHARGES;
+  }
+};
+
+export const saveGuestCharges = (charges) => {
+  localStorage.setItem(STORAGE_KEY_CHARGES, JSON.stringify(charges));
+  window.dispatchEvent(new Event('guest_charges_update'));
+};
+
+export const addGuestCharge = (chargeData) => {
+  const charges = getGuestCharges();
+  const quantity = Number(chargeData.quantity) || 1;
+  const unitPrice = Number(chargeData.unitPrice) || 0;
+  const amount = Number(chargeData.amount) || (quantity * unitPrice);
+
+  const newCharge = {
+    ...chargeData,
+    id: `GC-${Math.floor(1000 + Math.random() * 9000)}`,
+    guestName: chargeData.guestName ? chargeData.guestName.trim() : 'Guest',
+    roomNumber: chargeData.roomNumber || '205',
+    chargeType: chargeData.chargeType || 'Consumption',
+    itemName: chargeData.itemName ? chargeData.itemName.trim() : 'Hotel Service / Item',
+    inventoryItemId: chargeData.inventoryItemId || null,
+    quantity: quantity,
+    unitPrice: unitPrice,
+    amount: amount,
+    status: chargeData.status || 'Added to Folio',
+    date: chargeData.date || 'Today',
+    reportedDate: chargeData.reportedDate || new Date().toISOString().split('T')[0],
+    folioId: chargeData.folioId || `FOL-${chargeData.roomNumber || '205'}-${Math.floor(10 + Math.random() * 90)}`,
+    notes: chargeData.notes ? chargeData.notes.trim() : '',
+    deductedFromStock: chargeData.chargeType === 'Consumption' || chargeData.chargeType === 'Damage'
+  };
+
+  // Only reduce hotel stock if the charge is for an actual hotel inventory item consumed/damaged
+  // Do NOT reduce hotel stock for external orders or services
+  if (newCharge.deductedFromStock && newCharge.inventoryItemId) {
+    const items = getInventoryItems();
+    const targetItem = items.find(i => i.id === newCharge.inventoryItemId);
+    if (targetItem) {
+      const newQty = Math.max(0, (Number(targetItem.quantity) || 0) - quantity);
+      updateInventoryItem(targetItem.id, {
+        quantity: newQty,
+        status: newQty === 0 ? 'Out of Stock' : newQty <= targetItem.minimumStock ? 'Low Stock' : targetItem.status
+      });
+    }
+  }
+
+  const updatedCharges = [newCharge, ...charges];
+  saveGuestCharges(updatedCharges);
+  return newCharge;
+};
+
+export const updateGuestCharge = (id, updates) => {
+  const charges = getGuestCharges();
+  const updatedCharges = charges.map(ch => {
+    if (ch.id === id) {
+      const merged = { ...ch, ...updates };
+      merged.quantity = Number(merged.quantity) || 1;
+      merged.unitPrice = Number(merged.unitPrice) || 0;
+      merged.amount = merged.amount !== undefined ? Number(merged.amount) : (merged.quantity * merged.unitPrice);
+      return merged;
+    }
+    return ch;
+  });
+  saveGuestCharges(updatedCharges);
+};
+
+export const deleteGuestCharge = (id) => {
+  const charges = getGuestCharges();
+  const updatedCharges = charges.filter(ch => ch.id !== id);
+  saveGuestCharges(updatedCharges);
+};
+
+export const computeGuestChargeMetrics = (charges) => {
+  const totalCount = charges.length;
+  const totalAmount = charges.reduce((sum, ch) => sum + (Number(ch.amount) || 0), 0);
+  
+  const addedToFolio = charges.filter(ch => ch.status === 'Added to Folio');
+  const addedToFolioAmount = addedToFolio.reduce((sum, ch) => sum + (Number(ch.amount) || 0), 0);
+
+  const pending = charges.filter(ch => ch.status === 'Pending');
+  const pendingAmount = pending.reduce((sum, ch) => sum + (Number(ch.amount) || 0), 0);
+
+  const paid = charges.filter(ch => ch.status === 'Paid');
+  const paidAmount = paid.reduce((sum, ch) => sum + (Number(ch.amount) || 0), 0);
+
+  const consumption = charges.filter(ch => ch.chargeType === 'Consumption');
+  const consumptionAmount = consumption.reduce((sum, ch) => sum + (Number(ch.amount) || 0), 0);
+
+  const damage = charges.filter(ch => ch.chargeType === 'Damage');
+  const damageAmount = damage.reduce((sum, ch) => sum + (Number(ch.amount) || 0), 0);
+
+  const externalOrder = charges.filter(ch => ch.chargeType === 'External Order');
+  const externalOrderAmount = externalOrder.reduce((sum, ch) => sum + (Number(ch.amount) || 0), 0);
+
+  return {
+    totalCount,
+    totalAmount,
+    addedToFolioCount: addedToFolio.length,
+    addedToFolioAmount,
+    pendingCount: pending.length,
+    pendingAmount,
+    paidCount: paid.length,
+    paidAmount,
+    consumptionCount: consumption.length,
+    consumptionAmount,
+    damageCount: damage.length,
+    damageAmount,
+    externalOrderCount: externalOrder.length,
+    externalOrderAmount
+  };
 };
 

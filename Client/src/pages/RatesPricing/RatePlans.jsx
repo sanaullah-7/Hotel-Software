@@ -125,98 +125,75 @@ export default function RatePlans() {
     : 0;
 
   return (
-    <div className="space-y-4 max-w-[1600px] mx-auto pb-8 animate-fade-in">
-      <div className="h-1"></div>
+    <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in">
+      {/* Top Action Bar (Heading Removed) */}
+      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+        <button
+          onClick={handleResetDefaults}
+          title="Reset to default mock data"
+          className="px-2.5 py-1 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
+        >
+          Reset Demo
+        </button>
 
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-2xl border border-gray-100 shadow-xs">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Rate Plans</h1>
-            <span className="bg-[#e5f4eb] text-[#1b7f43] text-[11px] font-bold px-2.5 py-0.5 rounded-full">
-              {ratePlans.length} Total Plans
-            </span>
-          </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Configure room pricing tiers, meal inclusion packages, occupancy rates, and cancellation policies.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 self-end sm:self-auto">
-          <button
-            onClick={handleResetDefaults}
-            title="Reset to default mock data"
-            className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-xs font-semibold transition cursor-pointer"
-          >
-            <Refresh sx={{ fontSize: 15 }} />
-            <span className="hidden sm:inline">Reset Demo</span>
-          </button>
-
-          <button
-            onClick={handleOpenAddModal}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"
-          >
-            <Add sx={{ fontSize: 17 }} />
-            <span>Add Rate Plan</span>
-          </button>
-        </div>
+        <button
+          onClick={handleOpenAddModal}
+          className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+        >
+          + Add Rate Plan
+        </button>
       </div>
 
       {/* 5 Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
         {/* Total Plans */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Total Plans</span>
-            <Sell className="text-indigo-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-gray-900">{totalPlansCount}</span>
+            <span className="text-lg font-bold text-gray-900">{totalPlansCount}</span>
             <span className="text-[10px] text-gray-400 font-medium">Configured</span>
           </div>
         </div>
 
         {/* Active Plans */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Active Plans</span>
-            <CheckCircle className="text-emerald-600 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-emerald-700">{activePlansCount}</span>
+            <span className="text-lg font-bold text-emerald-700">{activePlansCount}</span>
             <span className="text-[10px] text-emerald-600 font-semibold">Live in Engine</span>
           </div>
         </div>
 
         {/* Flexible Policy */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Flexible Policy</span>
-            <Shield className="text-blue-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-gray-900">{flexiblePoliciesCount}</span>
+            <span className="text-lg font-bold text-gray-900">{flexiblePoliciesCount}</span>
             <span className="text-[10px] text-blue-600 font-medium">Free Cancel</span>
           </div>
         </div>
 
         {/* Non-Refundable */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Non-Refundable</span>
-            <Cancel className="text-amber-500 shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-gray-900">{nonRefundableCount}</span>
+            <span className="text-lg font-bold text-gray-900">{nonRefundableCount}</span>
             <span className="text-[10px] text-amber-600 font-medium">Advance Saver</span>
           </div>
         </div>
 
         {/* Avg Base Rate */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
+        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
+          <div className="flex justify-between items-center mb-0.5">
             <span className="text-gray-500 font-semibold text-[11px] truncate">Avg Base Rate</span>
-            <CurrencyExchange className="text-[#1b7f43] shrink-0" sx={{ fontSize: 17 }} />
           </div>
           <div className="flex items-baseline justify-between">
             <span className="text-base font-bold text-gray-900">PKR {avgBaseRate.toLocaleString()}</span>
@@ -226,10 +203,10 @@ export default function RatePlans() {
       </div>
 
       {/* Main Table Container */}
-      <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
         
         {/* Table Controls Header */}
-        <div className="p-4 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+        <div className="p-3 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
           
           {/* Left Controls: Search & Segmented Filter */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
@@ -317,19 +294,29 @@ export default function RatePlans() {
 
         </div>
 
-        {/* Data Table */}
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse">
+        {/* Data Table - Strictly 100% width with NO horizontal scroll */}
+        <div className="w-full">
+          <table className="w-full table-fixed text-left border-collapse">
+            <colgroup>
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '24%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '15%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '5%' }} />
+            </colgroup>
             <thead>
-              <tr className="bg-gray-50/80 border-b border-gray-100 text-[10.5px] font-bold text-gray-500 uppercase tracking-wider">
-                <th className="py-2.5 px-3 whitespace-nowrap">Rate Code</th>
-                <th className="py-2.5 px-3">Rate Plan Name</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">Room Type</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">Meal Plan</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">Base Rate</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">Cancellation</th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap text-center">Status</th>
-                <th className="py-2.5 px-2 text-right whitespace-nowrap w-16">Actions</th>
+              <tr className="bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                <th className="py-2.5 px-2">Rate Code</th>
+                <th className="py-2.5 px-2">Rate Plan Name</th>
+                <th className="py-2.5 px-2">Room Type</th>
+                <th className="py-2.5 px-2">Meal Plan</th>
+                <th className="py-2.5 px-2">Base Rate</th>
+                <th className="py-2.5 px-2">Cancellation</th>
+                <th className="py-2.5 px-1 text-center">Status</th>
+                <th className="py-2.5 px-1 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs">
@@ -337,18 +324,18 @@ export default function RatePlans() {
                 <tr key={plan.id} className="hover:bg-gray-50/60 transition-colors">
                   
                   {/* Rate Code */}
-                  <td className="py-2 px-3 whitespace-nowrap">
-                    <span className="font-mono font-bold text-[11px] bg-gray-100 text-gray-800 px-2 py-0.5 rounded-md border border-gray-200 whitespace-nowrap">
+                  <td className="py-2 px-2">
+                    <span className="font-mono font-bold text-[10.5px] bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded border border-gray-200 truncate inline-block max-w-full">
                       {plan.code}
                     </span>
                   </td>
 
                   {/* Plan Name & Inclusions */}
-                  <td className="py-2 px-3">
-                    <div>
-                      <span className="font-bold text-gray-900 block text-xs leading-tight">{plan.name}</span>
+                  <td className="py-2 px-2">
+                    <div className="min-w-0">
+                      <span className="font-bold text-gray-900 block text-xs leading-tight break-words">{plan.name}</span>
                       {plan.description && (
-                        <p className="text-[10.5px] text-gray-500 truncate max-w-[200px] mt-0.5">
+                        <p className="text-[10px] text-gray-500 truncate mt-0.5" title={plan.description}>
                           {plan.description}
                         </p>
                       )}
@@ -356,62 +343,62 @@ export default function RatePlans() {
                   </td>
 
                   {/* Room Type */}
-                  <td className="py-2 px-2.5 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5 text-gray-700 font-medium">
-                      <Hotel sx={{ fontSize: 14, color: '#6b7280' }} />
-                      <span className="whitespace-nowrap">{plan.roomType}</span>
+                  <td className="py-2 px-2">
+                    <div className="flex items-center gap-1 text-gray-700 font-medium">
+                      <Hotel sx={{ fontSize: 13, color: '#6b7280', flexShrink: 0 }} />
+                      <span className="truncate text-xs">{plan.roomType}</span>
                     </div>
                   </td>
 
                   {/* Meal Plan */}
-                  <td className="py-2 px-2.5 whitespace-nowrap">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-emerald-50 text-[#1b7f43] border border-emerald-200/60 whitespace-nowrap">
-                      <Restaurant sx={{ fontSize: 12 }} />
-                      <span className="whitespace-nowrap">{plan.mealPlan}</span>
+                  <td className="py-2 px-2">
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-[#1b7f43] border border-emerald-200/60 max-w-full">
+                      <Restaurant sx={{ fontSize: 11, flexShrink: 0 }} />
+                      <span className="truncate">{plan.mealPlan}</span>
                     </span>
                   </td>
 
                   {/* Base Rate & Currency */}
-                  <td className="py-2 px-2.5 whitespace-nowrap">
+                  <td className="py-2 px-2">
                     <div>
-                      <span className="font-extrabold text-xs text-gray-900 font-mono whitespace-nowrap">
+                      <span className="font-extrabold text-xs text-gray-900 font-mono block">
                         PKR {Number(plan.baseRate).toLocaleString()}
                       </span>
-                      <span className="text-[9.5px] text-gray-400 block leading-none">/ night</span>
+                      <span className="text-[9px] text-gray-400 block leading-none">/ night</span>
                     </div>
                   </td>
 
                   {/* Cancellation Policy */}
-                  <td className="py-2 px-2.5 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold whitespace-nowrap ${
+                  <td className="py-2 px-2">
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-bold max-w-full truncate ${
                       plan.cancellationPolicy === 'Flexible'
                         ? 'bg-blue-50 text-blue-700 border border-blue-200'
                         : plan.cancellationPolicy === 'Moderate'
                         ? 'bg-amber-50 text-amber-700 border border-amber-200'
                         : 'bg-red-50 text-red-700 border border-red-200'
                     }`}>
-                      {plan.cancellationPolicy}
+                      <span className="truncate">{plan.cancellationPolicy}</span>
                     </span>
                   </td>
 
                   {/* Status Badge */}
-                  <td className="py-2 px-2.5 whitespace-nowrap text-center">
+                  <td className="py-2 px-1 text-center">
                     <button
                       onClick={() => handleToggleStatus(plan)}
                       title="Click to toggle status"
-                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold cursor-pointer transition-all whitespace-nowrap ${
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold cursor-pointer transition-all ${
                         plan.status === 'Active'
                           ? 'bg-[#e5f4eb] text-[#1b7f43] hover:bg-[#d0ebd8] border border-[#1b7f43]/20'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
                       }`}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${plan.status === 'Active' ? 'bg-[#1b7f43]' : 'bg-gray-400'}`}></span>
-                      <span className="whitespace-nowrap">{plan.status}</span>
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${plan.status === 'Active' ? 'bg-[#1b7f43]' : 'bg-gray-400'}`}></span>
+                      <span>{plan.status}</span>
                     </button>
                   </td>
 
                   {/* Action Buttons */}
-                  <td className="py-2 px-2 whitespace-nowrap text-right">
+                  <td className="py-2 px-1 text-right">
                     <div className="flex items-center justify-end gap-0.5">
                       <Tooltip title="Edit Rate Plan">
                         <IconButton

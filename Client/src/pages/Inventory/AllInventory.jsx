@@ -17,6 +17,7 @@ import {
 import RoomInventoryModal from './components/RoomInventoryModal';
 import ItemDetailModal from './components/ItemDetailModal';
 import ReportIncidentModal from './components/ReportIncidentModal';
+import AddStockItemModal from './components/AddStockItemModal';
 
 const muiSelectSx = {
   '& .MuiOutlinedInput-root': {
@@ -57,6 +58,7 @@ export default function AllInventory() {
   const [selectedItemForDetail, setSelectedItemForDetail] = useState(null);
   const [prefilledItemForIncident, setPrefilledItemForIncident] = useState(null);
   const [incidentModalOpen, setIncidentModalOpen] = useState(false);
+  const [addStockModalOpen, setAddStockModalOpen] = useState(false);
 
   // Table action menu state
   const [anchorEl, setAnchorEl] = useState(null);
@@ -207,123 +209,97 @@ export default function AllInventory() {
   };
 
   return (
-    <div className="space-y-4 max-w-[1600px] mx-auto pb-8 animate-fade-in">
+    <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in">
       
-      {/* PAGE HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mt-3">
-        <div>
-          
-        </div>
+      {/* Top Action Buttons (Heading Removed) */}
+      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+        <button 
+          onClick={handleRefresh} 
+          disabled={isRefreshing}
+          title="Refresh Data & Reset Filters"
+          className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
+        >
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
 
-        {/* Header Action Buttons */}
-        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-          <button 
-            onClick={handleRefresh} 
-            disabled={isRefreshing}
-            title="Refresh Data & Reset Filters"
-            className="flex items-center gap-1.5 px-3 py-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl text-xs font-bold transition cursor-pointer shadow-xs"
-          >
-            <Refresh sx={{ fontSize: 16 }} className={isRefreshing ? 'animate-spin text-[#1b7f43]' : 'text-gray-500'} />
-            <span>Refresh</span>
-          </button>
+        <button 
+          onClick={handleExportCSV}
+          className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition shadow-xs cursor-pointer"
+        >
+          Export CSV
+        </button>
 
-          <button 
-            onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
-          >
-            <Download sx={{ fontSize: 16 }} />
-            <span>Export CSV</span>
-          </button>
+        <button 
+          onClick={() => {
+            setPrefilledItemForIncident(null);
+            setIncidentModalOpen(true);
+          }}
+          className="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded text-xs font-medium transition cursor-pointer"
+        >
+          Report Missing
+        </button>
 
-          <button 
-            onClick={() => {
-              setPrefilledItemForIncident(null);
-              setIncidentModalOpen(true);
-            }}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded-xl text-xs font-bold transition cursor-pointer"
-          >
-            <ReportProblem sx={{ fontSize: 16 }} />
-            <span>Report Missing</span>
-          </button>
-
-          <button 
-            onClick={() => navigate('/inventory/add')}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#1b7f43] hover:bg-[#166b37] text-white rounded-xl text-xs font-bold shadow-xs transition cursor-pointer"
-          >
-            <Add sx={{ fontSize: 17 }} />
-            <span>+ Add Inventory</span>
-          </button>
-        </div>
+        <button 
+          onClick={() => setAddStockModalOpen(true)}
+          className="px-3 py-1 bg-[#1b7f43] hover:bg-[#166b37] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+        >
+          + Add Stock
+        </button>
       </div>
 
-      {/* KPI SUMMARY CARDS */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      {/* KPI SUMMARY CARDS - Simplified, Compact, No Decorative Icons */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
         {/* Total Items */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-gray-500 font-semibold text-[11px] truncate">Total Items</span>
-            <Inventory2 className="text-slate-500 shrink-0" sx={{ fontSize: 17 }} />
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-gray-900">{metrics.totalCount}</span>
+        <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
+          <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Total Items</span>
+          <div className="flex items-baseline justify-between mt-0.5">
+            <span className="text-lg font-bold text-gray-900 leading-none">{metrics.totalCount}</span>
             <span className="text-[10px] text-gray-400 font-medium">{metrics.totalQuantity} Units</span>
           </div>
         </div>
 
         {/* Available Stock */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-gray-500 font-semibold text-[11px] truncate">Available Stock</span>
-            <CheckCircle className="text-emerald-600 shrink-0" sx={{ fontSize: 17 }} />
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-emerald-700">{metrics.availableStock}</span>
+        <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
+          <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Available Stock</span>
+          <div className="flex items-baseline justify-between mt-0.5">
+            <span className="text-lg font-bold text-emerald-700 leading-none">{metrics.availableStock}</span>
             <span className="text-[10px] text-emerald-600 font-semibold">Ready</span>
           </div>
         </div>
 
         {/* Low Stock */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-gray-500 font-semibold text-[11px] truncate">Low Stock</span>
-            <Warning className="text-amber-500 shrink-0" sx={{ fontSize: 17 }} />
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-gray-900">{metrics.lowStock}</span>
+        <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
+          <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Low Stock</span>
+          <div className="flex items-baseline justify-between mt-0.5">
+            <span className="text-lg font-bold text-amber-600 leading-none">{metrics.lowStock}</span>
             <span className="text-[10px] text-amber-600 font-medium">Below Min</span>
           </div>
         </div>
 
         {/* Missing Items */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-gray-500 font-semibold text-[11px] truncate">Missing Items</span>
-            <ReportProblem className="text-red-500 shrink-0" sx={{ fontSize: 17 }} />
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-xl font-bold text-gray-900">{metrics.missingItems}</span>
+        <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
+          <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Missing Items</span>
+          <div className="flex items-baseline justify-between mt-0.5">
+            <span className="text-lg font-bold text-red-600 leading-none">{metrics.missingItems}</span>
             <span className="text-[10px] text-red-600 font-medium">Active Loss</span>
           </div>
         </div>
 
         {/* Total Valuation */}
-        <div className="bg-white p-3.5 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-1">
-            <span className="text-gray-500 font-semibold text-[11px] truncate">Valuation</span>
-            <MonetizationOn className="text-blue-500 shrink-0" sx={{ fontSize: 17 }} />
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-base font-bold text-gray-900">
+        <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
+          <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Valuation</span>
+          <div className="flex items-baseline justify-between mt-0.5">
+            <span className="text-base font-bold text-gray-900 leading-none">
               ${metrics.totalValuation.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </span>
-            <span className="text-[10px] text-gray-400 font-medium">Assets</span>
+            <span className="text-[10px] text-gray-400 font-medium">Total Assets</span>
           </div>
         </div>
       </div>
 
       {/* FILTER & SEARCH TOOLBAR */}
-      <div className="bg-white p-4 rounded-2xl shadow-xs border border-gray-100 space-y-3">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 space-y-2">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
           
           {/* Search Box */}
           <div className="relative w-full sm:w-64 shrink-0">
@@ -336,7 +312,7 @@ export default function AllInventory() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full pl-8 pr-7 py-1.5 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-shadow placeholder-gray-400 text-gray-800"
+              className="w-full pl-8 pr-7 py-1 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] placeholder-gray-400 text-gray-800"
             />
             {searchQuery && (
               <button 
@@ -344,7 +320,7 @@ export default function AllInventory() {
                   setSearchQuery('');
                   setCurrentPage(1);
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
                 <Clear sx={{ fontSize: 14 }} />
               </button>
@@ -352,8 +328,8 @@ export default function AllInventory() {
           </div>
 
           {/* Quick Room Fast-Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto hide-scrollbar shrink-0 py-1">
-            <span className="text-[11px] font-bold text-gray-400 uppercase mr-1 whitespace-nowrap">Quick Rooms:</span>
+          <div className="flex items-center gap-1 shrink-0 py-0.5 flex-wrap">
+            <span className="text-[10.5px] font-bold text-gray-400 uppercase mr-1 whitespace-nowrap">Quick Rooms:</span>
             {['All', '101', '102', '201', '203', '205', '301', 'Storage'].map((r) => {
               const isActive = selectedRoom === r;
               return (
@@ -363,7 +339,7 @@ export default function AllInventory() {
                     setSelectedRoom(r);
                     setCurrentPage(1);
                   }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition whitespace-nowrap cursor-pointer ${
+                  className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition cursor-pointer ${
                     isActive 
                       ? 'bg-[#1b7f43] text-white shadow-xs' 
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -378,7 +354,7 @@ export default function AllInventory() {
         </div>
 
         {/* Detailed Dropdown Filters */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2.5 pt-2 border-t border-gray-100 items-center">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2 pt-2 border-t border-gray-100 items-center">
           
           {/* Room Filter Dropdown */}
           <div>
@@ -463,9 +439,9 @@ export default function AllInventory() {
             {hasActiveFilters && (
               <button
                 onClick={handleResetFilters}
-                className="w-full flex items-center justify-center gap-1 py-1.5 px-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition cursor-pointer"
+                className="w-full flex items-center justify-center py-1.5 px-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition cursor-pointer"
               >
-                <Clear sx={{ fontSize: 14 }} /> Reset
+                Reset Filters
               </button>
             )}
           </div>
@@ -473,14 +449,14 @@ export default function AllInventory() {
         </div>
       </div>
 
-      {/* INVENTORY DATA TABLE WITH COMFORTABLE COLUMN WIDTHS & HORIZONTAL SCROLLING */}
-      <div className="bg-white rounded-2xl shadow-xs border border-gray-100 overflow-hidden">
+      {/* INVENTORY DATA TABLE */}
+      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden w-full">
         
         {/* Table Top Header */}
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h3 className="text-[14px] font-bold text-gray-900">Inventory Items</h3>
-            <span className="text-[11px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+            <h3 className="text-xs font-bold text-gray-900 uppercase tracking-tight">Inventory Items</h3>
+            <span className="text-[10.5px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.2 rounded-full">
               {filteredItems.length} {filteredItems.length === 1 ? 'item' : 'items'}
             </span>
           </div>
@@ -488,47 +464,58 @@ export default function AllInventory() {
           {selectedRoom !== 'All' && selectedRoom !== 'Storage' && (
             <button
               onClick={() => setSelectedRoomForModal(selectedRoom)}
-              className="flex items-center gap-1.5 px-3 py-1 bg-[#e5f4eb] text-[#1b7f43] hover:bg-[#d5ecd9] rounded-lg text-xs font-bold transition cursor-pointer"
+              className="px-2.5 py-1 bg-[#e5f4eb] text-[#1b7f43] hover:bg-[#d5ecd9] rounded-lg text-[11px] font-bold transition cursor-pointer"
             >
-              <MeetingRoom sx={{ fontSize: 16 }} />
-              <span>Inspect Room {selectedRoom} Inventory</span>
+              Inspect Room {selectedRoom}
             </button>
           )}
         </div>
 
-        {/* Table Container */}
-        <div className="overflow-x-auto w-full">
-          <table className="w-full text-left border-collapse">
+        {/* Table Container - Strictly 100% width with NO horizontal scroll */}
+        <div className="w-full">
+          <table className="w-full table-fixed text-left border-collapse">
+            <colgroup>
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '6%' }} />
+              <col style={{ width: '4%' }} />
+            </colgroup>
             <thead>
-              <tr className="bg-gray-50/80 border-b border-gray-100 text-[10.5px] font-bold text-gray-500 uppercase tracking-wider">
-                <th className="py-2.5 px-3">
+              <tr className="bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                <th className="py-2.5 px-2.5">
                   Item & SKU
                 </th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">
+                <th className="py-2.5 px-1.5">
                   Category
                 </th>
-                <th className="py-2.5 px-2.5">
+                <th className="py-2.5 px-1.5">
                   Room / Location
                 </th>
-                <th className="py-2.5 px-2 text-center whitespace-nowrap">
+                <th className="py-2.5 px-1 text-center">
                   Stock / Qty
                 </th>
-                <th className="py-2.5 px-2 whitespace-nowrap">
+                <th className="py-2.5 px-1.5 text-right">
                   Unit Price
                 </th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">
+                <th className="py-2.5 px-1.5 text-right">
                   Total Value
                 </th>
-                <th className="py-2.5 px-2 text-center whitespace-nowrap">
+                <th className="py-2.5 px-1 text-center">
                   Condition
                 </th>
-                <th className="py-2.5 px-2.5 text-center whitespace-nowrap">
+                <th className="py-2.5 px-1 text-center">
                   Status
                 </th>
-                <th className="py-2.5 px-2.5 whitespace-nowrap">
+                <th className="py-2.5 px-1.5">
                   Last Updated
                 </th>
-                <th className="py-2.5 px-2 text-center w-12 whitespace-nowrap">
+                <th className="py-2.5 px-1 text-center">
                   Actions
                 </th>
               </tr>
@@ -544,84 +531,84 @@ export default function AllInventory() {
                     onClick={() => setSelectedItemForDetail(item)}
                   >
                     {/* Item & SKU */}
-                    <td className="py-2 px-3">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-gray-900 group-hover:text-[#1b7f43] transition-colors leading-snug">
+                    <td className="py-2 px-2.5">
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-xs font-bold text-gray-900 group-hover:text-[#1b7f43] transition-colors leading-tight break-words">
                           {item.itemName}
                         </span>
-                        <div className="flex items-center gap-1.5 mt-0.5 whitespace-nowrap">
-                          <span className="text-[10.5px] font-mono text-gray-500 whitespace-nowrap">{item.sku}</span>
-                          <span className="text-[10px] text-gray-300">•</span>
-                          <span className="text-[10px] text-gray-400 font-mono whitespace-nowrap">{item.id}</span>
+                        <div className="flex items-center gap-1 mt-0.5 text-[10px] text-gray-400 font-mono">
+                          <span className="truncate">{item.sku}</span>
+                          <span>•</span>
+                          <span className="truncate">{item.id}</span>
                         </div>
                       </div>
                     </td>
 
                     {/* Category */}
-                    <td className="py-2 px-2.5 whitespace-nowrap">
-                      <span className="text-[11.5px] font-semibold text-gray-700 bg-gray-100/80 px-2 py-0.5 rounded-md inline-block">
+                    <td className="py-2 px-1.5">
+                      <span className="text-[10.5px] font-semibold text-gray-700 bg-gray-100/80 px-1.5 py-0.5 rounded inline-block truncate max-w-full">
                         {item.category}
                       </span>
                     </td>
 
                     {/* Room / Location */}
-                    <td className="py-2 px-2.5 whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-2 px-1.5" onClick={(e) => e.stopPropagation()}>
                       {isRoomItem ? (
                         <button
                           onClick={() => setSelectedRoomForModal(item.roomNumber)}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 text-[#1b7f43] hover:bg-emerald-100 text-[11px] font-bold transition border border-emerald-200/50 cursor-pointer whitespace-nowrap"
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-[#1b7f43] hover:bg-emerald-100 text-[10.5px] font-bold transition border border-emerald-200/50 cursor-pointer max-w-full"
                           title={`Click to view all inventory assigned to Room ${item.roomNumber}`}
                         >
-                          <MeetingRoom sx={{ fontSize: 14 }} />
-                          <span className="whitespace-nowrap">Room {item.roomNumber}</span>
+                          <MeetingRoom sx={{ fontSize: 13 }} />
+                          <span className="truncate">Room {item.roomNumber}</span>
                         </button>
                       ) : (
-                        <div className="flex items-center gap-1 text-[11.5px] text-gray-600 font-medium truncate max-w-[130px]" title={item.location}>
-                          <Warehouse sx={{ fontSize: 14, color: '#9ca3af' }} />
+                        <div className="flex items-center gap-1 text-[11px] text-gray-600 font-medium truncate" title={item.location}>
+                          <Warehouse sx={{ fontSize: 13, color: '#9ca3af', flexShrink: 0 }} />
                           <span className="truncate">{item.location}</span>
                         </div>
                       )}
                     </td>
 
                     {/* Quantity */}
-                    <td className="py-2 px-2 text-center whitespace-nowrap">
-                      <div className="flex flex-col items-center justify-center">
-                        <span className={`text-xs font-bold leading-tight ${item.quantity === 0 ? 'text-red-500' : item.quantity <= item.minimumStock ? 'text-amber-600' : 'text-gray-900'}`}>
+                    <td className="py-2 px-1 text-center">
+                      <div className="flex flex-col items-center justify-center leading-none">
+                        <span className={`text-xs font-bold ${item.quantity === 0 ? 'text-red-500' : item.quantity <= item.minimumStock ? 'text-amber-600' : 'text-gray-900'}`}>
                           {item.quantity}
                         </span>
-                        <span className="text-[9.5px] text-gray-400 font-medium leading-none mt-0.5">
+                        <span className="text-[9px] text-gray-400 font-medium mt-0.5">
                           {item.locationType === 'Room' ? 'in room' : 'in store'}
                         </span>
                       </div>
                     </td>
 
                     {/* Unit Price */}
-                    <td className="py-2 px-2 text-xs font-medium text-gray-600 whitespace-nowrap font-mono">
+                    <td className="py-2 px-1.5 text-right text-xs font-medium text-gray-600 font-mono">
                       ${Number(item.unitPrice).toFixed(2)}
                     </td>
 
                     {/* Total Value */}
-                    <td className="py-2 px-2.5 text-xs font-bold text-gray-900 whitespace-nowrap font-mono">
+                    <td className="py-2 px-1.5 text-right text-xs font-bold text-gray-900 font-mono">
                       ${Number(item.totalValue).toFixed(2)}
                     </td>
 
                     {/* Condition */}
-                    <td className="py-2 px-2 text-center whitespace-nowrap">
+                    <td className="py-2 px-1 text-center">
                       {getConditionBadge(item.condition)}
                     </td>
 
                     {/* Status */}
-                    <td className="py-2 px-2.5 text-center whitespace-nowrap">
+                    <td className="py-2 px-1 text-center">
                       {getStatusBadge(item.status)}
                     </td>
 
                     {/* Last Updated */}
-                    <td className="py-2 px-2.5 text-[11px] font-medium text-gray-500 whitespace-nowrap">
+                    <td className="py-2 px-1.5 text-[10px] font-medium text-gray-500 font-mono truncate">
                       {item.lastUpdated}
                     </td>
 
                     {/* Actions Menu */}
-                    <td className="py-2 px-2 text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-2 px-1 text-center" onClick={(e) => e.stopPropagation()}>
                       <IconButton 
                         size="small" 
                         onClick={(e) => handleMenuClick(e, item.id)}
@@ -789,6 +776,13 @@ export default function AllInventory() {
           reloadData();
           navigate('/inventory/missing');
         }}
+      />
+
+      {/* ADD STOCK ITEM MODAL */}
+      <AddStockItemModal
+        open={addStockModalOpen}
+        onClose={() => setAddStockModalOpen(false)}
+        onItemAdded={reloadData}
       />
 
       {/* REFRESH NOTIFICATION SNACKBAR */}

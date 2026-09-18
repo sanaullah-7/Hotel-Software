@@ -262,15 +262,13 @@ function RecordPaymentInnerForm({ invoice, invoices = [], onSave, onClose }) {
         <Button onClick={onClose} color="inherit" className="!normal-case !text-gray-600">
           Cancel
         </Button>
-        <Button
+        <button
           type="submit"
-          variant="contained"
           disabled={numAmount <= 0 || numAmount > maxPayable}
-          className="!bg-[#1b7f43] hover:!bg-[#156736] !text-white !normal-case !font-semibold !px-6 !py-2 !rounded-lg cursor-pointer"
-          startIcon={<CheckCircleIcon />}
+          className="px-5 py-2 bg-[#1b7f43] hover:bg-[#156736] disabled:opacity-50 text-white font-bold rounded-lg text-xs shadow-xs transition cursor-pointer"
         >
           Confirm & Record Payment
-        </Button>
+        </button>
       </DialogActions>
     </form>
   );
@@ -289,23 +287,18 @@ export default function RecordPaymentModal({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ className: '!rounded-2xl !p-2' }}>
-      <DialogTitle className="!flex !items-center !justify-between !pb-2 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-emerald-50 text-[#1b7f43] flex items-center justify-center">
-            <PaymentIcon fontSize="small" />
-          </div>
-          <div>
-            <h3 className="font-bold text-gray-900 text-lg leading-tight">Record Payment</h3>
-            <p className="text-xs text-gray-500">Post a guest transaction directly against an invoice</p>
-          </div>
+    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ className: '!rounded-xl !p-1' }}>
+      <DialogTitle className="!flex !items-center !justify-between !p-3 !pb-2 border-b border-gray-100">
+        <div>
+          <h3 className="font-bold text-gray-900 text-base leading-tight">Record Payment</h3>
+          <p className="text-[11px] text-gray-500 mt-0.5">Post a guest transaction directly against an invoice</p>
         </div>
         <IconButton size="small" onClick={onClose} className="!text-gray-400 hover:!text-gray-700">
-          <CloseIcon fontSize="small" />
+          <CloseIcon sx={{ fontSize: 18 }} />
         </IconButton>
       </DialogTitle>
 
-      <DialogContent className="!pt-4">
+      <DialogContent className="!p-3.5 !pt-3">
         <RecordPaymentInnerForm
           key={invoice ? invoice.id : 'general-record-payment'}
           invoice={invoice}

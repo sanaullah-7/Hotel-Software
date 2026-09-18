@@ -84,9 +84,9 @@ export default function Sidebar() {
 
 
   const inventorySubItems = [
-    { label: 'All Inventory', id: 'all-inventory', path: '/inventory' },
-    { label: 'Add Inventory', id: 'add-inventory', path: '/inventory/add' },
-    { label: 'Missing Inventory', id: 'missing-inventory', path: '/inventory/missing' },
+    { label: 'Stock', id: 'stock', path: '/inventory' },
+    { label: 'Guest Charges', id: 'guest-charges', path: '/inventory/guest-charges' },
+    { label: 'Missing Items', id: 'missing-items', path: '/inventory/missing' },
   ];
 
   const ratesPricingSubItems = [
@@ -100,11 +100,6 @@ export default function Sidebar() {
     { label: 'Payment History', id: 'payment-history', path: '/payment-billing/payment-history' },
     { label: 'Pending Payments', id: 'pending-payments', path: '/payment-billing/pending-payments' },
     { label: 'Refunds', id: 'refunds', path: '/payment-billing/refunds' },
-    { label: 'All Booking', id: 'all-bookings', path: '/reservation/all' },
-    { label: 'Add Booking', id: 'add-booking', path: '/reservation/new' },
-    { label: 'Edit Booking', id: 'edit-booking', path: '/reservation/edit' },
-    { label: 'Cancel Booking', id: 'cancel-booking', path: '/reservation/cancelled' },
-    { label: 'Group Booking', id: 'group-booking', path: '/reservation/group' },
   ];
 
   const roomsSubItems = [
@@ -408,15 +403,15 @@ export default function Sidebar() {
               title={!isOpen ? "Rooms" : undefined}
               className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
                 isRoomsActive 
-                  ? 'bg-[#f0f9f4]' 
-                  : 'hover:bg-gray-50'
+                  ? 'bg-[#f0f9f4] text-[#1b7f43]' 
+                  : 'hover:bg-gray-50 text-gray-600'
               } ${isOpen ? 'justify-between' : 'justify-center'}`}
             >
               <div className="flex items-center min-w-0">
                 <div className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-colors ${
                   isRoomsActive 
                     ? 'bg-[#e5f4eb] text-[#1b7f43]' 
-                    : 'bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                    : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
                 }`}>
                   <RoomIcon sx={{ fontSize: 20 }} />
                 </div>
@@ -429,8 +424,10 @@ export default function Sidebar() {
               {isOpen && (
                 <div className="pr-1 shrink-0">
                   <ChevronRightIcon 
-                    sx={{ fontSize: 18 }} 
-                    className={`text-gray-400 transition-transform duration-300 ${isRoomsOpen ? 'rotate-90' : ''}`}
+                    fontSize="small"
+                    className={`transition-transform duration-300 ease-in-out ${
+                      isRoomsActive ? 'text-[#1b7f43]' : 'text-gray-400'
+                    } ${isRoomsOpen ? 'rotate-90' : 'rotate-0'}`} 
                   />
                 </div>
               )}
@@ -439,16 +436,16 @@ export default function Sidebar() {
             {/* Smooth Animated Sub-Items Dropdown List */}
             <div 
               className={`grid transition-all duration-300 ease-in-out ${
-                isOpen && isReservationOpen 
+                isOpen && isRoomsOpen 
                   ? 'grid-rows-[1fr] opacity-100 mt-1' 
                   : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
               }`}
             >
               <div className="overflow-hidden">
                 <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
-                  {reservationSubItems.map((subItem) => {
+                  {roomsSubItems.map((subItem) => {
                     const isSelected = location.pathname === subItem.path || 
-                      (subItem.id === 'add-new-reservation' && location.pathname.startsWith('/reservation/new'));
+                      (subItem.id === 'all-rooms' && location.pathname === '/rooms');
 
                     return (
                       <Link
@@ -479,72 +476,6 @@ export default function Sidebar() {
                 </div>
               </div>
             </div>
-          </li>
-
-          {/* Rooms Tab */}
-          <li>
-            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isOpen && isRoomsOpen ? 'max-h-[400px] opacity-100 mt-1' : 'max-h-0 opacity-0'}`}>
-              <div className="px-2">
-                <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
-                  {roomsSubItems.map((subItem) => {
-                    const isSelected = location.pathname === subItem.path || (subItem.id === 'all-rooms' && location.pathname === '/rooms');
-                                          return (
-                        <Link
-                          key={subItem.id}
-                          to={subItem.path}
-                          className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
-                            isSelected 
-                              ? 'bg-[#dcefe5] text-[#1b7f43]' 
-                              : 'hover:bg-white/60 text-slate-600 hover:text-slate-900'
-                          }`}
-                        >
-                          {/* Left Dot Bullet */}
-                          {isSelected ? (
-                            <div className="w-2.5 h-2.5 rounded-full bg-[#1b7f43] ring-3 ring-[#1b7f43]/20 mr-3 shrink-0 transition-all duration-200"></div>
-                          ) : (
-                            <div className="w-2 h-2 rounded-full bg-[#1b7f43] mr-3 shrink-0 ml-0.5 transition-all duration-200 opacity-60"></div>
-                          )}
-                          
-                          <span className={`text-[12.5px] whitespace-nowrap transition-all duration-200 ${
-                            isSelected ? 'font-bold' : 'font-medium'
-                          }`}>
-                            {subItem.label}
-                          </span>
-                        </Link>
-                      );
-                  })}
-                </div>
-              </div>
-            </div>
-          </li>
-
-          {/* Rooms Tab */}
-          <li>
-            <Link 
-              to="/rooms"
-              title={!isOpen ? "Rooms" : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
-                isRoomsActive 
-                  ? 'bg-[#f4f9f6] text-[#1b7f43]' 
-                  : 'hover:bg-gray-50 text-gray-600'
-              } ${isOpen ? 'justify-between' : 'justify-center'}`}
-            >
-              <div className="flex items-center min-w-0">
-                <div className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-colors ${
-                  isRoomsActive 
-                    ? 'bg-[#e5f4eb] text-[#1b7f43]' 
-                    : 'text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
-                }`}>
-                  <RoomIcon sx={{ fontSize: 19 }} />
-                </div>
-                
-                <span className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
-                  isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
-                } ${isRoomsActive ? 'text-gray-900 font-bold' : 'text-gray-600 group-hover:text-gray-900 font-medium'}`}>
-                  Rooms
-                </span>
-              </div>
-            </Link>
           </li>
 
           {/* Housekeeping Dropdown Menu Item */}
@@ -625,30 +556,6 @@ export default function Sidebar() {
                         </span>
                       </Link>
                     );
-                                          return (
-                        <Link
-                          key={subItem.id}
-                          to={subItem.path}
-                          className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
-                            isSelected 
-                              ? 'bg-[#dcefe5] text-[#1b7f43]' 
-                              : 'hover:bg-white/60 text-slate-600 hover:text-slate-900'
-                          }`}
-                        >
-                          {/* Left Dot Bullet */}
-                          {isSelected ? (
-                            <div className="w-2.5 h-2.5 rounded-full bg-[#1b7f43] ring-3 ring-[#1b7f43]/20 mr-3 shrink-0 transition-all duration-200"></div>
-                          ) : (
-                            <div className="w-2 h-2 rounded-full bg-[#1b7f43] mr-3 shrink-0 ml-0.5 transition-all duration-200 opacity-60"></div>
-                          )}
-                          
-                          <span className={`text-[12.5px] whitespace-nowrap transition-all duration-200 ${
-                            isSelected ? 'font-bold' : 'font-medium'
-                          }`}>
-                            {subItem.label}
-                          </span>
-                        </Link>
-                      );
                   })}
                 </div>
               </div>

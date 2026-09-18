@@ -1,27 +1,23 @@
 import React, { useState } from 'react';
 import { 
-  Dialog, DialogTitle, DialogContent, DialogActions, 
-  IconButton, Divider, TextField, MenuItem, FormControl, InputLabel, Select 
+  Dialog, DialogContent, DialogActions, 
+  IconButton, TextField, MenuItem, FormControl, InputLabel, Select 
 } from '@mui/material';
-import { 
-  Close, Inventory2, Edit, Save, MeetingRoom, 
-  Storefront, CalendarToday, LocalShipping, AttachMoney, 
-  ReportProblem, CheckCircle, Warning, InfoOutlined, Warehouse
-} from '@mui/icons-material';
+import { Close } from '@mui/icons-material';
 import { updateInventoryItem, deleteInventoryItem, getStorageReserveForItem, getInventoryItems } from '../inventoryStore';
 
 const muiSelectSx = {
   '& .MuiOutlinedInput-root': {
-    borderRadius: '8px',
+    borderRadius: '6px',
     backgroundColor: '#ffffff',
-    fontSize: '12.5px',
+    fontSize: '12px',
     color: '#1f2937',
-    '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' },
+    '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1px' },
     '&:hover fieldset': { borderColor: '#9ca3af' },
     '&.Mui-focused fieldset': { borderColor: '#1b7f43', borderWidth: '1.5px' },
   },
   '& .MuiInputLabel-root': {
-    fontSize: '12.5px',
+    fontSize: '12px',
     color: '#6b7280',
     '&.Mui-focused': { color: '#1b7f43' }
   }
@@ -70,15 +66,15 @@ export default function ItemDetailModal({
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Available':
-        return <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#e5f4eb] text-[#1b7f43] border border-[#1b7f43]/20">Available</span>;
+        return <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-[#e5f4eb] text-[#1b7f43] border border-[#1b7f43]/20">Available</span>;
       case 'Low Stock':
-        return <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Low Stock</span>;
+        return <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">Low Stock</span>;
       case 'Missing':
-        return <span className="px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-200">Missing</span>;
+        return <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-red-50 text-red-600 border border-red-200">Missing</span>;
       case 'Out of Stock':
-        return <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">Out of Stock</span>;
+        return <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">Out of Stock</span>;
       default:
-        return <span className="px-3 py-1 rounded-full text-xs font-bold bg-gray-100 text-gray-700">{status}</span>;
+        return <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-gray-100 text-gray-700">{status}</span>;
     }
   };
 
@@ -90,44 +86,39 @@ export default function ItemDetailModal({
       fullWidth
       PaperProps={{
         sx: { 
-          borderRadius: '18px',
+          borderRadius: '12px',
           overflow: 'hidden',
-          boxShadow: '0 20px 40px rgba(0,0,0,0.12)' 
+          boxShadow: '0 10px 25px rgba(0,0,0,0.1)' 
         }
       }}
     >
       {/* Header */}
-      <div className="bg-[#1b7f43] p-5 text-white flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-sm">
-            <Inventory2 sx={{ fontSize: 24 }} />
+      <div className="bg-[#1b7f43] px-4 py-3 text-white flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold tracking-tight">{item.itemName}</h2>
+            <span className="bg-white/20 text-white text-[11px] font-mono px-1.5 py-0.5 rounded">
+              {item.id}
+            </span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-bold tracking-tight">{item.itemName}</h2>
-              <span className="bg-white/20 text-white text-[11px] font-mono px-2 py-0.5 rounded-md">
-                {item.id}
-              </span>
-            </div>
-            <p className="text-xs text-white/80 mt-0.5">
-              SKU: {item.sku} • Category: {item.category}
-            </p>
-          </div>
+          <p className="text-[11px] text-white/80 mt-0.5">
+            SKU: {item.sku} • Category: {item.category}
+          </p>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {!isEditing ? (
             <button
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-lg text-xs font-semibold transition cursor-pointer mr-2"
+              className="px-2.5 py-1 bg-white/15 hover:bg-white/25 text-white rounded text-xs font-semibold transition cursor-pointer"
             >
-              <Edit sx={{ fontSize: 14 }} /> Edit Item
+              Edit Item
             </button>
           ) : (
             <button
               onClick={handleSave}
-              className="flex items-center gap-1 px-3 py-1.5 bg-white text-[#1b7f43] hover:bg-white/90 rounded-lg text-xs font-bold transition cursor-pointer mr-2 shadow-sm"
+              className="px-2.5 py-1 bg-white text-[#1b7f43] hover:bg-white/90 rounded text-xs font-bold transition cursor-pointer shadow-sm"
             >
-              <Save sx={{ fontSize: 14 }} /> Save Changes
+              Save Changes
             </button>
           )}
           <IconButton 
@@ -135,12 +126,12 @@ export default function ItemDetailModal({
             size="small" 
             sx={{ color: 'white', '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' } }}
           >
-            <Close sx={{ fontSize: 20 }} />
+            <Close sx={{ fontSize: 18 }} />
           </IconButton>
         </div>
       </div>
 
-      <DialogContent sx={{ p: 3, backgroundColor: '#f9fafb' }}>
+      <DialogContent sx={{ p: 2.5, backgroundColor: '#f9fafb' }}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           
           {/* Main Info Column (2 cols) */}
@@ -315,11 +306,8 @@ export default function ItemDetailModal({
               const storageReserve = getStorageReserveForItem(item, getInventoryItems());
               if (!storageReserve) return null;
               return (
-                <div className="bg-emerald-50/80 p-3.5 rounded-xl border border-emerald-100 space-y-1">
-                  <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs">
-                    <Warehouse sx={{ fontSize: 16 }} />
-                    <span>Hotel Reserve Stock</span>
-                  </div>
+                <div className="bg-emerald-50/80 p-3 rounded-lg border border-emerald-100 space-y-1">
+                  <span className="text-emerald-800 font-bold text-xs block">Hotel Reserve Stock</span>
                   <p className="text-[11px] text-emerald-700 leading-snug">
                     <strong>{storageReserve.availableUnits} units</strong> available in {storageReserve.location} for immediate room replenishment.
                   </p>
@@ -329,11 +317,8 @@ export default function ItemDetailModal({
 
             {/* Incident Trigger Card */}
             {item.status !== 'Missing' ? (
-              <div className="bg-red-50/70 p-4 rounded-xl border border-red-100 space-y-2">
-                <div className="flex items-center gap-1.5 text-red-700">
-                  <ReportProblem sx={{ fontSize: 16 }} />
-                  <span className="text-xs font-bold">Report Missing Item</span>
-                </div>
+              <div className="bg-red-50/70 p-3 rounded-lg border border-red-100 space-y-1.5">
+                <span className="text-xs font-bold text-red-700 block">Report Missing Item</span>
                 <p className="text-[11px] text-red-600/90 leading-tight">
                   Item not found during housekeeping turnaround? File an official incident ticket.
                 </p>
@@ -342,13 +327,13 @@ export default function ItemDetailModal({
                     onClose();
                     if (onReportMissing) onReportMissing(item);
                   }}
-                  className="w-full mt-1 py-1.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer"
+                  className="w-full mt-1 py-1.5 px-3 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold transition cursor-pointer"
                 >
                   Create Incident Ticket
                 </button>
               </div>
             ) : (
-              <div className="bg-amber-50 p-4 rounded-xl border border-amber-200">
+              <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
                 <span className="text-xs font-bold text-amber-800 block mb-1">Active Incident</span>
                 <p className="text-[11px] text-amber-700">
                   This item is currently flagged as missing. Check the "Missing Inventory" tab to track investigation and recovery.

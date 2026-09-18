@@ -62,38 +62,32 @@ export default function InvoiceDetailModal({
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '20px',
+          borderRadius: '16px',
           overflow: 'hidden',
           boxShadow: '0 20px 50px rgba(0,0,0,0.15)'
         }
       }}
     >
       {/* Modal Bar */}
-      <div className="bg-[#1b7f43] p-4 px-6 text-white flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center backdrop-blur-xs">
-            <ReceiptLong sx={{ fontSize: 22 }} />
+      <div className="bg-[#1b7f43] p-3.5 px-5 text-white flex items-center justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold tracking-tight">Invoice Details</h2>
+            <span className="font-mono bg-white/20 text-white text-[11px] px-2 py-0.5 rounded-md font-semibold">
+              {invoice.invoiceNumber}
+            </span>
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold tracking-tight">Invoice Details</h2>
-              <span className="font-mono bg-white/20 text-white text-[11px] px-2 py-0.5 rounded-md font-semibold">
-                {invoice.invoiceNumber}
-              </span>
-            </div>
-            <p className="text-xs text-white/80 mt-0.5">
-              Official guest folio and financial transaction statement
-            </p>
-          </div>
+          <p className="text-[11px] text-white/80 mt-0.5">
+            Official guest folio and financial transaction statement
+          </p>
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
           <button
             onClick={handlePrint}
-            className="flex items-center gap-1 px-3 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-xl text-xs font-semibold transition cursor-pointer mr-1"
+            className="px-3 py-1 bg-white/15 hover:bg-white/25 text-white rounded-lg text-xs font-semibold transition cursor-pointer"
           >
-            <Print sx={{ fontSize: 15 }} />
-            <span>Print Folio</span>
+            Print Folio
           </button>
 
           <IconButton
@@ -101,14 +95,14 @@ export default function InvoiceDetailModal({
             size="small"
             sx={{ color: 'white', '&:hover': { backgroundColor: 'rgba(255,255,255,0.2)' } }}
           >
-            <Close sx={{ fontSize: 20 }} />
+            <Close sx={{ fontSize: 18 }} />
           </IconButton>
         </div>
       </div>
 
       {/* Invoice Document Body */}
-      <DialogContent sx={{ p: { xs: 2.5, md: 4 }, backgroundColor: '#f9fafb' }}>
-        <div className="bg-white p-6 md:p-8 rounded-2xl border border-gray-200/80 shadow-xs space-y-6">
+      <DialogContent sx={{ p: { xs: 2, md: 3 }, backgroundColor: '#f9fafb' }}>
+        <div className="bg-white p-4 md:p-5 rounded-xl border border-gray-200/80 shadow-xs space-y-4">
           
           {/* Header: Hotel Brand & Invoice Meta */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-6 border-b border-gray-100">
@@ -169,15 +163,21 @@ export default function InvoiceDetailModal({
             </div>
           </div>
 
-          {/* Itemized Charges Table */}
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-left border-collapse">
+          {/* Itemized Charges Table - Strictly 100% width with NO horizontal scroll */}
+          <div className="w-full">
+            <table className="w-full table-fixed text-left border-collapse">
+              <colgroup>
+                <col style={{ width: '50%' }} />
+                <col style={{ width: '20%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '20%' }} />
+              </colgroup>
               <thead>
-                <tr className="border-b border-gray-200 text-[10.5px] font-bold text-gray-500 uppercase tracking-wider">
+                <tr className="border-b border-gray-200 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
                   <th className="py-2 px-2">Description / Inclusions</th>
-                  <th className="py-2 px-2 w-28 text-right whitespace-nowrap">Unit Rate</th>
-                  <th className="py-2 px-2 w-14 text-center whitespace-nowrap">Qty</th>
-                  <th className="py-2 px-2 w-32 text-right whitespace-nowrap">Amount (PKR)</th>
+                  <th className="py-2 px-2 text-right">Unit Rate</th>
+                  <th className="py-2 px-2 text-center">Qty</th>
+                  <th className="py-2 px-2 text-right">Amount (PKR)</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 text-xs">
@@ -185,12 +185,12 @@ export default function InvoiceDetailModal({
                   { description: `Room Charges (${invoice.roomType})`, rate: invoice.subtotal, qty: 1, amount: invoice.subtotal }
                 ]).map((item, idx) => (
                   <tr key={idx} className="hover:bg-gray-50/50">
-                    <td className="py-2 px-2 font-medium text-gray-800">{item.description}</td>
-                    <td className="py-2 px-2 text-right text-gray-600 font-mono whitespace-nowrap">
+                    <td className="py-2 px-2 font-medium text-gray-800 break-words">{item.description}</td>
+                    <td className="py-2 px-2 text-right text-gray-600 font-mono text-xs truncate">
                       {item.rate < 0 ? `-PKR ${Math.abs(item.rate).toLocaleString()}` : `PKR ${Number(item.rate).toLocaleString()}`}
                     </td>
-                    <td className="py-2 px-2 text-center text-gray-600 whitespace-nowrap">{item.qty}</td>
-                    <td className="py-2 px-2 text-right font-bold text-gray-900 font-mono whitespace-nowrap">
+                    <td className="py-2 px-2 text-center text-gray-600 text-xs">{item.qty}</td>
+                    <td className="py-2 px-2 text-right font-bold text-gray-900 font-mono text-xs truncate">
                       {item.amount < 0 ? `-PKR ${Math.abs(item.amount).toLocaleString()}` : `PKR ${Number(item.amount).toLocaleString()}`}
                     </td>
                   </tr>
@@ -250,25 +250,32 @@ export default function InvoiceDetailModal({
                 <Payment sx={{ fontSize: 16, color: '#1b7f43' }} />
                 <span>Recorded Payments on this Invoice ({invoice.payments.length})</span>
               </h4>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-xs">
+              <div className="w-full">
+                <table className="w-full table-fixed text-left border-collapse text-xs">
+                  <colgroup>
+                    <col style={{ width: '20%' }} />
+                    <col style={{ width: '22%' }} />
+                    <col style={{ width: '18%' }} />
+                    <col style={{ width: '20%' }} />
+                    <col style={{ width: '20%' }} />
+                  </colgroup>
                   <thead>
                     <tr className="bg-gray-50 text-gray-500 font-bold uppercase text-[10px]">
-                      <th className="py-2 px-3">Payment ID</th>
-                      <th className="py-2 px-3">Date & Time</th>
-                      <th className="py-2 px-3">Method</th>
-                      <th className="py-2 px-3">Reference</th>
-                      <th className="py-2 px-3 text-right">Amount (PKR)</th>
+                      <th className="py-2 px-2">Payment ID</th>
+                      <th className="py-2 px-2">Date & Time</th>
+                      <th className="py-2 px-2">Method</th>
+                      <th className="py-2 px-2">Reference</th>
+                      <th className="py-2 px-2 text-right">Amount (PKR)</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {invoice.payments.map((p, pIdx) => (
                       <tr key={pIdx} className="hover:bg-gray-50/50">
-                        <td className="py-2 px-3 font-mono font-bold text-gray-800">{p.paymentId}</td>
-                        <td className="py-2 px-3 text-gray-600">{p.paymentDate}</td>
-                        <td className="py-2 px-3 font-semibold text-gray-700">{p.paymentMethod}</td>
-                        <td className="py-2 px-3 text-gray-500 font-mono text-[11px]">{p.transactionRef}</td>
-                        <td className="py-2 px-3 text-right font-bold text-emerald-700 font-mono">
+                        <td className="py-2 px-2 font-mono font-bold text-gray-800 truncate">{p.paymentId}</td>
+                        <td className="py-2 px-2 text-gray-600 truncate">{p.paymentDate}</td>
+                        <td className="py-2 px-2 font-semibold text-gray-700 truncate">{p.paymentMethod}</td>
+                        <td className="py-2 px-2 text-gray-500 font-mono text-[10.5px] truncate">{p.transactionRef}</td>
+                        <td className="py-2 px-2 text-right font-bold text-emerald-700 font-mono truncate">
                           PKR {Number(p.amount).toLocaleString()}
                         </td>
                       </tr>
@@ -283,7 +290,7 @@ export default function InvoiceDetailModal({
       </DialogContent>
 
       {/* Footer Actions */}
-      <DialogActions sx={{ p: 3, backgroundColor: 'white', borderTop: '1px solid #f3f4f6', justifyContent: 'space-between' }}>
+      <DialogActions sx={{ p: 2.5, backgroundColor: 'white', borderTop: '1px solid #f3f4f6', justifyContent: 'space-between' }}>
         <div>
           {invoice.balanceDue > 0 && onRecordPayment && (
             <button
@@ -291,17 +298,16 @@ export default function InvoiceDetailModal({
                 onClose();
                 onRecordPayment(invoice);
               }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-xl text-xs font-bold shadow-sm transition cursor-pointer"
+              className="px-4 py-1.5 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
             >
-              <Payment sx={{ fontSize: 16 }} />
-              <span>Record Payment (PKR {Number(invoice.balanceDue).toLocaleString()})</span>
+              Record Payment (PKR {Number(invoice.balanceDue).toLocaleString()})
             </button>
           )}
         </div>
 
         <button
           onClick={onClose}
-          className="px-5 py-2 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition cursor-pointer"
+          className="px-4 py-1.5 text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition cursor-pointer"
         >
           Close
         </button>

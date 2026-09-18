@@ -70,8 +70,8 @@ export default function DataGridTable({ columns, data, selectable = false, flat 
   }
 
   return (
-    <TableContainer component={flat ? 'div' : Paper} className={`${flat ? '' : 'shadow-sm border border-gray-200'} rounded-lg overflow-x-auto`}>
-      <Table sx={{ minWidth: 650 }} size="small" aria-label="simple table">
+    <TableContainer component={flat ? 'div' : Paper} className={`${flat ? '' : 'shadow-sm border border-gray-200'} rounded-lg w-full`}>
+      <Table sx={{ width: '100%', tableLayout: 'fixed' }} size="small" aria-label="simple table">
         <TableHead className={`${flat ? 'bg-white border-b border-gray-100' : 'bg-gray-50 border-b border-gray-200'}`}>
           <TableRow>
             {selectable && (
