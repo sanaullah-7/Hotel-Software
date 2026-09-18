@@ -1,0 +1,1 @@
+Email aur SMS bhejne kay liye actual third-party service integration yahan hai (jese Twilio, SendGrid waghera). Notification module inhe call karta hai.

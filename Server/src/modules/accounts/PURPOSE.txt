@@ -1,0 +1,1 @@
+Shared account table ka model yahan hai jo traveller, provider aur admin teeno ka base account rakhta hai (email, password, phone, role). Ye sirf data structure hai, isme routes/controller nahi — login logic auth module mein hai.

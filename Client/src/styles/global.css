@@ -1,0 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* Global CSS Variables acting as the single source of truth */
+:root {
+  --primary-main: #1b7f43;
+  --primary-light: #28a75a;
+  --primary-dark: #12572e;
+  
+  --secondary-main: #9c27b0;
+  
+  --bg-default: #eff4f8;
+  --bg-paper: #ffffff;
+  
+  --text-primary: #1f2937; /* matches Tailwind gray-800 */
+  --text-secondary: #6b7280; /* matches Tailwind gray-500 */
+}
+
+/* Restaurant category filters use one consistent selected state. */
+.menu-category-chip {
+  background-color: var(--bg-paper);
+  border-color: #e5e7eb;
+  color: var(--text-secondary);
+}
+
+.menu-category-chip:hover {
+  border-color: var(--primary-main);
+  color: var(--primary-main);
+}
+
+.menu-category-chip.is-active,
+.menu-category-chip.is-active:hover {
+  background-color: var(--primary-main);
+  border-color: var(--primary-main);
+  color: #ffffff;
+  box-shadow: 0 1px 3px rgb(27 127 67 / 0.25);
+  transform: scale(1.03);
+}
+
+/* Base resets & layout application */
+body {
+  background-color: var(--bg-default);
+  color: var(--text-primary);
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Utility to hide scrollbars but keep functionality */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.personal-information-section {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 12px;
+  padding-top: 36px;
+}
+
+.personal-information-section > .flex {
+  margin-top: 0;
+  margin-bottom: 30px;
+  gap: 14px;
+}
+
+.personal-information-section > .flex > div:first-child {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 14px;
+}
+
+.personal-information-section > .flex > div:first-child svg {
+  width: 26px;
+  height: 26px;
+}
+
+.personal-information-section > .flex h3 {
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+
+.personal-information-section .MuiFormControl-root {
+  margin-bottom: 0;
+}
+
+.personal-information-section .MuiOutlinedInput-root {
+  min-height: 84px;
+  border-radius: 6px;
+}
+
+.personal-information-section .MuiOutlinedInput-notchedOutline {
+  border-color: #7d8490;
+}
+
+.personal-information-section .MuiOutlinedInput-input {
+  padding: 23px 18px;
+  font-size: 24px;
+  line-height: 1.5;
+  color: #293241;
+}
+
+.personal-information-section .MuiInputLabel-root {
+  font-size: 20px;
+  color: #293241;
+}
+
+.personal-information-section .MuiInputLabel-shrink {
+  background: #fff;
+  padding: 0 4px;
+}
+
+.personal-information-section .MuiInputAdornment-root {
+  margin-right: 14px;
+}
+
+.personal-information-section .MuiInputAdornment-root svg {
+  width: 30px;
+  height: 30px;
+  color: #707985;
+}
+
+@media (max-width: 600px) {
+  .personal-information-section {
+    padding-top: 24px;
+  }
+
+  .personal-information-section > .flex h3 {
+    font-size: 20px;
+  }
+
+  .personal-information-section .MuiOutlinedInput-input {
+    font-size: 19px;
+  }
+}

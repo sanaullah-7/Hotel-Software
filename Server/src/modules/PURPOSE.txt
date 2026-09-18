@@ -1,0 +1,1 @@
+Ye main folder hai jahan har feature (module) apna alag folder rakhta hai — jese hotels, bookings, payments. Har module kay andar uska model, routes, controller, service aur validation file hoti hai. Naya feature banana ho to yahan naya sub-folder banao.
