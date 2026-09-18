@@ -7,6 +7,7 @@ const requiredEnv = [
   "JWT_ACCESS_SECRET",
   "JWT_REFRESH_SECRET",
 ];
+console.log(process.env.MONGO_URI)
 
 for (const key of requiredEnv) {
   if (!process.env[key]) {

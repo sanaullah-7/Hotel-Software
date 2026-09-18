@@ -1,13 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import SparklesIcon from '@mui/icons-material/AutoAwesome';
-import SendIcon from '@mui/icons-material/Send';
-import BotIcon from '@mui/icons-material/SmartToy';
-import UserIcon from '@mui/icons-material/Person';
-import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import BedIcon from '@mui/icons-material/Bed';
+import UserIcon from '@mui/icons-material/Person';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import WarningIcon from '@mui/icons-material/WarningAmber';
-
+import WarningIcon from '@mui/icons-material/Warning';
+import SparklesIcon from '@mui/icons-material/AutoAwesome';
+import DeleteIcon from '@mui/icons-material/Delete';
+import BotIcon from '@mui/icons-material/SmartToy';
+import SendIcon from '@mui/icons-material/Send';
 const initialMessages = [
   {
     id: 1,

@@ -288,5 +288,40 @@ p {
     padding: var(--spacing-md);
   }
 }
+
+/* --------------------------------------------------------------------------
+   11. PRINT STYLES
+   -------------------------------------------------------------------------- */
+@media print {
+  aside,
+  header,
+  nav,
+  button,
+  .MuiDialogActions-root,
+  .MuiIconButton-root,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .MuiDialog-container {
+    display: block !important;
+    position: static !important;
+  }
+
+  .MuiDialog-paper {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+}
 .hide-scrollbar::-webkit-scrollbar { display: none; }
 .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

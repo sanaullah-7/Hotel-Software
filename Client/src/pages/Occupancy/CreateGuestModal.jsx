@@ -15,24 +15,26 @@ import {
   Box,
   Typography,
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import PersonIcon from '@mui/icons-material/Person';
-import BadgeIcon from '@mui/icons-material/Badge';
-import EmailIcon from '@mui/icons-material/Email';
-import PhoneIcon from '@mui/icons-material/Phone';
-import CreditCardIcon from '@mui/icons-material/CreditCard';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import FlagIcon from '@mui/icons-material/Flag';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-import StoreIcon from '@mui/icons-material/Store';
-import PaymentIcon from '@mui/icons-material/Payment';
-import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
-import NotesIcon from '@mui/icons-material/Notes';
-import StarIcon from '@mui/icons-material/Star';
-import VipIcon from '@mui/icons-material/WorkspacePremium';
-import BedIcon from '@mui/icons-material/Bed';
-import BookmarkIcon from '@mui/icons-material/BookmarkBorder';
+import {
+  Close as CloseIcon,
+  Person as PersonIcon,
+  Badge as BadgeIcon,
+  Email as EmailIcon,
+  Phone as PhoneIcon,
+  CreditCard as CreditCardIcon,
+  LocationOn as LocationOnIcon,
+  Flag as FlagIcon,
+  CalendarMonth as CalendarMonthIcon,
+  ConfirmationNumber as ConfirmationNumberIcon,
+  Store as StoreIcon,
+  Payment as PaymentIcon,
+  AttachMoney as AttachMoneyIcon,
+  Notes as NotesIcon,
+  Star as StarIcon,
+  WorkspacePremium as VipIcon,
+  Bed as BedIcon,
+  BookmarkBorder as BookmarkIcon,
+} from '@mui/icons-material';
 
 const inputSx = {
   '& .MuiOutlinedInput-root': {
@@ -134,8 +136,8 @@ export default function CreateGuestModal({ open, onClose, onSave, room }) {
           backgroundColor: 'white',
           borderBottom: '1px solid #e8eaf6',
           '& .MuiTab-root': { fontSize: '13px', textTransform: 'none', fontWeight: 500, minWidth: 0, color: '#6b7280', py: 1.5 },
-          '& .Mui-selected': { color: '#2e7d32', fontWeight: 600 },
-          '& .MuiTabs-indicator': { backgroundColor: '#2e7d32', height: '2px' },
+          '& .Mui-selected': { color: '#5c67f2', fontWeight: 600 },
+          '& .MuiTabs-indicator': { backgroundColor: '#5c67f2', height: '2px' },
         }}
       >
         <Tab label="Personal Information" />
@@ -149,7 +151,7 @@ export default function CreateGuestModal({ open, onClose, onSave, room }) {
         {tab === 0 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <PersonIcon sx={{ fontSize: 16, color: '#2e7d32' }} />
+              <PersonIcon sx={{ fontSize: 16, color: '#5c67f2' }} />
               <Typography sx={{ fontWeight: 700, fontSize: '14px', color: '#1f2937' }}>Personal Details</Typography>
             </Box>
 
@@ -187,7 +189,7 @@ export default function CreateGuestModal({ open, onClose, onSave, room }) {
             />
 
             <TextField
-              select label="Nationality" size="small" defaultValue={room?.guest?.name ? 'us' : ''} sx={{ width: '50%', ...inputSx }}
+              select label="Nationality" size="small" defaultValue="" sx={{ width: '50%', ...inputSx }}
               InputProps={{ endAdornment: <InputAdornment position="end"><FlagIcon sx={{ fontSize: 18, color: '#9ca3af', mr: 2 }} /></InputAdornment> }}
             >
               <MenuItem value="">Select</MenuItem>
@@ -204,11 +206,21 @@ export default function CreateGuestModal({ open, onClose, onSave, room }) {
         {tab === 1 && (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-              <BookmarkIcon sx={{ fontSize: 16, color: '#2e7d32' }} />
+              <BookmarkIcon sx={{ fontSize: 16, color: '#5c67f2' }} />
               <Typography sx={{ fontWeight: 700, fontSize: '14px', color: '#1f2937' }}>Booking Information</Typography>
             </Box>
 
             <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth type="date" label="Check-in Date*" size="small"
+                InputLabelProps={{ shrink: true }} sx={inputSx}
+                InputProps={{ endAdornment: <InputAdornment position="end"><CalendarMonthIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
+              />
+              <TextField
+                fullWidth type="date" label="Check-out Date*" size="small"
+                InputLabelProps={{ shrink: true }} sx={inputSx}
+                InputProps={{ endAdornment: <InputAdornment position="end"><CalendarMonthIcon sx={{ fontSize: 18, color: '#9ca3af' }} /></InputAdornment> }}
+              />
               <div className="flex flex-col gap-1 w-full">
                 <span className="text-[10px] font-semibold text-gray-500 pl-0.5">
                   Check-in Date*
@@ -271,7 +283,7 @@ export default function CreateGuestModal({ open, onClose, onSave, room }) {
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
               <Box sx={{ display: 'flex', gap: 0.4 }}>
-                {[0,1,2].map(i => <Box key={i} sx={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#2e7d32' }} />)}
+                {[0,1,2].map(i => <Box key={i} sx={{ width: 5, height: 5, borderRadius: '50%', backgroundColor: '#5c67f2' }} />)}
               </Box>
               <Typography sx={{ fontWeight: 700, fontSize: '14px', color: '#1f2937' }}>Additional Information</Typography>
             </Box>
@@ -288,7 +300,7 @@ export default function CreateGuestModal({ open, onClose, onSave, room }) {
             />
 
             <FormControlLabel
-              control={<Checkbox size="small" sx={{ color: '#2e7d32', '&.Mui-checked': { color: '#2e7d32' } }} />}
+              control={<Checkbox size="small" sx={{ color: '#5c67f2', '&.Mui-checked': { color: '#5c67f2' } }} />}
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <VipIcon sx={{ fontSize: 18, color: '#f59e0b' }} />
@@ -313,8 +325,8 @@ export default function CreateGuestModal({ open, onClose, onSave, room }) {
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <BedIcon sx={{ fontSize: 16, color: '#2e7d32' }} />
-          <Typography sx={{ fontSize: '12px', color: '#2e7d32', fontWeight: 600 }}>{roomLabel}</Typography>
+          <BedIcon sx={{ fontSize: 16, color: '#5c67f2' }} />
+          <Typography sx={{ fontSize: '12px', color: '#5c67f2', fontWeight: 600 }}>{roomLabel}</Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
           <Button

@@ -10,7 +10,31 @@ export default function AppBreadcrumbs() {
   const pathnames = location.pathname.split('/').filter((x) => x);
 
   // Helper to format path segments into readable text
+  const customSegmentLabels = {
+    'rates-pricing': 'Rates & Pricing',
+    'rate-plans': 'Rate Plans',
+    'taxes-fees': 'Taxes & Fees',
+    'payment-billing': 'Payment & Billing',
+    'invoices': 'Invoices',
+    'payment-history': 'Payment History',
+    'pending-payments': 'Pending Payments',
+    'refunds': 'Refunds',
+    'front-office': 'Front Office',
+    'operations-alerts': 'Operations Alerts',
+    'check-in-out': 'Check-In / Out',
+    'registration-forms': 'Registration Forms',
+    'guest-complaint': 'Guest Complaints',
+    'rooms-cleaning': 'Rooms & Cleaning',
+    'staff-assignment': 'Staff Assignment',
+    'guest-charges': 'Guest Charges',
+    'charges': 'Guest Charges',
+    'missing': 'Missing Items',
+    'missing-items': 'Missing Items',
+    'stock': 'Stock'
+  };
+
   const formatName = (name) => {
+    if (customSegmentLabels[name]) return customSegmentLabels[name];
     return name
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))

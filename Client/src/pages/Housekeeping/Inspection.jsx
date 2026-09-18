@@ -1,14 +1,7 @@
 import React, { useState } from 'react';
-import Search from '@mui/icons-material/Search';
-import CheckCircle from '@mui/icons-material/CheckCircle';
-import Warning from '@mui/icons-material/Warning';
-import Edit from '@mui/icons-material/Edit';
-import VerifiedUser from '@mui/icons-material/VerifiedUser';
-import PlayArrow from '@mui/icons-material/PlayArrow';
-import AssignmentInd from '@mui/icons-material/AssignmentInd';
-import MoreVert from '@mui/icons-material/MoreVert';
-import Cancel from '@mui/icons-material/Cancel';
-import AssignmentTurnedIn from '@mui/icons-material/AssignmentTurnedIn';
+import { 
+  Search, CheckCircle, Warning, Edit, VerifiedUser, PlayArrow, AssignmentInd, MoreVert, Cancel, AssignmentTurnedIn
+} from '@mui/icons-material';
 import { IconButton, Menu, MenuItem, Select, FormControl, Dialog } from '@mui/material';
 
 import { getRooms, getStaff, saveRooms } from './hkStore';

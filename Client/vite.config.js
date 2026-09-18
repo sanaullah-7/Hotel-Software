@@ -7,8 +7,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-    optimizeDeps: {
+  // Memory optimization: limit chunk size and pre-bundle only what's needed
+  optimizeDeps: {
     include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
       '@mui/material',
       '@mui/icons-material',
       '@emotion/react',

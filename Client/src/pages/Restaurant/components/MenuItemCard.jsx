@@ -1,7 +1,7 @@
-import React from 'react';
-import Add from '@mui/icons-material/Add';
-import Remove from '@mui/icons-material/Remove';
 import ShoppingCart from '@mui/icons-material/ShoppingCart';
+import Remove from '@mui/icons-material/Remove';
+import Add from '@mui/icons-material/Add';
+import React from 'react';
 
 /**
  * MenuItemCard — shows a single menu item with +/- quantity control.

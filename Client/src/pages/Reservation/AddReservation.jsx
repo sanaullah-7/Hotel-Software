@@ -1,14 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import ArrowBack from '@mui/icons-material/ArrowBack';
-import Save from '@mui/icons-material/Save';
-import UploadFile from '@mui/icons-material/UploadFile';
-import CalendarMonth from '@mui/icons-material/CalendarMonth';
-import AccessTime from '@mui/icons-material/AccessTime';
-import Person from '@mui/icons-material/Person';
-import Hotel from '@mui/icons-material/Hotel';
-import CreditCard from '@mui/icons-material/CreditCard';
-import NoteAlt from '@mui/icons-material/NoteAlt';
+import { 
+  ArrowBack, Save, UploadFile, CalendarMonth, AccessTime,
+  Person, Hotel, CreditCard, NoteAlt
+} from '@mui/icons-material';
 import {
   TextField, MenuItem, FormControl, InputLabel, Select
 } from '@mui/material';
@@ -240,11 +235,11 @@ export default function AddReservation() {
 
             {/* SECTION 4: ADDITIONAL DETAILS */}
             <div>
-              <div className="flex items-center gap-2 mb-6">
+              <div className="flex items-center gap-2 mb-4">
                 <NoteAlt sx={{ fontSize: 22, color: '#1b7f43' }} />
                 <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Additional Details</h3>
               </div>
-              <div className="flex flex-col gap-6">
+              <div className="space-y-4">
                 <TextField label="Address" name="address" value={formData.address} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
                 <TextField label="Special Requests (Dietary requirements, accessibility needs, etc.)" name="specialRequests" value={formData.specialRequests} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
                 

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { Button, Chip, IconButton, Menu, MenuItem, Grid, TextField, FormControl, InputLabel, Select } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import TotalIcon from '@mui/icons-material/People';
+import TotalIcon from '@mui/icons-material/Functions';
 import MoneyIcon from '@mui/icons-material/AttachMoney';
 import PaidIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/HourglassEmpty';
 import SearchIcon from '@mui/icons-material/Search';
+import React, { useState } from 'react';
+import { Button, Chip, IconButton, Menu, MenuItem, Grid, TextField, FormControl, InputLabel, Select } from '@mui/material';
 import PageHeader from '../../../components/common/PageHeader';
 import StatSummaryCard from '../../../components/common/StatSummaryCard';
 import DataGridTable from '../../../components/tables/DataGridTable';

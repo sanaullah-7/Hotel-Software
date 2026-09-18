@@ -40,6 +40,7 @@ const initialRooms = [
   { number: 106, type: 'Suite', floor: 1, status: 'BOOKED', statusColor: '#f59e0b', bed: 'Queen Bed', adults: 2, children: 2, maxOccupancy: 4, price: 420, housekeeping: 'Clean', housekeepingColor: '#1b7f43', amenities: ['wifi', 'ac', 'bar'], guest: { name: 'Emily Brown', vip: false, id: 'EM456BR789', checkIn: null, checkOut: null } },
 ];
 
+
 const statusIcon = { 
   OCCUPIED: <PersonIcon sx={{ fontSize: 16 }} />, 
   AVAILABLE: <CheckCircleIcon sx={{ fontSize: 16 }} />, 
