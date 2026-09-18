@@ -337,7 +337,7 @@ export default function StockReport() {
       {/* Main Card Container */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Card Header Toolbar */}
-        <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+        <div className="p-2 sm:p-2.5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <h2 className="text-base sm:text-lg font-semibold text-gray-800">All Stocks</h2>
             {selectedIds.size > 0 && (
@@ -466,7 +466,7 @@ export default function StockReport() {
             <thead>
               <tr className="border-b border-gray-100 bg-white">
                 {visibleColumns.checkbox && (
-                  <th className="py-3.5 px-4 w-12 text-center">
+                  <th className="py-2 px-2.5 w-10 text-center">
                     <input
                       type="checkbox"
                       checked={isAllSelected}
@@ -479,25 +479,25 @@ export default function StockReport() {
                   </th>
                 )}
                 {visibleColumns.productCode && (
-                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Product Code</th>
+                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Product Code</th>
                 )}
                 {visibleColumns.productName && (
-                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Product Name</th>
+                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Product Name</th>
                 )}
                 {visibleColumns.status && (
-                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Status</th>
+                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Status</th>
                 )}
                 {visibleColumns.price && (
-                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Price</th>
+                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Price</th>
                 )}
                 {visibleColumns.category && (
-                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Category</th>
+                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Category</th>
                 )}
                 {visibleColumns.quantity && (
-                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Quantity</th>
+                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Quantity</th>
                 )}
                 {visibleColumns.actions && (
-                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider text-right pr-6">
+                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider text-right pr-4">
                     Actions
                   </th>
                 )}
@@ -522,7 +522,7 @@ export default function StockReport() {
                       }`}
                     >
                       {visibleColumns.checkbox && (
-                        <td className="py-3 px-4 text-center">
+                        <td className="py-1.5 px-2.5 text-center">
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -532,25 +532,25 @@ export default function StockReport() {
                         </td>
                       )}
                       {visibleColumns.productCode && (
-                        <td className="py-3 px-4 font-normal text-gray-600">{item.productCode}</td>
+                        <td className="py-1.5 px-2.5 font-normal text-gray-600">{item.productCode}</td>
                       )}
                       {visibleColumns.productName && (
-                        <td className="py-3 px-4 font-medium text-gray-800">{item.productName}</td>
+                        <td className="py-1.5 px-2.5 font-medium text-gray-800">{item.productName}</td>
                       )}
                       {visibleColumns.status && (
-                        <td className="py-3 px-4">{renderStatusBadge(item.status)}</td>
+                        <td className="py-1.5 px-2.5">{renderStatusBadge(item.status)}</td>
                       )}
                       {visibleColumns.price && (
-                        <td className="py-3 px-4 font-normal text-gray-700">{item.price}</td>
+                        <td className="py-1.5 px-2.5 font-normal text-gray-700">{item.price}</td>
                       )}
                       {visibleColumns.category && (
-                        <td className="py-3 px-4 font-normal text-gray-600">{item.category}</td>
+                        <td className="py-1.5 px-2.5 font-normal text-gray-600">{item.category}</td>
                       )}
                       {visibleColumns.quantity && (
-                        <td className="py-3 px-4 font-normal text-gray-700">{item.quantity}</td>
+                        <td className="py-1.5 px-2.5 font-normal text-gray-700">{item.quantity}</td>
                       )}
                       {visibleColumns.actions && (
-                        <td className="py-3 px-4 text-right pr-6">
+                        <td className="py-1.5 px-2.5 text-right pr-4">
                           <div className="flex items-center justify-end gap-2">
                             {/* Edit Button */}
                             <button
@@ -580,7 +580,7 @@ export default function StockReport() {
         </div>
 
         {/* Card Footer / Pagination Controls */}
-        <div className="p-4 border-t border-gray-100 flex flex-wrap items-center justify-end gap-6 text-xs text-gray-500 font-medium">
+        <div className="p-2 border-t border-gray-100 flex flex-wrap items-center justify-end gap-4 text-xs text-gray-500 font-medium">
           {/* Items Per Page Select */}
           <div className="flex items-center gap-2">
             <span>Items per page:</span>

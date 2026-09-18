@@ -162,13 +162,13 @@ export default function RevenueReport() {
   const [showAiModal, setShowAiModal] = useState(false);
 
   return (
-    <div className="w-full space-y-3 pb-6 font-sans">
+    <div className="w-full space-y-2 pb-1 font-sans">
     
 
       {/* 2. Top Metric Cards (2x2 Grid) */}
       <div className="grid grid-cols-1  md:grid-cols-2 gap-2">
         {/* Card 1: TOTAL REVENUE */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -179,25 +179,25 @@ export default function RevenueReport() {
                   ↑ 12.5%
                 </span>
               </div>
-              <div className="text-3xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1">
+              <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
                 $1,245,870
               </div>
-              <div className="text-sm text-gray-500 font-normal">
+              <div className="text-xs sm:text-sm text-gray-500 font-normal">
                 This Period
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
-              <DollarIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
+              <DollarIcon sx={{ fontSize: 22 }} />
             </div>
           </div>
-          <div className="my-4 border-t border-gray-100"></div>
-          <div className="text-sm text-gray-500 font-normal">
+          <div className="my-2 border-t border-gray-100"></div>
+          <div className="text-xs text-gray-500 font-normal">
             vs last period: $1,107,440
           </div>
         </div>
 
         {/* Card 2: AVG. DAILY RATE */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -208,25 +208,25 @@ export default function RevenueReport() {
                   ↑ 8.2%
                 </span>
               </div>
-              <div className="text-3xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1">
+              <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
                 $187.50
               </div>
-              <div className="text-sm text-gray-500 font-normal">
+              <div className="text-xs sm:text-sm text-gray-500 font-normal">
                 Per occupied room
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#e0f2fe] flex items-center justify-center text-[#0284c7] shrink-0">
-              <TrendingUpIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-2xl bg-[#e0f2fe] flex items-center justify-center text-[#0284c7] shrink-0">
+              <TrendingUpIcon sx={{ fontSize: 22 }} />
             </div>
           </div>
-          <div className="my-4 border-t border-gray-100"></div>
-          <div className="text-sm text-gray-500 font-normal">
+          <div className="my-2 border-t border-gray-100"></div>
+          <div className="text-xs text-gray-500 font-normal">
             vs last period: $173.25
           </div>
         </div>
 
         {/* Card 3: TOTAL BOOKINGS */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -237,25 +237,25 @@ export default function RevenueReport() {
                   ↓ 3.1%
                 </span>
               </div>
-              <div className="text-3xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1">
+              <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
                 2,847
               </div>
-              <div className="text-sm text-gray-500 font-normal">
+              <div className="text-xs sm:text-sm text-gray-500 font-normal">
                 Confirmed reservations
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#ffedd5] flex items-center justify-center text-[#ea580c] shrink-0">
-              <BedIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-2xl bg-[#ffedd5] flex items-center justify-center text-[#ea580c] shrink-0">
+              <BedIcon sx={{ fontSize: 22 }} />
             </div>
           </div>
-          <div className="my-4 border-t border-gray-100"></div>
-          <div className="text-sm text-gray-500 font-normal">
+          <div className="my-2 border-t border-gray-100"></div>
+          <div className="text-xs text-gray-500 font-normal">
             vs last period: 2,938
           </div>
         </div>
 
         {/* Card 4: REVENUE PER AVAILABLE ROOM */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -285,7 +285,7 @@ export default function RevenueReport() {
       </div>
 
       {/* 3. Revenue Trend Analysis (Area Chart) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5">
         <div className="relative mb-6">
           <div className="text-center">
             <h3 className="text-[18px] font-bold text-[#1e293b]">
@@ -380,7 +380,7 @@ export default function RevenueReport() {
       </div>
 
       {/* 4. Revenue Distribution (Donut Chart) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5">
         <div className="mb-4">
           <h3 className="text-[18px] font-bold text-[#1e293b]">
             Revenue Distribution
@@ -440,7 +440,7 @@ export default function RevenueReport() {
       </div>
 
       {/* 5. Revenue Breakdown by Source (Data List / Table) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 overflow-hidden">
         <div className="mb-6">
           <h3 className="text-[18px] font-bold text-[#1e293b]">
             Revenue Breakdown by Source

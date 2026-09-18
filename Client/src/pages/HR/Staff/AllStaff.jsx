@@ -11,7 +11,13 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
-import React, { useState, useEffect } from 'react';
+import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
+import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
+import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   Button, 
@@ -160,56 +166,110 @@ export default function AllStaff() {
   });
 
   const columns = [
-    { label: 'Name', field: 'name', render: (row) => (
-      <div className="flex items-center gap-2">
-        <Avatar src={row.avatar || `https://i.pravatar.cc/150?u=${row.id}`} alt={row.name} sx={{ width: 28, height: 28, flexShrink: 0 }} />
-        <Link to={`/hr/staff/${row.id}`} className="text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors truncate max-w-[140px]" title={row.name}>
-          {row.name}
-        </Link>
-      </div>
-    )},
-    { label: 'Designation', field: 'designation', render: (row) => (
-      <span className="text-xs text-gray-700 truncate block max-w-[120px]" title={row.designation}>{row.designation}</span>
-    )},
-    { label: 'Mobile', field: 'phone', render: (row) => (
-      <div className="flex items-center gap-1 text-xs text-gray-700 whitespace-nowrap">
-        <PhoneOutlinedIcon fontSize="small" sx={{ color: '#22c55e', fontSize: '0.95rem', flexShrink: 0 }} />
-        <span>{row.phone}</span>
-      </div>
-    )},
-    { label: 'Email', field: 'email', render: (row) => (
-      <div className="flex items-center gap-1 text-xs text-gray-700">
-        <MailOutlinedIcon fontSize="small" sx={{ color: '#ef4444', fontSize: '0.95rem', flexShrink: 0 }} />
-        <span className="truncate max-w-[140px]" title={row.email}>{row.email}</span>
-      </div>
-    )},
-    { label: 'Joining Date', field: 'joiningDate', render: (row) => (
-      <div className="flex items-center gap-1 text-xs text-gray-700 whitespace-nowrap">
-        <CalendarTodayOutlinedIcon fontSize="small" sx={{ color: '#4b5563', fontSize: '0.95rem', flexShrink: 0 }} />
-        <span>{row.joiningDate}</span>
-      </div>
-    )},
-    { label: 'Address', field: 'address', render: (row) => (
-      <div className="flex items-center gap-1 text-xs text-gray-700">
-        <LocationOnOutlinedIcon fontSize="small" sx={{ color: '#3b82f6', fontSize: '0.95rem', flexShrink: 0 }} />
-        <span className="truncate max-w-[150px]" title={row.address}>{row.address}</span>
-      </div>
-    )},
+    { 
+      label: 'Name', 
+      field: 'name', 
+      sx: { width: '18%' },
+      render: (row) => (
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Avatar src={row.avatar || `https://i.pravatar.cc/150?u=${row.id}`} alt={row.name} sx={{ width: 24, height: 24, flexShrink: 0 }} />
+          <Link to={`/hr/staff/${row.id}`} className="text-xs font-semibold text-gray-800 hover:text-indigo-600 transition-colors truncate block" title={row.name}>
+            {row.name}
+          </Link>
+        </div>
+      )
+    },
+    { 
+      label: 'Designation', 
+      field: 'designation', 
+      sx: { width: '15%' },
+      render: (row) => (
+        <span className="text-xs text-gray-700 truncate block" title={row.designation}>{row.designation}</span>
+      )
+    },
+    { 
+      label: 'Mobile', 
+      field: 'phone', 
+      sx: { width: '14%' },
+      render: (row) => (
+        <div className="flex items-center gap-1 text-xs text-gray-700 min-w-0">
+          <PhoneOutlinedIcon sx={{ color: '#22c55e', fontSize: 14, flexShrink: 0 }} />
+          <span className="truncate block" title={row.phone}>{row.phone}</span>
+        </div>
+      )
+    },
+    { 
+      label: 'Email', 
+      field: 'email', 
+      sx: { width: '18%' },
+      render: (row) => (
+        <div className="flex items-center gap-1 text-xs text-gray-700 min-w-0">
+          <MailOutlinedIcon sx={{ color: '#ef4444', fontSize: 14, flexShrink: 0 }} />
+          <span className="truncate block" title={row.email}>{row.email}</span>
+        </div>
+      )
+    },
+    { 
+      label: 'Joining Date', 
+      field: 'joiningDate', 
+      sx: { width: '13%' },
+      render: (row) => (
+        <div className="flex items-center gap-1 text-xs text-gray-700 min-w-0">
+          <CalendarTodayOutlinedIcon sx={{ color: '#4b5563', fontSize: 13, flexShrink: 0 }} />
+          <span className="truncate block">{row.joiningDate}</span>
+        </div>
+      )
+    },
+    { 
+      label: 'Address', 
+      field: 'address', 
+      sx: { width: '12%' },
+      render: (row) => (
+        <div className="flex items-center gap-1 text-xs text-gray-700 min-w-0">
+          <LocationOnOutlinedIcon sx={{ color: '#3b82f6', fontSize: 14, flexShrink: 0 }} />
+          <span className="truncate block" title={row.address}>{row.address}</span>
+        </div>
+      )
+    },
     { 
       label: 'Actions', 
       field: 'actions', 
       alwaysVisible: true, 
-      sx: { pr: 2 },
+      sx: { 
+        width: '100px', 
+        minWidth: '100px', 
+        maxWidth: '100px', 
+        textAlign: 'center',
+        padding: '4px 2px',
+      },
       render: (row) => (
-        <div className="flex items-center gap-1 whitespace-nowrap pr-2">
+        <div className="flex items-center justify-center gap-0.5 whitespace-nowrap">
+          <Tooltip title="View Profile">
+            <IconButton 
+              size="small" 
+              component={Link} 
+              to={`/hr/staff/${row.id}`} 
+              sx={{ color: '#3b82f6', p: '2px' }}
+            >
+              <PersonOutlinedIcon sx={{ fontSize: 17 }} />
+            </IconButton>
+          </Tooltip>
           <Tooltip title="Edit Staff">
-            <IconButton size="small" onClick={() => handleOpenEdit(row)} sx={{ color: '#6366f1', p: '4px' }}>
-              <EditIcon sx={{ fontSize: 18 }} />
+            <IconButton 
+              size="small" 
+              onClick={() => handleOpenEdit(row)} 
+              sx={{ color: '#6366f1', p: '2px' }}
+            >
+              <EditIcon sx={{ fontSize: 17 }} />
             </IconButton>
           </Tooltip>
           <Tooltip title="Delete Staff">
-            <IconButton size="small" onClick={() => handleDeleteStaff(row.id)} sx={{ color: '#ef4444', p: '4px' }}>
-              <DeleteOutlineIcon sx={{ fontSize: 18 }} />
+            <IconButton 
+              size="small" 
+              onClick={() => handleDeleteStaff(row.id)} 
+              sx={{ color: '#ef4444', p: '2px' }}
+            >
+              <DeleteOutlineIcon sx={{ fontSize: 17 }} />
             </IconButton>
           </Tooltip>
         </div>
@@ -219,13 +279,119 @@ export default function AllStaff() {
 
   const activeColumns = columns.filter(col => col.alwaysVisible || visibleColumns[col.field]);
 
-  return (
-    <div className="px-px pt-4 pb-0 w-full overflow-x-hidden">
+  // Calculate dynamic HR summary metrics from staffData
+  const summaryCards = useMemo(() => {
+    const list = Array.isArray(staffData) ? staffData : [];
+    const totalStaff = list.length;
+    
+    // Active staff: status is active (case-insensitive)
+    const activeStaff = list.filter(s => (s.status || s.employmentStatus || 'Active').trim().toLowerCase() === 'active').length;
+    
+    // On Leave: status contains 'leave' (case-insensitive), fallback to 0
+    const onLeaveStaff = list.filter(s => (s.status || s.employmentStatus || '').trim().toLowerCase().includes('leave')).length;
+    
+    // Unique departments
+    const departmentsCount = new Set(list.map(s => (s.department || '').trim()).filter(Boolean)).size;
+    
+    // New Joiners: based on joiningDate within current month or last 30 days
+    const now = new Date();
+    const newJoinersCount = list.filter(s => {
+      if (!s.joiningDate) return false;
+      const joinDate = new Date(s.joiningDate);
+      if (isNaN(joinDate.getTime())) return false;
+      const isCurrentMonth = joinDate.getFullYear() === now.getFullYear() && joinDate.getMonth() === now.getMonth();
+      const diffDays = (now.getTime() - joinDate.getTime()) / (1000 * 3600 * 24);
+      return isCurrentMonth || (diffDays >= 0 && diffDays <= 30);
+    }).length;
 
-      <div className="bg-white rounded-xl shadow-sm p-px mt-px w-full overflow-x-hidden">
+    // Unique designations
+    const designationsCount = new Set(list.map(s => (s.designation || '').trim()).filter(Boolean)).size;
+
+    return [
+      {
+        id: 'total-staff',
+        title: 'Total Staff',
+        value: totalStaff,
+        subtext: 'Members',
+        icon: GroupOutlinedIcon
+      },
+      {
+        id: 'active-staff',
+        title: 'Active Staff',
+        value: activeStaff,
+        subtext: 'Active',
+        icon: CheckCircleOutlinedIcon
+      },
+      {
+        id: 'on-leave',
+        title: 'On Leave',
+        value: onLeaveStaff,
+        subtext: 'On Leave',
+        icon: EventBusyOutlinedIcon
+      },
+      {
+        id: 'departments',
+        title: 'Departments',
+        value: departmentsCount,
+        subtext: 'Units',
+        icon: BusinessOutlinedIcon
+      },
+      {
+        id: 'new-joiners',
+        title: 'New Joiners',
+        value: newJoinersCount,
+        subtext: 'Recent',
+        icon: PersonAddOutlinedIcon
+      },
+      {
+        id: 'designations',
+        title: 'Designations',
+        value: designationsCount,
+        subtext: 'Roles',
+        icon: BadgeOutlinedIcon
+      }
+    ];
+  }, [staffData]);
+
+  return (
+    <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden flex flex-col gap-2">
+      {/* ── Compact HR Summary Cards ─────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
+        {summaryCards.map((card) => {
+          const IconComp = card.icon;
+          return (
+            <div
+              key={card.id}
+              className="bg-white rounded-xl border border-gray-100 shadow-sm px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className="p-1 rounded-md bg-[var(--primary-main)]/10 text-[var(--primary-main)] flex items-center justify-center shrink-0">
+                  <IconComp sx={{ fontSize: 15 }} />
+                </div>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
+                  {card.title}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-1">
+                <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
+                  {card.value}
+                </span>
+                {card.subtext && (
+                  <span className="text-[10px] text-[var(--text-secondary)] font-normal hidden xl:inline">
+                    {card.subtext}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Main Table Card */}
+      <div className="bg-white rounded-xl shadow-sm p-0 w-full overflow-hidden">
         {/* Top Bar */}
-        <div className="flex justify-between items-center mb-1 pb-2 border-b border-gray-100">
-          <div className="flex items-center gap-4 pt-4 pl-4">
+        <div className="flex justify-between items-center mb-1 pb-1 border-b border-gray-100 px-2 sm:px-2.5">
+          <div className="flex items-center gap-2 pt-1">
             <TextField
             size="small"
             placeholder="Search..."
@@ -284,7 +450,7 @@ export default function AllStaff() {
       </div>
 
       {/* Table */}
-      <div className="w-full overflow-x-hidden">
+      <div className="w-full overflow-hidden">
         <DataGridTable 
           columns={activeColumns} 
           data={filteredStaff} 
@@ -293,6 +459,8 @@ export default function AllStaff() {
           selected={selectedIds}
           onSelectionChange={setSelectedIds}
           noHorizontalScroll={true}
+          checkboxHeaderSx={{ pl: '8px !important', pr: '8px !important', width: '48px !important', minWidth: '48px !important', maxWidth: '48px !important' }}
+          checkboxCellSx={{ pl: '8px !important', pr: '8px !important', width: '48px !important', minWidth: '48px !important', maxWidth: '48px !important' }}
         />
       </div>
 

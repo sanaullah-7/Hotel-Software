@@ -159,13 +159,13 @@ const CustomTrendTooltip = ({ active, payload, label }) => {
 
 export default function OccupancyReportTab() {
   return (
-    <div className="w-full space-y-6 pb-2 font-sans">
+    <div className="w-full space-y-2 pb-0 font-sans">
   
 
       {/* 2. Top Metric KPI Cards (2x2 Grid) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {/* Card 1: CURRENT OCCUPANCY RATE */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -176,25 +176,25 @@ export default function OccupancyReportTab() {
                   ↑ 5.2%
                 </span>
               </div>
-              <div className="text-3xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1">
+              <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
                 78.3%
               </div>
-              <div className="text-sm text-gray-500 font-normal">
+              <div className="text-xs sm:text-sm text-gray-500 font-normal">
                 Overall property occupancy
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
-              <BedIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
+              <BedIcon sx={{ fontSize: 22 }} />
             </div>
           </div>
-          <div className="my-4 border-t border-gray-100"></div>
-          <div className="text-sm text-gray-500 font-normal">
+          <div className="my-2 border-t border-gray-100"></div>
+          <div className="text-xs text-gray-500 font-normal">
             vs yesterday: 73.1%
           </div>
         </div>
 
         {/* Card 2: AVAILABLE ROOMS */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -205,25 +205,25 @@ export default function OccupancyReportTab() {
                   ↓ 12%
                 </span>
               </div>
-              <div className="text-3xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1">
+              <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
                 32
               </div>
-              <div className="text-sm text-gray-500 font-normal">
+              <div className="text-xs sm:text-sm text-gray-500 font-normal">
                 Currently available for booking
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#e0f2fe] flex items-center justify-center text-[#0284c7] shrink-0">
-              <BedIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-2xl bg-[#e0f2fe] flex items-center justify-center text-[#0284c7] shrink-0">
+              <BedIcon sx={{ fontSize: 22 }} />
             </div>
           </div>
-          <div className="my-4 border-t border-gray-100"></div>
-          <div className="text-sm text-gray-500 font-normal">
+          <div className="my-2 border-t border-gray-100"></div>
+          <div className="text-xs text-gray-500 font-normal">
             vs yesterday: 37
           </div>
         </div>
 
         {/* Card 3: UNDER MAINTENANCE */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -234,25 +234,25 @@ export default function OccupancyReportTab() {
                   — 0%
                 </span>
               </div>
-              <div className="text-3xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1">
+              <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
                 8
               </div>
-              <div className="text-sm text-gray-500 font-normal">
+              <div className="text-xs sm:text-sm text-gray-500 font-normal">
                 Rooms requiring maintenance
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#ffedd5] flex items-center justify-center text-[#ea580c] shrink-0">
-              <WrenchIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-2xl bg-[#ffedd5] flex items-center justify-center text-[#ea580c] shrink-0">
+              <WrenchIcon sx={{ fontSize: 22 }} />
             </div>
           </div>
-          <div className="my-4 border-t border-gray-100"></div>
-          <div className="text-sm text-gray-500 font-normal">
+          <div className="my-2 border-t border-gray-100"></div>
+          <div className="text-xs text-gray-500 font-normal">
             vs yesterday: 8
           </div>
         </div>
 
         {/* Card 4: AVG. LENGTH OF STAY */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -282,7 +282,7 @@ export default function OccupancyReportTab() {
       </div>
 
       {/* 3. Occupancy Trend Analysis (Dual Area Spline Chart) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h3 className="text-[18px] font-bold text-[#1e293b]">
@@ -388,7 +388,7 @@ export default function OccupancyReportTab() {
       </div>
 
       {/* 4. Room Status Distribution (Donut Chart) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5">
         <div className="mb-4">
           <h3 className="text-[18px] font-bold text-[#1e293b]">
             Room Status Distribution
@@ -448,7 +448,7 @@ export default function OccupancyReportTab() {
       </div>
 
       {/* 5. Room Type Performance (Data Table) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 overflow-hidden">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 overflow-hidden">
         <div className="mb-6">
           <h3 className="text-[18px] font-bold text-[#1e293b]">
             Room Type Performance

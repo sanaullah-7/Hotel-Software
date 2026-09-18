@@ -132,16 +132,16 @@ export default function AddEvent() {
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-2 p-0">
      
 
       {/* Success Notification Banner */}
       {isSuccess && (
-        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between gap-3 text-emerald-800 animate-fadeIn">
-          <div className="flex items-center gap-2.5">
+        <div className="mb-2 p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between gap-3 text-emerald-800 animate-fadeIn">
+          <div className="flex items-center gap-2">
             <SuccessIcon className="text-emerald-600" />
             <div>
-              <span className="font-bold text-sm block">Event Added Successfully!</span>
+              <span className="font-bold text-xs sm:text-sm block">Event Added Successfully!</span>
               <span className="text-xs text-emerald-700">
                 {formData.name} ({formData.id}) has been recorded in the system.
               </span>
@@ -150,13 +150,13 @@ export default function AddEvent() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => navigate('/events/all-events')}
-              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
             >
               View in All Events
             </button>
             <button
               onClick={handleReset}
-              className="px-3.5 py-1.5 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-700 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
+              className="px-3 py-1 bg-white border border-emerald-300 hover:bg-emerald-50 text-emerald-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
             >
               Add Another Event
             </button>
@@ -165,16 +165,16 @@ export default function AddEvent() {
       )}
 
       {/* Main Card Container */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 sm:p-8">
-        <h2 className="text-lg font-bold text-slate-800 mb-6 pb-3 border-b border-slate-100">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3 sm:p-4">
+        <h2 className="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">
           Add Event/Banquet
         </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-2.5">
           {/* Row 1: Event Name & Event ID */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
             <div className="relative">
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Event Name*
               </label>
               <input
@@ -183,33 +183,33 @@ export default function AddEvent() {
                 placeholder="e.g. Vance & Sterling Royal Gala"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
               />
             </div>
 
             <div className="relative">
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Event ID
               </label>
               <input
                 type="text"
                 readOnly
                 value={formData.id}
-                className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-600 font-mono font-medium select-none"
+                className="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 sm:py-2 text-slate-600 font-mono font-medium select-none"
               />
             </div>
           </div>
 
           {/* Row 2: Event Type & Client Name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Event Type*
               </label>
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all cursor-pointer"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all cursor-pointer"
               >
                 {EVENT_TYPES.map(type => (
                   <option key={type} value={type}>{type}</option>
@@ -218,7 +218,7 @@ export default function AddEvent() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Client Name*
               </label>
               <input
@@ -227,15 +227,15 @@ export default function AddEvent() {
                 placeholder="e.g. Baroness Evelyn Vance"
                 value={formData.client}
                 onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
               />
             </div>
           </div>
 
           {/* Row 3: Client Phone & Client Email */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Client Phone*
               </label>
               <input
@@ -244,12 +244,12 @@ export default function AddEvent() {
                 placeholder="+1 (555) 000-0000"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Client Email*
               </label>
               <input
@@ -258,15 +258,15 @@ export default function AddEvent() {
                 placeholder="client@luxuryevents.com"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
               />
             </div>
           </div>
 
           {/* Row 4: Event Date, Start Time & End Time */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Event Date*
               </label>
               <div className="relative">
@@ -275,13 +275,13 @@ export default function AddEvent() {
                   required
                   value={formData.date}
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                  className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
+                  className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Start Time*
               </label>
               <input
@@ -289,12 +289,12 @@ export default function AddEvent() {
                 required
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 End Time*
               </label>
               <input
@@ -302,21 +302,21 @@ export default function AddEvent() {
                 required
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
               />
             </div>
           </div>
 
           {/* Row 5: Venue & Expected Guests */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Venue*
               </label>
               <select
                 value={formData.venue}
                 onChange={(e) => setFormData({ ...formData, venue: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all cursor-pointer"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all cursor-pointer"
               >
                 {VENUES.map(v => (
                   <option key={v} value={v}>{v}</option>
@@ -325,7 +325,7 @@ export default function AddEvent() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Expected Guests*
               </label>
               <input
@@ -334,21 +334,21 @@ export default function AddEvent() {
                 required
                 value={formData.guests}
                 onChange={(e) => setFormData({ ...formData, guests: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
               />
             </div>
           </div>
 
           {/* Row 6: Catering Type & Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Catering Type
               </label>
               <select
                 value={formData.catering}
                 onChange={(e) => setFormData({ ...formData, catering: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all cursor-pointer"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all cursor-pointer"
               >
                 {CATERING_TYPES.map(c => (
                   <option key={c} value={c}>{c}</option>
@@ -357,13 +357,13 @@ export default function AddEvent() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Status*
               </label>
               <select
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all cursor-pointer"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all cursor-pointer"
               >
                 {STATUS_OPTIONS.map(s => (
                   <option key={s} value={s}>{s}</option>
@@ -373,9 +373,9 @@ export default function AddEvent() {
           </div>
 
           {/* Row 7: Total Amount, Advance Amount & Balance Amount */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Total Amount*
               </label>
               <input
@@ -384,12 +384,12 @@ export default function AddEvent() {
                 required
                 value={formData.totalAmount}
                 onChange={(e) => handleAmountChange('totalAmount', e.target.value)}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Advance Amount
               </label>
               <input
@@ -397,64 +397,64 @@ export default function AddEvent() {
                 min="0"
                 value={formData.advanceAmount}
                 onChange={(e) => handleAmountChange('advanceAmount', e.target.value)}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl px-3 py-1.5 sm:py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Balance Amount
               </label>
               <input
                 type="number"
                 readOnly
                 value={formData.balanceAmount}
-                className="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-slate-600 font-semibold select-none"
+                className="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 sm:py-2 text-slate-600 font-semibold select-none"
               />
             </div>
           </div>
 
           {/* Row 8: Special Requests & Notes */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Special Requests
               </label>
               <textarea
-                rows="4"
+                rows="3"
                 placeholder="Decorations, lighting, floral arrangements, audio/visual setup..."
                 value={formData.specialRequests}
                 onChange={(e) => setFormData({ ...formData, specialRequests: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl p-3.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all resize-y"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all resize-y"
               ></textarea>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
                 Notes
               </label>
               <textarea
-                rows="4"
+                rows="3"
                 placeholder="Internal event coordinator notes, special dietary allergies..."
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                className="w-full text-sm bg-white border border-slate-300 rounded-xl p-3.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all resize-y"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-300 rounded-xl p-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5c67f2]/20 focus:border-[#5c67f2] transition-all resize-y"
               ></textarea>
             </div>
           </div>
 
           {/* Row 9: Buttons matching Luxuria exactly */}
-          <div className="pt-6 border-t border-slate-100 flex items-center gap-4">
+          <div className="pt-3 border-t border-slate-100 flex items-center gap-3">
             <button
               type="submit"
-              className="min-w-[126px] h-[42px] px-8 rounded-full bg-[#5c67f2] hover:bg-[#4c57e8] text-white font-medium text-[14px] tracking-wide shadow-[0_4px_12px_rgba(92,103,242,0.28)] hover:shadow-[0_6px_16px_rgba(92,103,242,0.35)] transition-all duration-200 cursor-pointer flex items-center justify-center select-none active:scale-[0.98]"
+              className="min-w-[110px] h-[36px] px-6 rounded-full bg-[#5c67f2] hover:bg-[#4c57e8] text-white font-medium text-[13px] tracking-wide shadow-xs transition-all duration-200 cursor-pointer flex items-center justify-center select-none active:scale-[0.98]"
             >
               Submit
             </button>
             <button
               type="button"
               onClick={handleReset}
-              className="min-w-[126px] h-[42px] px-8 rounded-full bg-white border border-[#ffb3be] hover:border-[#f43f5e] hover:bg-rose-50/40 text-[#e11d48] font-medium text-[14px] tracking-wide shadow-xs transition-all duration-200 cursor-pointer flex items-center justify-center select-none active:scale-[0.98]"
+              className="min-w-[110px] h-[36px] px-6 rounded-full bg-white border border-[#ffb3be] hover:border-[#f43f5e] hover:bg-rose-50/40 text-[#e11d48] font-medium text-[13px] tracking-wide shadow-xs transition-all duration-200 cursor-pointer flex items-center justify-center select-none active:scale-[0.98]"
             >
               Cancel
             </button>

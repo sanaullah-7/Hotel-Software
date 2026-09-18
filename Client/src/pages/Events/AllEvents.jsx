@@ -17,7 +17,12 @@ import {
   Delete as DeleteIcon,
   VisibilityOutlined as ViewIcon,
   Check as CheckIcon,
-  FileDownload as DownloadIcon
+  FileDownload as DownloadIcon,
+  EventOutlined as EventOutlinedIcon,
+  CheckCircleOutlineOutlined as CheckCircleOutlineIcon,
+  PendingActionsOutlined as PendingActionsIcon,
+  PeopleOutlined as PeopleOutlinedIcon,
+  AttachMoneyOutlined as AttachMoneyOutlinedIcon
 } from '@mui/icons-material';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -425,6 +430,25 @@ export default function AllEvents() {
     return filteredEvents.slice(start, start + itemsPerPage);
   }, [filteredEvents, currentPage, itemsPerPage]);
 
+  // ── Summary Cards (calculated from full `events` array, unaffected by search/filter) ──
+  const eventSummary = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return {
+      totalEvents: events.length,
+      confirmedEvents: events.filter(e => e.status === 'Confirmed').length,
+      pendingEvents: events.filter(e => e.status === 'Pending').length,
+      upcomingEvents: events.filter(e => {
+        if (!e.date) return false;
+        const evtDate = new Date(e.date);
+        evtDate.setHours(0, 0, 0, 0);
+        return evtDate >= today;
+      }).length,
+      totalGuests: events.reduce((sum, e) => sum + (parseInt(e.guests, 10) || 0), 0),
+      totalRevenue: events.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0),
+    };
+  }, [events]);
+
   // Reset Filters
   const handleRefresh = () => {
     setSearchQuery('');
@@ -530,14 +554,103 @@ export default function AllEvents() {
     }
   };
 
+  const eventCards = [
+    {
+      id: 'total-events',
+      title: 'Total Events',
+      value: eventSummary.totalEvents,
+      subtext: 'All registered',
+      icon: EventOutlinedIcon,
+      iconBg: 'bg-[var(--primary-main)]/10',
+      iconColor: 'text-[var(--primary-main)]',
+    },
+    {
+      id: 'confirmed',
+      title: 'Confirmed',
+      value: eventSummary.confirmedEvents,
+      subtext: 'Bookings',
+      icon: CheckCircleOutlineIcon,
+      iconBg: 'bg-emerald-50',
+      iconColor: 'text-emerald-600',
+    },
+    {
+      id: 'pending',
+      title: 'Pending',
+      value: eventSummary.pendingEvents,
+      subtext: 'Awaiting confirm',
+      icon: PendingActionsIcon,
+      iconBg: 'bg-amber-50',
+      iconColor: 'text-amber-600',
+    },
+    {
+      id: 'upcoming',
+      title: 'Upcoming',
+      value: eventSummary.upcomingEvents,
+      subtext: 'Scheduled',
+      icon: CalendarIcon,
+      iconBg: 'bg-blue-50',
+      iconColor: 'text-blue-600',
+    },
+    {
+      id: 'guests',
+      title: 'Expected Guests',
+      value: eventSummary.totalGuests.toLocaleString(),
+      subtext: 'Total attendees',
+      icon: PeopleOutlinedIcon,
+      iconBg: 'bg-indigo-50',
+      iconColor: 'text-indigo-600',
+    },
+    {
+      id: 'revenue',
+      title: 'Total Revenue',
+      value: `$${eventSummary.totalRevenue.toLocaleString()}`,
+      subtext: 'Contract value',
+      icon: AttachMoneyOutlinedIcon,
+      iconBg: 'bg-[var(--primary-main)]/10',
+      iconColor: 'text-[var(--primary-main)]',
+    },
+  ];
+
   return (
-    <div className="w-full">
+    <div className="w-full p-0">
+      {/* ── Event Summary Cards ── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full mb-2">
+        {eventCards.map((card) => {
+          const IconComp = card.icon;
+          return (
+            <div
+              key={card.id}
+              className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className={`p-1 rounded-md ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}>
+                  <IconComp sx={{ fontSize: 15 }} />
+                </div>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
+                  {card.title}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-1">
+                <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
+                  {card.value}
+                </span>
+                {card.subtext && (
+                  <span className="text-[10px] text-[var(--text-secondary)] font-normal hidden xl:inline">
+                    {card.subtext}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
       {/* Main Card Container */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         {/* Card Header & Action Toolbar */}
-        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="p-2 sm:p-2.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           {/* Left Side: Search Bar Input & Bulk Actions */}
-          <div className="flex items-center gap-3 flex-1 max-w-md">
+          <div className="flex items-center gap-2 flex-1 max-w-md">
             <div className="relative w-full sm:w-72">
               <input
                 type="text"
@@ -547,90 +660,98 @@ export default function AllEvents() {
                   setSearchQuery(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full pl-3.5 pr-9 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20 focus:border-[#1b7f43] transition-all"
+                className="w-full pl-3 pr-8 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20 focus:border-[#1b7f43] transition-all"
               />
               <SearchIcon
-                sx={{ fontSize: 18 }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+                sx={{ fontSize: 16 }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
               />
             </div>
 
             {selectedIds.length > 0 && (
               <button
                 onClick={handleBulkDelete}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer whitespace-nowrap"
               >
-                <DeleteIcon sx={{ fontSize: 16 }} />
+                <DeleteIcon sx={{ fontSize: 15 }} />
                 Delete Selected ({selectedIds.length})
               </button>
             )}
           </div>
 
           {/* Right Side: Action Icons */}
-          <div className="flex items-center flex-wrap gap-2">
+          <div className="flex items-center flex-wrap gap-1.5">
             {/* Filter Toggle Button */}
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
               title="Filter Events"
-              className={`p-2 rounded-xl border transition-all cursor-pointer ${
+              className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
                 filterType !== 'All' || filterVenue !== 'All' || filterStatus !== 'All'
                   ? 'bg-blue-50 border-blue-200 text-blue-600'
                   : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
               }`}
             >
-              <FilterIcon sx={{ fontSize: 20 }} />
+              <FilterIcon sx={{ fontSize: 18 }} />
             </button>
 
-            {/* Add Event Button (Green Circle with Plus) */}
+            {/* View Mode Toggle: Table View */}
             <button
-              onClick={handleOpenAddModal}
-              title="Add New Event"
-              className="p-2 bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all cursor-pointer flex items-center justify-center"
+              onClick={() => setViewMode('table')}
+              title="Table View"
+              className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
+                viewMode === 'table'
+                  ? 'bg-[#1b7f43] border-[#1b7f43] text-white shadow-xs'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
             >
-              <AddIcon sx={{ fontSize: 22 }} />
+              <TableIcon sx={{ fontSize: 18 }} />
             </button>
 
-            {/* Refresh Button */}
+            {/* View Mode Toggle: Grid View */}
+            <button
+              onClick={() => setViewMode('grid')}
+              title="Grid View"
+              className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
+                viewMode === 'grid'
+                  ? 'bg-[#1b7f43] border-[#1b7f43] text-white shadow-xs'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <GridIcon sx={{ fontSize: 18 }} />
+            </button>
+
+            {/* Reload / Refresh Button */}
             <button
               onClick={handleRefresh}
-              title="Refresh / Reset Filters"
-              className="p-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl transition-all cursor-pointer"
+              title="Refresh"
+              className="p-1.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl transition-all cursor-pointer"
             >
-              <RefreshIcon sx={{ fontSize: 20 }} />
-            </button>
-
-            {/* Grid / Table View Toggle */}
-            <button
-              onClick={() => setViewMode(prev => prev === 'table' ? 'grid' : 'table')}
-              title={viewMode === 'table' ? 'Switch to Grid View' : 'Switch to Table View'}
-              className="p-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl transition-all cursor-pointer"
-            >
-              {viewMode === 'table' ? <GridIcon sx={{ fontSize: 20 }} /> : <TableIcon sx={{ fontSize: 20 }} />}
+              <RefreshIcon sx={{ fontSize: 18 }} />
             </button>
 
             {/* PDF Export Button */}
             <button
               onClick={handleExportPDF}
               title="Export PDF"
-              className="p-2 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 rounded-xl transition-all cursor-pointer"
+              className="p-1.5 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 rounded-xl transition-all cursor-pointer"
             >
-              <PdfIcon sx={{ fontSize: 20 }} />
+              <PdfIcon sx={{ fontSize: 18 }} />
             </button>
 
             {/* Excel Export Button */}
             <button
               onClick={handleExportExcel}
               title="Export Excel"
-              className="p-2 bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all cursor-pointer"
+              className="p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all cursor-pointer"
             >
-              <DownloadIcon sx={{ fontSize: 20 }} />
+              <DownloadIcon sx={{ fontSize: 18 }} />
             </button>
           </div>
         </div>
 
         {/* Collapsible Filter Bar */}
         {isFilterOpen && (
-          <div className="p-4 bg-slate-50 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4 animate-fadeIn">
+          <div className="p-2.5 bg-slate-50 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-2.5 animate-fadeIn">
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">Event Type</label>
               <select
@@ -639,7 +760,7 @@ export default function AllEvents() {
                   setFilterType(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full text-sm bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20"
               >
                 <option value="All">All Types</option>
                 {TYPE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
@@ -654,7 +775,7 @@ export default function AllEvents() {
                   setFilterVenue(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full text-sm bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20"
               >
                 <option value="All">All Venues</option>
                 {VENUE_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
@@ -669,7 +790,7 @@ export default function AllEvents() {
                   setFilterStatus(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full text-sm bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20"
+                className="w-full text-xs sm:text-sm bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20"
               >
                 <option value="All">All Statuses</option>
                 {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -684,7 +805,7 @@ export default function AllEvents() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-600 text-xs font-bold uppercase tracking-wider select-none">
-                  <th className="py-4 px-4 w-10 text-center">
+                  <th className="py-2 px-2.5 w-10 text-center">
                     <input
                       type="checkbox"
                       checked={
@@ -695,22 +816,22 @@ export default function AllEvents() {
                       className="w-4 h-4 rounded border-slate-300 text-[#1b7f43] focus:ring-[#1b7f43]/20 cursor-pointer"
                     />
                   </th>
-                  <th className="py-4 px-3 font-bold whitespace-nowrap">Event ID</th>
-                  <th className="py-4 px-3 font-bold whitespace-nowrap">Event Name</th>
-                  <th className="py-4 px-3 font-bold whitespace-nowrap">Type</th>
-                  <th className="py-4 px-3 font-bold whitespace-nowrap">Client</th>
-                  <th className="py-4 px-3 font-bold whitespace-nowrap">Date</th>
-                  <th className="py-4 px-3 font-bold whitespace-nowrap">Venue</th>
-                  <th className="py-4 px-3 font-bold whitespace-nowrap">Guests</th>
-                  <th className="py-4 px-3 font-bold whitespace-nowrap">Amount</th>
-                  <th className="py-4 px-3 font-bold whitespace-nowrap">Status</th>
-                  <th className="py-4 px-4 font-bold whitespace-nowrap text-right">Actions</th>
+                  <th className="py-2 px-2.5 font-bold whitespace-nowrap">Event ID</th>
+                  <th className="py-2 px-2.5 font-bold whitespace-nowrap">Event Name</th>
+                  <th className="py-2 px-2.5 font-bold whitespace-nowrap">Type</th>
+                  <th className="py-2 px-2.5 font-bold whitespace-nowrap">Client</th>
+                  <th className="py-2 px-2.5 font-bold whitespace-nowrap">Date</th>
+                  <th className="py-2 px-2.5 font-bold whitespace-nowrap">Venue</th>
+                  <th className="py-2 px-2.5 font-bold whitespace-nowrap">Guests</th>
+                  <th className="py-2 px-2.5 font-bold whitespace-nowrap">Amount</th>
+                  <th className="py-2 px-2.5 font-bold whitespace-nowrap">Status</th>
+                  <th className="py-2 px-2.5 font-bold whitespace-nowrap text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {paginatedEvents.length === 0 ? (
                   <tr>
-                    <td colSpan="11" className="py-12 text-center text-slate-400">
+                    <td colSpan="11" className="py-8 text-center text-slate-400">
                       No events found matching your search or filters.
                     </td>
                   </tr>
@@ -724,7 +845,7 @@ export default function AllEvents() {
                           isChecked ? 'bg-emerald-50/30' : ''
                         }`}
                       >
-                        <td className="py-3.5 px-4 text-center">
+                        <td className="py-1.5 px-2.5 text-center">
                           <input
                             type="checkbox"
                             checked={isChecked}
@@ -732,70 +853,70 @@ export default function AllEvents() {
                             className="w-4 h-4 rounded border-slate-300 text-[#1b7f43] focus:ring-[#1b7f43]/20 cursor-pointer"
                           />
                         </td>
-                        <td className="py-3.5 px-3 font-medium text-slate-700 whitespace-nowrap font-mono text-xs">
+                        <td className="py-1.5 px-2.5 font-medium text-slate-700 whitespace-nowrap font-mono text-xs">
                           {evt.id}
                         </td>
-                        <td className="py-3.5 px-3 font-semibold text-slate-900 whitespace-nowrap">
+                        <td className="py-1.5 px-2.5 font-semibold text-slate-900 whitespace-nowrap">
                           {evt.name}
                         </td>
-                        <td className="py-3.5 px-3 whitespace-nowrap">
+                        <td className="py-1.5 px-2.5 whitespace-nowrap">
                           <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getTypeBadgeStyle(
+                            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getTypeBadgeStyle(
                               evt.type
                             )}`}
                           >
                             {evt.type}
                           </span>
                         </td>
-                        <td className="py-3.5 px-3 text-slate-700 whitespace-nowrap font-medium">
+                        <td className="py-1.5 px-2.5 text-slate-700 whitespace-nowrap font-medium">
                           {evt.client}
                         </td>
-                        <td className="py-3.5 px-3 text-slate-600 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5">
-                            <CalendarIcon sx={{ fontSize: 16 }} className="text-slate-400" />
+                        <td className="py-1.5 px-2.5 text-slate-600 whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            <CalendarIcon sx={{ fontSize: 15 }} className="text-slate-400" />
                             <span>{evt.displayDate}</span>
                           </div>
                         </td>
-                        <td className="py-3.5 px-3 text-slate-700 whitespace-nowrap">
+                        <td className="py-1.5 px-2.5 text-slate-700 whitespace-nowrap">
                           {evt.venue}
                         </td>
-                        <td className="py-3.5 px-3 text-slate-800 whitespace-nowrap font-medium">
+                        <td className="py-1.5 px-2.5 text-slate-800 whitespace-nowrap font-medium">
                           {evt.guests}
                         </td>
-                        <td className="py-3.5 px-3 text-slate-900 font-bold whitespace-nowrap">
+                        <td className="py-1.5 px-2.5 text-slate-900 font-bold whitespace-nowrap">
                           ${evt.amount.toLocaleString()}
                         </td>
-                        <td className="py-3.5 px-3 whitespace-nowrap">
+                        <td className="py-1.5 px-2.5 whitespace-nowrap">
                           <span
-                            className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadgeStyle(
+                            className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusBadgeStyle(
                               evt.status
                             )}`}
                           >
                             {evt.status}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 text-right whitespace-nowrap">
+                        <td className="py-1.5 px-2.5 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => handleOpenViewModal(evt)}
                               title="View Details"
-                              className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                              className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                             >
-                              <ViewIcon sx={{ fontSize: 18 }} />
+                              <ViewIcon sx={{ fontSize: 16 }} />
                             </button>
                             <button
                               onClick={() => handleOpenEditModal(evt)}
                               title="Edit Event"
-                              className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                              className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
                             >
-                              <EditIcon sx={{ fontSize: 18 }} />
+                              <EditIcon sx={{ fontSize: 16 }} />
                             </button>
                             <button
                               onClick={() => handleDeleteEvent(evt.id)}
                               title="Delete Event"
-                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                             >
-                              <DeleteIcon sx={{ fontSize: 18 }} />
+                              <DeleteIcon sx={{ fontSize: 16 }} />
                             </button>
                           </div>
                         </td>
@@ -808,19 +929,19 @@ export default function AllEvents() {
           </div>
         ) : (
           /* View Mode: Grid Cards View */
-          <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="p-2.5 sm:p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {paginatedEvents.map((evt) => (
               <div
                 key={evt.id}
-                className="bg-white border border-slate-200 hover:border-slate-300 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+                className="bg-white border border-slate-200 hover:border-slate-300 rounded-xl p-3 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-start justify-between gap-3 mb-3">
-                    <span className="text-xs font-mono font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <span className="text-xs font-mono font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
                       {evt.id}
                     </span>
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${getStatusBadgeStyle(
+                      className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${getStatusBadgeStyle(
                         evt.status
                       )}`}
                     >
@@ -828,12 +949,12 @@ export default function AllEvents() {
                     </span>
                   </div>
 
-                  <h3 className="text-base font-bold text-slate-900 mb-1 line-clamp-1">
+                  <h3 className="text-sm font-bold text-slate-900 mb-1 line-clamp-1">
                     {evt.name}
                   </h3>
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex items-center gap-1.5 mb-2">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getTypeBadgeStyle(
+                      className={`px-1.5 py-0.5 rounded-full text-[11px] font-semibold ${getTypeBadgeStyle(
                         evt.type
                       )}`}
                     >
@@ -842,26 +963,26 @@ export default function AllEvents() {
                     <span className="text-xs text-slate-500">• {evt.client}</span>
                   </div>
 
-                  <div className="space-y-2 text-xs text-slate-600 pt-3 border-t border-slate-100">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon sx={{ fontSize: 15 }} className="text-slate-400" />
+                  <div className="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                    <div className="flex items-center gap-1.5">
+                      <CalendarIcon sx={{ fontSize: 14 }} className="text-slate-400" />
                       <span>{evt.displayDate} ({evt.startTime} - {evt.endTime})</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <LocationIcon sx={{ fontSize: 15 }} className="text-slate-400" />
+                    <div className="flex items-center gap-1.5">
+                      <LocationIcon sx={{ fontSize: 14 }} className="text-slate-400" />
                       <span className="truncate">{evt.venue}</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <PeopleIcon sx={{ fontSize: 15 }} className="text-slate-400" />
+                    <div className="flex items-center gap-1.5">
+                      <PeopleIcon sx={{ fontSize: 14 }} className="text-slate-400" />
                       <span>{evt.guests} Expected Guests</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
                   <div>
-                    <span className="text-xs text-slate-400 block">Total Contract</span>
-                    <span className="text-base font-bold text-slate-900">
+                    <span className="text-[11px] text-slate-400 block">Total Contract</span>
+                    <span className="text-sm font-bold text-slate-900">
                       ${evt.amount.toLocaleString()}
                     </span>
                   </div>
@@ -869,24 +990,24 @@ export default function AllEvents() {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={() => handleOpenViewModal(evt)}
-                      className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                       title="View Details"
                     >
-                      <ViewIcon sx={{ fontSize: 18 }} />
+                      <ViewIcon sx={{ fontSize: 16 }} />
                     </button>
                     <button
                       onClick={() => handleOpenEditModal(evt)}
-                      className="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
                       title="Edit Event"
                     >
-                      <EditIcon sx={{ fontSize: 18 }} />
+                      <EditIcon sx={{ fontSize: 16 }} />
                     </button>
                     <button
                       onClick={() => handleDeleteEvent(evt.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                       title="Delete Event"
                     >
-                      <DeleteIcon sx={{ fontSize: 18 }} />
+                      <DeleteIcon sx={{ fontSize: 16 }} />
                     </button>
                   </div>
                 </div>
@@ -896,7 +1017,7 @@ export default function AllEvents() {
         )}
 
         {/* Pagination Footer matching Luxuria */}
-        <div className="p-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-end gap-4 text-xs text-slate-500 select-none">
+        <div className="p-2 sm:p-2.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-end gap-3 text-xs text-slate-500 select-none">
           <div className="flex items-center gap-2">
             <span>Items per page:</span>
             <select

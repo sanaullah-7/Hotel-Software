@@ -34,6 +34,9 @@ import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOut
 import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
 import TagOutlinedIcon from '@mui/icons-material/TagOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
+import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
+import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { mockSalaries } from '../../../utils/mockData';
@@ -434,13 +437,131 @@ export default function EmployeeSalary() {
     });
   };
 
+  // Dynamic 6-card Payroll Summary Metrics (calculated from overall salaries state)
+  const payrollStats = useMemo(() => {
+    const list = Array.isArray(salaries) ? salaries : [];
+    const totalEmployees = list.length;
+
+    let totalPayroll = 0;
+    let totalBonuses = 0;
+    let totalDeductions = 0;
+    let highestNetSalary = 0;
+    let highestSalaryEmployee = null;
+
+    list.forEach((item) => {
+      const sal = Number(item.salary) || 0;
+      const bon = Number(item.bonus) || 0;
+      const ded = Number(item.deductions) || 0;
+      const net = sal + bon - ded;
+
+      totalPayroll += net;
+      totalBonuses += bon;
+      totalDeductions += ded;
+
+      if (net > highestNetSalary || highestSalaryEmployee === null) {
+        highestNetSalary = net;
+        highestSalaryEmployee = item;
+      }
+    });
+
+    const averageSalary = totalEmployees > 0 ? Math.round(totalPayroll / totalEmployees) : 0;
+
+    return [
+      {
+        id: 'total-employees',
+        title: 'Total Employees',
+        value: totalEmployees,
+        subtext: 'Employees with salary records',
+        icon: PeopleOutlinedIcon,
+        iconBg: 'bg-[var(--primary-main)]/10',
+        iconColor: 'text-[var(--primary-main)]'
+      },
+      {
+        id: 'total-payroll',
+        title: 'Total Payroll',
+        value: `$${Math.round(totalPayroll).toLocaleString()}`,
+        subtext: 'Total net salary payable',
+        icon: PaymentsOutlinedIcon,
+        iconBg: 'bg-emerald-50',
+        iconColor: 'text-emerald-600'
+      },
+      {
+        id: 'total-bonuses',
+        title: 'Total Bonuses',
+        value: `$${Math.round(totalBonuses).toLocaleString()}`,
+        subtext: 'Total bonuses & allowances',
+        icon: AttachMoneyOutlinedIcon,
+        iconBg: 'bg-amber-50',
+        iconColor: 'text-amber-600'
+      },
+      {
+        id: 'total-deductions',
+        title: 'Total Deductions',
+        value: `$${Math.round(totalDeductions).toLocaleString()}`,
+        subtext: 'Total deductions',
+        icon: RemoveCircleOutlineOutlinedIcon,
+        iconBg: 'bg-rose-50',
+        iconColor: 'text-rose-600'
+      },
+      {
+        id: 'average-salary',
+        title: 'Average Salary',
+        value: `$${Math.round(averageSalary).toLocaleString()}`,
+        subtext: 'Average net salary',
+        icon: TrendingUpOutlinedIcon,
+        iconBg: 'bg-blue-50',
+        iconColor: 'text-blue-600'
+      },
+      {
+        id: 'highest-net-salary',
+        title: 'Highest Net Salary',
+        value: `$${Math.round(highestNetSalary).toLocaleString()}`,
+        subtext: highestSalaryEmployee ? `Highest paid: ${highestSalaryEmployee.name}` : 'No salary records',
+        icon: WorkspacePremiumOutlinedIcon,
+        iconBg: 'bg-indigo-50',
+        iconColor: 'text-indigo-600'
+      }
+    ];
+  }, [salaries]);
+
   return (
-    <div className="w-full px-0.5 sm:px-1 py-3 max-w-[1600px] mx-auto transition-all">
+    <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden flex flex-col gap-2">
+      {/* ── 6 Payroll Summary Cards ─────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
+        {payrollStats.map((card) => {
+          const IconComp = card.icon;
+          return (
+            <div
+              key={card.id}
+              className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className={`p-1 rounded-md ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}>
+                  <IconComp sx={{ fontSize: 15 }} />
+                </div>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
+                  {card.title}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-1">
+                <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
+                  {card.value}
+                </span>
+              </div>
+              {card.subtext && (
+                <span className="text-[10px] text-[var(--text-secondary)] font-normal truncate mt-0.5 block" title={card.subtext}>
+                  {card.subtext}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       {/* 2. Main Employee Salary Card Container */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-3.5 sm:p-5 mb-6">
+      <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 mb-2">
         {/* Card Toolbar */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3.5 pb-4 border-b border-slate-100">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 pb-2 border-b border-slate-100">
           {/* Left: Card Title & Search Input */}
           <div className="flex items-center gap-3.5 w-full md:w-auto flex-wrap sm:flex-nowrap">
             <h2 className="text-base sm:text-lg font-bold text-slate-800 shrink-0">

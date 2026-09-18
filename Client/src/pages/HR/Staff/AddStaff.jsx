@@ -309,10 +309,10 @@ export default function AddStaff() {
   };
 
   return (
-    <div className="w-full bg-[#f8fafc] px-0.5 sm:px-1 py-2">
+    <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden bg-[#f8fafc]">
       
-      {/* Main White Card Container - Minimized Left & Right Padding */}
-      <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] px-2.5 sm:px-4 py-3.5 sm:py-4">
+      {/* Main White Card Container - Minimized Padding */}
+      <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] p-2 sm:p-2.5">
         
         {/* Card Header Banner with Icon */}
         {/* <div className="flex items-center gap-3 pb-3 border-b border-gray-100">

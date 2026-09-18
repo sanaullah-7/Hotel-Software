@@ -156,7 +156,7 @@ export default function HotelProfile() {
   const completionPercentage = Math.round((filledFields / totalFields) * 85);
 
   return (
-    <div className="w-full space-y-6 pb-6 font-sans">
+    <div className="w-full space-y-2 pb-1 font-sans">
       {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-20 right-8 z-50 flex items-center gap-2 bg-[#1e293b] text-white px-4 py-3 rounded-xl shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
@@ -168,14 +168,14 @@ export default function HotelProfile() {
      
 
       {/* 2. Main Form Card: Property Details */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 sm:p-8">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-4">
         {/* Card Header */}
-        <div className="flex items-center gap-3.5 pb-6 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-xl bg-[#e0edff] text-[#2563eb] flex items-center justify-center shrink-0">
-            <ApartmentIcon sx={{ fontSize: 22 }} />
+        <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+          <div className="w-9 h-9 rounded-xl bg-[#e0edff] text-[#2563eb] flex items-center justify-center shrink-0">
+            <ApartmentIcon sx={{ fontSize: 20 }} />
           </div>
           <div>
-            <h3 className="text-[17px] font-bold text-[#1e293b]">
+            <h3 className="text-[16px] font-bold text-[#1e293b]">
               Property Details
             </h3>
             <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
@@ -184,10 +184,10 @@ export default function HotelProfile() {
           </div>
         </div>
 
-        <form onSubmit={handleSave} className="space-y-8 mt-6">
+        <form onSubmit={handleSave} className="space-y-4 mt-3">
           {/* Section 1: General Information */}
           <div>
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-3">
               <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
                 <ApartmentIcon sx={{ fontSize: 16 }} />
               </div>
@@ -350,7 +350,7 @@ export default function HotelProfile() {
       </div>
 
       {/* 3. Branding & Media Card */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 sm:p-8 space-y-6">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-4 space-y-3">
         {/* Hidden File Input */}
         <input
           type="file"
@@ -362,12 +362,12 @@ export default function HotelProfile() {
 
         {/* Drag and Drop Upload Area */}
         {logoPreview ? (
-          <div className="border-2 border-[#818cf8] rounded-2xl p-6 bg-[#f8faff] flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
+          <div className="border-2 border-[#818cf8] rounded-2xl p-4 bg-[#f8faff] flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
               <img
                 src={logoPreview.url}
                 alt="Hotel Logo Preview"
-                className="w-16 h-16 object-contain rounded-xl bg-white border border-gray-200 p-1"
+                className="w-14 h-14 object-contain rounded-xl bg-white border border-gray-200 p-1"
               />
               <div>
                 <p className="font-bold text-gray-900 text-sm">{logoPreview.name}</p>
@@ -398,19 +398,19 @@ export default function HotelProfile() {
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-2xl p-8 sm:p-10 text-center transition-all cursor-pointer ${
+            className={`border-2 border-dashed rounded-2xl p-4 sm:p-5 text-center transition-all cursor-pointer ${
               isDragging
                 ? 'border-[#4f46e5] bg-[#eef2ff]'
                 : 'border-[#818cf8] bg-[#f8faff] hover:bg-[#f0f4ff]'
             }`}
           >
-            <div className="w-12 h-12 rounded-full bg-[#ede9fe] text-[#6366f1] mx-auto flex items-center justify-center mb-3">
-              <UploadIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-full bg-[#ede9fe] text-[#6366f1] mx-auto flex items-center justify-center mb-2">
+              <UploadIcon sx={{ fontSize: 20 }} />
             </div>
             <h4 className="font-bold text-gray-900 text-sm">
               Click or Drag to Upload Logo
             </h4>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               SVG, PNG or JPG (recommended 400×400px, max 2MB)
             </p>
           </div>

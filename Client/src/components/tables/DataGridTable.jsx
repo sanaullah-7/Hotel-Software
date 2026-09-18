@@ -16,7 +16,9 @@ export default function DataGridTable({
   noHorizontalScroll = false,
   minWidth = 650,
   tableSx = {},
-  containerSx = {}
+  containerSx = {},
+  checkboxHeaderSx = {},
+  checkboxCellSx = {}
 }) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -93,7 +95,8 @@ export default function DataGridTable({
         sx={{ 
           minWidth: noHorizontalScroll ? '100%' : minWidth, 
           width: '100%',
-          ...(noHorizontalScroll ? { tableLayout: 'auto' } : {}),
+          maxWidth: '100%',
+          ...(noHorizontalScroll ? { tableLayout: 'fixed' } : {}),
           ...tableSx 
         }} 
         size="small" 
@@ -102,25 +105,57 @@ export default function DataGridTable({
         <TableHead className={`${flat ? 'bg-white border-b border-gray-100' : 'bg-gray-50 border-b border-gray-200'}`}>
           <TableRow>
             {selectable && (
-              <TableCell padding="checkbox" sx={{ pl: flat ? '8px' : undefined }}>
+              <TableCell 
+                padding="checkbox" 
+                sx={{ 
+                  pl: flat ? '8px' : undefined, 
+                  pr: flat ? '8px' : undefined,
+                  width: flat ? '48px' : undefined,
+                  minWidth: flat ? '48px' : undefined,
+                  maxWidth: flat ? '48px' : undefined,
+                  ...checkboxHeaderSx 
+                }}
+              >
                 <Checkbox
                   color="primary"
+                  size="small"
                   indeterminate={actualSelected.length > 0 && actualSelected.length < data.length}
                   checked={data.length > 0 && actualSelected.length === data.length}
                   onChange={handleSelectAllClick}
                   inputProps={{ 'aria-label': 'select all items' }}
                   sx={{
+                    p: '2px !important',
                     color: flat ? '#d1d5db' : undefined,
                     '&.Mui-checked': { color: flat ? '#1f2937' : undefined }
                   }}
                 />
               </TableCell>
             )}
-            {columns.map((col, index) => (
-              <TableCell key={index} className="font-bold text-gray-700" sx={col.headerSx || col.sx}>
-                {col.label}
-              </TableCell>
-            ))}
+            {columns.map((col, index) => {
+              const isStickyRight = col.sticky === 'right';
+              const headerSx = {
+                px: '6px',
+                py: '6px',
+                ...(col.headerSx || col.sx || {}),
+                ...(isStickyRight ? {
+                  position: 'sticky',
+                  right: 0,
+                  zIndex: 3,
+                  backgroundColor: flat ? '#ffffff' : '#f9fafb',
+                  boxShadow: '-3px 0 5px -2px rgba(0,0,0,0.08)',
+                  borderLeft: '1px solid #f1f5f9',
+                } : {})
+              };
+              return (
+                <TableCell 
+                  key={index} 
+                  className={`font-bold text-gray-700 ${isStickyRight ? 'sticky-right-col' : ''}`} 
+                  sx={headerSx}
+                >
+                  {col.label}
+                </TableCell>
+              );
+            })}
           </TableRow>
         </TableHead>
         <TableBody>
@@ -135,21 +170,60 @@ export default function DataGridTable({
                 aria-checked={isItemSelected}
                 tabIndex={-1}
                 selected={isItemSelected}
+                sx={{
+                  '&:hover td.sticky-right-col': {
+                    backgroundColor: isItemSelected ? 'rgba(25, 118, 210, 0.12)' : '#f9fafb',
+                  }
+                }}
               >
                 {selectable && (
-                  <TableCell padding="checkbox" sx={{ pl: flat ? '8px' : undefined }}>
+                  <TableCell 
+                    padding="checkbox" 
+                    sx={{ 
+                      pl: flat ? '8px' : undefined, 
+                      pr: flat ? '8px' : '2px', 
+                      width: flat ? '48px' : '36px', 
+                      minWidth: flat ? '48px' : '36px', 
+                      maxWidth: flat ? '48px' : '36px',
+                      ...checkboxCellSx 
+                    }}
+                  >
                     <Checkbox
                       color="primary"
+                      size="small"
                       checked={isItemSelected}
                       onChange={(event) => handleClick(event, id)}
+                      sx={{
+                        p: '2px !important',
+                      }}
                     />
                   </TableCell>
                 )}
-                {columns.map((col, colIndex) => (
-                  <TableCell key={colIndex} className="text-gray-600" sx={col.cellSx || col.sx}>
-                    {col.render ? col.render(row) : row[col.field]}
-                  </TableCell>
-                ))}
+                {columns.map((col, colIndex) => {
+                  const isStickyRight = col.sticky === 'right';
+                  const cellSx = {
+                    px: '6px',
+                    py: '6px',
+                    ...(col.cellSx || col.sx || {}),
+                    ...(isStickyRight ? {
+                      position: 'sticky',
+                      right: 0,
+                      zIndex: 2,
+                      backgroundColor: isItemSelected ? 'rgba(25, 118, 210, 0.08)' : '#ffffff',
+                      boxShadow: '-3px 0 5px -2px rgba(0,0,0,0.08)',
+                      borderLeft: '1px solid #f1f5f9',
+                    } : {})
+                  };
+                  return (
+                    <TableCell 
+                      key={colIndex} 
+                      className={`text-gray-600 ${isStickyRight ? 'sticky-right-col' : ''}`} 
+                      sx={cellSx}
+                    >
+                      {col.render ? col.render(row) : row[col.field]}
+                    </TableCell>
+                  );
+                })}
               </TableRow>
             );
           })}
@@ -168,6 +242,11 @@ export default function DataGridTable({
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+        sx={{
+          position: 'sticky',
+          left: 0,
+          borderTop: '1px solid #f1f5f9',
+        }}
       />
     </TableContainer>
   );

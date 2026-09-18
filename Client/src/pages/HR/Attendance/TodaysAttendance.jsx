@@ -31,6 +31,12 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
+import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
+import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
+import PercentOutlinedIcon from '@mui/icons-material/PercentOutlined';
+import WbSunnyOutlinedIcon from '@mui/icons-material/WbSunnyOutlined';
+import NightsStayOutlinedIcon from '@mui/icons-material/NightsStayOutlined';
 
 // PDF Export Dependencies
 import jsPDF from 'jspdf';
@@ -520,13 +526,124 @@ export default function TodaysAttendance() {
     });
   };
 
+  // Dynamic 6-card Attendance Summary Metrics
+  const attendanceStats = useMemo(() => {
+    const list = Array.isArray(attendanceList) ? attendanceList : [];
+    const totalEmployees = list.length;
+    
+    // Present count (case-insensitive check)
+    const presentCount = list.filter(item => (item.status || '').toLowerCase() === 'present').length;
+    
+    // Absent count (case-insensitive check)
+    const absentCount = list.filter(item => (item.status || '').toLowerCase() === 'absent').length;
+    
+    // Attendance rate safe percentage
+    const attendanceRate = totalEmployees > 0 
+      ? `${Math.round((presentCount / totalEmployees) * 100)}%` 
+      : '0%';
+      
+    // Day Shift count (case-insensitive check)
+    const dayShiftCount = list.filter(item => (item.shift || '').toLowerCase().includes('day')).length;
+    
+    // Night Shift count (case-insensitive check)
+    const nightShiftCount = list.filter(item => (item.shift || '').toLowerCase().includes('night')).length;
+
+    return [
+      {
+        id: 'total-employees',
+        title: 'Total Employees',
+        value: totalEmployees,
+        subtext: 'Roster total',
+        icon: PeopleOutlinedIcon,
+        iconBg: 'bg-[var(--primary-main)]/10',
+        iconColor: 'text-[var(--primary-main)]'
+      },
+      {
+        id: 'present',
+        title: 'Present',
+        value: presentCount,
+        subtext: 'On duty',
+        icon: HowToRegOutlinedIcon,
+        iconBg: 'bg-emerald-50',
+        iconColor: 'text-emerald-600'
+      },
+      {
+        id: 'absent',
+        title: 'Absent',
+        value: absentCount,
+        subtext: 'Off duty',
+        icon: PersonOffOutlinedIcon,
+        iconBg: 'bg-rose-50',
+        iconColor: 'text-rose-600'
+      },
+      {
+        id: 'attendance-rate',
+        title: 'Attendance Rate',
+        value: attendanceRate,
+        subtext: 'Turnout',
+        icon: PercentOutlinedIcon,
+        iconBg: 'bg-blue-50',
+        iconColor: 'text-blue-600'
+      },
+      {
+        id: 'day-shift',
+        title: 'Day Shift',
+        value: dayShiftCount,
+        subtext: 'Day roster',
+        icon: WbSunnyOutlinedIcon,
+        iconBg: 'bg-amber-50',
+        iconColor: 'text-amber-600'
+      },
+      {
+        id: 'night-shift',
+        title: 'Night Shift',
+        value: nightShiftCount,
+        subtext: 'Night roster',
+        icon: NightsStayOutlinedIcon,
+        iconBg: 'bg-indigo-50',
+        iconColor: 'text-indigo-600'
+      }
+    ];
+  }, [attendanceList]);
+
   return (
-    <div className="w-full px-0.5 sm:px-1 py-3 max-w-[1600px] mx-auto transition-all">
+    <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden flex flex-col gap-2">
+      {/* ── 6 Attendance Summary Cards ─────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
+        {attendanceStats.map((card) => {
+          const IconComp = card.icon;
+          return (
+            <div
+              key={card.id}
+              className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className={`p-1 rounded-md ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}>
+                  <IconComp sx={{ fontSize: 15 }} />
+                </div>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
+                  {card.title}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-1">
+                <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
+                  {card.value}
+                </span>
+                {card.subtext && (
+                  <span className="text-[10px] text-[var(--text-secondary)] font-normal hidden xl:inline">
+                    {card.subtext}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
       {/* 2. Main Today's Attendance Card Container */}
-      <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-3.5 sm:p-5 mb-6">
+      <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 mb-2">
         {/* Card Toolbar */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3.5 pb-4 border-b border-slate-100">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 pb-2 border-b border-slate-100">
           {/* Left: Card Title & Search Input */}
           <div className="flex items-center gap-3.5 w-full md:w-auto flex-wrap sm:flex-nowrap">
             <h2 className="text-base sm:text-lg font-bold text-slate-800 shrink-0">

@@ -69,122 +69,122 @@ const CustomAreaTooltip = ({ active, payload, label }) => {
 
 export default function ExpenseVsRevenueTab() {
   return (
-    <div className="w-full space-y-2 pb-2 font-sans">
+    <div className="w-full space-y-2 pb-0 font-sans">
       
 
       {/* 2. Top Metric KPI Cards (2x2 Grid) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {/* Card 1: TOTAL REVENUE (YTD) */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
                 TOTAL REVENUE (YTD)
               </span>
-              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1.5">
+              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
                 $1,842,500
               </div>
               <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-bold inline-flex items-center gap-1 mb-1">
                 ↗ +15.2%
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#e0edff] flex items-center justify-center text-[#2563eb] shrink-0">
-              <RevenueIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-2xl bg-[#e0edff] flex items-center justify-center text-[#2563eb] shrink-0">
+              <RevenueIcon sx={{ fontSize: 22 }} />
             </div>
           </div>
           {/* Progress Bar */}
-          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-4 mb-2">
+          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-2.5 mb-1.5">
             <div className="h-full bg-[#3b5998] rounded-full" style={{ width: '85%' }}></div>
           </div>
-          <div className="text-sm text-gray-500 font-normal">
+          <div className="text-xs text-gray-500 font-normal">
             85% of annual target achieved
           </div>
         </div>
 
         {/* Card 2: TOTAL EXPENSES (YTD) */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
                 TOTAL EXPENSES (YTD)
               </span>
-              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1.5">
+              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
                 $642,800
               </div>
               <span className="rounded-full px-2.5 py-0.5 bg-[#fee2e2] text-[#ef4444] text-xs font-bold inline-flex items-center gap-1 mb-1">
                 ↘ -5.4%
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#ffe4e6] flex items-center justify-center text-[#f43f5e] shrink-0">
-              <ExpenseIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-2xl bg-[#ffe4e6] flex items-center justify-center text-[#f43f5e] shrink-0">
+              <ExpenseIcon sx={{ fontSize: 22 }} />
             </div>
           </div>
           {/* Progress Bar */}
-          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-4 mb-2">
+          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-2.5 mb-1.5">
             <div className="h-full bg-[#3b5998] rounded-full" style={{ width: '42%' }}></div>
           </div>
-          <div className="text-sm text-gray-500 font-normal">
+          <div className="text-xs text-gray-500 font-normal">
             42% of budget utilized
           </div>
         </div>
 
         {/* Card 3: NET PROFIT */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
                 NET PROFIT
               </span>
-              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1.5">
+              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
                 $1,199,700
               </div>
               <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-bold inline-flex items-center gap-1 mb-1">
                 ↗ +12.8%
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
-              <ProfitIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
+              <ProfitIcon sx={{ fontSize: 22 }} />
             </div>
           </div>
           {/* Progress Bar */}
-          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-4 mb-2">
+          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-2.5 mb-1.5">
             <div className="h-full bg-[#3b5998] rounded-full" style={{ width: '65.1%' }}></div>
           </div>
-          <div className="text-sm text-gray-500 font-normal">
+          <div className="text-xs text-gray-500 font-normal">
             Margin: 65.1%
           </div>
         </div>
 
         {/* Card 4: OPERATING MARGIN */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
                 OPERATING MARGIN
               </span>
-              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1.5">
+              <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
                 24.5%
               </div>
               <span className="rounded-full px-2.5 py-0.5 bg-[#f1f5f9] text-[#64748b] text-xs font-bold inline-flex items-center gap-1 mb-1">
                 → Stable
               </span>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#ede9fe] flex items-center justify-center text-[#7c3aed] shrink-0">
-              <MarginIcon sx={{ fontSize: 24 }} />
+            <div className="w-10 h-10 rounded-2xl bg-[#ede9fe] flex items-center justify-center text-[#7c3aed] shrink-0">
+              <MarginIcon sx={{ fontSize: 22 }} />
             </div>
           </div>
           {/* Progress Bar */}
-          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-4 mb-2">
+          <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-2.5 mb-1.5">
             <div className="h-full bg-[#3b5998] rounded-full" style={{ width: '24.5%' }}></div>
           </div>
-          <div className="text-sm text-gray-500 font-normal">
+          <div className="text-xs text-gray-500 font-normal">
             Against industry avg: 22%
           </div>
         </div>
       </div>
 
-      {/* 3. Revenue vs Expense Trends (Dual Area Spline Chart) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 mb-6">
+      {/* 3. Revenue Trend (Dual Area Spline Chart) */}
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 mb-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h3 className="text-[18px] font-bold text-[#1e293b]">

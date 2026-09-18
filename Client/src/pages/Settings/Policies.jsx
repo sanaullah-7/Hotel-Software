@@ -218,10 +218,10 @@ export default function Policies() {
   const activeGuestIdCount = guestIdRules.filter((r) => r.active).length;
 
   return (
-    <div className="w-full space-y-6 pb-6 font-sans">
+    <div className="w-full space-y-2 pb-1 font-sans">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="fixed top-20 right-8 z-50 flex items-center gap-2 bg-[#1e293b] text-white px-4 py-3 rounded-xl shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
+        <div className="fixed top-20 right-8 z-50 flex items-center gap-2 bg-[#1e293b] text-white px-3 py-2 rounded-xl shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
           <CheckIcon sx={{ fontSize: 20, color: '#10b981' }} />
           <span className="text-sm font-medium">{toastMessage}</span>
         </div>
@@ -230,36 +230,36 @@ export default function Policies() {
  
 
       {/* 2. Main Card: Property & Stay Policies */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 sm:p-8 space-y-6">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 space-y-3">
         {/* Card Header */}
-        <div className="flex items-center gap-3.5 pb-6 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-xl bg-[#e0edff] text-[#2563eb] flex items-center justify-center shrink-0">
-            <GavelIcon sx={{ fontSize: 22 }} />
+        <div className="flex items-center gap-2.5 pb-2.5 border-b border-gray-100">
+          <div className="w-8 h-8 rounded-xl bg-[#e0edff] text-[#2563eb] flex items-center justify-center shrink-0">
+            <GavelIcon sx={{ fontSize: 18 }} />
           </div>
           <div>
-            <h3 className="text-[17px] font-bold text-[#1e293b]">
+            <h3 className="text-[15px] font-bold text-[#1e293b]">
               Property & Stay Policies
             </h3>
-            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5">
               Configure legal rules, cancellation guidelines, and operational conditions for guests
             </p>
           </div>
         </div>
 
         {/* Accordion 1: Cancellation Policy */}
-        <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white">
+        <div className="border border-gray-100 rounded-xl overflow-hidden bg-white">
           <div
             onClick={() => setOpenCancellation((prev) => !prev)}
-            className="flex items-center justify-between p-5 cursor-pointer bg-white hover:bg-gray-50/50 transition-colors select-none"
+            className="flex items-center justify-between p-2.5 sm:p-3 cursor-pointer bg-white hover:bg-gray-50/50 transition-colors select-none"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#fee2e2] text-[#ef4444] flex items-center justify-center shrink-0">
-                <CancelIcon sx={{ fontSize: 20 }} />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#fee2e2] text-[#ef4444] flex items-center justify-center shrink-0">
+                <CancelIcon sx={{ fontSize: 18 }} />
               </div>
-              <span className="text-[15px] font-bold text-gray-900">
+              <span className="text-sm font-bold text-gray-900">
                 Cancellation Policy
               </span>
-              <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-semibold">
+              <span className="rounded-full px-2 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-[11px] font-semibold">
                 {activeCancellationCount} Active active
               </span>
             </div>
@@ -269,27 +269,27 @@ export default function Policies() {
           </div>
 
           {openCancellation && (
-            <div className="p-5 pt-0 space-y-3">
+            <div className="p-2.5 pt-0 space-y-2">
               {cancellationRules.map((rule) => {
                 const IconComponent = rule.icon;
                 return (
                   <div
                     key={rule.id}
-                    className="bg-[#f8fafc] hover:bg-[#f1f5f9]/70 rounded-2xl p-4 flex items-center justify-between gap-4 transition-colors"
+                    className="bg-[#f8fafc] hover:bg-[#f1f5f9]/70 rounded-xl p-2 sm:p-2.5 flex items-center justify-between gap-3 transition-colors"
                   >
-                    <div className="flex items-center gap-3.5">
+                    <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-10 h-10 rounded-xl ${rule.iconBg} ${rule.iconColor} flex items-center justify-center shrink-0`}
+                        className={`w-8 h-8 rounded-lg ${rule.iconBg} ${rule.iconColor} flex items-center justify-center shrink-0`}
                       >
-                        <IconComponent sx={{ fontSize: 20 }} />
+                        <IconComponent sx={{ fontSize: 18 }} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-gray-900">
+                          <span className="text-xs sm:text-sm font-bold text-gray-900">
                             {rule.title}
                           </span>
                           <span
-                            className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
                               rule.active
                                 ? 'bg-[#e8f8f0] text-[#0abb75]'
                                 : 'bg-[#f1f5f9] text-[#64748b]'
@@ -298,7 +298,7 @@ export default function Policies() {
                             {rule.active ? 'Active' : 'Disabled'}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5">{rule.desc}</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">{rule.desc}</p>
                       </div>
                     </div>
                     <ToggleSwitch
@@ -312,7 +312,7 @@ export default function Policies() {
               <button
                 type="button"
                 onClick={() => handleOpenAddModal('cancellation')}
-                className="mt-2 px-4 py-2 border border-gray-300 text-[#4f46e5] text-xs font-bold rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="mt-1.5 px-3 py-1.5 border border-gray-300 text-[#4f46e5] text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <AddIcon sx={{ fontSize: 16 }} />
                 Add New Policy Rule
@@ -322,19 +322,19 @@ export default function Policies() {
         </div>
 
         {/* Accordion 2: Property Policies */}
-        <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white">
+        <div className="border border-gray-100 rounded-xl overflow-hidden bg-white">
           <div
             onClick={() => setOpenProperty((prev) => !prev)}
-            className="flex items-center justify-between p-5 cursor-pointer bg-white hover:bg-gray-50/50 transition-colors select-none"
+            className="flex items-center justify-between p-2.5 sm:p-3 cursor-pointer bg-white hover:bg-gray-50/50 transition-colors select-none"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#e0edff] text-[#2563eb] flex items-center justify-center shrink-0">
-                <PropertyIcon sx={{ fontSize: 20 }} />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#e0edff] text-[#2563eb] flex items-center justify-center shrink-0">
+                <PropertyIcon sx={{ fontSize: 18 }} />
               </div>
-              <span className="text-[15px] font-bold text-gray-900">
+              <span className="text-sm font-bold text-gray-900">
                 Property Policies
               </span>
-              <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-semibold">
+              <span className="rounded-full px-2 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-[11px] font-semibold">
                 {activePropertyCount} Active active
               </span>
             </div>
@@ -344,27 +344,27 @@ export default function Policies() {
           </div>
 
           {openProperty && (
-            <div className="p-5 pt-0 space-y-3">
+            <div className="p-2.5 pt-0 space-y-2">
               {propertyRules.map((rule) => {
                 const IconComponent = rule.icon;
                 return (
                   <div
                     key={rule.id}
-                    className="bg-[#f8fafc] hover:bg-[#f1f5f9]/70 rounded-2xl p-4 flex items-center justify-between gap-4 transition-colors"
+                    className="bg-[#f8fafc] hover:bg-[#f1f5f9]/70 rounded-xl p-2 sm:p-2.5 flex items-center justify-between gap-3 transition-colors"
                   >
-                    <div className="flex items-center gap-3.5">
+                    <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-10 h-10 rounded-xl ${rule.iconBg} ${rule.iconColor} flex items-center justify-center shrink-0`}
+                        className={`w-8 h-8 rounded-lg ${rule.iconBg} ${rule.iconColor} flex items-center justify-center shrink-0`}
                       >
-                        <IconComponent sx={{ fontSize: 20 }} />
+                        <IconComponent sx={{ fontSize: 18 }} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-gray-900">
+                          <span className="text-xs sm:text-sm font-bold text-gray-900">
                             {rule.title}
                           </span>
                           <span
-                            className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
                               rule.active
                                 ? 'bg-[#e8f8f0] text-[#0abb75]'
                                 : 'bg-[#f1f5f9] text-[#64748b]'
@@ -373,7 +373,7 @@ export default function Policies() {
                             {rule.active ? 'Active' : 'Disabled'}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5">{rule.desc}</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">{rule.desc}</p>
                       </div>
                     </div>
                     <ToggleSwitch
@@ -387,7 +387,7 @@ export default function Policies() {
               <button
                 type="button"
                 onClick={() => handleOpenAddModal('property')}
-                className="mt-2 px-4 py-2 border border-gray-300 text-[#4f46e5] text-xs font-bold rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="mt-1.5 px-3 py-1.5 border border-gray-300 text-[#4f46e5] text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <AddIcon sx={{ fontSize: 16 }} />
                 Add New Policy Rule
@@ -397,19 +397,19 @@ export default function Policies() {
         </div>
 
         {/* Accordion 3: Guest Identification */}
-        <div className="border border-gray-100 rounded-2xl overflow-hidden bg-white">
+        <div className="border border-gray-100 rounded-xl overflow-hidden bg-white">
           <div
             onClick={() => setOpenGuestId((prev) => !prev)}
-            className="flex items-center justify-between p-5 cursor-pointer bg-white hover:bg-gray-50/50 transition-colors select-none"
+            className="flex items-center justify-between p-2.5 sm:p-3 cursor-pointer bg-white hover:bg-gray-50/50 transition-colors select-none"
           >
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#ede9fe] text-[#7c3aed] flex items-center justify-center shrink-0">
-                <IdIcon sx={{ fontSize: 20 }} />
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#ede9fe] text-[#7c3aed] flex items-center justify-center shrink-0">
+                <IdIcon sx={{ fontSize: 18 }} />
               </div>
-              <span className="text-[15px] font-bold text-gray-900">
+              <span className="text-sm font-bold text-gray-900">
                 Guest Identification
               </span>
-              <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-semibold">
+              <span className="rounded-full px-2 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-[11px] font-semibold">
                 {activeGuestIdCount} Active active
               </span>
             </div>
@@ -419,27 +419,27 @@ export default function Policies() {
           </div>
 
           {openGuestId && (
-            <div className="p-5 pt-0 space-y-3">
+            <div className="p-2.5 pt-0 space-y-2">
               {guestIdRules.map((rule) => {
                 const IconComponent = rule.icon;
                 return (
                   <div
                     key={rule.id}
-                    className="bg-[#f8fafc] hover:bg-[#f1f5f9]/70 rounded-2xl p-4 flex items-center justify-between gap-4 transition-colors"
+                    className="bg-[#f8fafc] hover:bg-[#f1f5f9]/70 rounded-xl p-2 sm:p-2.5 flex items-center justify-between gap-3 transition-colors"
                   >
-                    <div className="flex items-center gap-3.5">
+                    <div className="flex items-center gap-2.5">
                       <div
-                        className={`w-10 h-10 rounded-xl ${rule.iconBg} ${rule.iconColor} flex items-center justify-center shrink-0`}
+                        className={`w-8 h-8 rounded-lg ${rule.iconBg} ${rule.iconColor} flex items-center justify-center shrink-0`}
                       >
-                        <IconComponent sx={{ fontSize: 20 }} />
+                        <IconComponent sx={{ fontSize: 18 }} />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-gray-900">
+                          <span className="text-xs sm:text-sm font-bold text-gray-900">
                             {rule.title}
                           </span>
                           <span
-                            className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                            className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${
                               rule.active
                                 ? 'bg-[#e8f8f0] text-[#0abb75]'
                                 : 'bg-[#f1f5f9] text-[#64748b]'
@@ -448,7 +448,7 @@ export default function Policies() {
                             {rule.active ? 'Active' : 'Disabled'}
                           </span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5">{rule.desc}</p>
+                        <p className="text-[11px] text-gray-500 mt-0.5">{rule.desc}</p>
                       </div>
                     </div>
                     <ToggleSwitch
@@ -462,7 +462,7 @@ export default function Policies() {
               <button
                 type="button"
                 onClick={() => handleOpenAddModal('guest ID')}
-                className="mt-2 px-4 py-2 border border-gray-300 text-[#4f46e5] text-xs font-bold rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="mt-1.5 px-3 py-1.5 border border-gray-300 text-[#4f46e5] text-xs font-bold rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <AddIcon sx={{ fontSize: 16 }} />
                 Add New Policy Rule
@@ -473,28 +473,28 @@ export default function Policies() {
       </div>
 
       {/* 3. Card 2: Deposit Requirements */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 sm:p-8 space-y-5">
-        <div className="flex items-center gap-3.5 pb-4 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-xl bg-[#e0edff] text-[#2563eb] flex items-center justify-center shrink-0">
-            <SecurityIcon sx={{ fontSize: 22 }} />
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 space-y-2.5">
+        <div className="flex items-center gap-2.5 pb-2.5 border-b border-gray-100">
+          <div className="w-8 h-8 rounded-xl bg-[#e0edff] text-[#2563eb] flex items-center justify-center shrink-0">
+            <SecurityIcon sx={{ fontSize: 18 }} />
           </div>
           <div>
-            <h3 className="text-[17px] font-bold text-[#1e293b]">
+            <h3 className="text-[15px] font-bold text-[#1e293b]">
               Deposit Requirements
             </h3>
-            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5">
               Set mandatory guest deposit protocols
             </p>
           </div>
         </div>
 
         <div className="max-w-md">
-          <fieldset className="border border-gray-300 focus-within:border-[#4f46e5] rounded-xl px-3 py-1.5 bg-white transition-colors">
-            <legend className="px-1 text-xs font-semibold text-gray-500 focus-within:text-[#4f46e5] select-none">
+          <fieldset className="border border-gray-300 focus-within:border-[#4f46e5] rounded-xl px-3 py-1 bg-white transition-colors">
+            <legend className="px-1 text-[11px] font-semibold text-gray-500 focus-within:text-[#4f46e5] select-none">
               Security Deposit Amount ($)
             </legend>
-            <div className="flex items-center gap-2 px-1 py-1">
-              <DollarIcon sx={{ fontSize: 22 }} className="text-gray-800 shrink-0" />
+            <div className="flex items-center gap-2 px-1 py-0.5">
+              <DollarIcon sx={{ fontSize: 20 }} className="text-gray-800 shrink-0" />
               <input
                 type="number"
                 value={securityDeposit}
@@ -503,36 +503,36 @@ export default function Policies() {
               />
             </div>
           </fieldset>
-          <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-500">
-            <InfoIcon sx={{ fontSize: 15, color: '#3b82f6' }} />
+          <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-gray-500">
+            <InfoIcon sx={{ fontSize: 14, color: '#3b82f6' }} />
             <span>Fully refundable security deposit held on guest credit card at check-in.</span>
           </div>
         </div>
       </div>
 
       {/* 4. Card 3: Damage & Incidentals Policy */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 sm:p-8 space-y-5">
-        <div className="flex items-center gap-3.5 pb-4 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#7c3aed] flex items-center justify-center shrink-0">
-            <WarningIcon sx={{ fontSize: 22 }} />
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 space-y-2.5">
+        <div className="flex items-center gap-2.5 pb-2.5 border-b border-gray-100">
+          <div className="w-8 h-8 rounded-xl bg-[#ede9fe] text-[#7c3aed] flex items-center justify-center shrink-0">
+            <WarningIcon sx={{ fontSize: 18 }} />
           </div>
           <div>
-            <h3 className="text-[17px] font-bold text-[#1e293b]">
+            <h3 className="text-[15px] font-bold text-[#1e293b]">
               Damage & Incidentals Policy
             </h3>
-            <p className="text-xs sm:text-sm text-gray-500 mt-0.5">
+            <p className="text-xs text-gray-500 mt-0.5">
               Define recovery fees for room damages
             </p>
           </div>
         </div>
 
         <div className="max-w-md">
-          <fieldset className="border border-gray-300 focus-within:border-[#4f46e5] rounded-xl px-3 py-1.5 bg-white transition-colors">
-            <legend className="px-1 text-xs font-semibold text-gray-500 focus-within:text-[#4f46e5] select-none">
+          <fieldset className="border border-gray-300 focus-within:border-[#4f46e5] rounded-xl px-3 py-1 bg-white transition-colors">
+            <legend className="px-1 text-[11px] font-semibold text-gray-500 focus-within:text-[#4f46e5] select-none">
               Standard Damage Fee ($)
             </legend>
-            <div className="flex items-center gap-2 px-1 py-1">
-              <ToolsIcon sx={{ fontSize: 20 }} className="text-gray-800 shrink-0" />
+            <div className="flex items-center gap-2 px-1 py-0.5">
+              <ToolsIcon sx={{ fontSize: 18 }} className="text-gray-800 shrink-0" />
               <input
                 type="number"
                 value={damageFee}
@@ -541,21 +541,21 @@ export default function Policies() {
               />
             </div>
           </fieldset>
-          <div className="flex items-center gap-1.5 mt-2 text-xs text-gray-500">
-            <InfoIcon sx={{ fontSize: 15, color: '#3b82f6' }} />
+          <div className="flex items-center gap-1.5 mt-1.5 text-[11px] text-gray-500">
+            <InfoIcon sx={{ fontSize: 14, color: '#3b82f6' }} />
             <span>Baseline recovery assessment applied for minor non-structural property damages.</span>
           </div>
         </div>
       </div>
 
       {/* 5. Primary Apply Button */}
-      <div className="pt-2">
+      <div className="pt-1">
         <button
           type="button"
           onClick={handleApplyConfiguration}
-          className="px-6 py-3 bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-xl font-bold text-sm shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+          className="px-4 py-2 bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-xl font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
         >
-          <CheckIcon sx={{ fontSize: 18 }} />
+          <CheckIcon sx={{ fontSize: 16 }} />
           Apply Policy Configuration
         </button>
       </div>

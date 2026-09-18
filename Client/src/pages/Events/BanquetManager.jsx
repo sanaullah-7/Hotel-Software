@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
   HomeOutlined as HomeIcon,
   Celebration as CelebrationIcon,
@@ -24,11 +24,11 @@ const INITIAL_EVENTS = [
   {
     id: 'BEO-401',
     title: 'Vance & Sterling Royal Wedding Gala',
-    client: 'Baroness Evelyn Vance • Vance Family Trust',
+    client: 'Baroness Evelyn Vance â€¢ Vance Family Trust',
     venue: 'Grand Crystal Ballroom',
     status: 'Confirmed & Deposit Paid',
     statusType: 'confirmed',
-    schedule: 'Oct 28, 2026 (18:00 – 23:30)',
+    schedule: 'Oct 28, 2026 (18:00 â€“ 23:30)',
     attendance: '320 Guests (Round Table Banquet (10-top))',
     catering: '6-Course Michelin Gala Dinner & Vintage Champagne Toast',
     totalPrice: '$68,500',
@@ -39,11 +39,11 @@ const INITIAL_EVENTS = [
   {
     id: 'BEO-402',
     title: 'Global Private Wealth & Tech Summit 2026',
-    client: 'Julian Thorne • Thorne Capital Partners',
+    client: 'Julian Thorne â€¢ Thorne Capital Partners',
     venue: 'Grand Crystal Ballroom',
     status: 'BEO In Preparation',
     statusType: 'in-prep',
-    schedule: 'Nov 04, 2026 (08:30 – 17:00)',
+    schedule: 'Nov 04, 2026 (08:30 â€“ 17:00)',
     attendance: '380 Guests (Theater Keynote & Stage)',
     catering: 'Executive All-Day Coffee Bar & Gourmet Buffet Luncheon',
     totalPrice: '$42,000',
@@ -54,13 +54,13 @@ const INITIAL_EVENTS = [
   {
     id: 'BEO-403',
     title: 'Haute Horlogerie Luxury Watch Showcase',
-    client: 'Genevieve Moreau • Vacheron & Patek Guild',
+    client: 'Genevieve Moreau â€¢ Vacheron & Patek Guild',
     venue: 'Skyline Rooftop Pavilion',
     status: 'In-Progress Live Event',
     statusType: 'in-progress',
-    schedule: 'Today (19:00 – 23:00)',
+    schedule: 'Today (19:00 â€“ 23:00)',
     attendance: '140 Guests (Cocktail Reception Standing)',
-    catering: 'Beluga Caviar Tasting, Truffle Canapés & Sommelier Wine Pairing',
+    catering: 'Beluga Caviar Tasting, Truffle CanapÃ©s & Sommelier Wine Pairing',
     totalPrice: '$29,800',
     depositPaid: '$29,800',
     avSetup: 'Ambient DJ Sound System & Museum-Grade Vitrine Lighting',
@@ -69,11 +69,11 @@ const INITIAL_EVENTS = [
   {
     id: 'BEO-404',
     title: 'Diplomatic Corps Autumn Ambassadorial Dinner',
-    client: 'Ambassador Henri Zhao • Consular Diplomatic Mission',
+    client: 'Ambassador Henri Zhao â€¢ Consular Diplomatic Mission',
     venue: 'Royal Executive Boardroom',
     status: 'Confirmed & Deposit Paid',
     statusType: 'confirmed',
-    schedule: 'Oct 30, 2026 (19:30 – 22:30)',
+    schedule: 'Oct 30, 2026 (19:30 â€“ 22:30)',
     attendance: '28 Guests (U-Shape Executive)',
     catering: 'Private Chef 5-Course State Banquet with Wine Pairing',
     totalPrice: '$12,400',
@@ -84,11 +84,11 @@ const INITIAL_EVENTS = [
   {
     id: 'BEO-405',
     title: 'Luminis Biotech European Board Meeting',
-    client: 'Dr. Aris Thorne • Luminis Therapeutics',
+    client: 'Dr. Aris Thorne â€¢ Luminis Therapeutics',
     venue: 'Botanical Garden Terrace',
     status: 'BEO In Preparation',
     statusType: 'in-prep',
-    schedule: 'Nov 12, 2026 (11:00 – 16:00)',
+    schedule: 'Nov 12, 2026 (11:00 â€“ 16:00)',
     attendance: '160 Guests (Classroom & Workshop)',
     catering: 'Farm-to-Table Organic Garden Lunch & Artisan Gelato Bar',
     totalPrice: '$24,800',
@@ -229,121 +229,121 @@ export default function BanquetManager() {
   });
 
   return (
-    <div className="w-full space-y-3  font-sans">
-      {/* Toast Notification */}
+    <div className="w-full space-y-2 pb-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+
+      {/* â”€â”€ Toast Notification â”€â”€ */}
       {toastMessage && (
-        <div className="fixed top-20 right-8 z-50 flex items-center gap-2 bg-[#1e293b] text-white px-4 py-3 rounded-xl shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
-          <CheckCircleIcon sx={{ fontSize: 20, color: '#10b981' }} />
-          <span className="text-sm font-medium">{toastMessage}</span>
+        <div className="fixed top-20 right-6 z-50 flex items-center gap-2 bg-[var(--text-primary)] text-white px-3 py-2 rounded-xl shadow-xl text-xs font-medium">
+          <CheckCircleIcon sx={{ fontSize: 16, color: 'var(--primary-main)' }} />
+          <span>{toastMessage}</span>
         </div>
       )}
 
-
-      {/* 2. Top 4 Metric KPI Cards (2x2 Grid) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {/* Card 1: MONTHLY BANQUET REVENUE */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+      {/* â”€â”€ 1. KPI Cards â”€â”€ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+        {/* Card 1: Monthly Banquet Revenue */}
+        <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 hover:border-[var(--primary-main)]/30 transition-colors">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
-                MONTHLY BANQUET REVENUE
+              <span className="text-[11px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block">
+                Monthly Revenue
               </span>
-              <div className="text-xl font-extrabold text-[#3b5998] tracking-tight mt-2.5 mb-3">
+              <div className="text-lg font-bold text-[var(--text-primary)] tracking-tight mt-0.5 mb-1">
                 $184,500
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded-full px-2.5 py-1 bg-[#e8f8f0] text-[#0abb75] text-xs font-bold">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="rounded-full px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[11px] font-semibold">
                   +18.4% vs Last Month
                 </span>
-                <span className="rounded-full px-2.5 py-1 bg-[#f1f5f9] text-gray-600 text-xs font-medium">
+                <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
                   F&B + AV Included
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#ede9fe] text-[#7c3aed] flex items-center justify-center shrink-0">
-              <CelebrationIcon sx={{ fontSize: 24 }} />
+            <div className="w-8 h-8 rounded-lg bg-[var(--primary-main)]/10 text-[var(--primary-main)] flex items-center justify-center shrink-0">
+              <CelebrationIcon sx={{ fontSize: 17 }} />
             </div>
           </div>
         </div>
 
-        {/* Card 2: ACTIVE FUNCTIONS & BEOS */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        {/* Card 2: Active Functions & BEOs */}
+        <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 hover:border-[var(--primary-main)]/30 transition-colors">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
-                ACTIVE FUNCTIONS & BEOS
+              <span className="text-[11px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block">
+                Active Functions
               </span>
-              <div className="text-xl font-extrabold text-[#10b981] tracking-tight mt-2.5 mb-3">
+              <div className="text-lg font-bold text-[var(--text-primary)] tracking-tight mt-0.5 mb-1">
                 14 Events
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded-full px-2.5 py-1 bg-[#f1f5f9] text-gray-600 text-xs font-medium">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
                   Weddings & Galas
                 </span>
-                <span className="rounded-full px-2.5 py-1 bg-[#f1f5f9] text-gray-600 text-xs font-medium">
+                <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
                   Corporate Summits
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#d1fae5] text-[#10b981] flex items-center justify-center shrink-0">
-              <SeatIcon sx={{ fontSize: 24 }} />
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+              <SeatIcon sx={{ fontSize: 17 }} />
             </div>
           </div>
         </div>
 
-        {/* Card 3: VENUE UTILIZATION */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        {/* Card 3: Venue Utilization */}
+        <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 hover:border-[var(--primary-main)]/30 transition-colors">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
-                VENUE UTILIZATION
+              <span className="text-[11px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block">
+                Venue Utilization
               </span>
-              <div className="text-xl font-extrabold text-[#6366f1] tracking-tight mt-2.5 mb-3">
+              <div className="text-lg font-bold text-[var(--text-primary)] tracking-tight mt-0.5 mb-1">
                 88%
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded-full px-2.5 py-1 bg-[#f1f5f9] text-gray-600 text-xs font-medium">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
                   4 Luxury Venues
                 </span>
-                <span className="rounded-full px-2.5 py-1 bg-[#f1f5f9] text-gray-600 text-xs font-medium">
+                <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
                   Peak Weekend Par
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#f3e8ff] text-[#9333ea] flex items-center justify-center shrink-0">
-              <VenueIcon sx={{ fontSize: 24 }} />
+            <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <VenueIcon sx={{ fontSize: 17 }} />
             </div>
           </div>
         </div>
 
-        {/* Card 4: AVG SPEND PER GUEST */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow">
+        {/* Card 4: Avg Spend Per Guest */}
+        <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 hover:border-[var(--primary-main)]/30 transition-colors">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
-                AVG SPEND PER GUEST
+              <span className="text-[11px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block">
+                Avg Spend / Guest
               </span>
-              <div className="text-xl font-extrabold text-[#ea580c] tracking-tight mt-2.5 mb-3 flex items-baseline">
-                $285 <span className="text-sm font-normal text-gray-500 ml-1.5">/ Pax</span>
+              <div className="text-lg font-bold text-[var(--text-primary)] tracking-tight mt-0.5 mb-1 flex items-baseline">
+                $285 <span className="text-xs font-normal text-[var(--text-secondary)] ml-1">/ Pax</span>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="rounded-full px-2.5 py-1 bg-[#f1f5f9] text-gray-600 text-xs font-medium">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
                   Michelin Plated
                 </span>
-                <span className="rounded-full px-2.5 py-1 bg-[#f1f5f9] text-gray-600 text-xs font-medium">
+                <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
                   Sommelier Packages
                 </span>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-2xl bg-[#fef3c7] text-[#d97706] flex items-center justify-center shrink-0">
-              <SpendIcon sx={{ fontSize: 24 }} />
+            <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+              <SpendIcon sx={{ fontSize: 17 }} />
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3. Venues Filter Pills Bar */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 no-scrollbar">
+      {/* â”€â”€ 2. Venue Filter Pills â”€â”€ */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 pt-0.5 no-scrollbar">
         {VENUE_FILTERS.map((venue) => {
           const isSelected = selectedVenue === venue.id;
           const IconComp = venue.icon;
@@ -351,36 +351,36 @@ export default function BanquetManager() {
             <button
               key={venue.id}
               onClick={() => setSelectedVenue(venue.id)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer border ${
                 isSelected
-                  ? 'bg-[#4f46e5] text-white shadow-xs'
-                  : 'bg-[#f1f5f9] hover:bg-gray-200 text-gray-700'
+                  ? 'bg-[var(--primary-main)] text-white border-[var(--primary-main)] shadow-sm'
+                  : 'bg-white border-slate-200 text-[var(--text-secondary)] hover:border-[var(--primary-main)]/40 hover:text-[var(--primary-main)]'
               }`}
             >
-              {IconComp && <IconComp sx={{ fontSize: 16 }} />}
+              {IconComp && <IconComp sx={{ fontSize: 14 }} />}
+              <span>{venue.label}</span>
               {venue.pax && (
-                <span className={`text-[11px] font-bold ${isSelected ? 'text-indigo-200' : 'text-gray-500'}`}>
+                <span className={`text-[10px] font-medium ${isSelected ? 'text-white/70' : 'text-slate-400'}`}>
                   {venue.pax}
                 </span>
               )}
-              <span>{venue.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* 4. Status Filter Pills */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+      {/* â”€â”€ 3. Status Filter Pills â”€â”€ */}
+      <div className="flex items-center gap-1 overflow-x-auto pb-0.5 no-scrollbar">
         {STATUS_FILTERS.map((status) => {
           const isSelected = selectedStatus === status;
           return (
             <button
               key={status}
               onClick={() => setSelectedStatus(status)}
-              className={`px-4 py-1.5 rounded-full text-xs whitespace-nowrap transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all cursor-pointer font-medium ${
                 isSelected
-                  ? 'bg-[#e0e7ff] text-[#4f46e5] font-bold'
-                  : 'text-gray-600 hover:text-gray-900 font-medium hover:bg-gray-100'
+                  ? 'bg-[var(--primary-main)]/10 text-[var(--primary-main)] font-semibold'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-100'
               }`}
             >
               {status}
@@ -389,50 +389,50 @@ export default function BanquetManager() {
         })}
       </div>
 
-      {/* 5. Search & Actions Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-        {/* Search Input */}
+      {/* â”€â”€ 4. Search & Actions Toolbar â”€â”€ */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-0.5">
+        {/* Search */}
         <div className="relative w-full sm:w-80">
-          <SearchIcon sx={{ fontSize: 18 }} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <SearchIcon sx={{ fontSize: 15 }} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search event, client, venue, BEO #..."
-            className="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-xl text-xs font-medium text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#4f46e5]"
+            className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs font-medium text-[var(--text-primary)] placeholder-slate-400 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]/20 transition"
           />
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2">
+        {/* Buttons */}
+        <div className="flex items-center gap-1.5">
           <button
             onClick={handleResetFilters}
             title="Reset Filters"
-            className="p-2 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl transition cursor-pointer"
+            className="p-1.5 bg-white border border-slate-200 text-slate-500 hover:text-[var(--primary-main)] hover:border-[var(--primary-main)]/40 rounded-lg transition cursor-pointer"
           >
-            <RefreshIcon sx={{ fontSize: 18 }} />
+            <RefreshIcon sx={{ fontSize: 16 }} />
           </button>
 
           <button
             onClick={handleExportCSV}
-            className="px-3.5 py-2 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer"
+            className="px-2.5 py-1.5 bg-white border border-slate-200 text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-50 rounded-lg text-xs font-semibold transition flex items-center gap-1 cursor-pointer"
           >
-            <DownloadIcon sx={{ fontSize: 16 }} />
+            <DownloadIcon sx={{ fontSize: 15 }} />
             Export BEOs
           </button>
 
           <button
             onClick={() => setIsGenerateModalOpen(true)}
-            className="px-4 py-2 bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-1.5 bg-[var(--primary-main)] hover:bg-[var(--primary-dark)] text-white rounded-lg text-xs font-semibold shadow-sm transition flex items-center gap-1 cursor-pointer"
           >
-            <AddIcon sx={{ fontSize: 16 }} />
+            <AddIcon sx={{ fontSize: 15 }} />
             Generate New BEO
           </button>
         </div>
       </div>
 
-      {/* 6. Event Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* â”€â”€ 5. Event / BEO Cards Grid â”€â”€ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
         {filteredEvents.map((event) => {
           const isConfirmed = event.statusType === 'confirmed';
           const isInProgress = event.statusType === 'in-progress';
@@ -440,28 +440,30 @@ export default function BanquetManager() {
           return (
             <div
               key={event.id}
-              className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-6 hover:shadow-md transition-shadow flex flex-col justify-between"
+              className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2.5 sm:p-3 hover:border-[var(--primary-main)]/20 hover:shadow-sm transition-all flex flex-col justify-between"
             >
               <div>
-                {/* Card Header Row */}
-                <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
-                  <span className="font-bold text-gray-900 text-sm">
+                {/* Card Header */}
+                <div className="flex items-center justify-between gap-2 mb-1.5 flex-wrap">
+                  <span className="text-xs font-bold text-slate-400 tracking-wider">
                     {event.id}
                   </span>
 
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#eef2ff] text-[#4f46e5] text-xs font-semibold">
-                      <LocationIcon sx={{ fontSize: 13 }} />
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    {/* Venue Badge */}
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[11px] font-medium">
+                      <LocationIcon sx={{ fontSize: 11 }} />
                       {event.venue}
                     </span>
 
+                    {/* Status Badge */}
                     <span
-                      className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                      className={`px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                         isConfirmed
-                          ? 'bg-[#e8f8f0] text-[#0abb75]'
+                          ? 'bg-emerald-50 text-emerald-700'
                           : isInProgress
-                          ? 'bg-[#f3e8ff] text-[#9333ea]'
-                          : 'bg-[#fffbeb] text-[#d97706]'
+                          ? 'bg-[var(--primary-main)]/10 text-[var(--primary-main)]'
+                          : 'bg-amber-50 text-amber-700'
                       }`}
                     >
                       {event.status}
@@ -469,51 +471,50 @@ export default function BanquetManager() {
                   </div>
                 </div>
 
-                {/* Event Title & Client */}
-                <h3 className="text-[16px] font-bold text-gray-900 mt-1 mb-0.5">
+                {/* Title & Client */}
+                <h3 className="text-sm font-bold text-[var(--text-primary)] leading-snug mb-0.5">
                   {event.title}
                 </h3>
-                <p className="text-xs text-gray-500 mb-4">
+                <p className="text-xs text-[var(--text-secondary)] mb-2 leading-relaxed">
                   {event.client}
                 </p>
 
-                {/* Schedule & Attendance Box */}
-                <div className="space-y-2 text-xs py-1">
+                {/* Schedule & Attendance */}
+                <div className="space-y-1 text-xs mb-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500 flex items-center gap-1.5 font-medium">
-                      <ScheduleIcon sx={{ fontSize: 15 }} className="text-gray-400" />
+                    <span className="text-[var(--text-secondary)] flex items-center gap-1">
+                      <ScheduleIcon sx={{ fontSize: 13 }} className="text-slate-300" />
                       Schedule
                     </span>
-                    <span className="font-bold text-gray-800">
+                    <span className="font-semibold text-[var(--text-primary)]">
                       {event.schedule}
                     </span>
                   </div>
-
                   <div className="flex items-center justify-between">
-                    <span className="text-gray-500 flex items-center gap-1.5 font-medium">
-                      <PeopleIcon sx={{ fontSize: 15 }} className="text-gray-400" />
+                    <span className="text-[var(--text-secondary)] flex items-center gap-1">
+                      <PeopleIcon sx={{ fontSize: 13 }} className="text-slate-300" />
                       Attendance
                     </span>
-                    <span className="font-bold text-[#4f46e5]">
+                    <span className="font-semibold text-[var(--primary-main)]">
                       {event.attendance}
                     </span>
                   </div>
                 </div>
 
-                {/* Menu / Catering Banner */}
-                <div className="bg-[#f8faff] border border-blue-50/80 rounded-xl p-3 flex items-center gap-2 text-xs text-gray-700 font-medium my-4">
-                  <MenuIcon sx={{ fontSize: 17, color: '#6366f1' }} className="shrink-0" />
+                {/* Catering Banner */}
+                <div className="bg-slate-50 border border-slate-100 rounded-lg p-2 flex items-center gap-1.5 text-xs text-[var(--text-secondary)] font-medium">
+                  <MenuIcon sx={{ fontSize: 14, color: 'var(--primary-main)' }} className="shrink-0" />
                   <span className="line-clamp-1">{event.catering}</span>
                 </div>
               </div>
 
               {/* Card Footer */}
-              <div className="pt-3 border-t border-gray-100 flex items-center justify-between">
+              <div className="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between">
                 <div>
-                  <span className="text-lg font-extrabold text-gray-900">
+                  <span className="text-base font-bold text-[var(--text-primary)]">
                     {event.totalPrice}
                   </span>
-                  <span className="text-xs font-semibold text-[#10b981] ml-2">
+                  <span className="text-xs font-medium text-emerald-600 ml-2">
                     Deposit: {event.depositPaid}
                   </span>
                 </div>
@@ -521,9 +522,9 @@ export default function BanquetManager() {
                 <button
                   type="button"
                   onClick={() => setActiveBeoSheet(event)}
-                  className="text-xs font-bold text-[#4f46e5] hover:text-[#4338ca] flex items-center gap-1 transition cursor-pointer"
+                  className="text-xs font-semibold text-[var(--primary-main)] hover:text-[var(--primary-dark)] flex items-center gap-1 transition cursor-pointer"
                 >
-                  <BeoIcon sx={{ fontSize: 16 }} />
+                  <BeoIcon sx={{ fontSize: 14 }} />
                   View BEO Sheet
                 </button>
               </div>
@@ -532,104 +533,104 @@ export default function BanquetManager() {
         })}
       </div>
 
-      {/* 7. Footer */}
-      <div className="pt-4 text-left text-sm text-gray-500 font-normal">
-        Copyright © 2026 Design By <span className="text-gray-700 font-semibold">Luxuria</span>
+      {/* â”€â”€ 6. Footer â”€â”€ */}
+      <div className="pt-1 text-left text-xs text-slate-400 font-normal">
+        Copyright Â© 2026 Design By <span className="text-slate-600 font-semibold">Luxuria</span>
       </div>
 
-      {/* Modal: View BEO Sheet */}
+      {/* â”€â”€ Modal: View BEO Sheet â”€â”€ */}
       {activeBeoSheet && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 border border-gray-100 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
-            {/* Modal Top Bar */}
-            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-100 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#ede9fe] text-[#7c3aed] flex items-center justify-center">
-                  <BeoIcon sx={{ fontSize: 22 }} />
+                <div className="w-9 h-9 rounded-lg bg-[var(--primary-main)]/10 text-[var(--primary-main)] flex items-center justify-center">
+                  <BeoIcon sx={{ fontSize: 20 }} />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-gray-900">
-                    Banquet Event Order ({activeBeoSheet.id})
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                    Banquet Event Order â€” {activeBeoSheet.id}
                   </h3>
-                  <p className="text-xs text-gray-500">Official Production Specification Sheet</p>
+                  <p className="text-xs text-[var(--text-secondary)]">Official Production Specification Sheet</p>
                 </div>
               </div>
               <button
                 onClick={() => setActiveBeoSheet(null)}
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
               >
-                <CloseIcon sx={{ fontSize: 20 }} />
+                <CloseIcon sx={{ fontSize: 18 }} />
               </button>
             </div>
 
-            {/* BEO Details Body */}
-            <div className="py-6 space-y-6 text-sm">
+            {/* Modal Body */}
+            <div className="px-5 py-4 space-y-4 text-sm">
               {/* Event & Client Banner */}
-              <div className="bg-gray-50 rounded-2xl p-4 space-y-2 border border-gray-100">
-                <h4 className="text-lg font-bold text-gray-900">{activeBeoSheet.title}</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-gray-600">
-                  <p><span className="font-semibold text-gray-800">Client:</span> {activeBeoSheet.client}</p>
-                  <p><span className="font-semibold text-gray-800">Venue:</span> {activeBeoSheet.venue}</p>
-                  <p><span className="font-semibold text-gray-800">Date & Time:</span> {activeBeoSheet.schedule}</p>
-                  <p><span className="font-semibold text-gray-800">Coordinator:</span> {activeBeoSheet.coordinator}</p>
+              <div className="bg-slate-50 rounded-xl p-3.5 space-y-2 border border-slate-100">
+                <h4 className="text-sm font-bold text-[var(--text-primary)] leading-snug">{activeBeoSheet.title}</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs text-[var(--text-secondary)]">
+                  <p><span className="font-semibold text-[var(--text-primary)]">Client:</span> {activeBeoSheet.client}</p>
+                  <p><span className="font-semibold text-[var(--text-primary)]">Venue:</span> {activeBeoSheet.venue}</p>
+                  <p><span className="font-semibold text-[var(--text-primary)]">Date & Time:</span> {activeBeoSheet.schedule}</p>
+                  <p><span className="font-semibold text-[var(--text-primary)]">Coordinator:</span> {activeBeoSheet.coordinator}</p>
                 </div>
               </div>
 
-              {/* Attendance & Setup */}
+              {/* Room Configuration */}
               <div>
-                <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                <h5 className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
                   Room Configuration & Attendance
                 </h5>
-                <div className="bg-[#f8faff] rounded-xl p-3 border border-blue-100/60 text-xs space-y-1">
-                  <p className="font-bold text-gray-900">{activeBeoSheet.attendance}</p>
-                  <p className="text-gray-600">AV & Staging: {activeBeoSheet.avSetup}</p>
+                <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 text-xs space-y-1">
+                  <p className="font-semibold text-[var(--text-primary)]">{activeBeoSheet.attendance}</p>
+                  <p className="text-[var(--text-secondary)]">AV & Staging: {activeBeoSheet.avSetup}</p>
                 </div>
               </div>
 
-              {/* Food & Beverage Menu */}
+              {/* Culinary & Bar */}
               <div>
-                <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                <h5 className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
                   Culinary & Bar Specifications
                 </h5>
-                <div className="bg-[#f0fdf4] rounded-xl p-3 border border-green-100 text-xs text-green-900">
-                  <p className="font-bold">{activeBeoSheet.catering}</p>
-                  <p className="text-green-700 mt-1">Special Dietary: Kosher & Halal options pre-flagged with Banquet Captain.</p>
+                <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-100 text-xs">
+                  <p className="font-semibold text-emerald-800">{activeBeoSheet.catering}</p>
+                  <p className="text-emerald-700 mt-1">Special Dietary: Kosher & Halal options pre-flagged with Banquet Captain.</p>
                 </div>
               </div>
 
-              {/* Billing Summary */}
+              {/* Financials */}
               <div>
-                <h5 className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">
+                <h5 className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)] mb-2">
                   Financials & Billing
                 </h5>
-                <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-lg border border-slate-100">
                   <div>
-                    <span className="text-xs text-gray-500">Contract Total</span>
-                    <p className="text-xl font-extrabold text-gray-900">{activeBeoSheet.totalPrice}</p>
+                    <span className="text-xs text-[var(--text-secondary)]">Contract Total</span>
+                    <p className="text-xl font-bold text-[var(--text-primary)] leading-tight">{activeBeoSheet.totalPrice}</p>
                   </div>
                   <div>
-                    <span className="text-xs text-gray-500">Deposit Received</span>
-                    <p className="text-xl font-extrabold text-[#10b981]">{activeBeoSheet.depositPaid}</p>
+                    <span className="text-xs text-[var(--text-secondary)]">Deposit Received</span>
+                    <p className="text-xl font-bold text-emerald-600 leading-tight">{activeBeoSheet.depositPaid}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Modal Actions */}
-            <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
+            {/* Modal Footer */}
+            <div className="px-5 py-3.5 border-t border-slate-100 flex items-center justify-between">
               <button
                 onClick={() => {
                   window.print();
                   showToast('Preparing BEO Document for Print...');
                 }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 text-xs font-bold rounded-xl hover:bg-gray-50 transition flex items-center gap-1.5 cursor-pointer"
+                className="px-4 py-1.5 border border-slate-200 text-[var(--text-secondary)] text-xs font-semibold rounded-lg hover:bg-slate-50 hover:text-[var(--text-primary)] transition flex items-center gap-1.5 cursor-pointer"
               >
-                <PrintIcon sx={{ fontSize: 16 }} />
+                <PrintIcon sx={{ fontSize: 15 }} />
                 Print BEO Sheet
               </button>
               <button
                 onClick={() => setActiveBeoSheet(null)}
-                className="px-5 py-2 bg-[#4f46e5] text-white text-xs font-bold rounded-xl hover:bg-[#4338ca] transition cursor-pointer"
+                className="px-5 py-1.5 bg-[var(--primary-main)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition cursor-pointer"
               >
                 Close
               </button>
@@ -638,31 +639,33 @@ export default function BanquetManager() {
         </div>
       )}
 
-      {/* Modal: Generate New BEO */}
+      {/* â”€â”€ Modal: Generate New BEO â”€â”€ */}
       {isGenerateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 sm:p-8 border border-gray-100 max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full border border-slate-100 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#4f46e5] text-white flex items-center justify-center">
-                  <AddIcon sx={{ fontSize: 20 }} />
+                <div className="w-9 h-9 rounded-lg bg-[var(--primary-main)] text-white flex items-center justify-center">
+                  <AddIcon sx={{ fontSize: 19 }} />
                 </div>
-                <h4 className="font-bold text-gray-900 text-base">
+                <h4 className="font-bold text-[var(--text-primary)] text-sm">
                   Generate New Banquet Event Order
                 </h4>
               </div>
               <button
                 onClick={() => setIsGenerateModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
               >
-                <CloseIcon sx={{ fontSize: 20 }} />
+                <CloseIcon sx={{ fontSize: 18 }} />
               </button>
             </div>
 
-            <form onSubmit={handleCreateBEO} className="space-y-4 mt-5 text-xs">
+            <form onSubmit={handleCreateBEO} className="px-5 py-4 space-y-3.5 text-xs">
+              {/* Event Title */}
               <div>
-                <label className="block font-bold text-gray-700 uppercase tracking-wider mb-1">
-                  Event Title*
+                <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                  Event Title <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -670,33 +673,33 @@ export default function BanquetManager() {
                   placeholder="e.g. Cambridge Tech Gala & Reception"
                   value={newBEO.title}
                   onChange={(e) => setNewBEO({ ...newBEO, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#4f46e5]"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-[var(--text-primary)] placeholder-slate-400 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]/20 transition"
                 />
               </div>
 
+              {/* Client */}
               <div>
-                <label className="block font-bold text-gray-700 uppercase tracking-wider mb-1">
-                  Client / Sponsor*
+                <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                  Client / Sponsor <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Lady Clara Sterling • Sterling Foundation"
+                  placeholder="e.g. Lady Clara Sterling â€¢ Sterling Foundation"
                   value={newBEO.client}
                   onChange={(e) => setNewBEO({ ...newBEO, client: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#4f46e5]"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-[var(--text-primary)] placeholder-slate-400 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]/20 transition"
                 />
               </div>
 
+              {/* Venue & Status */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Venue
-                  </label>
+                  <label className="block font-semibold text-[var(--text-primary)] mb-1">Venue</label>
                   <select
                     value={newBEO.venue}
                     onChange={(e) => setNewBEO({ ...newBEO, venue: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#4f46e5] bg-white"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]/20 bg-white transition"
                   >
                     <option value="Grand Crystal Ballroom">Grand Crystal Ballroom (450 Pax)</option>
                     <option value="Skyline Rooftop Pavilion">Skyline Rooftop Pavilion (180 Pax)</option>
@@ -704,15 +707,12 @@ export default function BanquetManager() {
                     <option value="Botanical Garden Terrace">Botanical Garden Terrace (220 Pax)</option>
                   </select>
                 </div>
-
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Status
-                  </label>
+                  <label className="block font-semibold text-[var(--text-primary)] mb-1">Status</label>
                   <select
                     value={newBEO.status}
                     onChange={(e) => setNewBEO({ ...newBEO, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#4f46e5] bg-white"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]/20 bg-white transition"
                   >
                     <option value="Confirmed & Deposit Paid">Confirmed & Deposit Paid</option>
                     <option value="BEO In Preparation">BEO In Preparation</option>
@@ -721,84 +721,78 @@ export default function BanquetManager() {
                 </div>
               </div>
 
+              {/* Schedule & Attendance */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Schedule
-                  </label>
+                  <label className="block font-semibold text-[var(--text-primary)] mb-1">Schedule</label>
                   <input
                     type="text"
-                    placeholder="Nov 18, 2026 (18:00 – 23:00)"
+                    placeholder="Nov 18, 2026 (18:00 â€“ 23:00)"
                     value={newBEO.schedule}
                     onChange={(e) => setNewBEO({ ...newBEO, schedule: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#4f46e5]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-[var(--text-primary)] placeholder-slate-400 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]/20 transition"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Attendance
-                  </label>
+                  <label className="block font-semibold text-[var(--text-primary)] mb-1">Attendance</label>
                   <input
                     type="text"
                     placeholder="250 Guests (Round Table 10-top)"
                     value={newBEO.attendance}
                     onChange={(e) => setNewBEO({ ...newBEO, attendance: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#4f46e5]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-[var(--text-primary)] placeholder-slate-400 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]/20 transition"
                   />
                 </div>
               </div>
 
+              {/* Catering */}
               <div>
-                <label className="block font-bold text-gray-700 uppercase tracking-wider mb-1">
-                  Food & Beverage Menu
-                </label>
+                <label className="block font-semibold text-[var(--text-primary)] mb-1">Food & Beverage Menu</label>
                 <input
                   type="text"
                   placeholder="5-Course Plated Dinner & Open Bar"
                   value={newBEO.catering}
                   onChange={(e) => setNewBEO({ ...newBEO, catering: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#4f46e5]"
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-[var(--text-primary)] placeholder-slate-400 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]/20 transition"
                 />
               </div>
 
+              {/* Pricing */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Total Contract Price ($)
-                  </label>
+                  <label className="block font-semibold text-[var(--text-primary)] mb-1">Total Contract Price ($)</label>
                   <input
                     type="text"
                     placeholder="$35,000"
                     value={newBEO.totalPrice}
                     onChange={(e) => setNewBEO({ ...newBEO, totalPrice: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#4f46e5]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-[var(--text-primary)] placeholder-slate-400 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]/20 transition"
                   />
                 </div>
                 <div>
-                  <label className="block font-bold text-gray-700 uppercase tracking-wider mb-1">
-                    Deposit Paid ($)
-                  </label>
+                  <label className="block font-semibold text-[var(--text-primary)] mb-1">Deposit Paid ($)</label>
                   <input
                     type="text"
                     placeholder="$15,000"
                     value={newBEO.depositPaid}
                     onChange={(e) => setNewBEO({ ...newBEO, depositPaid: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm focus:outline-none focus:border-[#4f46e5]"
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-[var(--text-primary)] placeholder-slate-400 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]/20 transition"
                   />
                 </div>
               </div>
 
-              <div className="pt-3 flex justify-end gap-2 border-t border-gray-100">
+              {/* Form Actions */}
+              <div className="pt-3 flex justify-end gap-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsGenerateModalOpen(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition cursor-pointer"
+                  className="px-4 py-1.5 border border-slate-200 text-[var(--text-secondary)] text-xs font-semibold rounded-lg hover:bg-slate-50 hover:text-[var(--text-primary)] transition cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#4f46e5] text-white font-bold rounded-xl hover:bg-[#4338ca] transition shadow-xs cursor-pointer"
+                  className="px-5 py-1.5 bg-[var(--primary-main)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition shadow-sm cursor-pointer"
                 >
                   Generate BEO
                 </button>
@@ -810,3 +804,4 @@ export default function BanquetManager() {
     </div>
   );
 }
+

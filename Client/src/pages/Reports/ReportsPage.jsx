@@ -32,7 +32,7 @@ function TabPanel({ children, value, index }) {
       aria-labelledby={`report-tab-${index}`}
     >
       {value === index && (
-        <Box sx={{ pt: 1 }}>
+        <Box sx={{ pt: 0 }}>
           {children}
         </Box>
       )}
@@ -66,7 +66,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="pt-0  pb-3">
+    <div className="p-0">
       
 
       {/* Tab Panels */}

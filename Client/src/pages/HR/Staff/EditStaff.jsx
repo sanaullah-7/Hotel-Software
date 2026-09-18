@@ -149,11 +149,11 @@ export default function EditStaff() {
   }
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-4 sm:p-6 bg-slate-50/50">
+    <div className="min-h-[80vh] flex items-center justify-center p-1 sm:p-2 bg-slate-50/50">
       <div className="w-full max-w-[650px] bg-white rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12)] border border-gray-100">
         
         {/* Header Bar matching Luxuria exact design */}
-        <div className="bg-[#5d5fef] px-6 py-4 flex items-center justify-between">
+        <div className="bg-[#5d5fef] px-3 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-3.5">
             <Avatar
               src={staff.avatar || `https://i.pravatar.cc/150?u=${staff.id}`}
@@ -182,7 +182,7 @@ export default function EditStaff() {
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSave} noValidate className="p-6">
+        <form onSubmit={handleSave} noValidate className="p-3 sm:p-4">
           <div className="space-y-4">
             {/* Row 1: Name & Designation */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

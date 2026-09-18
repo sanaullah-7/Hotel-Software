@@ -24,10 +24,10 @@ export default function StaffProfile() {
   if (!staff) return <div className="p-4 text-gray-500">Staff member not found.</div>;
 
   return (
-    <div className="p-px">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-0">
+      <div className="flex justify-between items-center mb-2">
         <PageHeader title="Staff Profile" breadcrumb="Human Resources / Staff / Profile" />
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <Button 
             variant="outlined" 
             startIcon={<EditIcon />} 
@@ -47,16 +47,16 @@ export default function StaffProfile() {
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-6 max-w-5xl">
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden mt-2 max-w-5xl">
         {/* Profile Header */}
-        <div className="bg-gray-50 p-px flex flex-col md:flex-row items-center gap-6 border-b">
-          <div className="w-24 h-24 rounded-full bg-[#1b7f43] text-white flex items-center justify-center text-4xl font-bold shadow-md">
+        <div className="bg-gray-50 p-2 sm:p-3 flex flex-col md:flex-row items-center gap-4 border-b">
+          <div className="w-20 h-20 rounded-full bg-[#1b7f43] text-white flex items-center justify-center text-3xl font-bold shadow-md">
             {staff.name.charAt(0)}
           </div>
           <div className="text-center md:text-left">
-            <h2 className="text-2xl font-bold text-gray-800">{staff.name}</h2>
-            <p className="text-gray-500 font-medium mb-2">{staff.designation} - {staff.department}</p>
-            <div className="flex gap-3 justify-center md:justify-start">
+            <h2 className="text-xl font-bold text-gray-800">{staff.name}</h2>
+            <p className="text-gray-500 font-medium mb-1">{staff.designation} - {staff.department}</p>
+            <div className="flex gap-2 justify-center md:justify-start">
               <Chip label={staff.status} size="small" color={staff.status === 'Active' ? 'success' : 'default'} />
               <Chip label={`ID: ${staff.empId}`} size="small" variant="outlined" />
             </div>
@@ -64,7 +64,7 @@ export default function StaffProfile() {
         </div>
 
         {/* Information Sections */}
-        <div className="p-px">
+        <div className="p-2 sm:p-3">
           <Grid container spacing={4}>
             <Grid item xs={12} md={6}>
               <h3 className="text-lg font-bold text-gray-800 mb-4">Personal Information</h3>
