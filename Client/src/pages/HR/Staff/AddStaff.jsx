@@ -38,6 +38,7 @@ import {
   Alert,
   Snackbar
 } from '@mui/material';
+import { addStaffMember } from './staffStore';
 
 // Material Icons matching Luxuria Design
 
@@ -268,31 +269,12 @@ export default function AddStaff() {
   // Form Validation & Submit
   const validateForm = () => {
     const errors = {};
-    if (!formData.fullName.trim()) errors.fullName = 'Full Name is required';
-    if (!formData.empId.trim()) errors.empId = 'Employee ID is required';
-    if (!formData.gender) errors.gender = 'Please select a gender';
-    if (!formData.dob) errors.dob = 'Date of Birth is required';
-    if (!formData.nationality.trim()) errors.nationality = 'Nationality is required';
-    if (!formData.maritalStatus) errors.maritalStatus = 'Please select marital status';
-    if (!formData.designation) errors.designation = 'Please select designation';
-    if (!formData.department) errors.department = 'Please select department';
-    if (!formData.joiningDate) errors.joiningDate = 'Joining Date is required';
-    if (!formData.empType) errors.empType = 'Please select employee type';
-    if (!formData.shift) errors.shift = 'Please select shift';
-    if (!formData.salary) errors.salary = 'Salary / Rate is required';
-    if (!formData.employmentStatus) errors.employmentStatus = 'Please select employment status';
-    if (!formData.mobile.trim()) errors.mobile = 'Mobile Phone is required';
-    if (!formData.email.trim()) {
-      errors.email = 'Email Address is required';
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    if (!formData.fullName || !formData.fullName.trim()) {
+      errors.fullName = 'Full Name is required';
+    }
+    if (formData.email && formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = 'Invalid email address';
     }
-    if (!formData.address.trim()) errors.address = 'Address is required';
-    if (!formData.experience) errors.experience = 'Experience is required';
-    if (!formData.education) errors.education = 'Education is required';
-    if (!formData.emergencyName.trim()) errors.emergencyName = 'Emergency contact name is required';
-    if (!formData.emergencyPhone.trim()) errors.emergencyPhone = 'Emergency contact phone is required';
-    if (!formData.emergencyRelation) errors.emergencyRelation = 'Relationship is required';
 
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -303,31 +285,34 @@ export default function AddStaff() {
     if (!validateForm()) {
       setSnackbar({
         open: true,
-        message: 'Please fill in all required fields marked with *',
+        message: 'Please provide at least a Full Name for the staff member',
         severity: 'error'
       });
       return;
     }
 
     setIsSubmitting(true);
+    // Persist new staff member to localStorage
+    const savedStaff = addStaffMember(formData);
+
     setTimeout(() => {
       setIsSubmitting(false);
       setSnackbar({
         open: true,
-        message: `Staff member "${formData.fullName}" (${formData.empId}) successfully registered!`,
+        message: `Staff member "${savedStaff.name}" (${savedStaff.empId}) successfully registered!`,
         severity: 'success'
       });
       setTimeout(() => {
         navigate('/hr/staff');
-      }, 1200);
-    }, 600);
+      }, 700);
+    }, 400);
   };
 
   return (
-    <div className="w-full bg-[#f8fafc] px-0.5 sm:px-1 py-2">
+    <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden bg-[#f8fafc]">
       
-      {/* Main White Card Container - Minimized Left & Right Padding */}
-      <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] px-2.5 sm:px-4 py-3.5 sm:py-4">
+      {/* Main White Card Container - Minimized Padding */}
+      <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] p-2 sm:p-2.5">
         
         {/* Card Header Banner with Icon */}
         {/* <div className="flex items-center gap-3 pb-3 border-b border-gray-100">

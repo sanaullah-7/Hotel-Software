@@ -65,10 +65,7 @@ import TodaysAttendance from '../pages/HR/Attendance/TodaysAttendance';
 import EmployeeSalary from '../pages/HR/Salary/EmployeeSalary';
 
 // Reports Module Pages
-import StocksExpenseRevenue from '../pages/Reports/StocksExpenseRevenue';
-import OccupancyReport from '../pages/Reports/OccupancyReport';
-import ExpenseVsRevenue from '../pages/Reports/ExpenseVsRevenue';
-import ExpenseManagement from '../pages/Reports/ExpenseManagement';
+import ReportsPage from '../pages/Reports/ReportsPage';
 
 // Settings Module Pages
 import HotelProfile from '../pages/Settings/HotelProfile';
@@ -76,6 +73,11 @@ import Policies from '../pages/Settings/Policies';
 
 // Restaurant Module Pages
 import Restaurant from '../pages/Restaurant/Restaurant';
+
+// Events & Banquets Module Pages
+import BanquetManager from '../pages/Events/BanquetManager';
+import AllEvents from '../pages/Events/AllEvents';
+import AddEvent from '../pages/Events/AddEvent';
 
 // Assistant Module
 import LuxuriaAssistant from '../pages/Assistant/LuxuriaAssistant';
@@ -157,19 +159,25 @@ export default function AppRoutes() {
         <Route path="/hr/employee-salary" element={<DashboardLayout><EmployeeSalary /></DashboardLayout>} />
 
         {/* Reports Sub-Routes */}
-        <Route path="/reports/stocks-expense-revenue" element={<DashboardLayout><StocksExpenseRevenue /></DashboardLayout>} />
-        <Route path="/reports/occupancy" element={<DashboardLayout><OccupancyReport /></DashboardLayout>} />
-        <Route path="/reports/expense-vs-revenue" element={<DashboardLayout><ExpenseVsRevenue /></DashboardLayout>} />
-        <Route path="/reports/expense-management" element={<DashboardLayout><ExpenseManagement /></DashboardLayout>} />
+        <Route path="/reports" element={<Navigate to="/reports/stock" replace />} />
+        <Route path="/reports/:tab" element={<DashboardLayout><ReportsPage /></DashboardLayout>} />
 
         {/* Settings Sub-Routes */}
         <Route path="/settings/hotel-profile" element={<DashboardLayout><HotelProfile /></DashboardLayout>} />
         <Route path="/settings/policies" element={<DashboardLayout><Policies /></DashboardLayout>} />
+        <Route path="/hotel-settings/hotel-profile" element={<DashboardLayout><HotelProfile /></DashboardLayout>} />
+        <Route path="/hotel-settings/policies" element={<DashboardLayout><Policies /></DashboardLayout>} />
 
         {/* Restaurant Sub-Routes */}
         <Route path="/restaurant" element={<Navigate to="/restaurant/menu" replace />} />
         <Route path="/restaurant/menu" element={<DashboardLayout><Restaurant /></DashboardLayout>} />
         <Route path="/restaurant/orders" element={<DashboardLayout><Restaurant /></DashboardLayout>} />
+
+        {/* Events & Banquets Sub-Routes */}
+        <Route path="/events" element={<Navigate to="/events/all-events" replace />} />
+        <Route path="/events/all-events" element={<DashboardLayout><AllEvents /></DashboardLayout>} />
+        <Route path="/events/add-event" element={<DashboardLayout><AddEvent /></DashboardLayout>} />
+        <Route path="/events/banquet-manager" element={<DashboardLayout><BanquetManager /></DashboardLayout>} />
 
         {/* Assistant Route */}
         <Route path="/ai-assistant" element={<DashboardLayout><LuxuriaAssistant /></DashboardLayout>} />

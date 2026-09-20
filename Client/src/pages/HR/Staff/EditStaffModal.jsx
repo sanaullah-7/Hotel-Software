@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
 import {
+  Dialog,
+  DialogContent,
   TextField,
   MenuItem,
   InputAdornment,
   IconButton,
-  Avatar
+  Avatar,
+  Slide
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import MailOutlineIcon from '@mui/icons-material/MailOutlined';
 import CalendarTodayOutlinedIcon from '@mui/icons-material/CalendarTodayOutlined';
-import { getStoredStaff, updateStaffMember } from './staffStore';
+import { updateStaffMember } from './staffStore';
 
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="down" ref={ref} {...props} />;
+});
+
+// Outlined input styling matching Luxuria Material theme
 const inputStyle = {
   '& .MuiOutlinedInput-root': {
     borderRadius: '7px',
@@ -70,11 +77,7 @@ const designationsList = [
   'Waiter/Waitress'
 ];
 
-export default function EditStaff() {
-  const navigate = useNavigate();
-  const { id } = useParams();
-
-  const [staff, setStaff] = useState(null);
+export default function EditStaffModal({ open, onClose, staff, onSaveSuccess }) {
   const [formData, setFormData] = useState({
     name: '',
     designation: '',
@@ -88,20 +91,18 @@ export default function EditStaff() {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const staffList = getStoredStaff();
-    const current = staffList.find(s => String(s.id) === String(id) || String(s.empId) === String(id));
-    if (current) {
-      setStaff(current);
+    if (staff) {
       setFormData({
-        name: current.name || '',
-        designation: current.designation || '',
-        phone: current.phone || '',
-        email: current.email || '',
-        joiningDate: current.joiningDate || '',
-        address: current.address || ''
+        name: staff.name || '',
+        designation: staff.designation || '',
+        phone: staff.phone || '',
+        email: staff.email || '',
+        joiningDate: staff.joiningDate || '',
+        address: staff.address || ''
       });
+      setErrors({});
     }
-  }, [id]);
+  }, [staff, open]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -128,61 +129,73 @@ export default function EditStaff() {
       return;
     }
 
-    updateStaffMember(id, {
-      name: formData.name.trim(),
-      designation: formData.designation,
-      phone: formData.phone.trim(),
-      email: formData.email.trim(),
-      joiningDate: formData.joiningDate,
-      address: formData.address.trim()
-    });
-
-    navigate('/hr/staff');
+    if (staff) {
+      const updatedList = updateStaffMember(staff.id, {
+        name: formData.name.trim(),
+        designation: formData.designation,
+        phone: formData.phone.trim(),
+        email: formData.email.trim(),
+        joiningDate: formData.joiningDate,
+        address: formData.address.trim()
+      });
+      const updatedStaff = updatedList.find(s => String(s.id) === String(staff.id)) || {
+        ...staff,
+        ...formData
+      };
+      if (onSaveSuccess) onSaveSuccess(updatedStaff);
+    }
+    onClose();
   };
 
-  if (!staff) {
-    return (
-      <div className="p-8 text-center text-gray-500">
-        Staff member not found.
-      </div>
-    );
-  }
+  if (!staff) return null;
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center p-1 sm:p-2 bg-slate-50/50">
-      <div className="w-full max-w-[650px] bg-white rounded-2xl overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12)] border border-gray-100">
-        
-        {/* Header Bar matching Luxuria exact design */}
-        <div className="bg-[#5d5fef] px-3 py-2.5 flex items-center justify-between">
-          <div className="flex items-center gap-3.5">
-            <Avatar
-              src={staff.avatar || `https://i.pravatar.cc/150?u=${staff.id}`}
-              alt={staff.name}
-              sx={{
-                width: 44,
-                height: 44,
-                border: '2px solid rgba(255,255,255,0.85)',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
-              }}
-            />
-            <h2 className="text-white text-[18px] font-bold tracking-tight leading-snug">
-              {formData.name || staff.name}
-            </h2>
-          </div>
-
-          {/* Close button */}
-          <button
-            type="button"
-            onClick={() => navigate('/hr/staff')}
-            aria-label="Close"
-            className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all duration-150 cursor-pointer"
-          >
-            <CloseIcon sx={{ fontSize: 18 }} />
-          </button>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      TransitionComponent={Transition}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: '16px',
+          overflow: 'hidden',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        }
+      }}
+    >
+      {/* Header Bar matching Luxuria exact design */}
+      <div className="bg-[#5d5fef] px-5 py-3.5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Avatar
+            src={staff.avatar || `https://i.pravatar.cc/150?u=${staff.id}`}
+            alt={staff.name}
+            sx={{
+              width: 44,
+              height: 44,
+              border: '2px solid rgba(255,255,255,0.85)',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+            }}
+          />
+          <h2 className="text-white text-[17px] font-bold tracking-tight leading-snug">
+            {formData.name || staff.name}
+          </h2>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSave} noValidate className="p-3 sm:p-4">
+        {/* Circular translucent close button */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close dialog"
+          className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all duration-150 cursor-pointer"
+        >
+          <CloseIcon sx={{ fontSize: 18 }} />
+        </button>
+      </div>
+
+      {/* Dialog Form Body */}
+      <form onSubmit={handleSave} noValidate>
+        <DialogContent sx={{ p: '24px 24px 16px 24px' }}>
           <div className="space-y-4">
             {/* Row 1: Name & Designation */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -221,7 +234,7 @@ export default function EditStaff() {
               </div>
             </div>
 
-            {/* Row 2: Mobile & Email */}
+            {/* Row 2: Mobile & Email with right-side icons */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <TextField
@@ -264,7 +277,7 @@ export default function EditStaff() {
               </div>
             </div>
 
-            {/* Row 3: Joining date */}
+            {/* Row 3: Joining date with calendar icon */}
             <div>
               <TextField
                 fullWidth
@@ -316,25 +329,25 @@ export default function EditStaff() {
               />
             </div>
           </div>
+        </DialogContent>
 
-          {/* Footer Buttons matching Luxuria pill design */}
-          <div className="pt-6 flex items-center gap-3">
-            <button
-              type="submit"
-              className="px-7 py-2 rounded-full bg-white hover:bg-[#5d5fef] text-[#5d5fef] hover:text-white font-semibold text-sm border border-gray-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md transition-all duration-200 cursor-pointer"
-            >
-              Save
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/hr/staff')}
-              className="px-7 py-2 rounded-full bg-white hover:bg-red-500 text-red-500 hover:text-white font-semibold text-sm border border-red-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md transition-all duration-200 cursor-pointer"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Footer Buttons exactly matching Luxuria pill design */}
+        <div className="px-6 pb-6 pt-2 flex items-center gap-3">
+          <button
+            type="submit"
+            className="px-7 py-2 rounded-full bg-white hover:bg-[#5d5fef] text-[#5d5fef] hover:text-white font-semibold text-sm border border-gray-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md transition-all duration-200 cursor-pointer"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-7 py-2 rounded-full bg-white hover:bg-red-500 text-red-500 hover:text-white font-semibold text-sm border border-red-100 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md transition-all duration-200 cursor-pointer"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </Dialog>
   );
 }

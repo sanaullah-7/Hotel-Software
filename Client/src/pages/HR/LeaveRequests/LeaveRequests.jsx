@@ -12,6 +12,12 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import CloseIcon from '@mui/icons-material/Close';
+import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
+import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
+import DateRangeIcon from '@mui/icons-material/DateRange';
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -505,32 +511,122 @@ export default function LeaveRequests() {
     setVisibleColumns(prev => ({ ...prev, [col]: !prev[col] }));
   };
 
+  // Dynamic Leave Management Summary Statistics
+  const leaveStats = useMemo(() => {
+    const list = Array.isArray(data) ? data : [];
+    const totalRequests = list.length;
+    const pendingRequests = list.filter(item => (item.status || '').toLowerCase() === 'pending').length;
+    const approvedRequests = list.filter(item => (item.status || '').toLowerCase() === 'approved').length;
+    const rejectedRequests = list.filter(item => (item.status || '').toLowerCase() === 'rejected').length;
+    
+    // Unique employees with approved leave
+    const employeesOnLeave = new Set(
+      list
+        .filter(item => (item.status || '').toLowerCase() === 'approved')
+        .map(item => item.empId || item.name)
+        .filter(Boolean)
+    ).size;
+
+    // Total days requested / recorded
+    const totalLeaveDays = list.reduce((sum, item) => sum + (Number(item.days) || 0), 0);
+
+    return [
+      {
+        id: 'total-requests',
+        title: 'Total Requests',
+        value: totalRequests,
+        subtext: 'All records',
+        icon: AssignmentOutlinedIcon,
+        iconBg: 'bg-[var(--primary-main)]/10',
+        iconColor: 'text-[var(--primary-main)]'
+      },
+      {
+        id: 'pending-requests',
+        title: 'Pending Requests',
+        value: pendingRequests,
+        subtext: 'Needs review',
+        icon: PendingActionsOutlinedIcon,
+        iconBg: 'bg-amber-50',
+        iconColor: 'text-amber-600'
+      },
+      {
+        id: 'approved-requests',
+        title: 'Approved Requests',
+        value: approvedRequests,
+        subtext: 'Granted',
+        icon: CheckCircleOutlinedIcon,
+        iconBg: 'bg-emerald-50',
+        iconColor: 'text-emerald-600'
+      },
+      {
+        id: 'rejected-requests',
+        title: 'Rejected Requests',
+        value: rejectedRequests,
+        subtext: 'Declined',
+        icon: CancelOutlinedIcon,
+        iconBg: 'bg-rose-50',
+        iconColor: 'text-rose-600'
+      },
+      {
+        id: 'employees-on-leave',
+        title: 'Employees on Leave',
+        value: employeesOnLeave,
+        subtext: 'Active staff',
+        icon: GroupOutlinedIcon,
+        iconBg: 'bg-blue-50',
+        iconColor: 'text-blue-600'
+      },
+      {
+        id: 'total-leave-days',
+        title: 'Total Leave Days',
+        value: totalLeaveDays,
+        subtext: 'Days total',
+        icon: DateRangeIcon,
+        iconBg: 'bg-indigo-50',
+        iconColor: 'text-indigo-600'
+      }
+    ];
+  }, [data]);
+
   return (
-    <div className="w-full bg-[#f8fafc] px-0.5 sm:px-1 py-2">
-
-      {/* 1. Page Title & Breadcrumbs */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-3.5 px-1">
-        <h1 className="text-xl font-bold text-gray-800 tracking-tight">Leave Requests</h1>
-
-        {/* Breadcrumb matching Luxuria */}
-        <nav className="flex items-center text-xs sm:text-sm font-medium text-gray-500 space-x-1.5">
-          <Link to="/" className="flex items-center text-gray-400 hover:text-[#5d5fef] transition-colors">
-            <HomeOutlinedIcon sx={{ fontSize: 17 }} />
-          </Link>
-          <span className="text-gray-300">•</span>
-          <span className="hover:text-[#5d5fef] transition-colors text-gray-600">
-            Human Resources
-          </span>
-          <span className="text-gray-300">•</span>
-          <span className="text-gray-900 font-semibold">Leave Requests</span>
-        </nav>
+    <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden bg-[#f8fafc] flex flex-col gap-1">
+      {/* ── Compact Leave Management Summary Cards ─────────────────────────────── */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
+        {leaveStats.map((card) => {
+          const IconComp = card.icon;
+          return (
+            <div
+              key={card.id}
+              className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
+            >
+              <div className="flex items-center gap-1.5 min-w-0">
+                <div className={`p-1 rounded-md ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}>
+                  <IconComp sx={{ fontSize: 15 }} />
+                </div>
+                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
+                  {card.title}
+                </span>
+              </div>
+              <div className="flex items-baseline justify-between mt-1">
+                <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
+                  {card.value}
+                </span>
+                {card.subtext && (
+                  <span className="text-[10px] text-[var(--text-secondary)] font-normal hidden xl:inline">
+                    {card.subtext}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* 2. Main White Table Card Container */}
-      <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] px-2.5 sm:px-4 py-3.5 sm:py-4">
+      <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] p-2 sm:p-2.5">
 
         {/* Toolbar Header (Title + Search + Actions) */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3.5 border-b border-gray-100">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-2 border-b border-gray-100">
           
           {/* Left: Table Title & Search input */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
@@ -565,7 +661,7 @@ export default function LeaveRequests() {
                   className="!bg-red-50 !text-red-600 hover:!bg-red-100"
                   sx={{ width: 34, height: 34, borderRadius: '8px' }}
                 >
-                  <DeleteOutlinedIcon sx={{ fontSize: 19 }} />
+                  <DeleteOutlinedIcon fontSize='small' />
                 </IconButton>
               </Tooltip>
             )}
@@ -584,7 +680,7 @@ export default function LeaveRequests() {
                   '&:hover': { backgroundColor: '#e2e8f0' }
                 }}
               >
-                <FilterListIcon sx={{ fontSize: 19 }} />
+                <FilterListIcon fontSize="small"   />
               </IconButton>
             </Tooltip>
 
@@ -602,7 +698,7 @@ export default function LeaveRequests() {
                   '&:hover': { backgroundColor: '#16a34a' }
                 }}
               >
-                <AddIcon sx={{ fontSize: 20 }} />
+                <AddIcon fontSize="small"  />
               </IconButton>
             </Tooltip>
 
@@ -620,7 +716,7 @@ export default function LeaveRequests() {
                   '&:hover': { backgroundColor: '#e2e8f0' }
                 }}
               >
-                <RefreshIcon sx={{ fontSize: 19 }} />
+                <RefreshIcon fontSize="small"  />
               </IconButton>
             </Tooltip>
 
@@ -638,7 +734,7 @@ export default function LeaveRequests() {
                   '&:hover': { backgroundColor: '#0369a1' }
                 }}
               >
-                <TableChartIcon sx={{ fontSize: 18 }} />
+                <TableChartIcon fontSize="small" />
               </IconButton>
             </Tooltip>
 
@@ -656,7 +752,7 @@ export default function LeaveRequests() {
                   '&:hover': { backgroundColor: '#dc2626' }
                 }}
               >
-                <PictureAsPdfIcon sx={{ fontSize: 18 }} />
+                <PictureAsPdfIcon fontSize="small"  />
               </IconButton>
             </Tooltip>
           </div>
