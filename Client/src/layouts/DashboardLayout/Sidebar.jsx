@@ -99,11 +99,6 @@ export default function Sidebar() {
 
   const reservationSubItems = [
     {
-      label: 'Add New Reservation',
-      id: 'add-new-reservation',
-      path: '/reservation/new',
-    },
-    {
       label: 'All Reservations',
       id: 'all-reservations',
       path: '/reservation/all',
@@ -122,6 +117,11 @@ export default function Sidebar() {
       label: 'Group Booking',
       id: 'group-booking',
       path: '/reservation/group',
+    },
+    {
+      label: 'Add New Reservation',
+      id: 'add-new-reservation',
+      path: '/reservation/new',
     },
   ];
 
