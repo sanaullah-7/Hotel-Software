@@ -44,7 +44,7 @@ export default function AppBreadcrumbs() {
   if (pathnames.length === 0) {
     // We are on the root/dashboard, breadcrumb could be just "Dashboard"
     return (
-      <div className="mb-3.5">
+      <div>
         <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
           <Typography sx={{ color: 'text.primary', fontSize: '13px', fontWeight: 600 }}>
             Dashboard
@@ -54,13 +54,13 @@ export default function AppBreadcrumbs() {
     );
   }
 
-  // Remove the breadcrumb feature entirely from HR, Reports and Events pages
-  if (pathnames[0] === 'hr' || pathnames[0] === 'reports' || pathnames[0] === 'events') {
+  // Remove the breadcrumb feature entirely from all Human Resources pages
+  if (pathnames[0] === 'hr') {
     return null;
   }
 
   return (
-    <div className="mb-3.5">
+    <div>
       <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
         <Link 
           component={RouterLink}
