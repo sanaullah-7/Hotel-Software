@@ -126,7 +126,7 @@ export default function LuxuriaAssistant() {
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 shadow-sm shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-dark)] flex items-center justify-center text-white shadow-md">
             <SparklesIcon sx={{ fontSize: 22 }} />
           </div>
           <div>
@@ -158,9 +158,9 @@ export default function LuxuriaAssistant() {
           <button
             key={chip.id}
             onClick={() => handleSuggestionClick(chip.id)}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 text-gray-600 hover:text-indigo-700 text-xs font-medium rounded-full transition-all whitespace-nowrap cursor-pointer shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-[var(--primary-light)] hover:bg-[#e5f4eb] text-gray-600 hover:text-[var(--primary-dark)] text-xs font-medium rounded-full transition-all whitespace-nowrap cursor-pointer shadow-sm"
           >
-            {chip.icon && <span className="text-indigo-400">{chip.icon}</span>}
+            {chip.icon && <span className="text-[var(--primary-light)]">{chip.icon}</span>}
             {chip.label}
           </button>
         ))}
@@ -176,7 +176,7 @@ export default function LuxuriaAssistant() {
                 
                 {/* Avatar */}
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 shadow-sm ${
-                  isAi ? 'bg-indigo-100 text-indigo-600' : 'bg-gray-200 text-gray-600'
+                  isAi ? 'bg-[#e5f4eb] text-[var(--primary-main)]' : 'bg-gray-200 text-gray-600'
                 }`}>
                   {isAi ? <BotIcon sx={{ fontSize: 18 }} /> : <UserIcon sx={{ fontSize: 18 }} />}
                 </div>
@@ -186,7 +186,7 @@ export default function LuxuriaAssistant() {
                   <div className={`px-5 py-3.5 rounded-2xl shadow-sm text-[14.5px] leading-relaxed ${
                     isAi 
                       ? 'bg-white text-gray-700 border border-gray-100 rounded-tl-sm' 
-                      : 'bg-indigo-600 text-white rounded-tr-sm'
+                      : 'bg-[var(--primary-main)] text-white rounded-tr-sm'
                   }`}>
                     {msg.text}
                   </div>
@@ -211,13 +211,13 @@ export default function LuxuriaAssistant() {
         {isTyping && (
           <div className="flex justify-start">
             <div className="flex gap-3 max-w-[80%]">
-              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0 mt-1 shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0 mt-1 shadow-sm">
                 <BotIcon sx={{ fontSize: 18 }} />
               </div>
               <div className="bg-white border border-gray-100 px-5 py-4 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5">
-                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-[var(--primary-light)] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                <div className="w-2 h-2 bg-[var(--primary-light)] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                <div className="w-2 h-2 bg-[var(--primary-light)] rounded-full animate-bounce"></div>
               </div>
             </div>
           </div>
@@ -229,7 +229,7 @@ export default function LuxuriaAssistant() {
       <div className="p-4 bg-white border-t border-gray-100 shrink-0">
         <form 
           onSubmit={handleSend}
-          className="max-w-5xl mx-auto flex items-center gap-3 bg-white border border-gray-300 rounded-full pl-6 pr-2 py-2 shadow-sm focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-200 transition-all"
+          className="max-w-5xl mx-auto flex items-center gap-3 bg-white border border-gray-300 rounded-full pl-6 pr-2 py-2 shadow-sm focus-within:border-[var(--primary-main)] focus-within:ring-2 focus-within:ring-[#dcefe5] transition-all"
         >
           <input 
             type="text" 
@@ -241,7 +241,7 @@ export default function LuxuriaAssistant() {
           <button 
             type="submit"
             disabled={!inputValue.trim() || isTyping}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md"
+            className="bg-[var(--primary-main)] hover:bg-[var(--primary-dark)] text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md"
           >
             <SendIcon sx={{ fontSize: 18 }} />
           </button>

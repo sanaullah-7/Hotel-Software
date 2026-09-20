@@ -9,7 +9,6 @@ import {
   ChevronRight as ChevronRightIcon,
   ChevronLeft as ChevronLeftIcon,
   CleaningServices as HousekeepingIcon,
-  Build as MaintenanceIcon,
   Inventory2 as InventoryIcon,
   Payments as RatesPricingIcon,
   ReceiptLong as PaymentBillingIcon,
@@ -31,7 +30,6 @@ export default function Sidebar() {
   const isReservationActive = pathname.startsWith('/reservation');
   const isRoomsActive = pathname.startsWith('/rooms');
   const isHousekeepingActive = pathname.startsWith('/housekeeping');
-  const isMaintenanceActive = pathname.startsWith('/maintenance');
   const isInventoryActive = pathname.startsWith('/inventory');
   const isRatesPricingActive = pathname.startsWith('/rates-pricing');
   const isPaymentBillingActive = pathname.startsWith('/payment-billing');
@@ -625,45 +623,6 @@ export default function Sidebar() {
             items={housekeepingSubItems}
           />
 
-          {/* Maintenance */}
-          <li>
-            <Link
-              to="/maintenance"
-              title={!isOpen ? 'Maintenance' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
-                isMaintenanceActive
-                  ? 'bg-[#f4f9f6] text-[#1b7f43]'
-                  : 'hover:bg-gray-50 text-gray-600'
-              } ${isOpen ? 'justify-between' : 'justify-center'}`}
-            >
-              <div className="flex items-center min-w-0">
-                <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
-                    isMaintenanceActive
-                      ? 'bg-[#e5f4eb] text-[#1b7f43]'
-                      : 'text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
-                  }`}
-                >
-                  <MaintenanceIcon sx={{ fontSize: 19 }} />
-                </div>
-
-                <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
-                    isOpen
-                      ? 'opacity-100 block truncate'
-                      : 'opacity-0 hidden'
-                  } ${
-                    isMaintenanceActive
-                      ? 'text-gray-900 font-bold'
-                      : 'text-gray-600 group-hover:text-gray-900 font-medium'
-                  }`}
-                >
-                  Maintenance
-                </span>
-              </div>
-            </Link>
-          </li>
-
           {/* Inventory */}
           <DropdownSection
             active={isInventoryActive}
@@ -724,16 +683,6 @@ export default function Sidebar() {
             items={reportsSubItems}
           />
 
-          {/* Hotel Settings */}
-          <DropdownSection
-            active={isSettingsActive}
-            open={isSettingsOpen}
-            toggle={handleToggleSettings}
-            icon={SettingsIcon}
-            label="Hotel Settings"
-            items={settingsSubItems}
-          />
-
           {/* AI Assistant */}
           <li>
             <Link
@@ -741,7 +690,7 @@ export default function Sidebar() {
               title={!isOpen ? 'AI Assistant' : undefined}
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isAssistantActive
-                  ? 'bg-indigo-50 text-indigo-600'
+                  ? 'bg-[#dcefe5] text-[var(--primary-main)]'
                   : 'hover:bg-gray-50 text-gray-600'
               } ${isOpen ? 'justify-between' : 'justify-center'}`}
             >
@@ -749,7 +698,7 @@ export default function Sidebar() {
                 <div
                   className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
                     isAssistantActive
-                      ? 'bg-indigo-100 text-indigo-600'
+                      ? 'bg-[#cce7d6] text-[var(--primary-main)]'
                       : 'text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
                   }`}
                 >
@@ -763,7 +712,7 @@ export default function Sidebar() {
                       : 'opacity-0 hidden'
                   } ${
                     isAssistantActive
-                      ? 'text-indigo-900 font-bold'
+                      ? 'text-gray-900 font-bold'
                       : 'text-gray-600 group-hover:text-gray-900 font-medium'
                   }`}
                 >
@@ -772,6 +721,16 @@ export default function Sidebar() {
               </div>
             </Link>
           </li>
+
+          {/* Hotel Settings */}
+          <DropdownSection
+            active={isSettingsActive}
+            open={isSettingsOpen}
+            toggle={handleToggleSettings}
+            icon={SettingsIcon}
+            label="Hotel Settings"
+            items={settingsSubItems}
+          />
 
         </ul>
       </nav>
