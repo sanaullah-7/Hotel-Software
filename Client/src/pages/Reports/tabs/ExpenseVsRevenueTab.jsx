@@ -75,7 +75,7 @@ export default function ExpenseVsRevenueTab() {
       {/* 2. Top Metric KPI Cards (2x2 Grid) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {/* Card 1: TOTAL REVENUE (YTD) */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
@@ -102,7 +102,7 @@ export default function ExpenseVsRevenueTab() {
         </div>
 
         {/* Card 2: TOTAL EXPENSES (YTD) */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
@@ -129,7 +129,7 @@ export default function ExpenseVsRevenueTab() {
         </div>
 
         {/* Card 3: NET PROFIT */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
@@ -156,7 +156,7 @@ export default function ExpenseVsRevenueTab() {
         </div>
 
         {/* Card 4: OPERATING MARGIN */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
@@ -184,7 +184,7 @@ export default function ExpenseVsRevenueTab() {
       </div>
 
       {/* 3. Revenue Trend (Dual Area Spline Chart) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 mb-2">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 mb-2">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h3 className="text-[18px] font-bold text-[#1e293b]">
@@ -267,10 +267,6 @@ export default function ExpenseVsRevenueTab() {
         </div>
       </div>
 
-      {/* 4. Footer */}
-      <div className="pt-2 text-left text-sm text-gray-500 font-normal">
-        Copyright © 2026 Design By <span className="text-gray-700 font-semibold">Tech Titans</span>
-      </div>
     </div>
   );
 }

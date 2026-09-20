@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import {
   HomeOutlined as HomeIcon,
   Celebration as CelebrationIcon,
@@ -533,10 +533,6 @@ export default function BanquetManager() {
         })}
       </div>
 
-      {/* â”€â”€ 6. Footer â”€â”€ */}
-      <div className="pt-1 text-left text-xs text-slate-400 font-normal">
-        Copyright Â© 2026 Design By <span className="text-slate-600 font-semibold">Luxuria</span>
-      </div>
 
       {/* â”€â”€ Modal: View BEO Sheet â”€â”€ */}
       {activeBeoSheet && (

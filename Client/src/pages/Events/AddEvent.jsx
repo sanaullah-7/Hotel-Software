@@ -165,7 +165,7 @@ export default function AddEvent() {
       )}
 
       {/* Main Card Container */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-3 sm:p-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 px-2.5 sm:px-3 py-2.5">
         <h2 className="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">
           Add Event/Banquet
         </h2>

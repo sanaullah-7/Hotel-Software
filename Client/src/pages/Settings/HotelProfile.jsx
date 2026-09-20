@@ -168,7 +168,7 @@ export default function HotelProfile() {
      
 
       {/* 2. Main Form Card: Property Details */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-4">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5">
         {/* Card Header */}
         <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
           <div className="w-9 h-9 rounded-xl bg-[#e0edff] text-[#2563eb] flex items-center justify-center shrink-0">
@@ -350,7 +350,7 @@ export default function HotelProfile() {
       </div>
 
       {/* 3. Branding & Media Card */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-4 space-y-3">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 space-y-3">
         {/* Hidden File Input */}
         <input
           type="file"
@@ -448,7 +448,7 @@ export default function HotelProfile() {
         </div>
 
         {/* Profile Completion Section */}
-        <div className="bg-[#f0fdf4]/50 border border-green-100 rounded-2xl p-6 mt-4">
+        <div className="bg-[#f0fdf4]/50 border border-green-100 rounded-2xl p-3 sm:p-3.5 mt-3">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#d1fae5] text-[#10b981] flex items-center justify-center shrink-0">
@@ -486,10 +486,6 @@ export default function HotelProfile() {
         </div>
       </div>
 
-      {/* 4. Footer */}
-      <div className="pt-2 text-left text-sm text-gray-500 font-normal">
-        Copyright © 2026 Design By <span className="text-gray-700 font-semibold">Luxuria</span>
-      </div>
     </div>
   );
 }

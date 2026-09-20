@@ -49,8 +49,15 @@ export default function AppBreadcrumbs() {
     );
   }
 
-  // Remove the breadcrumb feature entirely from HR, Reports and Events pages
-  if (pathnames[0] === 'hr' || pathnames[0] === 'reports' || pathnames[0] === 'events') {
+  // Remove the breadcrumb feature entirely from HR, Reports, Events and Settings / Hotel Profile pages
+  if (
+    pathnames[0] === 'hr' ||
+    pathnames[0] === 'reports' ||
+    pathnames[0] === 'events' ||
+    pathnames[0] === 'settings' ||
+    pathnames[0] === 'hotel-settings' ||
+    pathnames.includes('hotel-profile')
+  ) {
     return null;
   }
 

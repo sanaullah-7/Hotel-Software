@@ -311,7 +311,6 @@ export default function ExpenseReport() {
       showToast('Failed to export PDF file');
     }
   };
-
   // Status Badge Renderer
   const renderStatusBadge = (status) => {
     switch (status) {
@@ -351,30 +350,13 @@ export default function ExpenseReport() {
       {/* Main Card Container */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Card Header Toolbar */}
-        <div className="p-2 sm:p-2.5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
-          {/* Left Side: Search Bar (replacing All Expenses heading) & Bulk Actions */}
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-52 sm:w-64 pl-3.5 pr-9 py-2 text-sm bg-slate-50 rounded-xl border border-gray-200 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 transition text-gray-700 placeholder-gray-400"
-              />
-              <SearchIcon
-                sx={{ fontSize: 18, color: '#9ca3af' }}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
-              />
-            </div>
-
+        <div className="p-4 sm:p-5 border-b border-gray-100 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-800">All Expenses</h2>
             {selectedIds.size > 0 && (
               <button
                 onClick={handleBulkDelete}
-                className="text-xs bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1 transition cursor-pointer"
+                className="text-xs bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-3 py-1 rounded-md font-medium flex items-center gap-1 transition cursor-pointer"
               >
                 <DeleteIcon sx={{ fontSize: 15 }} />
                 Delete Selected ({selectedIds.size})
@@ -384,6 +366,23 @@ export default function ExpenseReport() {
 
           {/* Right Toolbar Actions */}
           <div className="flex items-center flex-wrap gap-2.5">
+            {/* Search Input */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-44 sm:w-56 pl-3 pr-9 py-1.5 text-sm rounded-md border border-gray-200 focus:outline-none focus:border-indigo-500 transition text-gray-700 placeholder-gray-400"
+              />
+              <SearchIcon
+                sx={{ fontSize: 18, color: '#9ca3af' }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+              />
+            </div>
 
             {/* Filter / Column Toggle Button */}
             <div className="relative" ref={filterMenuRef}>
@@ -482,7 +481,7 @@ export default function ExpenseReport() {
             <thead>
               <tr className="border-b border-gray-100 bg-white">
                 {visibleColumns.checkbox && (
-                  <th className="py-2 px-2.5 w-10 text-center">
+                  <th className="py-3.5 px-4 w-12 text-center">
                     <input
                       type="checkbox"
                       checked={isAllSelected}
@@ -495,31 +494,31 @@ export default function ExpenseReport() {
                   </th>
                 )}
                 {visibleColumns.invoiceNo && (
-                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Invoice No</th>
+                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Invoice No</th>
                 )}
                 {visibleColumns.date && (
-                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Date</th>
+                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Date</th>
                 )}
                 {visibleColumns.expense && (
-                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Expense</th>
+                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Expense</th>
                 )}
                 {visibleColumns.expenseBy && (
-                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Expense By</th>
+                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Expense By</th>
                 )}
                 {visibleColumns.amount && (
-                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Amount</th>
+                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Amount</th>
                 )}
                 {visibleColumns.paymentMode && (
-                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Payment Mode</th>
+                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Payment Mode</th>
                 )}
                 {visibleColumns.status && (
-                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Status</th>
+                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Status</th>
                 )}
                 {visibleColumns.paidTo && (
-                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider">Paid To</th>
+                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider">Paid To</th>
                 )}
                 {visibleColumns.actions && (
-                  <th className="py-2 px-2.5 text-xs font-semibold text-gray-700 tracking-wider text-right pr-4">
+                  <th className="py-3.5 px-4 text-xs font-semibold text-gray-700 tracking-wider text-right pr-6">
                     Actions
                   </th>
                 )}
@@ -545,7 +544,7 @@ export default function ExpenseReport() {
                       }`}
                     >
                       {visibleColumns.checkbox && (
-                        <td className="py-1.5 px-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                        <td className="py-3 px-4 text-center" onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={isSelected}
@@ -555,10 +554,10 @@ export default function ExpenseReport() {
                         </td>
                       )}
                       {visibleColumns.invoiceNo && (
-                        <td className="py-1.5 px-2.5 font-normal text-gray-600">{item.invoiceNo}</td>
+                        <td className="py-3 px-4 font-normal text-gray-600">{item.invoiceNo}</td>
                       )}
                       {visibleColumns.date && (
-                        <td className="py-1.5 px-2.5 font-normal text-gray-600 whitespace-nowrap">
+                        <td className="py-3 px-4 font-normal text-gray-600 whitespace-nowrap">
                           <span className="flex items-center gap-1.5">
                             <CalendarIcon sx={{ fontSize: 15, color: '#9ca3af' }} />
                             <span>{item.date}</span>
@@ -566,25 +565,25 @@ export default function ExpenseReport() {
                         </td>
                       )}
                       {visibleColumns.expense && (
-                        <td className="py-1.5 px-2.5 font-medium text-gray-800">{item.expense}</td>
+                        <td className="py-3 px-4 font-medium text-gray-800">{item.expense}</td>
                       )}
                       {visibleColumns.expenseBy && (
-                        <td className="py-1.5 px-2.5 font-normal text-gray-600">{item.expenseBy}</td>
+                        <td className="py-3 px-4 font-normal text-gray-600">{item.expenseBy}</td>
                       )}
                       {visibleColumns.amount && (
-                        <td className="py-1.5 px-2.5 font-normal text-gray-700">${item.amount}</td>
+                        <td className="py-3 px-4 font-normal text-gray-700">${item.amount}</td>
                       )}
                       {visibleColumns.paymentMode && (
-                        <td className="py-1.5 px-2.5 font-normal text-gray-600">{item.paymentMode}</td>
+                        <td className="py-3 px-4 font-normal text-gray-600">{item.paymentMode}</td>
                       )}
                       {visibleColumns.status && (
-                        <td className="py-1.5 px-2.5">{renderStatusBadge(item.status)}</td>
+                        <td className="py-3 px-4">{renderStatusBadge(item.status)}</td>
                       )}
                       {visibleColumns.paidTo && (
-                        <td className="py-1.5 px-2.5 font-normal text-gray-600">{item.paidTo}</td>
+                        <td className="py-3 px-4 font-normal text-gray-600">{item.paidTo}</td>
                       )}
                       {visibleColumns.actions && (
-                        <td className="py-1.5 px-2.5 text-right pr-4" onClick={(e) => e.stopPropagation()}>
+                        <td className="py-3 px-4 text-right pr-6" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-2">
                             {/* Edit Button */}
                             <button
@@ -614,7 +613,7 @@ export default function ExpenseReport() {
         </div>
 
         {/* Card Footer / Pagination Controls */}
-        <div className="p-2 border-t border-gray-100 flex flex-wrap items-center justify-end gap-4 text-xs text-gray-500 font-medium">
+        <div className="p-4 border-t border-gray-100 flex flex-wrap items-center justify-end gap-6 text-xs text-gray-500 font-medium">
           {/* Items Per Page */}
           <div className="flex items-center gap-2">
             <span>Items per page:</span>

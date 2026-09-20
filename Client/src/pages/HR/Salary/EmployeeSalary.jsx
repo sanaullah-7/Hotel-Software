@@ -1106,11 +1106,6 @@ export default function EmployeeSalary() {
         </div>
       </div>
 
-      {/* 5. Footer Copyright Note */}
-      <div className="text-center text-xs text-slate-400 py-3">
-        Copyright © 2026 Design By <span className="text-[#5d5fef] font-medium">Luxuria</span>
-      </div>
-
       {/* Popover: Filter by Department */}
       <Popover
         open={Boolean(filterAnchorEl)}

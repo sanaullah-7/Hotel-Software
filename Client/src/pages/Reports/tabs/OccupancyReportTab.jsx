@@ -165,7 +165,7 @@ export default function OccupancyReportTab() {
       {/* 2. Top Metric KPI Cards (2x2 Grid) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {/* Card 1: CURRENT OCCUPANCY RATE */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -194,7 +194,7 @@ export default function OccupancyReportTab() {
         </div>
 
         {/* Card 2: AVAILABLE ROOMS */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -223,7 +223,7 @@ export default function OccupancyReportTab() {
         </div>
 
         {/* Card 3: UNDER MAINTENANCE */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -252,7 +252,7 @@ export default function OccupancyReportTab() {
         </div>
 
         {/* Card 4: AVG. LENGTH OF STAY */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -282,7 +282,7 @@ export default function OccupancyReportTab() {
       </div>
 
       {/* 3. Occupancy Trend Analysis (Dual Area Spline Chart) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
             <h3 className="text-[18px] font-bold text-[#1e293b]">
@@ -388,7 +388,7 @@ export default function OccupancyReportTab() {
       </div>
 
       {/* 4. Room Status Distribution (Donut Chart) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5">
         <div className="mb-4">
           <h3 className="text-[18px] font-bold text-[#1e293b]">
             Room Status Distribution
@@ -576,10 +576,6 @@ export default function OccupancyReportTab() {
         </div>
       </div>
 
-      {/* 7. Footer */}
-      <div className="pt-4 text-left text-sm text-gray-500 font-normal">
-        Copyright © 2026 Design By <span className="text-gray-700 font-semibold">Tech Titans</span>
-      </div>
     </div>
   );
 }

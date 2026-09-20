@@ -168,7 +168,7 @@ export default function RevenueReport() {
       {/* 2. Top Metric Cards (2x2 Grid) */}
       <div className="grid grid-cols-1  md:grid-cols-2 gap-2">
         {/* Card 1: TOTAL REVENUE */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -197,7 +197,7 @@ export default function RevenueReport() {
         </div>
 
         {/* Card 2: AVG. DAILY RATE */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -226,7 +226,7 @@ export default function RevenueReport() {
         </div>
 
         {/* Card 3: TOTAL BOOKINGS */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -255,7 +255,7 @@ export default function RevenueReport() {
         </div>
 
         {/* Card 4: REVENUE PER AVAILABLE ROOM */}
-        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5 hover:shadow-md transition-shadow">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2.5">
@@ -285,7 +285,7 @@ export default function RevenueReport() {
       </div>
 
       {/* 3. Revenue Trend Analysis (Area Chart) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5">
         <div className="relative mb-6">
           <div className="text-center">
             <h3 className="text-[18px] font-bold text-[#1e293b]">
@@ -380,7 +380,7 @@ export default function RevenueReport() {
       </div>
 
       {/* 4. Revenue Distribution (Donut Chart) */}
-      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5">
+      <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm px-2.5 sm:px-3 py-2.5">
         <div className="mb-4">
           <h3 className="text-[18px] font-bold text-[#1e293b]">
             Revenue Distribution
@@ -517,10 +517,6 @@ export default function RevenueReport() {
         </div>
       </div>
 
-      {/* 6. Footer */}
-      <div className="pt-4 text-left text-sm text-gray-500 font-normal">
-        Copyright © 2026 Design By <span className="text-gray-700 font-semibold">Luxuria</span>
-      </div>
 
       {/* AI Explain Modal */}
       {showAiModal && (
