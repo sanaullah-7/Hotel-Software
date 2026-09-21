@@ -30,7 +30,14 @@ export default function AppBreadcrumbs() {
     'charges': 'Guest Charges',
     'missing': 'Missing Items',
     'missing-items': 'Missing Items',
-    'stock': 'Stock'
+    'stock': 'Stock',
+    'hr': 'Human Resources',
+    'staff': 'Staff',
+    'add': 'Add Staff',
+    'leave-requests': 'Leave Requests',
+    'attendance': 'Attendance Sheet',
+    'today': "Today's Attendance",
+    'employee-salary': 'Employee Salary'
   };
 
   const formatName = (name) => {
@@ -54,27 +61,18 @@ export default function AppBreadcrumbs() {
     );
   }
 
-  // Remove the breadcrumb feature entirely from all Human Resources pages
-  if (pathnames[0] === 'hr') {
-    return null;
-  }
-
   return (
     <div>
       <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
-        <Link 
-          component={RouterLink}
-          underline="hover"
-          color="inherit" 
-          to="/" 
-          sx={{ fontSize: '13px', color: '#6b7280', '&:hover': { color: '#1b7f43' } }}
-        >
-          Dashboard
-        </Link>
         {pathnames.map((value, index) => {
           const isLast = index === pathnames.length - 1;
           const to = `/${pathnames.slice(0, index + 1).join('/')}`;
-          const label = formatName(value);
+          const label =
+            pathnames[0] === 'hr' && pathnames[1] === 'staff' && index === 2
+              ? 'Staff Profile'
+              : pathnames[0] === 'hr' && pathnames[1] === 'staff' && index === 3
+                ? 'Edit Staff'
+                : formatName(value);
 
           return isLast ? (
             <Typography key={to} sx={{ color: 'text.primary', fontSize: '13px', fontWeight: 600 }}>

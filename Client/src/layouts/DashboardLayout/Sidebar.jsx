@@ -16,8 +16,123 @@ import {
   BarChart as ReportsIcon,
   Settings as SettingsIcon,
   RestaurantMenu as RestaurantIcon,
+  Celebration as EventsIcon,
   AutoAwesome as AssistantIcon,
 } from '@mui/icons-material';
+
+
+// Reusable submenu renderer
+const renderSubItems = (items, pathname) => {
+  return (
+    <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
+      {items.map((subItem) => {
+        const isSelected = pathname === subItem.path;
+
+        return (
+          <Link
+            key={subItem.id}
+            to={subItem.path}
+            className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
+              isSelected
+                ? 'bg-[#dcefe5] text-[#1b7f43]'
+                : 'hover:bg-[#dcefe5] text-slate-600 hover:text-[#1b7f43]'
+            }`}
+          >
+            {isSelected ? (
+              <div className="w-2.5 h-2.5 rounded-full bg-[#1b7f43] ring-3 ring-[#1b7f43]/20 mr-3 shrink-0" />
+            ) : (
+              <div className="w-2 h-2 rounded-full bg-[#86efac] mr-3 shrink-0 ml-0.5" />
+            )}
+
+            <span className={`text-[12.5px] font-semibold transition-colors ${
+              isSelected ? 'text-[#1b7f43]' : 'text-slate-600 group-hover:text-[#1b7f43]'
+            }`}>
+              {subItem.label}
+            </span>
+          </Link>
+        );
+      })}
+    </div>
+  );
+};
+
+
+// Reusable dropdown component
+const DropdownSection = ({
+  isOpen,
+  pathname,
+  active,
+  open,
+  toggle,
+  icon: Icon,
+  label,
+  items,
+}) => {
+  return (
+    <li>
+      <button
+        onClick={toggle}
+        title={!isOpen ? label : undefined}
+        className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
+          active
+            ? 'bg-[#f0f9f4] text-[#1b7f43]'
+            : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
+        } ${isOpen ? 'justify-between' : 'justify-center'}`}
+      >
+        <div className="flex items-center min-w-0">
+          <div
+            className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-colors ${
+              active
+                ? 'bg-[#e5f4eb] text-[#1b7f43]'
+                : 'bg-gray-50 text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
+            }`}
+          >
+            <Icon sx={{ fontSize: 20 }} />
+          </div>
+
+          <span
+            className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+              isOpen
+                ? 'opacity-100 block truncate'
+                : 'opacity-0 hidden'
+            } ${
+              active
+                ? 'font-bold text-gray-900'
+                : 'text-gray-600 font-medium'
+            }`}
+          >
+            {label}
+          </span>
+        </div>
+
+        {isOpen && (
+          <div className="pr-1 shrink-0">
+            <ChevronRightIcon
+              fontSize="small"
+              className={`transition-transform duration-300 ease-in-out ${
+                active
+                  ? 'text-[#1b7f43]'
+                  : 'text-gray-400'
+              } ${open ? 'rotate-90' : 'rotate-0'}`}
+            />
+          </div>
+        )}
+      </button>
+
+      <div
+        className={`grid transition-all duration-300 ease-in-out ${
+          isOpen && open
+            ? 'grid-rows-[1fr] opacity-100 mt-1'
+            : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
+        }`}
+      >
+        <div className="overflow-hidden">
+          {renderSubItems(items, pathname)}
+        </div>
+      </div>
+    </li>
+  );
+};
 
 export default function Sidebar() {
   const location = useLocation();
@@ -37,6 +152,7 @@ export default function Sidebar() {
   const isReportsActive = pathname.startsWith('/reports');
   const isSettingsActive = pathname.startsWith('/settings');
   const isRestaurantActive = pathname.startsWith('/restaurant');
+  const isEventsActive = pathname.startsWith('/events');
   const isAssistantActive = pathname.startsWith('/ai-assistant');
 
   // Sidebar open/close
@@ -75,6 +191,8 @@ export default function Sidebar() {
 
   const [isRestaurantOpen, setIsRestaurantOpen] =
     useState(isRestaurantActive);
+
+  const [isEventsOpen, setIsEventsOpen] = useState(isEventsActive);
 
   // Sub menu data
   const frontOfficeSubItems = [
@@ -276,9 +394,19 @@ export default function Sidebar() {
 
   const reportsSubItems = [
     {
-      label: 'Stocks, Expense, Revenue Report',
-      id: 'stocks-expense-revenue',
-      path: '/reports/stocks-expense-revenue',
+      label: 'Stock',
+      id: 'stock',
+      path: '/reports/stock',
+    },
+    {
+      label: 'Expense',
+      id: 'expense',
+      path: '/reports/expense',
+    },
+    {
+      label: 'Revenue Report',
+      id: 'revenue',
+      path: '/reports/revenue',
     },
     {
       label: 'Occupancy Report',
@@ -286,15 +414,16 @@ export default function Sidebar() {
       path: '/reports/occupancy',
     },
     {
-      label: 'Expense vs Revenue',
+      label: 'Expense Vs Revenue',
       id: 'expense-vs-revenue',
       path: '/reports/expense-vs-revenue',
     },
-    {
-      label: 'Expense Management',
-      id: 'expense-management',
-      path: '/reports/expense-management',
-    },
+  ];
+
+  const eventsSubItems = [
+    { label: 'All Events', id: 'all-events', path: '/events/all-events' },
+    { label: 'Add Event', id: 'add-event', path: '/events/add-event' },
+    { label: 'Banquet Manager', id: 'banquet-manager', path: '/events/banquet-manager' },
   ];
 
   const settingsSubItems = [
@@ -353,6 +482,9 @@ export default function Sidebar() {
   const handleToggleRestaurant = () =>
     toggleDropdown(setIsRestaurantOpen);
 
+  const handleToggleEvents = () =>
+    toggleDropdown(setIsEventsOpen);
+
   // Reusable submenu renderer
   const renderSubItems = (items) => {
     return (
@@ -392,81 +524,7 @@ export default function Sidebar() {
     );
   };
 
-  // Reusable dropdown component
-  const DropdownSection = ({
-    active,
-    open,
-    toggle,
-    icon: Icon,
-    label,
-    items,
-  }) => {
-    return (
-      <li>
-        <button
-          onClick={toggle}
-          title={!isOpen ? label : undefined}
-          className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
-            active
-              ? 'bg-[#f0f9f4] text-[#1b7f43]'
-              : 'hover:bg-gray-50 text-gray-600'
-          } ${isOpen ? 'justify-between' : 'justify-center'}`}
-        >
-          <div className="flex items-center min-w-0">
-            <div
-              className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-colors ${
-                active
-                  ? 'bg-[#e5f4eb] text-[#1b7f43]'
-                  : 'bg-gray-50 text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
-              }`}
-            >
-              <Icon sx={{ fontSize: 20 }} />
-            </div>
-
-            <span
-              className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
-                isOpen
-                  ? 'opacity-100 block truncate'
-                  : 'opacity-0 hidden'
-              } ${
-                active
-                  ? 'font-bold text-gray-900'
-                  : 'text-gray-600 font-medium'
-              }`}
-            >
-              {label}
-            </span>
-          </div>
-
-          {isOpen && (
-            <div className="pr-1 shrink-0">
-              <ChevronRightIcon
-                fontSize="small"
-                className={`transition-transform duration-300 ease-in-out ${
-                  active
-                    ? 'text-[#1b7f43]'
-                    : 'text-gray-400'
-                } ${open ? 'rotate-90' : 'rotate-0'}`}
-              />
-            </div>
-          )}
-        </button>
-
-        <div
-          className={`grid transition-all duration-300 ease-in-out ${
-            isOpen && open
-              ? 'grid-rows-[1fr] opacity-100 mt-1'
-              : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
-          }`}
-        >
-          <div className="overflow-hidden">
-            {renderSubItems(items)}
-          </div>
-        </div>
-      </li>
-    );
-  };
-
+  
   return (
     <aside
       className={`${
@@ -513,7 +571,7 @@ export default function Sidebar() {
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isDashboardActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
-                  : 'hover:bg-gray-50 text-gray-600'
+                  : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
               } ${isOpen ? 'justify-between' : 'justify-center'}`}
             >
               <div className="flex items-center min-w-0">
@@ -521,7 +579,7 @@ export default function Sidebar() {
                   className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-colors ${
                     isDashboardActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
-                      : 'text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
+                      : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
                   }`}
                 >
                   <DashboardIcon sx={{ fontSize: 19 }} />
@@ -552,7 +610,7 @@ export default function Sidebar() {
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isOccupancyActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
-                  : 'hover:bg-gray-50 text-gray-600'
+                  : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
               } ${isOpen ? 'justify-between' : 'justify-center'}`}
             >
               <div className="flex items-center min-w-0">
@@ -560,7 +618,7 @@ export default function Sidebar() {
                   className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
                     isOccupancyActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
-                      : 'text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
+                      : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
                   }`}
                 >
                   <OccupancyIcon sx={{ fontSize: 19 }} />
@@ -585,6 +643,8 @@ export default function Sidebar() {
 
           {/* Front Office */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isFrontOfficeActive}
             open={isFrontOfficeOpen}
             toggle={handleToggleFrontOffice}
@@ -595,6 +655,8 @@ export default function Sidebar() {
 
           {/* Reservation */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isReservationActive}
             open={isReservationOpen}
             toggle={handleToggleReservation}
@@ -605,6 +667,8 @@ export default function Sidebar() {
 
           {/* Rooms */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isRoomsActive}
             open={isRoomsOpen}
             toggle={handleToggleRooms}
@@ -615,6 +679,8 @@ export default function Sidebar() {
 
           {/* Housekeeping */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isHousekeepingActive}
             open={isHousekeepingOpen}
             toggle={handleToggleHousekeeping}
@@ -625,6 +691,8 @@ export default function Sidebar() {
 
           {/* Inventory */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isInventoryActive}
             open={isInventoryOpen}
             toggle={handleToggleInventory}
@@ -635,6 +703,8 @@ export default function Sidebar() {
 
           {/* Rates & Pricing */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isRatesPricingActive}
             open={isRatesPricingOpen}
             toggle={handleToggleRatesPricing}
@@ -645,6 +715,8 @@ export default function Sidebar() {
 
           {/* Payment & Billing */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isPaymentBillingActive}
             open={isPaymentBillingOpen}
             toggle={handleTogglePaymentBilling}
@@ -655,6 +727,8 @@ export default function Sidebar() {
 
           {/* Human Resources */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isHRActive}
             open={isHROpen}
             toggle={handleToggleHR}
@@ -665,6 +739,8 @@ export default function Sidebar() {
 
           {/* Restaurant */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isRestaurantActive}
             open={isRestaurantOpen}
             toggle={handleToggleRestaurant}
@@ -673,8 +749,22 @@ export default function Sidebar() {
             items={restaurantSubItems}
           />
 
+          {/* Events & Banquets */}
+          <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
+            active={isEventsActive}
+            open={isEventsOpen}
+            toggle={handleToggleEvents}
+            icon={EventsIcon}
+            label="Events & Banquets"
+            items={eventsSubItems}
+          />
+
           {/* Reports */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isReportsActive}
             open={isReportsOpen}
             toggle={handleToggleReports}
@@ -691,7 +781,7 @@ export default function Sidebar() {
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isAssistantActive
                   ? 'bg-[#dcefe5] text-[var(--primary-main)]'
-                  : 'hover:bg-gray-50 text-gray-600'
+                  : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
               } ${isOpen ? 'justify-between' : 'justify-center'}`}
             >
               <div className="flex items-center min-w-0">
@@ -699,7 +789,7 @@ export default function Sidebar() {
                   className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
                     isAssistantActive
                       ? 'bg-[#cce7d6] text-[var(--primary-main)]'
-                      : 'text-gray-400 group-hover:bg-gray-100 group-hover:text-gray-600'
+                      : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
                   }`}
                 >
                   <AssistantIcon sx={{ fontSize: 19 }} />
@@ -724,6 +814,8 @@ export default function Sidebar() {
 
           {/* Hotel Settings */}
           <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
             active={isSettingsActive}
             open={isSettingsOpen}
             toggle={handleToggleSettings}

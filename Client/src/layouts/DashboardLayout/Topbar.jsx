@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import AppBreadcrumbs from './AppBreadcrumbs';
 import {
   Box,
   InputBase,
@@ -19,14 +20,65 @@ import {
   SettingsBackupRestore as RestoreIcon,
   Logout as LogoutIcon,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { getRooms as getRoomInventory, ROOM_UPDATED_EVENT } from '../../features/rooms/state/roomStore';
+import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../../features/reservations/state/reservationStore';
+import { getGuests, GUESTS_UPDATED_EVENT } from '../../features/guests/state/guestStore';
+import { getStaff } from '../../features/housekeeping/pages/hkStore';
+import { getInventoryItems } from '../../features/inventory/pages/inventoryStore';
+import { getMenuItems } from '../../features/restaurant/pages/restaurantStore';
 
 const Topbar = () => {
+  const navigate = useNavigate();
   // State for profile menu
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const isProfileMenuOpen = Boolean(profileAnchorEl);
 
   // State for language
   const [language, setLanguage] = useState('en');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dataVersion, setDataVersion] = useState(0);
+
+  useEffect(() => {
+    const refreshSearchIndex = () => setDataVersion((version) => version + 1);
+    const events = [
+      'storage',
+      ROOM_UPDATED_EVENT,
+      RESERVATIONS_UPDATED_EVENT,
+      GUESTS_UPDATED_EVENT,
+      'hk_update',
+      'inventory_update',
+      'restaurant_update',
+    ];
+    events.forEach((eventName) => window.addEventListener(eventName, refreshSearchIndex));
+    return () => events.forEach((eventName) => window.removeEventListener(eventName, refreshSearchIndex));
+  }, []);
+
+  const searchResults = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return [];
+
+    const results = [
+      ...getRoomInventory().map((room) => ({ type: 'Room', title: `Room ${room.roomNo}`, detail: `${room.roomType} • ${room.status}`, path: '/rooms' })),
+      ...getReservations().map((reservation) => ({ type: 'Reservation', title: reservation.name || `Reservation ${reservation.id}`, detail: `Room ${reservation.room || 'unassigned'} • ${reservation.status || 'Booked'}`, path: '/reservation/all' })),
+      ...getGuests().map((guest) => ({ type: 'Guest', title: guest.name, detail: `${guest.email} • ${guest.city || 'Guest profile'}`, path: '/guests' })),
+      ...getStaff().map((staff) => ({ type: 'Staff', title: staff.name, detail: `Housekeeping • ${staff.status}`, path: '/housekeeping/staff-assignment' })),
+      ...getInventoryItems().map((item) => ({ type: 'Inventory', title: item.name, detail: `${item.category || 'Stock'} • Qty ${item.quantity ?? 0}`, path: '/inventory/stock' })),
+      ...getMenuItems().map((item) => ({ type: 'Menu', title: item.name, detail: `${item.dietary || 'Menu item'} • ${item.availability}`, path: '/restaurant/menu' })),
+    ];
+
+    return results
+      .filter((result) => `${result.type} ${result.title} ${result.detail}`.toLowerCase().includes(query))
+      .slice(0, 10);
+  }, [searchTerm, dataVersion]);
+
+  const handleSearchKeyDown = (event) => {
+    if (event.key === 'Escape') setSearchTerm('');
+    if (event.key === 'Enter' && searchResults[0]) {
+      navigate(searchResults[0].path);
+      setSearchTerm('');
+    }
+  };
 
   const handleProfileClick = (event) => {
     setProfileAnchorEl(event.currentTarget);
@@ -54,40 +106,45 @@ const Topbar = () => {
         flexShrink: 0,
       }}
     >
-      {/* Left Side: Search */}
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          bgcolor: '#f3f4f6',
-          borderRadius: 2,
-          px: 2,
-          py: 0.5,
-          width: 350,
-        }}
-      >
-        <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
+      <AppBreadcrumbs />
+
+      {/* Global search across hotel operations data */}
+      <Box sx={{ position: 'relative', flex: 1, maxWidth: 430, mx: 3 }}>
+        <SearchIcon sx={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', fontSize: 20, zIndex: 1 }} />
         <InputBase
-          placeholder="Search rooms, guests, actions..."
-          sx={{ flex: 1, fontSize: '0.875rem' }}
-        />
-        <Box
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.target.value)}
+          onKeyDown={handleSearchKeyDown}
+          placeholder="Search rooms, guests, reservations, staff..."
+          inputProps={{ 'aria-label': 'Search hotel data' }}
           sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: '#e5e7eb',
-            borderRadius: 1,
-            px: 1,
-            py: 0.5,
-            ml: 1,
-            color: 'text.secondary',
-            fontSize: '0.75rem',
-            fontWeight: 'bold',
+            width: '100%',
+            bgcolor: '#f8fafc',
+            border: '1px solid #e5e7eb',
+            borderRadius: 2,
+            px: 1.5,
+            pl: 5,
+            py: 0.7,
+            fontSize: 13,
+            '&:focus-within': { borderColor: '#1b7f43', bgcolor: '#fff' },
           }}
-        >
-          ⌘K
-        </Box>
+        />
+        {searchTerm.trim() && (
+          <Box sx={{ position: 'absolute', left: 0, right: 0, top: 'calc(100% + 8px)', bgcolor: '#fff', border: '1px solid #e5e7eb', borderRadius: 2, boxShadow: '0 12px 30px rgba(15, 23, 42, 0.14)', zIndex: 20, overflow: 'hidden' }}>
+            {searchResults.length ? searchResults.map((result, index) => (
+              <Box
+                key={`${result.type}-${result.title}-${index}`}
+                onClick={() => { navigate(result.path); setSearchTerm(''); }}
+                sx={{ px: 1.5, py: 1.1, cursor: 'pointer', '&:hover': { bgcolor: '#f0fdf4' }, borderBottom: index < searchResults.length - 1 ? '1px solid #f1f5f9' : 'none' }}
+              >
+                <Typography sx={{ fontSize: 12.5, fontWeight: 700, color: '#1f2937' }}>{result.title}</Typography>
+                <Typography sx={{ fontSize: 11, color: '#6b7280', mt: 0.25 }}>{result.type} • {result.detail}</Typography>
+              </Box>
+            )) : (
+              <Typography sx={{ px: 1.5, py: 1.5, fontSize: 12, color: '#6b7280' }}>No matching hotel data found.</Typography>
+            )}
+          </Box>
+        )}
       </Box>
 
       {/* Right Side: Icons and Profile */}

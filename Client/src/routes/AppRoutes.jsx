@@ -3,56 +3,56 @@ import DashboardLayout from '../layouts/DashboardLayout/DashboardLayout';
 import Dashboard from '../pages/Dashboard/Dashboard';
 
 // Front Office Module Pages
-import OperationsAlerts from '../pages/FrontOffice/OperationsAlerts';
-import CheckInOut from '../pages/FrontOffice/CheckInOut';
-import RegistrationForms from '../pages/FrontOffice/RegistrationForms';
-import NewRegistrationForm from '../pages/FrontOffice/NewRegistrationForm';
-import GuestComplaint from '../pages/FrontOffice/GuestComplaint';
+import OperationsAlerts from '../features/front-office/pages/OperationsAlerts';
+import CheckInOut from '../features/front-office/pages/CheckInOut';
+import RegistrationForms from '../features/front-office/pages/RegistrationForms';
+import NewRegistrationForm from '../features/front-office/pages/NewRegistrationForm';
+import GuestComplaint from '../features/front-office/pages/GuestComplaint';
 
 // Reservation Module Pages
-import AddReservation from '../pages/Reservation/AddReservation';
-import AllReservations from '../pages/Reservation/AllReservations';
-import ReservationHistory from '../pages/Reservation/ReservationHistory';
-import EditReservation from '../pages/Reservation/EditReservation';
-import CancelledBookings from '../pages/Reservation/CancelledBookings';
-import GroupReservations from '../pages/Reservation/GroupReservations';
+import AddReservation from '../features/reservations/pages/AddReservation';
+import AllReservations from '../features/reservations/pages/AllReservations';
+import ReservationHistory from '../features/reservations/pages/ReservationHistory';
+import EditReservation from '../features/reservations/pages/EditReservation';
+import CancelledBookings from '../features/reservations/pages/CancelledBookings';
+import GroupReservations from '../features/reservations/pages/GroupReservations';
 
 // Rooms Module Pages
-import Rooms from '../pages/Rooms/Rooms';
-import AddRoom from '../pages/Rooms/AddRoom';
-import RoomTypes from '../pages/Rooms/RoomTypes';
-import RatePricing from '../pages/Rooms/RatePricing';
+import Rooms from '../features/rooms/pages/Rooms';
+import AddRoom from '../features/rooms/pages/AddRoom';
+import RoomTypes from '../features/rooms/pages/RoomTypes';
+import RatePricing from '../features/rooms/pages/RatePricing';
 
 // Housekeeping Module Pages
-import RoomsAndCleaning from '../pages/Housekeeping/RoomsAndCleaning';
-import Inspection from '../pages/Housekeeping/Inspection';
-import StaffAssignment from '../pages/Housekeeping/StaffAssignment';
-import CleaningSchedule from '../pages/Housekeeping/CleaningSchedule';
-import LostAndFound from '../pages/Housekeeping/LostAndFound';
-import InspectionChecklist from '../pages/Housekeeping/InspectionChecklist';
+import RoomsAndCleaning from '../features/housekeeping/pages/RoomsAndCleaning';
+import Inspection from '../features/housekeeping/pages/Inspection';
+import StaffAssignment from '../features/housekeeping/pages/StaffAssignment';
+import CleaningSchedule from '../features/housekeeping/pages/CleaningSchedule';
+import LostAndFound from '../features/housekeeping/pages/LostAndFound';
+import InspectionChecklist from '../features/housekeeping/pages/InspectionChecklist';
 
 // Inventory Module Pages
-import AllInventory from '../pages/Inventory/AllInventory';
-import AddInventory from '../pages/Inventory/AddInventory';
-import GuestCharges from '../pages/Inventory/GuestCharges';
-import MissingInventory from '../pages/Inventory/MissingInventory';
+import AllInventory from '../features/inventory/pages/AllInventory';
+import AddInventory from '../features/inventory/pages/AddInventory';
+import GuestCharges from '../features/inventory/pages/GuestCharges';
+import MissingInventory from '../features/inventory/pages/MissingInventory';
 
 // Rates & Pricing Module Pages
-import RatePlans from '../pages/RatesPricing/RatePlans';
-import Discounts from '../pages/RatesPricing/Discounts';
-import TaxesFees from '../pages/RatesPricing/TaxesFees';
+import RatePlans from '../features/rates-pricing/pages/RatePlans';
+import Discounts from '../features/rates-pricing/pages/Discounts';
+import TaxesFees from '../features/rates-pricing/pages/TaxesFees';
 
 // Payment & Billing Module Pages
-import Invoices from '../pages/PaymentBilling/Invoices';
-import PaymentHistory from '../pages/PaymentBilling/PaymentHistory';
-import PendingPayments from '../pages/PaymentBilling/PendingPayments';
-import Refunds from '../pages/PaymentBilling/Refunds';
+import Invoices from '../features/payment-billing/pages/Invoices';
+import PaymentHistory from '../features/payment-billing/pages/PaymentHistory';
+import PendingPayments from '../features/payment-billing/pages/PendingPayments';
+import Refunds from '../features/payment-billing/pages/Refunds';
 
 // Guests Module
-import Guests from '../pages/Guests/Guests';
+import Guests from '../features/guests/pages/Guests';
 
 // Occupancy Module
-import Occupancy from '../pages/Occupancy/Occupancy';
+import Occupancy from '../features/occupancy/pages/Occupancy';
 
 // HR Module Pages
 import AllStaff from '../pages/HR/Staff/AllStaff';
@@ -65,22 +65,22 @@ import TodaysAttendance from '../pages/HR/Attendance/TodaysAttendance';
 import EmployeeSalary from '../pages/HR/Salary/EmployeeSalary';
 
 // Reports Module Pages
-import ReportsPage from '../pages/Reports/ReportsPage';
+import ReportsPage from '../features/reports/pages/ReportsPage';
 
 // Settings Module Pages
-import HotelProfile from '../pages/Settings/HotelProfile';
-import Policies from '../pages/Settings/Policies';
+import HotelProfile from '../features/settings/pages/HotelProfile';
+import Policies from '../features/settings/pages/Policies';
 
 // Restaurant Module Pages
-import Restaurant from '../pages/Restaurant/Restaurant';
+import Restaurant from '../features/restaurant/pages/Restaurant';
 
 // Events & Banquets Module Pages
-import BanquetManager from '../pages/Events/BanquetManager';
-import AllEvents from '../pages/Events/AllEvents';
-import AddEvent from '../pages/Events/AddEvent';
+import BanquetManager from '../features/events/pages/BanquetManager';
+import AllEvents from '../features/events/pages/AllEvents';
+import AddEvent from '../features/events/pages/AddEvent';
 
 // Assistant Module
-import LuxuriaAssistant from '../pages/Assistant/LuxuriaAssistant';
+import LuxuriaAssistant from '../features/assistant/pages/LuxuriaAssistant';
 
 export default function AppRoutes() {
   return (
