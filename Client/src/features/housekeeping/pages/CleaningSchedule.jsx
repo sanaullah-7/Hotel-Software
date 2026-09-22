@@ -1,4 +1,4 @@
-import { FilterList, AddCircleOutlined, Refresh, TableChart, PictureAsPdf } from'@mui/icons-material';
+import { FilterList, AddCircleOutlined, Refresh, TableChart, PictureAsPdf,HourglassEmpty , Autorenew ,CheckCircle, Warning  } from'@mui/icons-material';
 import React, { useState, useRef, useEffect } from'react';
 
 import { TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment , TablePagination } from'@mui/material';
@@ -377,34 +377,46 @@ export default function CleaningSchedule() {
  return (
  <div className="w-full h-full flex flex-col pt-1 min-h-screen gap-1">
  {/* Summary Cards */}
- <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Pending</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{pendingCount}</p>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">In Progress</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{inProgressCount}</p>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Completed</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{completedCount}</p>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Delayed</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{delayedCount}</p>
- </div>
- </div>
- </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Pending</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{pendingCount}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-orange-50 text-orange-600">
+              <HourglassEmpty sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">In Progress</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{inProgressCount}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+              <Autorenew sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Completed</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{completedCount}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+              <CheckCircle sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Delayed</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{delayedCount}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+              <Warning sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+        </div>
 
- {/* Table Section */}
+        {/* Table Section */}
  <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 flex-1">
  {/* Table Header with Title & Button */}
  <div className="p-2.5 flex items-center justify-between border-b border-gray-100 gap-4">

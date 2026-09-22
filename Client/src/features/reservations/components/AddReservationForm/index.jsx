@@ -39,7 +39,7 @@ export default function AddReservation() {
  {/* FORM CARD */}
  <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden mt-1">
  <div className="p-2 md:p-8 bg-white">
- <form onSubmit={handleSave} className="space-y-6">
+ <form className="space-y-6">
  
  {/* SECTION 1: GUEST INFORMATION */}
  <div>
@@ -187,15 +187,7 @@ export default function AddReservation() {
 
  {/* ACTION BUTTONS */}
  <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
- <button 
- type="button"
- onClick={() => navigate(-1)}
- className="px-5 py-2.5 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-xl transition-colors"
- >
- Cancel
- </button>
- <button 
- type="submit"
+ <button type="button" onClick={handleSave}
  className="px-6 py-2.5 text-sm font-bold text-white bg-[#1b7f43] hover:bg-[#156736] rounded-xl shadow-sm transition-all flex items-center gap-2"
  >
  <Save sx={{ fontSize: 18 }} />

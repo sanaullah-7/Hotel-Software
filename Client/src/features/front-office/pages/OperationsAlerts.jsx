@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from'react';
+import React, { useState, useMemo, useEffect } from'react';
 import { TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem } from'@mui/material';
 import {
  Notifications as NotificationsIcon,
@@ -44,6 +44,7 @@ import Delete from'@mui/icons-material/Delete';
 // ---- Department visual theme (icon, colors) — reused across load bars + alert cards ----
 const DEPARTMENTS = {'VIP Arrivals': { icon: StarIcon, color:'#2e7d32', bg:'#edf7ed' },'Housekeeping': { icon: CleaningServicesIcon, color:'#10b981', bg:'#ecfdf5' },'Maintenance': { icon: BuildIcon, color:'#f97316', bg:'#fff7ed' },'Dining & F&B': { icon: RestaurantIcon, color:'#a855f7', bg:'#f3e8ff' },'Security & Front Desk': { icon: SecurityIcon, color:'#2e7d32', bg:'#edf7ed' },
 };
+const DEFAULT_DEPARTMENT = 'VIP Arrivals';
 
 const PRIORITY_STYLES = {
  Critical:'bg-[#fee2e2] text-[#dc2626]',
@@ -160,7 +161,17 @@ const muiSelectSx = {'& .MuiOutlinedInput-root': {
 };
 
 export default function OperationsAlerts() {
- const [alerts, setAlerts] = useState(initialAlerts);
+ const [alerts, setAlerts] = useState(() => {
+    const saved = localStorage.getItem('hotel_ops_alerts');
+    if (saved) {
+      try { return JSON.parse(saved); } catch(e) {}
+    }
+    return initialAlerts;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('hotel_ops_alerts', JSON.stringify(alerts));
+  }, [alerts]);
  const [searchQuery, setSearchQuery] = useState('');
  const [deptFilter, setDeptFilter] = useState('All');
  const [priorityFilter, setPriorityFilter] = useState('All');
@@ -168,7 +179,7 @@ export default function OperationsAlerts() {
  const [broadcastOpen, setBroadcastOpen] = useState(false);
  const [broadcastMsg, setBroadcastMsg] = useState('');
  const [alertTitle, setAlertTitle] = useState('');
- const [alertDept, setAlertDept] = useState('VIP Arrival');
+ const [alertDept, setAlertDept] = useState(DEFAULT_DEPARTMENT);
  const [alertPriority, setAlertPriority] = useState('High');
  const [broadcastSentMsg, setBroadcastSentMsg] = useState('');
 
@@ -224,60 +235,86 @@ export default function OperationsAlerts() {
  };
 
  const handleSendBroadcast = () => {
- if (!alertTitle.trim()) return;
- setBroadcastOpen(false);
- setBroadcastSentMsg(`Broadcast sent to all staff:"${alertTitle.trim()}"`);
- setAlertTitle('');
- setTimeout(() => setBroadcastSentMsg(''), 4000);
- };
+    if (!alertTitle.trim()) return;
+    
+    const newAlert = {
+      id: 'AL-' + Math.floor(1000 + Math.random() * 9000),
+      title: alertTitle.trim(),
+      department: alertDept,
+      priority: alertPriority,
+      status: 'Open',
+      time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) + ' (' + new Date().toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric'}) + ')',
+      location: 'Front Desk Broadcast',
+      guest: 'Multiple/None',
+      reportedBy: 'Front Office',
+      reportedAgo: 'Just now',
+      description: 'Broadcast message triggered manually via Front Office Dashboard.',
+      action: 'Acknowledge and proceed as instructed.',
+      assignedTo: alertDept + ' Team'
+    };
+
+    setAlerts(prev => [newAlert, ...prev]);
+    setBroadcastOpen(false);
+    setBroadcastSentMsg(`Broadcast "${alertTitle.trim()}" dispatched and saved successfully.`);
+    setAlertTitle('');
+    setTimeout(() => setBroadcastSentMsg(''), 4000);
+  };
 
  return (
  <div className="pt-1 min-h-screen">
  {/* TOP SUMMARY CARDS */}
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-2">
- <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex gap-3 items-start">
- 
- <div className="flex flex-col w-full">
- <div className="flex justify-between items-start w-full mb-0.5">
- <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mt-0.5">Active Alerts</span>
- <span className="bg-[#edf7ed] text-[#2e7d32] text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1 shrink-0">
- <span className="w-1.5 h-1.5 rounded-full bg-[#2e7d32] animate-pulse"></span>Live
- </span>
- </div>
- <span className="text-[24px] font-black text-[#0f172a] leading-none mb-0.5 tracking-tight">{activeCount}</span>
- <span className="text-[10px] text-[#94a3b8] font-medium leading-tight">Requires operational staff attention</span>
- </div>
- </div>
-
- <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex gap-3 items-start">
- 
- <div className="flex flex-col w-full">
- <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">Critical & Urgent</span>
- <span className="text-[24px] font-black text-[#0f172a] leading-none mb-0.5 tracking-tight">{criticalCount}</span>
- <span className="text-[10px] text-[#94a3b8] font-medium leading-tight">High escalation threshold</span>
- </div>
- </div>
-
- <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex gap-3 items-start">
- 
- <div className="flex flex-col w-full">
- <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">In Progress</span>
- <span className="text-[24px] font-black text-[#0f172a] leading-none mb-0.5 tracking-tight">{inProgressCount}</span>
- <span className="text-[10px] text-[#94a3b8] font-medium leading-tight">Staff actively attending</span>
- </div>
- </div>
-
- <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 flex gap-3 items-start">
- 
- <div className="flex flex-col w-full">
- <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">Resolved Today</span>
- <span className="text-[24px] font-black text-[#0f172a] leading-none mb-0.5 tracking-tight">{resolvedCount}</span>
- <span className="text-[10px] text-[#94a3b8] font-medium leading-tight">Avg. time: 32 mins</span>
- </div>
- </div>
- </div>
-
- {/* DEPARTMENT OPERATIONS LOAD */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-2">
+          <div className="bg-white rounded-[12px] shadow-sm border border-gray-100 p-3 flex items-center justify-between gap-3">
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mt-0.5">Active Alerts</span>
+                <span className="bg-[#edf7ed] text-[#2e7d32] text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2e7d32] animate-pulse"></span>Live
+                </span>
+              </div>
+              <span className="text-[24px] font-black text-[#0f172a] leading-none tracking-tight">{activeCount}</span>
+              <span className="text-[10px] text-[#94a3b8] font-medium leading-tight mt-0.5">Requires operational staff attention</span>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
+              <NotificationsIcon sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+  
+          <div className="bg-white rounded-[12px] shadow-sm border border-gray-100 p-3 flex items-center justify-between gap-3">
+            <div className="flex flex-col">
+              <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">Critical & Urgent</span>
+              <span className="text-[24px] font-black text-[#0f172a] leading-none tracking-tight">{criticalCount}</span>
+              <span className="text-[10px] text-[#94a3b8] font-medium leading-tight mt-0.5">High escalation threshold</span>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600 shrink-0">
+              <ReportProblemIcon sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+  
+          <div className="bg-white rounded-[12px] shadow-sm border border-gray-100 p-3 flex items-center justify-between gap-3">
+            <div className="flex flex-col">
+              <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">In Progress</span>
+              <span className="text-[24px] font-black text-[#0f172a] leading-none tracking-tight">{inProgressCount}</span>
+              <span className="text-[10px] text-[#94a3b8] font-medium leading-tight mt-0.5">Staff actively attending</span>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-orange-50 text-orange-600 shrink-0">
+              <PendingActionsIcon sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+  
+          <div className="bg-white rounded-[12px] shadow-sm border border-gray-100 p-3 flex items-center justify-between gap-3">
+            <div className="flex flex-col">
+              <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">Resolved Today</span>
+              <span className="text-[24px] font-black text-[#0f172a] leading-none tracking-tight">{resolvedCount}</span>
+              <span className="text-[10px] text-[#94a3b8] font-medium leading-tight mt-0.5">Avg. time: 32 mins</span>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600 shrink-0">
+              <TaskAltIcon sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+        </div>
+  
+        {/* DEPARTMENT OPERATIONS LOAD */}
  <div className="bg-white rounded-[10px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-4 mb-2">
  <div className="flex justify-between items-center border-b border-gray-100 mb-4">
  <div className="flex items-center gap-3">
@@ -288,7 +325,7 @@ export default function OperationsAlerts() {
 
  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
  {departmentLoad.map(({ dept, active }) => {
- const theme = DEPARTMENTS[dept];
+ const theme = DEPARTMENTS[dept] ?? DEPARTMENTS[DEFAULT_DEPARTMENT];
  const Icon = theme.icon;
  const isActive = deptFilter === dept;
  return (
@@ -396,7 +433,7 @@ export default function OperationsAlerts() {
  {/* ALERTS LIST */}
  <div className="flex flex-col gap-2">
  {filteredAlerts.map(alert => {
- const theme = DEPARTMENTS[alert.department];
+ const theme = DEPARTMENTS[alert.department] ?? DEPARTMENTS[DEFAULT_DEPARTMENT];
  const Icon = theme.icon;
  const isResolved = alert.status ==='Resolved';
 
@@ -526,10 +563,11 @@ export default function OperationsAlerts() {
  <FormControl fullWidth size="small">
  <InputLabel>Department / Category*</InputLabel>
  <Select label="Department / Category*" value={alertDept} onChange={(e) => setAlertDept(e.target.value)}>
- <MenuItem value="VIP Arrival">VIP Arrival</MenuItem>
+ <MenuItem value="VIP Arrivals">VIP Arrivals</MenuItem>
  <MenuItem value="Housekeeping">Housekeeping</MenuItem>
  <MenuItem value="Maintenance">Maintenance</MenuItem>
- <MenuItem value="Security">Security</MenuItem>
+ <MenuItem value="Dining & F&B">Dining &amp; F&amp;B</MenuItem>
+ <MenuItem value="Security & Front Desk">Security &amp; Front Desk</MenuItem>
  </Select>
  </FormControl>
  

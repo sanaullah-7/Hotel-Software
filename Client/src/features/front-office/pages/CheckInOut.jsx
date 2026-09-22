@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from'react';
-import { TextField, InputAdornment, FormControl, InputLabel, Select as MuiSelect, MenuItem } from'@mui/material';
+import { TextField, InputAdornment, FormControl, InputLabel, Select as MuiSelect, MenuItem, Box, Typography } from'@mui/material';
 import {
  Groups as GroupsIcon,
  Login as LoginIcon,
@@ -394,17 +394,33 @@ function GuestFormModal({ onClose, onSave, initialData }) {
  />
 
  {/* Row 5 */}
- <TextField 
- fullWidth label="Check-in Date*" variant="outlined" size="small" type="date"
- InputLabelProps={{ shrink: true }}
- value={form.checkIn} onChange={(e) => set('checkIn')(e.target.value)}
- />
- <TextField 
- fullWidth label="Check-out Date*" variant="outlined" size="small" type="date"
- InputLabelProps={{ shrink: true }}
- value={form.checkOut} onChange={(e) => set('checkOut')(e.target.value)}
- />
+ <Box>
+  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+    Check-in Date
+  </Typography>
+  <TextField
+    fullWidth
+    variant="outlined"
+    size="small"
+    type="date"
+    value={form.checkIn}
+    onChange={(e) => set('checkIn')(e.target.value)}
+  />
+</Box>
 
+<Box>
+  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+    Check-out Date
+  </Typography>
+  <TextField
+    fullWidth
+    variant="outlined"
+    size="small"
+    type="date"
+    value={form.checkOut}
+    onChange={(e) => set('checkOut')(e.target.value)}
+  />
+</Box>
  {/* Row 6 */}
  <TextField 
  fullWidth label="Guest Count" variant="outlined" size="small"
@@ -837,38 +853,46 @@ export default function CheckInOut() {
  return (
  <div className="animate-fade-in pt-1 pb-2">
  {/* SUMMARY CARDS */}
- <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-2">
- 
- <div className="flex flex-col">
- <span className="text-gray-500 font-semibold text-[11px]">Total Guests</span>
- <span className="text-lg font-bold text-gray-900 leading-tight">{totalGuests}</span>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
- 
- <div className="flex flex-col">
- <span className="text-gray-500 font-semibold text-[11px]">Checked In</span>
- <span className="text-lg font-bold text-gray-900 leading-tight">{checkedInCount}</span>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
- 
- <div className="flex flex-col">
- <span className="text-gray-500 font-semibold text-[11px]">Checked Out</span>
- <span className="text-lg font-bold text-gray-900 leading-tight">{checkedOutCount}</span>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center gap-3">
- 
- <div className="flex flex-col">
- <span className="text-gray-500 font-semibold text-[11px]">Pending</span>
- <span className="text-lg font-bold text-gray-900 leading-tight">{pendingCount}</span>
- </div>
- </div>
- </div>
+   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+     <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-2">
+       <div className="flex flex-col">
+         <span className="text-gray-500 font-semibold text-[11px]">Total Guests</span>
+         <span className="text-lg font-bold text-gray-900 leading-tight">{totalGuests}</span>
+       </div>
+       <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+         <GroupsIcon sx={{ fontSize: 18 }} />
+       </div>
+     </div>
+     <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+       <div className="flex flex-col">
+         <span className="text-gray-500 font-semibold text-[11px]">Checked In</span>
+         <span className="text-lg font-bold text-gray-900 leading-tight">{checkedInCount}</span>
+       </div>
+       <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+         <LoginIcon sx={{ fontSize: 18 }} />
+       </div>
+     </div>
+     <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+       <div className="flex flex-col">
+         <span className="text-gray-500 font-semibold text-[11px]">Checked Out</span>
+         <span className="text-lg font-bold text-gray-900 leading-tight">{checkedOutCount}</span>
+       </div>
+       <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+         <LogoutIcon sx={{ fontSize: 18 }} />
+       </div>
+     </div>
+     <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+       <div className="flex flex-col">
+         <span className="text-gray-500 font-semibold text-[11px]">Pending</span>
+         <span className="text-lg font-bold text-gray-900 leading-tight">{pendingCount}</span>
+       </div>
+       <div className="w-8 h-8 rounded-full flex items-center justify-center bg-orange-50 text-orange-600">
+         <PendingActionsIcon sx={{ fontSize: 18 }} />
+       </div>
+     </div>
+   </div>
 
- {/* MAIN CARD */}
+   {/* MAIN CARD */}
  <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden mt-2">
  {/* Header */}
  <div className="p-2 border-b border-gray-100 flex items-center justify-between gap-3">

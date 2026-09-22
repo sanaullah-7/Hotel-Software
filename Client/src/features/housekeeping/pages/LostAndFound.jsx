@@ -1,7 +1,7 @@
-import { FilterList, AddCircleOutlined, Refresh, TableChart, PictureAsPdf } from'@mui/icons-material';
+import { FilterList, AddCircleOutlined, Refresh, TableChart, PictureAsPdf, Category, Inventory, CheckCircle, Delete } from'@mui/icons-material';
 import React, { useState, useRef, useEffect } from'react';
 
-import { TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment , TablePagination } from'@mui/material';
+import { TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment , TablePagination, Typography, Box } from'@mui/material';
 
 const initialItems = [
  {
@@ -331,34 +331,46 @@ export default function LostAndFound() {
  return (
  <div className="w-full h-full flex flex-col pt-1 min-h-screen gap-1">
  {/* Summary Cards */}
- <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Total Items</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{totalCount}</p>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Unclaimed</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{unclaimedCount}</p>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Returned/Claimed</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{claimedReturnedCount}</p>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Disposed</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{disposedCount}</p>
- </div>
- </div>
- </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Total Items</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{totalCount}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+              <Category sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Unclaimed</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{unclaimedCount}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-orange-50 text-orange-600">
+              <Inventory sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Returned/Claimed</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{claimedReturnedCount}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+              <CheckCircle sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Disposed</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{disposedCount}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+              <Delete sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+        </div>
 
- {/* Table Section */}
+        {/* Table Section */}
  <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 flex-1">
  {/* Table Header with Title & Button */}
  <div className="p-2.5 flex items-center justify-between border-b border-gray-100 gap-4">
@@ -514,19 +526,22 @@ export default function LostAndFound() {
  fullWidth
  />
 
- <TextField 
- type="date" 
- label="Date Found*" 
- required
- value={form.foundDate} 
- onChange={e => setForm({...form, foundDate: e.target.value})} 
- sx={muiInputSx} 
- size="small" 
- fullWidth 
- InputLabelProps={{ shrink: true }} 
- />
-
- <FormControl size="small" fullWidth sx={muiInputSx}>
+<Box>
+  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+    Date Found*
+  </Typography>
+  <TextField
+    type="date"
+    label=""
+    required
+    value={form.foundDate}
+    onChange={e => setForm({ ...form, foundDate: e.target.value })}
+    sx={muiInputSx}
+    size="small"
+    fullWidth
+    InputLabelProps={{ shrink: true }}
+  />
+</Box> <FormControl size="small" fullWidth sx={muiInputSx}>
  <InputLabel>Status*</InputLabel>
  <Select 
  value={form.status} 

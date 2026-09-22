@@ -549,7 +549,13 @@ export default function Sidebar() {
         <h1 className="font-bold tracking-wide text-gray-800 whitespace-nowrap transition-all duration-300">
           {isOpen ? (
             <span className="text-2xl">
-              Hotel<span className="text-[#1b7f43]">Admin</span>
+              {localStorage.getItem('hotelName') ? (
+                <>
+                  {localStorage.getItem('hotelName').split(' ')[0]}<span className="text-[#1b7f43]">{localStorage.getItem('hotelName').split(' ').slice(1).join(' ')}</span>
+                </>
+              ) : (
+                <>Hotel<span className="text-[#1b7f43]">Admin</span></>
+              )}
             </span>
           ) : (
             <span className="text-xl text-[#1b7f43]">

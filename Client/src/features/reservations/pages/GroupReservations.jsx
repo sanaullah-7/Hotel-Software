@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from'react';
-import { FormControl, InputLabel, Select, MenuItem, TextField } from'@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, TextField, Box, Typography } from'@mui/material';
 import {
  Search, FilterList, AddCircleOutlined, Refresh,
  TableChart, PictureAsPdf, Close,
@@ -425,9 +425,41 @@ export default function GroupReservations() {
  <TextField required label="Email" type="email" name="email" value={form.email} onChange={(e)=>setForm({...form, email: e.target.value})} sx={muiInputSx} size="small" fullWidth />
  <TextField required label="Phone" name="phone" value={form.phone} onChange={(e)=>setForm({...form, phone: e.target.value})} sx={muiInputSx} size="small" fullWidth />
 
- <TextField required type="date" label="Check In Date" name="checkIn" value={form.checkIn} onChange={(e)=>setForm({...form, checkIn: e.target.value})} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
- <TextField required type="date" label="Check Out Date" name="checkOut" value={form.checkOut} onChange={(e)=>setForm({...form, checkOut: e.target.value})} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
+ <Box>
+  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+    Check In Date
+  </Typography>
+  <TextField
+    required
+    type="date"
+    label=""
+    name="checkIn"
+    value={form.checkIn}
+    onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
+    sx={muiInputSx}
+    size="small"
+    fullWidth
+    InputLabelProps={{ shrink: true }}
+  />
+</Box>
 
+<Box>
+  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+    Check Out Date
+  </Typography>
+  <TextField
+    required
+    type="date"
+    label=""
+    name="checkOut"
+    value={form.checkOut}
+    onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
+    sx={muiInputSx}
+    size="small"
+    fullWidth
+    InputLabelProps={{ shrink: true }}
+  />
+</Box>
  <TextField required type="number" label="Number of Rooms" name="rooms" value={form.rooms} onChange={(e)=>setForm({...form, rooms: e.target.value})} sx={muiInputSx} size="small" fullWidth />
  <TextField required type="number" label="Number of Guests" name="guests" value={form.guests} onChange={(e)=>setForm({...form, guests: e.target.value})} sx={muiInputSx} size="small" fullWidth />
 

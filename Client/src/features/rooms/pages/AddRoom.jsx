@@ -1,4 +1,4 @@
-﻿import React, { useState } from'react';
+﻿import React, { useState, useRef } from'react';
 import { useNavigate } from'react-router-dom';
 import { 
  ArrowBack, Save, RestartAlt, Hotel, KingBed, 
@@ -8,22 +8,29 @@ import {
  TextField, Select, MenuItem, InputLabel, FormControl, 
  Switch, FormControlLabel 
 } from'@mui/material';
+import { addRoom } from '../state/roomStore';
 
 export default function AddRoom() {
  const navigate = useNavigate();
 
  const [formData, setFormData] = useState({
- // Room Information
- roomNumber:'', roomType:'', acNonAc:'', mealPlan:'', floorNumber:'', rentPerNight:'', roomStatus:'',
- // Bed & Space
- capacity:'', bedType:'', numberOfBeds:'', roomSize:'', viewType:'',
- // Amenities
- tvType:'', bathroomType:'', wifiAvailable: false, balconyAvailable: false, miniBarAvailable: false, petFriendly: false, accessibilityFeatures:'None',
- // Operations
- housekeepingStatus:'', maintenanceStatus:'', smokingPolicy:'', contactMobile:'',
- // Additional Details
- notes:''
- });
+    roomNumber: '',
+    roomType: '',
+    acNonAc: '',
+    bedCapacity: '',
+    rent: '',
+    status: '',
+    notes: '',
+  });
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+    }
+  };
 
  const handleChange = (e) => {
  const { name, value, type, checked } = e.target;
@@ -34,9 +41,20 @@ export default function AddRoom() {
  };
 
  const handleSave = (e) => {
- e.preventDefault();
- alert('Room successfully configured and added!');
- navigate('/rooms');
+   e.preventDefault();
+   const statusMap = { Available: 'Open', Occupied: 'Booked', Cleaning: 'Inactive', Maintenance: 'Inactive' };
+   addRoom({
+     ...formData,
+     roomNo: formData.roomNumber.trim(),
+     meal: formData.mealPlan || 'None',
+     capacity: formData.capacity || 0,
+     rent: formData.rentPerNight || 0,
+     mobile: formData.contactMobile || '',
+     status: statusMap[formData.roomStatus] || 'Open',
+     roomImage: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop',
+   });
+   alert('Room successfully configured and added!');
+   navigate('/rooms');
  };
 
  const handleReset = () => {
@@ -242,11 +260,21 @@ export default function AddRoom() {
  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
  <div>
  <label className="block text-xs font-semibold text-gray-700 mb-2">Room Images / Documents</label>
- <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer">
- <CloudUpload sx={{ fontSize: 32, color:'#9ca3af' }} className="mb-2" />
- <p className="text-sm font-semibold text-gray-700">Click to upload <span className="font-normal text-gray-500">or drag and drop file here</span></p>
- <p className="text-xs text-gray-400 mt-1">No file chosen</p>
- </div>
+ <div 
+    className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer"
+    onClick={() => fileInputRef.current && fileInputRef.current.click()}
+  >
+    <input 
+      type="file" 
+      ref={fileInputRef} 
+      onChange={handleFileChange} 
+      className="hidden" 
+      accept="image/*,.pdf,.doc,.docx"
+    />
+    <CloudUpload sx={{ fontSize: 32, color: '#9ca3af' }} className="mb-2" />
+    <p className="text-sm font-semibold text-gray-700">Click to upload <span className="font-normal text-gray-500">or drag and drop file here</span></p>
+    <p className="text-xs text-gray-400 mt-1">{selectedFile ? <span className="text-[#1b7f43] font-medium">{selectedFile.name}</span> : 'No file chosen'}</p>
+  </div>
  </div>
  
  <div>
