@@ -1,7 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import AppBreadcrumbs from './AppBreadcrumbs';
 
 export default function DashboardLayout({ children }) {
   const location = useLocation();
@@ -25,7 +24,6 @@ export default function DashboardLayout({ children }) {
         
         {/* Page Content Wrapper */}
         <div className={`flex-1 min-h-0 ${isMinimizedPadding ? 'px-1 sm:px-1.5 md:px-2' : 'px-3 md:px-4'} pt-1 pb-3 md:pt-2 md:pb-4 overflow-y-auto overflow-x-hidden`}>
-          <AppBreadcrumbs />
           {children}
         </div>
       </main>

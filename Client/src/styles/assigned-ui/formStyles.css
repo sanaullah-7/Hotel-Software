@@ -1,0 +1,136 @@
+.assigned-form-surface {
+  --assigned-primary: var(--primary-main, #1b7f43);
+  --assigned-input-border: #d1d5db;
+  --assigned-input-text: #374151;
+  --assigned-label: #4b5563;
+  --assigned-placeholder: #9ca3af;
+  --assigned-section: #f8f9fa;
+  --assigned-divider: #e5e7eb;
+}
+
+.assigned-form-surface input:not([type='file']):not(.MuiInputBase-input),
+.assigned-form-surface select,
+.assigned-form-surface textarea {
+  background-color: #ffffff;
+  border-color: var(--assigned-input-border);
+  color: var(--assigned-input-text);
+  border-radius: 6px;
+}
+
+.assigned-form-surface input:not([type='file']):not(.MuiInputBase-input)::placeholder,
+.assigned-form-surface textarea::placeholder {
+  color: var(--assigned-placeholder);
+}
+
+.assigned-form-surface input:not([type='file']):not(.MuiInputBase-input):focus,
+.assigned-form-surface select:focus,
+.assigned-form-surface textarea:focus {
+  border-color: var(--assigned-primary);
+  outline: none;
+  box-shadow: none;
+}
+
+.assigned-form-surface label {
+  color: var(--assigned-label);
+}
+
+.assigned-form-surface .assigned-modal-header {
+  background-color: var(--assigned-primary);
+  color: #ffffff;
+}
+
+.assigned-form-surface .assigned-modal-close {
+  color: rgb(255 255 255 / 0.8);
+  background-color: rgb(255 255 255 / 0.1);
+}
+
+.assigned-form-surface .assigned-modal-close:hover {
+  color: #ffffff;
+  background-color: rgb(255 255 255 / 0.2);
+}
+
+.assigned-form-surface .assigned-primary-button {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: var(--assigned-primary);
+}
+
+.assigned-form-surface .assigned-primary-button:hover {
+  background-color: #f8fafc;
+}
+
+.assigned-form-surface .assigned-secondary-button {
+  background-color: #fce7f3;
+  border: 1px solid transparent;
+  color: #e11d48;
+}
+
+.assigned-form-surface .assigned-secondary-button:hover {
+  background-color: #fbcfe8;
+}
+
+.assigned-form-surface .assigned-section {
+  background-color: var(--assigned-section);
+  border-color: var(--assigned-divider);
+}
+
+.assigned-form-surface .assigned-icon {
+  color: var(--assigned-label);
+}
+
+.assigned-form-surface .MuiOutlinedInput-root {
+  border-radius: 6px;
+  background-color: #ffffff;
+  color: var(--assigned-input-text);
+}
+
+.assigned-form-surface .MuiOutlinedInput-notchedOutline {
+  border-color: var(--assigned-input-border);
+}
+
+.assigned-form-surface .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline,
+.assigned-form-surface .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--assigned-primary);
+}
+
+.assigned-form-surface .MuiInputLabel-root {
+  color: var(--assigned-label);
+}
+
+.assigned-form-surface .MuiInputLabel-root.Mui-focused {
+  color: var(--assigned-primary);
+}
+
+.assigned-form-surface .MuiInputLabel-shrink {
+  z-index: 1;
+  padding: 0 4px;
+  background-color: #ffffff;
+}
+
+.assigned-form-surface .salary-table-wrapper {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.assigned-form-surface .salary-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.assigned-form-surface .salary-table th,
+.assigned-form-surface .salary-table td {
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assigned-form-surface .salary-table .salary-checkbox-cell {
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+  padding-left: 10px;
+  padding-right: 10px;
+  text-align: center;
+}

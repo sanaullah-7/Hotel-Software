@@ -25,7 +25,27 @@ export default function AppBreadcrumbs() {
     'registration-forms': 'Registration Forms',
     'guest-complaint': 'Guest Complaints',
     'rooms-cleaning': 'Rooms & Cleaning',
-    'staff-assignment': 'Staff Assignment'
+    'staff-assignment': 'Staff Assignment',
+    'guest-charges': 'Guest Charges',
+    'charges': 'Guest Charges',
+    'missing': 'Missing Items',
+    'missing-items': 'Missing Items',
+    'stock': 'Stock',
+    'hr': 'Human Resources',
+    'staff': 'Staff',
+    'add': 'Add Staff',
+    'leave-requests': 'Leave Requests',
+    'attendance': 'Attendance Sheet',
+    'today': "Today's Attendance",
+    'employee-salary': 'Employee Salary',
+    'reports': 'Reports',
+    'events': 'Events & Banquets',
+    'all-events': 'All Events',
+    'add-event': 'Add Event',
+    'banquet-manager': 'Banquet Manager',
+    'settings': 'Settings',
+    'hotel-settings': 'Hotel Settings',
+    'policies': 'Policies'
   };
 
   const formatName = (name) => {
@@ -39,7 +59,7 @@ export default function AppBreadcrumbs() {
   if (pathnames.length === 0) {
     // We are on the root/dashboard, breadcrumb could be just "Dashboard"
     return (
-      <div className="mb-3.5">
+      <div>
         <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
           <Typography sx={{ color: 'text.primary', fontSize: '13px', fontWeight: 600 }}>
             Dashboard
@@ -49,34 +69,18 @@ export default function AppBreadcrumbs() {
     );
   }
 
-  // Remove the breadcrumb feature entirely from HR, Reports, Events and Settings / Hotel Profile pages
-  if (
-    pathnames[0] === 'hr' ||
-    pathnames[0] === 'reports' ||
-    pathnames[0] === 'events' ||
-    pathnames[0] === 'settings' ||
-    pathnames[0] === 'hotel-settings' ||
-    pathnames.includes('hotel-profile')
-  ) {
-    return null;
-  }
-
   return (
-    <div className="mb-3.5">
+    <div>
       <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
-        <Link 
-          component={RouterLink}
-          underline="hover"
-          color="inherit" 
-          to="/" 
-          sx={{ fontSize: '13px', color: '#6b7280', '&:hover': { color: '#1b7f43' } }}
-        >
-          Dashboard
-        </Link>
         {pathnames.map((value, index) => {
           const isLast = index === pathnames.length - 1;
           const to = `/${pathnames.slice(0, index + 1).join('/')}`;
-          const label = formatName(value);
+          const label =
+            pathnames[0] === 'hr' && pathnames[1] === 'staff' && index === 2
+              ? 'Staff Profile'
+              : pathnames[0] === 'hr' && pathnames[1] === 'staff' && index === 3
+                ? 'Edit Staff'
+                : formatName(value);
 
           return isLast ? (
             <Typography key={to} sx={{ color: 'text.primary', fontSize: '13px', fontWeight: 600 }}>
