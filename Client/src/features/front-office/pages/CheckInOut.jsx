@@ -10,18 +10,18 @@ import {
 import CheckInOutDeleteModal from '../components/CheckInOutDeleteModal';
 
 export const initialGuests = [
-  { id: 'BK-1001', name: 'John Doe', email: 'john.doe@example.com', room: '101', roomType: 'Deluxe', checkIn: '5/20/24', checkOut: '5/22/24', status: 'Pending' },
-  { id: 'BK-1002', name: 'Jane Smith', email: 'jane.smith@example.com', room: '205', roomType: 'Suite', checkIn: '5/19/24', checkOut: '5/21/24', status: 'Checked In' },
-  { id: 'BK-1003', name: 'Robert Brown', email: 'robert.brown@example.com', room: '302', roomType: 'Standard', checkIn: '5/18/24', checkOut: '5/19/24', status: 'Checked Out' },
-  { id: 'BK-1004', name: 'Emily Johnson', email: 'emily.johnson@example.com', room: '105', roomType: 'Deluxe', checkIn: '5/21/24', checkOut: '5/24/24', status: 'Reserved' },
-  { id: 'BK-1005', name: 'Michael Wilson', email: 'michael.wilson@example.com', room: '210', roomType: 'Executive', checkIn: '5/22/24', checkOut: '5/25/24', status: 'Pending' },
-  { id: 'BK-1006', name: 'Sarah Davis', email: 'sarah.davis@example.com', room: '112', roomType: 'Standard', checkIn: '5/16/24', checkOut: '5/18/24', status: 'Checked Out' },
-  { id: 'BK-1007', name: 'David Lee', email: 'david.lee@example.com', room: '308', roomType: 'Suite', checkIn: '5/23/24', checkOut: '5/27/24', status: 'Checked In' },
-  { id: 'BK-1008', name: 'Laura Martinez', email: 'laura.martinez@example.com', room: '406', roomType: 'Deluxe', checkIn: '5/24/24', checkOut: '5/26/24', status: 'Reserved' },
-  { id: 'BK-1009', name: 'Chris Anderson', email: 'chris.anderson@example.com', room: '118', roomType: 'Standard', checkIn: '5/15/24', checkOut: '5/17/24', status: 'Checked Out' },
-  { id: 'BK-1010', name: 'Olivia Taylor', email: 'olivia.taylor@example.com', room: '221', roomType: 'Executive', checkIn: '5/25/24', checkOut: '5/28/24', status: 'Pending' },
-  { id: 'BK-1011', name: 'Daniel Thomas', email: 'daniel.thomas@example.com', room: '133', roomType: 'Deluxe', checkIn: '5/17/24', checkOut: '5/20/24', status: 'Checked In' },
-  { id: 'BK-1012', name: 'Sophia White', email: 'sophia.white@example.com', room: '409', roomType: 'Suite', checkIn: '5/26/24', checkOut: '5/29/24', status: 'Reserved' },
+  { id: 'BK-1001', bookingId: 'BK-1001', name: 'John Doe', email: 'john.doe@example.com', room: '101', roomType: 'Deluxe', checkIn: '5/20/24', checkOut: '5/22/24', status: 'Pending' },
+  { id: 'BK-1002', bookingId: 'BK-1002', name: 'Jane Smith', email: 'jane.smith@example.com', room: '205', roomType: 'Suite', checkIn: '5/19/24', checkOut: '5/21/24', status: 'Checked In' },
+  { id: 'BK-1003', bookingId: 'BK-1003', name: 'Robert Brown', email: 'robert.brown@example.com', room: '302', roomType: 'Standard', checkIn: '5/18/24', checkOut: '5/19/24', status: 'Checked Out' },
+  { id: 'BK-1004', bookingId: 'BK-1004', name: 'Emily Johnson', email: 'emily.johnson@example.com', room: '105', roomType: 'Deluxe', checkIn: '5/21/24', checkOut: '5/24/24', status: 'Reserved' },
+  { id: 'BK-1005', bookingId: 'BK-1005', name: 'Michael Wilson', email: 'michael.wilson@example.com', room: '210', roomType: 'Executive', checkIn: '5/22/24', checkOut: '5/25/24', status: 'Pending' },
+  { id: 'BK-1006', bookingId: 'BK-1006', name: 'Sarah Davis', email: 'sarah.davis@example.com', room: '112', roomType: 'Standard', checkIn: '5/16/24', checkOut: '5/18/24', status: 'Checked Out' },
+  { id: 'BK-1007', bookingId: 'BK-1007', name: 'David Lee', email: 'david.lee@example.com', room: '308', roomType: 'Suite', checkIn: '5/23/24', checkOut: '5/27/24', status: 'Checked In' },
+  { id: 'BK-1008', bookingId: 'BK-1008', name: 'Laura Martinez', email: 'laura.martinez@example.com', room: '406', roomType: 'Deluxe', checkIn: '5/24/24', checkOut: '5/26/24', status: 'Reserved' },
+  { id: 'BK-1009', bookingId: 'BK-1009', name: 'Chris Anderson', email: 'chris.anderson@example.com', room: '118', roomType: 'Standard', checkIn: '5/15/24', checkOut: '5/17/24', status: 'Checked Out' },
+  { id: 'BK-1010', bookingId: 'BK-1010', name: 'Olivia Taylor', email: 'olivia.taylor@example.com', room: '221', roomType: 'Executive', checkIn: '5/25/24', checkOut: '5/28/24', status: 'Pending' },
+  { id: 'BK-1011', bookingId: 'BK-1011', name: 'Daniel Thomas', email: 'daniel.thomas@example.com', room: '133', roomType: 'Deluxe', checkIn: '5/17/24', checkOut: '5/20/24', status: 'Checked In' },
+  { id: 'BK-1012', bookingId: 'BK-1012', name: 'Sophia White', email: 'sophia.white@example.com', room: '409', roomType: 'Suite', checkIn: '5/26/24', checkOut: '5/29/24', status: 'Reserved' },
 ];
 
 export default function CheckInOut() {
@@ -88,8 +88,10 @@ export default function CheckInOut() {
     const nextNum = guests.length
       ? Math.max(...guests.map((g) => parseInt(g.id.split('-')[1], 10))) + 1
       : 1001;
+    const newId = form.bookingId?.trim() || `BK-${nextNum}`;
     const newGuest = {
-      id: `BK-${nextNum}`,
+      id: newId,
+      bookingId: newId,
       name: form.name.trim(),
       email:
         form.email.trim() ||

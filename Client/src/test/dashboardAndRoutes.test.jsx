@@ -145,4 +145,18 @@ describe('Dashboard and Shared UI Components', () => {
 
     expect(searchInput.value).toBe('');
   });
+
+  it('renders CheckInOut table with visible Booking IDs in the Booking ID column', async () => {
+    const { default: CheckInOut } = await import('../features/front-office/pages/CheckInOut');
+    const { getByText } = render(
+      <MemoryRouter>
+        <CheckInOut />
+      </MemoryRouter>
+    );
+
+    // Verify header and booking IDs
+    expect(getByText('Booking ID', { selector: 'th' })).toBeTruthy();
+    expect(getByText('BK-1001')).toBeTruthy();
+    expect(getByText('BK-1002')).toBeTruthy();
+  });
 });

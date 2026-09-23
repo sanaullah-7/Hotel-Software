@@ -134,7 +134,7 @@ export default function CheckInOutTable({
                   >
                     <td className="py-3 px-3">
                       <span className="font-mono text-[11.5px] font-semibold text-gray-500">
-                        {guest.bookingId}
+                        {guest.bookingId || guest.id}
                       </span>
                     </td>
                     <td className="py-3 px-3">
