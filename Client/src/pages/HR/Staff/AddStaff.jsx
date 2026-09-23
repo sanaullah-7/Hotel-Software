@@ -39,6 +39,7 @@ import {
  Snackbar
 } from'@mui/material';
 import { addStaffMember } from'./staffStore';
+import '../../../features/assigned-ui/formStyles.css';
 
 // Material Icons matching Luxuria Design
 
@@ -63,20 +64,20 @@ const inputStyle = {'& .MuiOutlinedInput-root': {
  fontSize:'14.5px',
  color:'#1e293b',
  transition:'all 0.2s ease-in-out','& fieldset': {
- borderColor:'#e2e8f0',
+ borderColor:'#d1d5db',
  borderWidth:'1.2px',
  },'&:hover fieldset': {
- borderColor:'#cbd5e1',
+ borderColor:'var(--primary-main)',
  },'&.Mui-focused fieldset': {
- borderColor:'#5d5fef',
+ borderColor:'var(--primary-main)',
  borderWidth:'1.5px',
  },'&.Mui-focused': {
- boxShadow:'0 0 0 3px rgba(93, 95, 239, 0.12)',
+ boxShadow:'0 0 0 1px var(--primary-main)',
  },
  },'& .MuiInputLabel-root': {
  fontSize:'14px',
- color:'#64748b','&.Mui-focused': {
- color:'#5d5fef',
+ color:'#4b5563','&.Mui-focused': {
+ color:'var(--primary-main)',
  fontWeight: 500,
  },
  },'& .MuiInputLabel-shrink': {
@@ -110,20 +111,20 @@ const multilineStyle = {'& .MuiOutlinedInput-root': {
  color:'#1e293b',
  padding:'10px 12px',
  transition:'all 0.2s ease-in-out','& fieldset': {
- borderColor:'#e2e8f0',
+ borderColor:'#d1d5db',
  borderWidth:'1.2px',
  },'&:hover fieldset': {
- borderColor:'#cbd5e1',
+ borderColor:'var(--primary-main)',
  },'&.Mui-focused fieldset': {
- borderColor:'#5d5fef',
+ borderColor:'var(--primary-main)',
  borderWidth:'1.5px',
  },'&.Mui-focused': {
- boxShadow:'0 0 0 3px rgba(93, 95, 239, 0.12)',
+ boxShadow:'0 0 0 1px var(--primary-main)',
  },
  },'& .MuiInputLabel-root': {
  fontSize:'14px',
- color:'#64748b','&.Mui-focused': {
- color:'#5d5fef',
+ color:'#4b5563','&.Mui-focused': {
+ color:'var(--primary-main)',
  fontWeight: 500,
  },
  },'& .MuiInputLabel-shrink': {
@@ -291,7 +292,7 @@ export default function AddStaff() {
  };
 
  return (
- <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden bg-[#f8fafc]">
+ <div className="assigned-form-surface p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden bg-[#f8fafc]">
  
  {/* Main White Card Container - Minimized Padding */}
  <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] p-2 sm:p-2.5">
@@ -1154,7 +1155,7 @@ export default function AddStaff() {
  <button
  type="submit"
  disabled={isSubmitting}
- className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-[#5d5fef] hover:bg-[#4d4fd9] text-white font-medium text-sm rounded-lg shadow-sm hover:shadow transition-all duration-200 cursor-pointer disabled:opacity-60"
+ className="assigned-primary-button inline-flex items-center justify-center gap-2 px-5 py-2 font-medium text-sm rounded-full shadow-sm hover:shadow transition-all duration-200 cursor-pointer disabled:opacity-60"
  >
  <PersonAddOutlinedIcon sx={{ fontSize: 18 }} />
  <span>{isSubmitting ?'Submitting...' :'Submit'}</span>

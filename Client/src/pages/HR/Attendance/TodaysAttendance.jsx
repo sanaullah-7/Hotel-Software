@@ -30,6 +30,9 @@ import ChevronLeftIcon from'@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from'@mui/icons-material/ChevronRight';
 import ArrowUpwardIcon from'@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from'@mui/icons-material/ArrowDownward';
+import MetricCards from '../components/MetricCards';
+import '../../../features/assigned-ui/formStyles.css';
+import '../../../features/assigned-ui/toolbarStyles.css';
 import WarningAmberOutlinedIcon from'@mui/icons-material/WarningAmberOutlined';
 import PeopleOutlinedIcon from'@mui/icons-material/PeopleOutlined';
 import HowToRegOutlinedIcon from'@mui/icons-material/HowToRegOutlined';
@@ -606,38 +609,8 @@ export default function TodaysAttendance() {
  }, [attendanceList]);
 
  return (
- <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden flex flex-col gap-2">
- {/* ── 6 Attendance Summary Cards ─────────────────────────────── */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
- {attendanceStats.map((card) => {
- const IconComp = card.icon;
- return (
- <div
- key={card.id}
- className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
- >
- <div className="flex items-center gap-1.5 min-w-0">
- <div className={`p-1 rounded-md ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}>
- <IconComp sx={{ fontSize: 15 }} />
- </div>
- <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
- {card.title}
- </span>
- </div>
- <div className="flex items-baseline justify-between mt-1">
- <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
- {card.value}
- </span>
- {card.subtext && (
- <span className="text-[10px] text-[var(--text-secondary)] font-normal hidden xl:inline">
- {card.subtext}
- </span>
- )}
- </div>
- </div>
- );
- })}
- </div>
+ <div className="assigned-form-surface p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden flex flex-col gap-2">
+ <MetricCards cards={attendanceStats} compactSubtext />
 
  {/* 2. Main Today's Attendance Card Container */}
  <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 mb-2">
@@ -674,7 +647,7 @@ export default function TodaysAttendance() {
  </div>
 
  {/* Right: Action Buttons matching Luxuria icons */}
- <div className="flex items-center gap-1.5 sm:gap-2 self-end md:self-auto">
+ <div className="assigned-table-toolbar flex items-center gap-1.5 sm:gap-2 self-end md:self-auto">
  {/* Filter Button */}
  <Tooltip title="Filter by Shift / Status">
  <IconButton
@@ -748,6 +721,7 @@ export default function TodaysAttendance() {
  {/* Export PDF Button */}
  <Tooltip title="Export to PDF">
  <IconButton
+ className="toolbar-export-icon"
  onClick={handleExportPDF}
  size="small"
  sx={{
@@ -1279,6 +1253,7 @@ export default function TodaysAttendance() {
 
  {/* Dialog: Add Today's Attendance */}
  <Dialog
+ className="assigned-form-surface"
  open={isAddModalOpen}
  onClose={() => setIsAddModalOpen(false)}
  maxWidth="sm"

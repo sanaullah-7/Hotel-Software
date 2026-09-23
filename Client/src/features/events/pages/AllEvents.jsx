@@ -27,6 +27,9 @@ import {
 import jsPDF from'jspdf';
 import autoTable from'jspdf-autotable';
 import * as XLSX from'xlsx';
+import EventSummaryCards from '../components/EventSummaryCards';
+import '../../assigned-ui/formStyles.css';
+import '../../assigned-ui/toolbarStyles.css';
 
 // Initial Event Data from Luxuria template
 const INITIAL_EVENTS = [
@@ -443,7 +446,7 @@ export default function AllEvents() {
  const doc = new jsPDF('landscape');
  doc.setFontSize(16);
  doc.setTextColor(30, 41, 59);
- doc.text('Luxuria Hotel & Resorts - All Events Report', 14, 15);
+ doc.text(' Hotel & Resorts - All Events Report', 14, 15);
  doc.setFontSize(10);
  doc.setTextColor(100, 116, 139);
  doc.text(`Generated on: ${new Date().toLocaleDateString()} | Total Events: ${filteredEvents.length}`, 14, 22);
@@ -576,45 +579,15 @@ export default function AllEvents() {
  ];
 
  return (
- <div className="w-full p-0">
- {/* ── Event Summary Cards ── */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full mb-2">
- {eventCards.map((card) => {
- const IconComp = card.icon;
- return (
- <div
- key={card.id}
- className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
- >
- <div className="flex items-center gap-1.5 min-w-0">
- <div className={`p-1 rounded-md ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}>
- <IconComp sx={{ fontSize: 15 }} />
- </div>
- <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
- {card.title}
- </span>
- </div>
- <div className="flex items-baseline justify-between mt-1">
- <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
- {card.value}
- </span>
- {card.subtext && (
- <span className="text-[10px] text-[var(--text-secondary)] font-normal hidden xl:inline">
- {card.subtext}
- </span>
- )}
- </div>
- </div>
- );
- })}
- </div>
+ <div className="assigned-form-surface w-full p-0">
+ <EventSummaryCards cards={eventCards} />
 
  {/* Main Card Container */}
  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
  {/* Card Header & Action Toolbar */}
  <div className="p-2 sm:p-2.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
  {/* Left Side: Search Bar Input & Bulk Actions */}
- <div className="flex items-center gap-2 flex-1 max-w-md">
+ <div className="assigned-table-toolbar flex items-center gap-2 flex-1 max-w-md">
  <div className="relative w-full sm:w-72">
  <input
  type="text"
@@ -697,7 +670,7 @@ export default function AllEvents() {
  <button
  onClick={handleExportPDF}
  title="Export PDF"
- className="p-1.5 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 rounded-xl transition-all cursor-pointer"
+ className="toolbar-export-icon p-1.5 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 rounded-xl transition-all cursor-pointer"
  >
  <PdfIcon sx={{ fontSize: 18 }} />
  </button>
@@ -706,7 +679,7 @@ export default function AllEvents() {
  <button
  onClick={handleExportExcel}
  title="Export Excel"
- className="p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all cursor-pointer"
+ className="toolbar-export-icon p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all cursor-pointer"
  >
  <DownloadIcon sx={{ fontSize: 18 }} />
  </button>

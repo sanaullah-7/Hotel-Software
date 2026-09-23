@@ -35,6 +35,9 @@ import DataGridTable from'../../../components/tables/DataGridTable';
 import PageHeader from'../../../components/common/PageHeader';
 import { getStoredStaff, deleteStaffMember, bulkDeleteStaff } from'./staffStore';
 import EditStaffModal from'./EditStaffModal';
+import StaffSummaryCards from './components/StaffSummaryCards';
+import StaffTable from './components/StaffTable';
+import '../../../features/assigned-ui/toolbarStyles.css';
 
 export default function AllStaff() {
  const [searchTerm, setSearchTerm] = useState('');
@@ -355,37 +358,7 @@ export default function AllStaff() {
 
  return (
  <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden flex flex-col gap-2">
- {/* ── Compact HR Summary Cards ─────────────────────────────── */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
- {summaryCards.map((card) => {
- const IconComp = card.icon;
- return (
- <div
- key={card.id}
- className="bg-white rounded-xl border border-gray-100 shadow-sm px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
- >
- <div className="flex items-center gap-1.5 min-w-0">
- <div className="p-1 rounded-md bg-[var(--primary-main)]/10 text-[var(--primary-main)] flex items-center justify-center shrink-0">
- <IconComp sx={{ fontSize: 15 }} />
- </div>
- <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
- {card.title}
- </span>
- </div>
- <div className="flex items-baseline justify-between mt-1">
- <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
- {card.value}
- </span>
- {card.subtext && (
- <span className="text-[10px] text-[var(--text-secondary)] font-normal hidden xl:inline">
- {card.subtext}
- </span>
- )}
- </div>
- </div>
- );
- })}
- </div>
+ <StaffSummaryCards cards={summaryCards} />
 
  {/* Main Table Card */}
  <div className="bg-white rounded-xl shadow-sm p-0 w-full overflow-hidden">
@@ -412,7 +385,7 @@ export default function AllStaff() {
  />
  </div>
  
- <div className="flex items-center gap-2">
+ <div className="assigned-table-toolbar flex items-center gap-2">
  {selectedIds.length > 0 && (
  <Tooltip title="Delete Selected">
  <IconButton size="small" sx={{ color:'#ef4444' }} onClick={handleBulkDelete}>
@@ -436,12 +409,12 @@ export default function AllStaff() {
  </IconButton>
  </Tooltip>
  <Tooltip title="Download Excel">
- <IconButton size="small" sx={{ color:'#0ea5e9' }} onClick={handleExcelExport}>
+ <IconButton className="toolbar-export-icon" size="small" sx={{ color:'#0ea5e9' }} onClick={handleExcelExport}>
  <CalculateIcon fontSize="small" />
  </IconButton>
  </Tooltip>
  <Tooltip title="Download PDF">
- <IconButton size="small" sx={{ color:'#ef4444' }} onClick={handlePdfExport}>
+ <IconButton className="toolbar-export-icon" size="small" sx={{ color:'#ef4444' }} onClick={handlePdfExport}>
  <PictureAsPdfIcon fontSize="small" />
  </IconButton>
  </Tooltip>
@@ -450,16 +423,11 @@ export default function AllStaff() {
 
  {/* Table */}
  <div className="w-full overflow-hidden">
- <DataGridTable 
- columns={activeColumns} 
- data={filteredStaff} 
- selectable={true} 
- flat={true} 
+ <StaffTable
+ columns={activeColumns}
+ data={filteredStaff}
  selected={selectedIds}
  onSelectionChange={setSelectedIds}
- noHorizontalScroll={true}
- checkboxHeaderSx={{ pl:'8px !important', pr:'8px !important', width:'48px !important', minWidth:'48px !important', maxWidth:'48px !important' }}
- checkboxCellSx={{ pl:'8px !important', pr:'8px !important', width:'48px !important', minWidth:'48px !important', maxWidth:'48px !important' }}
  />
  </div>
 

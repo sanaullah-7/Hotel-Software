@@ -18,6 +18,8 @@ import {
  Delete as DeleteIcon,
  CheckCircle as SuccessIcon
 } from'@mui/icons-material';
+import FormField from '../components/FormField';
+import '../../assigned-ui/formStyles.css';
 
 const DEFAULT_PROFILE = {
  hotelName:'Luxuria Resort & Spa',
@@ -40,45 +42,6 @@ const ACCENT_COLORS = [
  { id:'red', hex:'#ef4444', bg:'bg-[#ef4444]' },
 ];
 
-// Reusable custom field with notched legend label matching Luxuria exactly
-const FormField = ({ label, icon: Icon, value, onChange, name, placeholder, multiline = false, rows = 3 }) => {
- return (
- <div className="relative group w-full">
- <fieldset className="border border-gray-300 group-focus-within:border-[#4f46e5] rounded-xl px-3 py-1.5 transition-colors bg-white">
- <legend className="px-1 text-xs font-semibold text-gray-500 group-focus-within:text-[#4f46e5] transition-colors select-none">
- {label}
- </legend>
- <div className="flex items-center gap-3 px-1 py-1">
- {Icon && (
- <Icon
- sx={{ fontSize: 20 }}
- className="text-gray-400 group-focus-within:text-[#4f46e5] shrink-0 transition-colors"
- />
- )}
- {multiline ? (
- <textarea
- name={name}
- rows={rows}
- value={value}
- onChange={onChange}
- placeholder={placeholder}
- className="w-full bg-transparent border-none outline-none text-gray-800 text-sm font-medium resize-y"
- />
- ) : (
- <input
- type="text"
- name={name}
- value={value}
- onChange={onChange}
- placeholder={placeholder}
- className="w-full bg-transparent border-none outline-none text-gray-800 text-sm font-medium"
- />
- )}
- </div>
- </fieldset>
- </div>
- );
-};
 
 export default function HotelProfile() {
  const [formData, setFormData] = useState(DEFAULT_PROFILE);
@@ -156,7 +119,7 @@ export default function HotelProfile() {
  const completionPercentage = Math.round((filledFields / totalFields) * 85);
 
  return (
- <div className="w-full space-y-2 pb-1 font-sans">
+ <div className="assigned-form-surface w-full space-y-2 pb-1 font-sans">
  {/* Toast Notification */}
  {toastMessage && (
  <div className="fixed top-20 right-8 z-50 flex items-center gap-2 bg-[#1e293b] text-white px-4 py-3 rounded-xl shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
@@ -171,7 +134,7 @@ export default function HotelProfile() {
  <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-4">
  {/* Card Header */}
  <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
- <div className="w-9 h-9 rounded-xl bg-[#e0edff] text-[#2563eb] flex items-center justify-center shrink-0">
+ <div className="w-9 h-9 rounded-xl bg-[#ECFDF5] text-[#008000] flex items-center justify-center shrink-0">
  <ApartmentIcon sx={{ fontSize: 20 }} />
  </div>
  <div>
@@ -188,7 +151,7 @@ export default function HotelProfile() {
  {/* Section 1: General Information */}
  <div>
  <div className="flex items-center gap-2 mb-3">
- <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+ <div className="w-7 h-7 rounded-lg bg-[#ECFDF5]  text-[#008000]  flex items-center justify-center">
  <ApartmentIcon sx={{ fontSize: 16 }} />
  </div>
  <h4 className="text-[15px] font-bold text-gray-900">
@@ -219,7 +182,7 @@ export default function HotelProfile() {
  <div className="border-t border-gray-100 pt-6">
  {/* Section 2: Contact & Web Presence */}
  <div className="flex items-center gap-2 mb-4">
- <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+ <div className="w-7 h-7 rounded-lg bg-[#ECFDF5]  text-[#008000] flex items-center justify-center">
  <EmailIcon sx={{ fontSize: 16 }} />
  </div>
  <h4 className="text-[15px] font-bold text-gray-900">
@@ -263,7 +226,7 @@ export default function HotelProfile() {
  <div className="border-t border-gray-100 pt-6">
  {/* Section 3: Address & Location */}
  <div className="flex items-center gap-2 mb-4">
- <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+ <div className="w-7 h-7 rounded-lg bg-[#ECFDF5] text-emerald-600 flex items-center justify-center">
  <LocationIcon sx={{ fontSize: 16 }} />
  </div>
  <h4 className="text-[15px] font-bold text-gray-900">
@@ -307,7 +270,7 @@ export default function HotelProfile() {
  <div className="border-t border-gray-100 pt-6">
  {/* Section 4: Property Narrative */}
  <div className="flex items-center gap-2 mb-4">
- <div className="w-7 h-7 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
+ <div className="w-7 h-7 rounded-lg bg-[#ECFDF5]  text-[#008000] flex items-center justify-center">
  <DescriptionIcon sx={{ fontSize: 16 }} />
  </div>
  <h4 className="text-[15px] font-bold text-gray-900">
@@ -332,7 +295,7 @@ export default function HotelProfile() {
  <div className="pt-4 flex items-center gap-3">
  <button
  type="submit"
- className="px-5 py-2.5 bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-xl font-semibold text-sm shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+ className="px-5 py-2.5 bg-[#008000] hover:bg-green-800 text-white rounded-xl font-semibold text-sm shadow-xs transition-all flex items-center gap-2 cursor-pointer"
  >
  <SaveIcon sx={{ fontSize: 18 }} />
  Save Changes
@@ -400,11 +363,11 @@ export default function HotelProfile() {
  onClick={() => fileInputRef.current?.click()}
  className={`border-2 border-dashed rounded-2xl p-4 sm:p-5 text-center transition-all cursor-pointer ${
  isDragging
- ?'border-[#4f46e5] bg-[#eef2ff]'
- :'border-[#818cf8] bg-[#f8faff] hover:bg-[#f0f4ff]'
+ ?'border-[#008000] bg-[#EFF4F8]'
+ :'border-[#008000] bg-[#f8faff] hover:bg-[#f0f4ff]'
  }`}
  >
- <div className="w-10 h-10 rounded-full bg-[#ede9fe] text-[#6366f1] mx-auto flex items-center justify-center mb-2">
+ <div className="w-10 h-10 rounded-full bg-[#ede9fe] text-[#008000] mx-auto flex items-center justify-center mb-2">
  <UploadIcon sx={{ fontSize: 20 }} />
  </div>
  <h4 className="font-bold text-gray-900 text-sm">
@@ -417,7 +380,7 @@ export default function HotelProfile() {
  )}
 
  {/* Brand Accent Color Section */}
- <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+ {/* <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
  <span className="font-bold text-sm text-gray-900">
  Brand Accent Color
  </span>
@@ -445,7 +408,7 @@ export default function HotelProfile() {
  {selectedColor}
  </span>
  </div>
- </div>
+ </div> */}
 
  {/* Profile Completion Section */}
  <div className="bg-[#f0fdf4]/50 border border-green-100 rounded-2xl p-6 mt-4">
@@ -471,7 +434,7 @@ export default function HotelProfile() {
  {/* Progress Bar */}
  <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden mt-4 mb-3">
  <div
- className="h-full bg-[#4f46e5] rounded-full transition-all duration-300"
+ className="h-full bg-[#008000] rounded-full transition-all duration-300"
  style={{ width:`${completionPercentage}%` }}
  ></div>
  </div>
@@ -486,10 +449,8 @@ export default function HotelProfile() {
  </div>
  </div>
 
- {/* 4. Footer */}
- <div className="pt-2 text-left text-sm text-gray-500 font-normal">
- Copyright © 2026 Design By <span className="text-gray-700 font-semibold">Luxuria</span>
- </div>
+
+
  </div>
  );
 }

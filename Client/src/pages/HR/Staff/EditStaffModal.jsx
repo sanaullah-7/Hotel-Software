@@ -14,6 +14,7 @@ import PhoneOutlinedIcon from'@mui/icons-material/PhoneOutlined';
 import MailOutlineIcon from'@mui/icons-material/MailOutlined';
 import CalendarTodayOutlinedIcon from'@mui/icons-material/CalendarTodayOutlined';
 import { updateStaffMember } from'./staffStore';
+import '../../../features/assigned-ui/formStyles.css';
 
 const Transition = React.forwardRef(function Transition(props, ref) {
  return <Slide direction="down" ref={ref} {...props} />;
@@ -25,20 +26,20 @@ const inputStyle = {'& .MuiOutlinedInput-root': {
  backgroundColor:'#ffffff',
  fontSize:'14.5px',
  color:'#1e293b','& fieldset': {
- borderColor:'#e2e8f0',
+ borderColor:'#d1d5db',
  borderWidth:'1.2px',
  },'&:hover fieldset': {
- borderColor:'#cbd5e1',
+ borderColor:'var(--primary-main)',
  },'&.Mui-focused fieldset': {
- borderColor:'#5d5fef',
+ borderColor:'var(--primary-main)',
  borderWidth:'1.5px',
  },'&.Mui-focused': {
- boxShadow:'0 0 0 3px rgba(93, 95, 239, 0.12)',
+ boxShadow:'0 0 0 1px var(--primary-main)',
  },
  },'& .MuiInputLabel-root': {
  fontSize:'14px',
- color:'#64748b','&.Mui-focused': {
- color:'#5d5fef',
+ color:'#4b5563','&.Mui-focused': {
+ color:'var(--primary-main)',
  fontWeight: 500,
  },
  },'& .MuiInputLabel-shrink': {
@@ -125,6 +126,7 @@ export default function EditStaffModal({ open, onClose, staff, onSaveSuccess }) 
 
  return (
  <Dialog
+ className="assigned-form-surface"
  open={open}
  onClose={onClose}
  TransitionComponent={Transition}
@@ -139,7 +141,7 @@ export default function EditStaffModal({ open, onClose, staff, onSaveSuccess }) 
  }}
  >
  {/* Header Bar matching Luxuria exact design */}
- <div className="bg-[#5d5fef] px-5 py-3.5 flex items-center justify-between">
+ <div className="assigned-modal-header px-5 py-3.5 flex items-center justify-between">
  <div className="flex items-center gap-3">
  <Avatar
  src={staff.avatar ||`https://i.pravatar.cc/150?u=${staff.id}`}
@@ -161,7 +163,7 @@ export default function EditStaffModal({ open, onClose, staff, onSaveSuccess }) 
  type="button"
  onClick={onClose}
  aria-label="Close dialog"
- className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-all duration-150 cursor-pointer"
+ className="assigned-modal-close w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer"
  >
  <CloseIcon sx={{ fontSize: 18 }} />
  </button>
@@ -309,7 +311,7 @@ export default function EditStaffModal({ open, onClose, staff, onSaveSuccess }) 
  <div className="px-6 pb-6 pt-2 flex items-center gap-3">
  <button
  type="submit"
- className="px-7 py-2 rounded-full bg-white hover:bg-[#5d5fef] text-[#5d5fef] hover:text-white font-semibold text-sm border border-gray-200/80 shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md transition-all duration-200 cursor-pointer"
+ className="assigned-primary-button px-7 py-2 rounded-full font-semibold text-sm shadow-[0_2px_8px_rgba(0,0,0,0.06)] hover:shadow-md transition-all duration-200 cursor-pointer"
  >
  Save
  </button>

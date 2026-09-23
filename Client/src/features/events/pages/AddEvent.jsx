@@ -5,28 +5,8 @@ import {
  CheckCircle as SuccessIcon,
  CalendarMonth as CalendarIcon
 } from'@mui/icons-material';
-
-// Helper to generate auto Event ID matching Luxuria EVT... format
-function generateEventId() {
- const chars ='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
- let randomStr ='';
- for (let i = 0; i < 8; i++) {
- randomStr += chars.charAt(Math.floor(Math.random() * chars.length));
- }
- return`EVT${randomStr}`;
-}
-
-const EVENT_TYPES = ['Wedding','Corporate Meeting','Conference','Birthday Party','Anniversary','Product Launch','Seminar','Reception','Gala','Workshop'
-];
-
-const VENUES = ['Grand Ballroom','Conference Hall A','Conference Hall B','Rooftop Terrace','Garden Area','Poolside','Grand Crystal Ballroom','Royal Executive Boardroom'
-];
-
-const CATERING_TYPES = ['Buffet','Plated Service','Cocktail Reception','Family Style','Coffee & Snacks','No Catering'
-];
-
-const STATUS_OPTIONS = ['Pending','Confirmed','In Progress','Completed','Cancelled'
-];
+import { CATERING_TYPES, EVENT_TYPES, STATUS_OPTIONS, VENUES, generateEventId } from '../data/eventOptions';
+import '../../assigned-ui/formStyles.css';
 
 export default function AddEvent() {
  const navigate = useNavigate();
@@ -103,7 +83,7 @@ export default function AddEvent() {
  };
 
  return (
- <div className="w-full space-y-2 p-0">
+ <div className="assigned-form-surface w-full space-y-2 p-0">
  
 
  {/* Success Notification Banner */}
@@ -418,14 +398,14 @@ export default function AddEvent() {
  <div className="pt-3 border-t border-slate-100 flex items-center gap-3">
  <button
  type="submit"
- className="min-w-[110px] h-[36px] px-6 rounded-full bg-[#5c67f2] hover:bg-[#4c57e8] text-white font-medium text-[13px] tracking-wide shadow-xs transition-all duration-200 cursor-pointer flex items-center justify-center select-none active:scale-[0.98]"
+ className="assigned-primary-button min-w-[110px] h-[36px] px-6 rounded-full font-medium text-[13px] tracking-wide shadow-xs transition-all duration-200 cursor-pointer flex items-center justify-center select-none active:scale-[0.98]"
  >
  Submit
  </button>
  <button
  type="button"
  onClick={handleReset}
- className="min-w-[110px] h-[36px] px-6 rounded-full bg-white border border-[#ffb3be] hover:border-[#f43f5e] hover:bg-rose-50/40 text-[#e11d48] font-medium text-[13px] tracking-wide shadow-xs transition-all duration-200 cursor-pointer flex items-center justify-center select-none active:scale-[0.98]"
+ className="assigned-secondary-button min-w-[110px] h-[36px] px-6 rounded-full font-medium text-[13px] tracking-wide shadow-xs transition-all duration-200 cursor-pointer flex items-center justify-center select-none active:scale-[0.98]"
  >
  Cancel
  </button>

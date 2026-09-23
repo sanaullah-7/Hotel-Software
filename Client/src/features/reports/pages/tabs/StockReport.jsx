@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from'react';
+import '../../../assigned-ui/toolbarStyles.css';
 import {
  Search as SearchIcon,
  FilterList as FilterIcon,
@@ -338,7 +339,7 @@ export default function StockReport() {
  </div>
 
  {/* Right Toolbar Actions */}
- <div className="flex items-center flex-wrap gap-2.5">
+ <div className="assigned-table-toolbar flex items-center flex-wrap gap-2.5">
  {/* Search Input */}
  <div className="relative">
  <input

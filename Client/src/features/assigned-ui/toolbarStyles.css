@@ -1,0 +1,48 @@
+.assigned-table-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px !important;
+}
+
+.assigned-table-toolbar .MuiIconButton-root {
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 9999px !important;
+  background-color: transparent !important;
+}
+
+.assigned-table-toolbar .MuiIconButton-root .MuiSvgIcon-root {
+  font-size: 20px;
+}
+
+.assigned-table-toolbar > button > .MuiSvgIcon-root {
+  font-size: 20px;
+}
+
+.assigned-table-toolbar button.toolbar-export-icon > .MuiSvgIcon-root,
+.assigned-table-toolbar .MuiIconButton-root.toolbar-export-icon .MuiSvgIcon-root {
+  font-size: 18px !important;
+}
+
+.assigned-table-toolbar button:not(.MuiIconButton-root) {
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  border-radius: 9999px !important;
+}
+
+.assigned-table-toolbar button:hover,
+.assigned-table-toolbar .MuiIconButton-root:hover {
+  background-color: #e5f4eb !important;
+}
+
+.assigned-table-toolbar button[title*='PDF']:hover,
+.assigned-table-toolbar .MuiIconButton-root[title*='PDF']:hover {
+  background-color: #fef2f2 !important;
+}
