@@ -23,7 +23,7 @@ export default function DashboardStaffAttendance({
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <h2 className="text-[15px] font-bold text-gray-700">Today's Staff Attendance</h2>
           <Link
-            to="/hr/attendance/todays-attendance"
+            to="/hr/attendance/today"
             className="text-[12px] text-[#1b7f43] font-bold hover:underline bg-[#e5f4eb] px-3 py-1 rounded-full"
           >
             View All
