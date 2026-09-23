@@ -1,11 +1,12 @@
 import React from 'react';
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { PersonAdd } from '@mui/icons-material';
 import KPICard from '../components/common/KPICard';
 import StatusBadge from '../components/common/StatusBadge';
 import Dashboard from '../pages/Dashboard/Dashboard';
+import CurrentBookingsTable from '../pages/Dashboard/components/CurrentBookingsTable';
 
 describe('Dashboard and Shared UI Components', () => {
   it('renders KPICard with ForwardRef MUI Icon correctly in compact variant', () => {
@@ -57,5 +58,57 @@ describe('Dashboard and Shared UI Components', () => {
       </MemoryRouter>
     );
     expect(container).toBeTruthy();
+  });
+
+  it('allows adding a booking and typing into all form inputs', () => {
+    const { getByTitle, getByPlaceholderText, getByText } = render(
+      <MemoryRouter>
+        <CurrentBookingsTable />
+      </MemoryRouter>
+    );
+
+    // Open Add Booking modal
+    const addBtn = getByTitle('Add Booking');
+    fireEvent.click(addBtn);
+
+    // Verify modal opened with 'Add Booking' header and button
+    expect(getByText('Add Booking', { selector: 'h2' })).toBeTruthy();
+    expect(getByText('Add Booking', { selector: 'button' })).toBeTruthy();
+
+    // Type into inputs
+    const firstNameInput = getByPlaceholderText('First Name');
+    const lastNameInput = getByPlaceholderText('Last Name');
+    const mobileInput = getByPlaceholderText('123456789');
+
+    fireEvent.change(firstNameInput, { target: { value: 'Zaid' } });
+    fireEvent.change(lastNameInput, { target: { value: 'Khan' } });
+    fireEvent.change(mobileInput, { target: { value: '5551234' } });
+
+    expect(firstNameInput.value).toBe('Zaid');
+    expect(lastNameInput.value).toBe('Khan');
+    expect(mobileInput.value).toBe('5551234');
+
+    // Click Add Booking
+    const submitBtn = getByText('Add Booking', { selector: 'button' });
+    fireEvent.click(submitBtn);
+
+    // Verify new booking is rendered in table
+    expect(getByText('Zaid Khan')).toBeTruthy();
+  });
+
+  it('filters by date buttons correctly', () => {
+    const { getByText } = render(
+      <MemoryRouter>
+        <CurrentBookingsTable />
+      </MemoryRouter>
+    );
+
+    const weeklyBtn = getByText('Weekly');
+    fireEvent.click(weeklyBtn);
+    expect(weeklyBtn.className).toContain('text-[#1b7f43]');
+
+    const monthlyBtn = getByText('Monthly');
+    fireEvent.click(monthlyBtn);
+    expect(monthlyBtn.className).toContain('text-[#1b7f43]');
   });
 });

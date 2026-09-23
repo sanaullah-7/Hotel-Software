@@ -4,12 +4,21 @@ import { Close } from '@mui/icons-material';
 export default function ReservationFormModal({
   open,
   editingId,
-  form,
+  form = {},
   onFormChange,
   onClose,
-  onSave
+  onSave,
+  onSubmit
 }) {
   if (!open) return null;
+
+  const handleSave = onSave || onSubmit;
+
+  const handleFieldChange = (field, value) => {
+    if (typeof onFormChange === 'function') {
+      onFormChange(field, value);
+    }
+  };
 
   return (
     <div
@@ -37,7 +46,7 @@ export default function ReservationFormModal({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            onSave();
+            if (handleSave) handleSave(e);
           }}
           className="overflow-y-auto flex-1 p-6 bg-gray-50/30"
         >
@@ -52,10 +61,10 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.firstName || ''}
-                  onChange={(e) => onFormChange('firstName', e.target.value)}
+                  onChange={(e) => handleFieldChange('firstName', e.target.value)}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
-                  placeholder="Pooja"
+                  placeholder="First Name"
                 />
               </div>
               <div className="md:col-span-1">
@@ -63,9 +72,9 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.lastName || ''}
-                  onChange={(e) => onFormChange('lastName', e.target.value)}
+                  onChange={(e) => handleFieldChange('lastName', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
-                  placeholder="Sarma"
+                  placeholder="Last Name"
                 />
               </div>
               <div className="md:col-span-1">
@@ -73,7 +82,7 @@ export default function ReservationFormModal({
                 <input
                   type="email"
                   value={form.email || ''}
-                  onChange={(e) => onFormChange('email', e.target.value)}
+                  onChange={(e) => handleFieldChange('email', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                   placeholder="test@example.com"
                 />
@@ -82,7 +91,7 @@ export default function ReservationFormModal({
                 <label className="block text-[12px] text-gray-600 font-medium mb-1">Gender</label>
                 <select
                   value={form.gender || ''}
-                  onChange={(e) => onFormChange('gender', e.target.value)}
+                  onChange={(e) => handleFieldChange('gender', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                 >
                   <option value="">Select</option>
@@ -96,7 +105,7 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.mobile || ''}
-                  onChange={(e) => onFormChange('mobile', e.target.value)}
+                  onChange={(e) => handleFieldChange('mobile', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                   placeholder="123456789"
                 />
@@ -106,9 +115,9 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.city || ''}
-                  onChange={(e) => onFormChange('city', e.target.value)}
+                  onChange={(e) => handleFieldChange('city', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
-                  placeholder="Surat"
+                  placeholder="City"
                 />
               </div>
               <div className="md:col-span-1">
@@ -116,7 +125,7 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.passport || ''}
-                  onChange={(e) => onFormChange('passport', e.target.value)}
+                  onChange={(e) => handleFieldChange('passport', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                   placeholder="P123456789"
                 />
@@ -126,9 +135,9 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.nationality || ''}
-                  onChange={(e) => onFormChange('nationality', e.target.value)}
+                  onChange={(e) => handleFieldChange('nationality', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
-                  placeholder="Indian"
+                  placeholder="Nationality"
                 />
               </div>
             </div>
@@ -145,7 +154,7 @@ export default function ReservationFormModal({
                 <input
                   type="date"
                   value={form.checkIn || ''}
-                  onChange={(e) => onFormChange('checkIn', e.target.value)}
+                  onChange={(e) => handleFieldChange('checkIn', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                 />
               </div>
@@ -154,7 +163,7 @@ export default function ReservationFormModal({
                 <input
                   type="date"
                   value={form.checkOut || ''}
-                  onChange={(e) => onFormChange('checkOut', e.target.value)}
+                  onChange={(e) => handleFieldChange('checkOut', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                 />
               </div>
@@ -162,7 +171,7 @@ export default function ReservationFormModal({
                 <label className="block text-[12px] text-gray-600 font-medium mb-1">Select Package Type</label>
                 <select
                   value={form.package || ''}
-                  onChange={(e) => onFormChange('package', e.target.value)}
+                  onChange={(e) => handleFieldChange('package', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                 >
                   <option value="">Select</option>
@@ -177,9 +186,9 @@ export default function ReservationFormModal({
                   type="number"
                   required
                   value={form.totalPerson || ''}
-                  onChange={(e) => onFormChange('totalPerson', e.target.value)}
+                  onChange={(e) => handleFieldChange('totalPerson', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
-                  placeholder="3"
+                  placeholder="1"
                 />
               </div>
               <div className="md:col-span-1">
@@ -187,16 +196,16 @@ export default function ReservationFormModal({
                 <input
                   type="number"
                   value={form.numRooms || ''}
-                  onChange={(e) => onFormChange('numRooms', e.target.value)}
+                  onChange={(e) => handleFieldChange('numRooms', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
-                  placeholder="2"
+                  placeholder="1"
                 />
               </div>
               <div className="md:col-span-1">
                 <label className="block text-[12px] text-gray-600 font-medium mb-1">Select Room Type</label>
                 <select
                   value={form.roomType || ''}
-                  onChange={(e) => onFormChange('roomType', e.target.value)}
+                  onChange={(e) => handleFieldChange('roomType', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                 >
                   <option value="">Select</option>
@@ -209,7 +218,7 @@ export default function ReservationFormModal({
                 <label className="block text-[12px] text-gray-600 font-medium mb-1">Arrival Time</label>
                 <select
                   value={form.arrivalTime || ''}
-                  onChange={(e) => onFormChange('arrivalTime', e.target.value)}
+                  onChange={(e) => handleFieldChange('arrivalTime', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                 >
                   <option value="">Select</option>
@@ -222,7 +231,7 @@ export default function ReservationFormModal({
                 <label className="block text-[12px] text-gray-600 font-medium mb-1">Purpose of Stay</label>
                 <select
                   value={form.purpose || ''}
-                  onChange={(e) => onFormChange('purpose', e.target.value)}
+                  onChange={(e) => handleFieldChange('purpose', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                 >
                   <option value="">Select</option>
@@ -244,10 +253,12 @@ export default function ReservationFormModal({
                 <label className="block text-[12px] text-gray-600 font-medium mb-1">Payment Method</label>
                 <select
                   value={form.paymentMethod || ''}
-                  onChange={(e) => onFormChange('paymentMethod', e.target.value)}
+                  onChange={(e) => handleFieldChange('paymentMethod', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                 >
                   <option value="">Select</option>
+                  <option value="Paid">Paid</option>
+                  <option value="Unpaid">Unpaid</option>
                   <option value="Credit Card">Credit Card</option>
                   <option value="Cash">Cash</option>
                   <option value="Bank Transfer">Bank Transfer</option>
@@ -258,7 +269,7 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.discountCode || ''}
-                  onChange={(e) => onFormChange('discountCode', e.target.value)}
+                  onChange={(e) => handleFieldChange('discountCode', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                   placeholder="SAVE10"
                 />
@@ -268,7 +279,7 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.bookingRef || ''}
-                  onChange={(e) => onFormChange('bookingRef', e.target.value)}
+                  onChange={(e) => handleFieldChange('bookingRef', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                   placeholder="BK123456ABCD"
                 />
@@ -278,7 +289,7 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.emergencyName || ''}
-                  onChange={(e) => onFormChange('emergencyName', e.target.value)}
+                  onChange={(e) => handleFieldChange('emergencyName', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                   placeholder="John Doe"
                 />
@@ -288,7 +299,7 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.emergencyPhone || ''}
-                  onChange={(e) => onFormChange('emergencyPhone', e.target.value)}
+                  onChange={(e) => handleFieldChange('emergencyPhone', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                   placeholder="987654321"
                 />
@@ -307,7 +318,7 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.address || ''}
-                  onChange={(e) => onFormChange('address', e.target.value)}
+                  onChange={(e) => handleFieldChange('address', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                   placeholder="101, Elanxa, New York"
                 />
@@ -317,7 +328,7 @@ export default function ReservationFormModal({
                 <input
                   type="text"
                   value={form.specialRequests || ''}
-                  onChange={(e) => onFormChange('specialRequests', e.target.value)}
+                  onChange={(e) => handleFieldChange('specialRequests', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                   placeholder="Non-smoking room, late check-in"
                 />
@@ -336,7 +347,7 @@ export default function ReservationFormModal({
                 <textarea
                   rows="3"
                   value={form.note || ''}
-                  onChange={(e) => onFormChange('note', e.target.value)}
+                  onChange={(e) => handleFieldChange('note', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                   placeholder="Notes regarding booking..."
                 ></textarea>
@@ -350,16 +361,18 @@ export default function ReservationFormModal({
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 rounded text-[13.5px] font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+            className="px-5 py-2 rounded text-[13.5px] font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="button"
-            onClick={onSave}
-            className="px-5 py-2 rounded text-[13.5px] font-bold text-white bg-[var(--primary-main)] hover:bg-green-700 transition-colors"
+            onClick={(e) => {
+              if (handleSave) handleSave(e);
+            }}
+            className="px-5 py-2 rounded text-[13.5px] font-bold text-white bg-[var(--primary-main)] hover:bg-green-700 transition-colors cursor-pointer shadow-sm"
           >
-            Save Changes
+            {editingId ? 'Save Changes' : 'Add Booking'}
           </button>
         </div>
       </div>

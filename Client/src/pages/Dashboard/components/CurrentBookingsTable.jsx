@@ -122,6 +122,10 @@ export default function CurrentBookingsTable({
 
   const isFormValid = (form.firstName || '').trim() !== '';
 
+  const handleFormChange = (field, value) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
   useEffect(() => {
     const syncReservations = () => setBookings(getReservations(initialBookings));
     window.addEventListener('storage', syncReservations);
@@ -175,28 +179,24 @@ export default function CurrentBookingsTable({
     const checkInDate = parseDate(b.checkIn);
     if (!checkInDate) return true;
 
-    // Anchor reference: latest booking date or current date
+    // Anchor reference
     const refYear = checkInDate.getFullYear();
     const refMonth = checkInDate.getMonth();
     const refDay = checkInDate.getDate();
 
     if (dateFilter === 'Daily') {
-      // Filter for the active daily booking dates
       return refDay >= 20 && refDay <= 28;
     }
 
     if (dateFilter === 'Weekly') {
-      // Filter for current week (e.g. within a 7-day range)
       return refDay >= 10 && refDay <= 20;
     }
 
     if (dateFilter === 'Monthly') {
-      // Filter by active month (e.g. February)
       return refMonth === 1 || refMonth === new Date().getMonth();
     }
 
     if (dateFilter === 'Yearly') {
-      // Filter by active year
       return refYear === 2023 || refYear === new Date().getFullYear();
     }
 
@@ -288,7 +288,7 @@ export default function CurrentBookingsTable({
   };
 
   const handleSaveBooking = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!isFormValid) return;
 
     if (editingId) {
@@ -296,15 +296,27 @@ export default function CurrentBookingsTable({
         b.id === editingId
           ? {
               ...b,
-              name: `${form.firstName} ${form.lastName}`.trim(),
+              name: `${form.firstName || ''} ${form.lastName || ''}`.trim() || b.name,
               email: form.email,
               gender: form.gender,
               mobile: form.mobile,
+              city: form.city,
+              passport: form.passport,
+              nationality: form.nationality,
               package: form.package,
               roomType: form.roomType,
               checkIn: form.checkIn,
               checkOut: form.checkOut,
-              payment: form.paymentMethod
+              payment: form.paymentMethod,
+              arrivalTime: form.arrivalTime,
+              purpose: form.purpose,
+              discountCode: form.discountCode,
+              bookingRef: form.bookingRef,
+              emergencyName: form.emergencyName,
+              emergencyPhone: form.emergencyPhone,
+              address: form.address,
+              specialRequests: form.specialRequests,
+              note: form.note
             }
           : b
       );
@@ -312,16 +324,28 @@ export default function CurrentBookingsTable({
     } else {
       const newBooking = {
         id: Date.now(),
-        name: `${form.firstName} ${form.lastName}`.trim(),
-        avatar: 'https://i.pravatar.cc/150?img=' + Math.floor(Math.random() * 50),
-        package: form.package,
-        roomType: form.roomType,
+        name: `${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Guest',
+        avatar: 'https://i.pravatar.cc/150?img=' + Math.floor(Math.random() * 50 + 1),
+        package: form.package || 'All inclusive',
+        roomType: form.roomType || 'Delux',
         status: 'Booked',
-        checkIn: form.checkIn,
-        checkOut: form.checkOut,
-        payment: form.paymentMethod,
-        email: form.email,
-        mobile: form.mobile
+        checkIn: form.checkIn || new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
+        checkOut: form.checkOut || new Date(Date.now() + 86400000 * 2).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
+        payment: form.paymentMethod || 'Paid',
+        email: form.email || '',
+        mobile: form.mobile || '',
+        city: form.city || '',
+        passport: form.passport || '',
+        nationality: form.nationality || '',
+        arrivalTime: form.arrivalTime || 'Morning',
+        purpose: form.purpose || 'Leisure',
+        discountCode: form.discountCode || '',
+        bookingRef: form.bookingRef || `BK-${Date.now().toString().slice(-6)}`,
+        emergencyName: form.emergencyName || '',
+        emergencyPhone: form.emergencyPhone || '',
+        address: form.address || '',
+        specialRequests: form.specialRequests || '',
+        note: form.note || ''
       };
       persistBookings([newBooking, ...bookings]);
     }
@@ -732,9 +756,9 @@ export default function CurrentBookingsTable({
         open={isBookingModalOpen}
         editingId={editingId}
         form={form}
-        setForm={setForm}
-        isFormValid={isFormValid}
+        onFormChange={handleFormChange}
         onClose={() => setIsBookingModalOpen(false)}
+        onSave={handleSaveBooking}
         onSubmit={handleSaveBooking}
       />
 
