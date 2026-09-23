@@ -35,13 +35,22 @@ const DEFAULT_STATUS_STYLES = {
   Expired: 'bg-rose-50 text-rose-700 border-rose-200'
 };
 
+function renderBadgeIcon(icon, defaultSx = {}) {
+  if (!icon) return null;
+  if (React.isValidElement(icon)) {
+    return icon;
+  }
+  const IconComp = icon;
+  return <IconComp sx={defaultSx} />;
+}
+
 /**
  * Standard StatusBadge / Pill component across HMS tables, views, and cards.
  */
 export default function StatusBadge({
   status = '',
   stylesMap,
-  icon: IconComponent,
+  icon,
   size = 'sm', // 'xs' | 'sm' | 'md'
   className = '',
   children
@@ -60,13 +69,9 @@ export default function StatusBadge({
     <span
       className={`inline-flex items-center gap-1 font-bold rounded-[4px] leading-tight ${sizeClasses} ${resolvedStyle} ${className}`}
     >
-      {IconComponent && (
+      {icon && (
         <span className="shrink-0 flex items-center">
-          {typeof IconComponent === 'function' ? (
-            <IconComponent sx={{ fontSize: size === 'xs' ? 10 : 13 }} />
-          ) : (
-            IconComponent
-          )}
+          {renderBadgeIcon(icon, { fontSize: size === 'xs' ? 10 : 13 })}
         </span>
       )}
       <span>{displayContent}</span>

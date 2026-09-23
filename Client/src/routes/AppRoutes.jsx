@@ -94,6 +94,7 @@ export default function AppRoutes() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
+        <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
 
         {/* Front Office Sub-Routes */}
         <Route path="/front-office" element={<DashboardLayout><OperationsAlerts /></DashboardLayout>} />

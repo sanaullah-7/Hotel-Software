@@ -1,6 +1,18 @@
 import React from 'react';
 
 /**
+ * Safely renders an icon whether passed as a React component type (function/forwardRef) or a JSX element.
+ */
+function renderIcon(icon, defaultSx = {}) {
+  if (!icon) return null;
+  if (React.isValidElement(icon)) {
+    return icon;
+  }
+  const IconComp = icon;
+  return <IconComp sx={defaultSx} />;
+}
+
+/**
  * Reusable KPI / Metric card for dashboards and module summary banners.
  *
  * Variants:
@@ -12,7 +24,7 @@ export default function KPICard({
   title,
   value,
   subtext,
-  icon: IconComponent,
+  icon,
   iconColor = 'text-[var(--primary-main)]',
   iconBg = 'bg-[var(--primary-main)]/10',
   variant = 'compact',
@@ -32,13 +44,9 @@ export default function KPICard({
         } ${className}`}
       >
         <div className="flex items-center gap-1.5 min-w-0">
-          {IconComponent && (
+          {icon && (
             <div className={`p-1 rounded-md ${iconBg} ${iconColor} flex items-center justify-center shrink-0`}>
-              {typeof IconComponent === 'function' ? (
-                <IconComponent sx={{ fontSize: 15 }} />
-              ) : (
-                IconComponent
-              )}
+              {renderIcon(icon, { fontSize: 15 })}
             </div>
           )}
           <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
@@ -73,13 +81,9 @@ export default function KPICard({
           <span className="text-lg font-bold text-gray-900 leading-tight">{value}</span>
           {subtext && <span className="text-[10.5px] text-gray-400 mt-0.5">{subtext}</span>}
         </div>
-        {IconComponent && (
+        {icon && (
           <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${iconBg} ${iconColor}`}>
-            {typeof IconComponent === 'function' ? (
-              <IconComponent sx={{ fontSize: 18 }} />
-            ) : (
-              IconComponent
-            )}
+            {renderIcon(icon, { fontSize: 18 })}
           </div>
         )}
       </div>
@@ -99,13 +103,9 @@ export default function KPICard({
         <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">
           {title}
         </span>
-        {IconComponent && (
+        {icon && (
           <div className={`${iconColor} shrink-0 flex items-center justify-center`}>
-            {typeof IconComponent === 'function' ? (
-              <IconComponent sx={{ fontSize: 16 }} />
-            ) : (
-              IconComponent
-            )}
+            {renderIcon(icon, { fontSize: 16 })}
           </div>
         )}
       </div>
