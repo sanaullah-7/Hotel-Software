@@ -159,4 +159,31 @@ describe('Dashboard and Shared UI Components', () => {
     expect(getByText('BK-1001')).toBeTruthy();
     expect(getByText('BK-1002')).toBeTruthy();
   });
+
+  it('renders GuestComplaint with working delete confirmation modal and text truncation', async () => {
+    const { default: GuestComplaint } = await import('../features/front-office/pages/GuestComplaint');
+    const { getByText, queryByText, getAllByTitle } = render(
+      <MemoryRouter>
+        <GuestComplaint />
+      </MemoryRouter>
+    );
+
+    // Verify initial complaint exists
+    expect(getByText('John Doe')).toBeTruthy();
+
+    // Click delete icon for first complaint
+    const deleteButtons = getAllByTitle('Delete Complaint');
+    expect(deleteButtons.length).toBeGreaterThan(0);
+    fireEvent.click(deleteButtons[0]);
+
+    // Delete confirmation modal should appear
+    expect(getByText('Are you sure?')).toBeTruthy();
+
+    // Confirm deletion
+    const confirmDeleteBtn = getByText('Delete', { selector: 'button' });
+    fireEvent.click(confirmDeleteBtn);
+
+    // Complaint John Doe should now be deleted
+    expect(queryByText('John Doe')).toBeNull();
+  });
 });
