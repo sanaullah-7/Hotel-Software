@@ -276,36 +276,7 @@ export default function GuestComplaint() {
           </div>
           
           <div className="flex items-center gap-2 relative">
-            <div className="relative" ref={filterMenuRef}>
-              <button 
-                onClick={() => setShowColumnsMenu(!showColumnsMenu)}
-                className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer"
-                title="Show/Hide Column"
-              >
-                <FilterList className="text-[var(--primary-main)]" sx={{ fontSize: 20 }} />
-              </button>
-              
-              {showColumnsMenu && (
-                <div className="absolute right-0 top-12 mt-1 w-52 bg-[#f8f9fa] shadow-xl border border-gray-200 rounded z-50 overflow-hidden flex flex-col max-h-80">
-                  <div className="px-4 py-3 border-b border-gray-200">
-                    <span className="text-[13px] font-bold text-gray-800">Show/Hide Column</span>
-                  </div>
-                  <div className="p-2 overflow-y-auto custom-scrollbar flex-1">
-                    {Object.keys(visibleColumns).map(col => (
-                      <label key={col} className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded cursor-pointer">
-                        <div className={`w-4 h-4 rounded-sm flex items-center justify-center border ${visibleColumns[col] ? 'bg-[#1b7f43] border-[#1b7f43]' : 'bg-white border-gray-300'}`}>
-                          {visibleColumns[col] && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                        </div>
-                        <span className="text-[14px] text-gray-700">{col}</span>
-                        <input type="checkbox" checked={visibleColumns[col]} onChange={() => toggleColumn(col)} className="hidden" />
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <button onClick={openNewModal} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-green-50 transition-colors cursor-pointer">
+            <button onClick={openNewModal} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-green-50 transition-colors cursor-pointer" title="Add Complaint">
               <AddCircleOutlined sx={{ fontSize: 24 }} className="text-[#1b7f43]" />
             </button>
             <button onClick={handleRefresh} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
