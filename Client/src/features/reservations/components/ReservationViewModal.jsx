@@ -5,7 +5,8 @@ import {
   LocalOfferOutlined,
   CalendarTodayOutlined,
   PhoneOutlined,
-  EmailOutlined
+  EmailOutlined,
+  MeetingRoomOutlined
 } from '@mui/icons-material';
 import ModalShell from '../../../components/common/ModalShell';
 import StatusBadge from '../../../components/common/StatusBadge';
@@ -56,6 +57,21 @@ export default function ReservationViewModal({
       showCloseButton={true}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Room */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
+          <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
+            <MeetingRoomOutlined sx={{ fontSize: 20 }} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Assigned Room
+            </span>
+            <span className="text-[14px] font-bold text-gray-800">
+              Room {booking.roomNo || booking.room || '101'} ({booking.roomType || 'Standard'})
+            </span>
+          </div>
+        </div>
+
         {/* Package */}
         <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
           <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">

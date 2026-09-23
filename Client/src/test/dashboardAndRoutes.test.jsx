@@ -79,21 +79,36 @@ describe('Dashboard and Shared UI Components', () => {
     const firstNameInput = getByPlaceholderText('First Name');
     const lastNameInput = getByPlaceholderText('Last Name');
     const mobileInput = getByPlaceholderText('123456789');
+    const roomInput = getByPlaceholderText('e.g. 101, 102, 201');
 
     fireEvent.change(firstNameInput, { target: { value: 'Zaid' } });
     fireEvent.change(lastNameInput, { target: { value: 'Khan' } });
     fireEvent.change(mobileInput, { target: { value: '5551234' } });
+    fireEvent.change(roomInput, { target: { value: '305' } });
 
     expect(firstNameInput.value).toBe('Zaid');
     expect(lastNameInput.value).toBe('Khan');
     expect(mobileInput.value).toBe('5551234');
+    expect(roomInput.value).toBe('305');
 
     // Click Add Booking
     const submitBtn = getByText('Add Booking', { selector: 'button' });
     fireEvent.click(submitBtn);
 
-    // Verify new booking is rendered in table
+    // Verify new booking and Room 305 are rendered in table
     expect(getByText('Zaid Khan')).toBeTruthy();
+    expect(getByText('Room 305')).toBeTruthy();
+  });
+
+  it('renders Room column in table headers and rows', () => {
+    const { getByText, getAllByText } = render(
+      <MemoryRouter>
+        <CurrentBookingsTable />
+      </MemoryRouter>
+    );
+
+    expect(getByText('Room', { selector: 'th' })).toBeTruthy();
+    expect(getAllByText(/Room \d+/).length).toBeGreaterThan(0);
   });
 
   it('filters by date buttons correctly', () => {

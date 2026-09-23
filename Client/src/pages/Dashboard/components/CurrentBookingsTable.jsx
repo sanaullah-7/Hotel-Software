@@ -34,16 +34,16 @@ import ReservationCancelModal from '../../../features/reservations/components/Re
 import { statusStyles, paymentStyles } from '../../../features/reservations/components/ReservationTable';
 
 const initialBookings = [
-  { id: 1, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=11', package: 'All inclusive', roomType: 'Delux', status: 'Cancelled', checkIn: '02/25/2023', checkOut: '02/28/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 2, name: 'Sarah Smith', avatar: 'https://i.pravatar.cc/150?img=5', package: 'Business', roomType: 'Super Delux', status: 'Booked', checkIn: '02/12/2023', checkOut: '02/15/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 3, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=12', package: 'All inclusive', roomType: 'Super Delux', status: 'CheckIn', checkIn: '02/25/2023', checkOut: '02/26/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 4, name: 'Jay Soni', avatar: 'https://i.pravatar.cc/150?img=33', package: 'Business', roomType: 'Delux', status: 'Cancelled', checkIn: '02/21/2023', checkOut: '02/23/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 5, name: 'Smita Pari...', avatar: 'https://i.pravatar.cc/150?img=44', package: 'All inclusive', roomType: 'Vila', status: 'CheckOut', checkIn: '02/16/2023', checkOut: '02/19/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 6, name: 'Pankaj Sin...', avatar: 'https://i.pravatar.cc/150?img=55', package: 'Wedding', roomType: 'Double', status: 'Booked', checkIn: '02/11/2023', checkOut: '02/14/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 7, name: 'Pankaj Sin...', avatar: 'https://i.pravatar.cc/150?img=56', package: 'Business', roomType: 'Single', status: 'Booked', checkIn: '02/27/2023', checkOut: '02/28/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 8, name: 'Jay Soni', avatar: 'https://i.pravatar.cc/150?img=34', package: 'All inclusive', roomType: 'Delux', status: 'Booked', checkIn: '02/17/2023', checkOut: '02/20/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 9, name: 'Smita Pari...', avatar: 'https://i.pravatar.cc/150?img=45', package: 'Wedding', roomType: 'Delux', status: 'CheckOut', checkIn: '02/07/2023', checkOut: '02/10/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 10, name: 'Pooja Patel', avatar: 'https://i.pravatar.cc/150?img=22', package: 'Business', roomType: 'Super Delux', status: 'Cancelled', checkIn: '02/09/2023', checkOut: '02/12/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 1, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=11', roomNo: '101', package: 'All inclusive', roomType: 'Delux', status: 'Cancelled', checkIn: '02/25/2023', checkOut: '02/28/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 2, name: 'Sarah Smith', avatar: 'https://i.pravatar.cc/150?img=5', roomNo: '102', package: 'Business', roomType: 'Super Delux', status: 'Booked', checkIn: '02/12/2023', checkOut: '02/15/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 3, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=12', roomNo: '103', package: 'All inclusive', roomType: 'Super Delux', status: 'CheckIn', checkIn: '02/25/2023', checkOut: '02/26/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 4, name: 'Jay Soni', avatar: 'https://i.pravatar.cc/150?img=33', roomNo: '104', package: 'Business', roomType: 'Delux', status: 'Cancelled', checkIn: '02/21/2023', checkOut: '02/23/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 5, name: 'Smita Pari...', avatar: 'https://i.pravatar.cc/150?img=44', roomNo: '105', package: 'All inclusive', roomType: 'Vila', status: 'CheckOut', checkIn: '02/16/2023', checkOut: '02/19/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 6, name: 'Pankaj Sin...', avatar: 'https://i.pravatar.cc/150?img=55', roomNo: '106', package: 'Wedding', roomType: 'Double', status: 'Booked', checkIn: '02/11/2023', checkOut: '02/14/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 7, name: 'Pankaj Sin...', avatar: 'https://i.pravatar.cc/150?img=56', roomNo: '201', package: 'Business', roomType: 'Single', status: 'Booked', checkIn: '02/27/2023', checkOut: '02/28/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 8, name: 'Jay Soni', avatar: 'https://i.pravatar.cc/150?img=34', roomNo: '202', package: 'All inclusive', roomType: 'Delux', status: 'Booked', checkIn: '02/17/2023', checkOut: '02/20/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 9, name: 'Smita Pari...', avatar: 'https://i.pravatar.cc/150?img=45', roomNo: '203', package: 'Wedding', roomType: 'Delux', status: 'CheckOut', checkIn: '02/07/2023', checkOut: '02/10/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 10, name: 'Pooja Patel', avatar: 'https://i.pravatar.cc/150?img=22', roomNo: '204', package: 'Business', roomType: 'Super Delux', status: 'Cancelled', checkIn: '02/09/2023', checkOut: '02/12/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
 ];
 
 // Helper to parse date strings safely
@@ -108,6 +108,7 @@ export default function CurrentBookingsTable({
     totalPerson: '1',
     numRooms: '1',
     roomType: 'Delux',
+    roomNo: '101',
     arrivalTime: 'Morning',
     purpose: 'Leisure',
     paymentMethod: 'Paid',
@@ -117,7 +118,9 @@ export default function CurrentBookingsTable({
     emergencyPhone: '',
     address: '',
     specialRequests: '',
-    note: ''
+    note: '',
+    avatar: '',
+    avatarFileName: ''
   });
 
   const isFormValid = (form.firstName || '').trim() !== '';
@@ -167,8 +170,9 @@ export default function CurrentBookingsTable({
       const matchName = b.name && b.name.toLowerCase().includes(q);
       const matchMobile = b.mobile && b.mobile.includes(q);
       const matchPackage = b.package && b.package.toLowerCase().includes(q);
-      const matchRoom = b.roomType && b.roomType.toLowerCase().includes(q);
-      if (!matchName && !matchMobile && !matchPackage && !matchRoom) {
+      const matchRoomType = b.roomType && b.roomType.toLowerCase().includes(q);
+      const matchRoomNo = (b.roomNo || b.room || '').toString().toLowerCase().includes(q);
+      if (!matchName && !matchMobile && !matchPackage && !matchRoomType && !matchRoomNo) {
         return false;
       }
     }
@@ -241,6 +245,7 @@ export default function CurrentBookingsTable({
       totalPerson: '1',
       numRooms: '1',
       roomType: 'Delux',
+      roomNo: '101',
       arrivalTime: 'Morning',
       purpose: 'Leisure',
       paymentMethod: 'Paid',
@@ -250,7 +255,9 @@ export default function CurrentBookingsTable({
       emergencyPhone: '',
       address: '',
       specialRequests: '',
-      note: ''
+      note: '',
+      avatar: '',
+      avatarFileName: ''
     });
     setIsBookingModalOpen(true);
   };
@@ -273,6 +280,7 @@ export default function CurrentBookingsTable({
       totalPerson: booking.totalPerson || '1',
       numRooms: booking.numRooms || '1',
       roomType: booking.roomType || 'Delux',
+      roomNo: booking.roomNo || booking.room || '101',
       arrivalTime: booking.arrivalTime || 'Morning',
       purpose: booking.purpose || 'Leisure',
       paymentMethod: booking.payment || 'Paid',
@@ -282,7 +290,9 @@ export default function CurrentBookingsTable({
       emergencyPhone: booking.emergencyPhone || '',
       address: booking.address || '',
       specialRequests: booking.specialRequests || '',
-      note: booking.note || ''
+      note: booking.note || '',
+      avatar: booking.avatar || '',
+      avatarFileName: ''
     });
     setIsBookingModalOpen(true);
   };
@@ -297,6 +307,7 @@ export default function CurrentBookingsTable({
           ? {
               ...b,
               name: `${form.firstName || ''} ${form.lastName || ''}`.trim() || b.name,
+              avatar: form.avatar || b.avatar,
               email: form.email,
               gender: form.gender,
               mobile: form.mobile,
@@ -305,6 +316,7 @@ export default function CurrentBookingsTable({
               nationality: form.nationality,
               package: form.package,
               roomType: form.roomType,
+              roomNo: form.roomNo || b.roomNo || '101',
               checkIn: form.checkIn,
               checkOut: form.checkOut,
               payment: form.paymentMethod,
@@ -325,7 +337,8 @@ export default function CurrentBookingsTable({
       const newBooking = {
         id: Date.now(),
         name: `${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Guest',
-        avatar: 'https://i.pravatar.cc/150?img=' + Math.floor(Math.random() * 50 + 1),
+        avatar: form.avatar || ('https://i.pravatar.cc/150?img=' + Math.floor(Math.random() * 50 + 1)),
+        roomNo: form.roomNo || '101',
         package: form.package || 'All inclusive',
         roomType: form.roomType || 'Delux',
         status: 'Booked',
@@ -386,17 +399,18 @@ export default function CurrentBookingsTable({
     persistBookings(updated);
   };
 
-  // Export CSV (Without Email Column)
+  // Export CSV (Without Email Column, With Room Column)
   const handleExportCSV = () => {
-    const cols = ['Name', 'Package', 'Room Type', 'Status', 'Check In', 'Check Out', 'Payment', 'Dues', 'Mobile'];
+    const cols = ['Name', 'Room', 'Room Type', 'Package', 'Status', 'Check In', 'Check Out', 'Payment', 'Dues', 'Mobile'];
     let csvContent = cols.join(',') + '\n';
 
     filteredBookings.forEach((b) => {
       const duesAmt = getBookingDues(b);
       const row = [
         `"${b.name || ''}"`,
-        `"${b.package || ''}"`,
+        `"Room ${b.roomNo || b.room || '101'}"`,
         `"${b.roomType || ''}"`,
+        `"${b.package || ''}"`,
         `"${b.status || ''}"`,
         `"${b.checkIn || ''}"`,
         `"${b.checkOut || ''}"`,
@@ -414,9 +428,9 @@ export default function CurrentBookingsTable({
     link.click();
   };
 
-  // Export PDF (Without Email Column)
+  // Export PDF (Without Email Column, With Room Column)
   const handleExportPDF = () => {
-    const cols = ['Name', 'Package', 'Room Type', 'Status', 'Check In', 'Check Out', 'Payment', 'Dues', 'Mobile'];
+    const cols = ['Name', 'Room', 'Room Type', 'Package', 'Status', 'Check In', 'Check Out', 'Payment', 'Dues', 'Mobile'];
     let html = `
       <html>
       <head>
@@ -443,8 +457,9 @@ export default function CurrentBookingsTable({
       const duesAmt = getBookingDues(b);
       html += `<tr>
         <td>${b.name || ''}</td>
-        <td>${b.package || ''}</td>
+        <td>Room ${b.roomNo || b.room || '101'}</td>
         <td>${b.roomType || ''}</td>
+        <td>${b.package || ''}</td>
         <td>${b.status || ''}</td>
         <td>${b.checkIn || ''}</td>
         <td>${b.checkOut || ''}</td>
@@ -567,21 +582,22 @@ export default function CurrentBookingsTable({
         </div>
       </div>
 
-      {/* ─── Table Without Email Column and Without Overflow Scrolling ─── */}
+      {/* ─── Table With Room Column and Without Overflow Scrolling ─── */}
       <div className="w-full">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse table-auto">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/50">
-              <th className="py-2.5 px-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Name</th>
-              <th className="py-2.5 px-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Package</th>
-              <th className="py-2.5 px-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Room Type</th>
-              <th className="py-2.5 px-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Status</th>
-              <th className="py-2.5 px-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Check In</th>
-              <th className="py-2.5 px-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Check Out</th>
-              <th className="py-2.5 px-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Payment</th>
-              <th className="py-2.5 px-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Dues</th>
-              <th className="py-2.5 px-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Mobile</th>
-              <th className="py-2.5 px-3 text-[11px] font-bold text-gray-600 uppercase tracking-wide text-center">Actions</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Name</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Room</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Room Type</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Package</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Status</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Check In</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Check Out</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Payment</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Dues</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Mobile</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -593,8 +609,8 @@ export default function CurrentBookingsTable({
                 title="Click to view details"
               >
                 {/* Name */}
-                <td className="py-2.5 px-3">
-                  <div className="flex items-center gap-2">
+                <td className="py-2.5 px-2">
+                  <div className="flex items-center gap-1.5">
                     <img
                       src={booking.avatar}
                       alt="Avatar"
@@ -603,7 +619,7 @@ export default function CurrentBookingsTable({
                     <Link
                       to={`/guests/${booking.guestId || `GST-${booking.id}`}`}
                       onClick={(e) => e.stopPropagation()}
-                      className="text-[12px] text-gray-800 font-bold hover:text-[#1b7f43] hover:underline transition-colors truncate"
+                      className="text-[12px] text-gray-800 font-bold hover:text-[#1b7f43] hover:underline transition-colors truncate max-w-[110px]"
                       title="View Guest Profile"
                     >
                       {booking.name}
@@ -611,14 +627,21 @@ export default function CurrentBookingsTable({
                   </div>
                 </td>
 
-                {/* Package */}
-                <td className="py-2.5 px-3 text-[12px] text-gray-600">{booking.package}</td>
+                {/* Room */}
+                <td className="py-2.5 px-2">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-gray-100 text-gray-800 border border-gray-200 whitespace-nowrap">
+                    Room {booking.roomNo || booking.room || '101'}
+                  </span>
+                </td>
 
                 {/* Room Type */}
-                <td className="py-2.5 px-3 text-[12px] text-gray-600">{booking.roomType}</td>
+                <td className="py-2.5 px-2 text-[11.5px] text-gray-600">{booking.roomType}</td>
+
+                {/* Package */}
+                <td className="py-2.5 px-2 text-[11.5px] text-gray-600">{booking.package}</td>
 
                 {/* Status */}
-                <td className="py-2.5 px-3">
+                <td className="py-2.5 px-2">
                   <StatusBadge
                     status={booking.status}
                     stylesMap={statusStyles}
@@ -627,23 +650,23 @@ export default function CurrentBookingsTable({
                 </td>
 
                 {/* Check In */}
-                <td className="py-2.5 px-3 text-[11.5px] text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <CalendarTodayOutlined sx={{ fontSize: 12 }} className="text-gray-400" />
+                <td className="py-2.5 px-2 text-[11px] text-gray-600">
+                  <div className="flex items-center gap-1 whitespace-nowrap">
+                    <CalendarTodayOutlined sx={{ fontSize: 11 }} className="text-gray-400" />
                     {booking.checkIn}
                   </div>
                 </td>
 
                 {/* Check Out */}
-                <td className="py-2.5 px-3 text-[11.5px] text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <CalendarTodayOutlined sx={{ fontSize: 12 }} className="text-gray-400" />
+                <td className="py-2.5 px-2 text-[11px] text-gray-600">
+                  <div className="flex items-center gap-1 whitespace-nowrap">
+                    <CalendarTodayOutlined sx={{ fontSize: 11 }} className="text-gray-400" />
                     {booking.checkOut}
                   </div>
                 </td>
 
                 {/* Payment */}
-                <td className="py-2.5 px-3">
+                <td className="py-2.5 px-2">
                   <StatusBadge
                     status={booking.payment}
                     stylesMap={paymentStyles}
@@ -652,7 +675,7 @@ export default function CurrentBookingsTable({
                 </td>
 
                 {/* Dues */}
-                <td className="py-2.5 px-3 text-[12px] font-semibold">
+                <td className="py-2.5 px-2 text-[11.5px] font-semibold">
                   {(() => {
                     const duesAmt = getBookingDues(booking);
                     return duesAmt > 0 ? (
@@ -663,16 +686,16 @@ export default function CurrentBookingsTable({
                   })()}
                 </td>
 
-                {/* Mobile (Email removed!) */}
-                <td className="py-2.5 px-3 text-[11.5px] text-gray-600">
-                  <div className="flex items-center gap-1">
-                    <PhoneOutlined sx={{ fontSize: 12 }} className="text-emerald-500" />
+                {/* Mobile */}
+                <td className="py-2.5 px-2 text-[11px] text-gray-600">
+                  <div className="flex items-center gap-1 whitespace-nowrap">
+                    <PhoneOutlined sx={{ fontSize: 11 }} className="text-emerald-500" />
                     {booking.mobile}
                   </div>
                 </td>
 
                 {/* Actions */}
-                <td className="py-2.5 px-3 text-center relative" onClick={(e) => e.stopPropagation()}>
+                <td className="py-2.5 px-2 text-center relative" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={(e) => toggleMenu(e, booking.id)}
                     className="text-gray-600 hover:bg-gray-100 rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors cursor-pointer"
@@ -723,7 +746,7 @@ export default function CurrentBookingsTable({
 
             {filteredBookings.length === 0 && (
               <tr>
-                <td colSpan={10} className="py-8 text-center text-gray-400 text-xs">
+                <td colSpan={11} className="py-8 text-center text-gray-400 text-xs">
                   No bookings found matching criteria.
                 </td>
               </tr>

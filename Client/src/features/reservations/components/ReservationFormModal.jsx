@@ -1,5 +1,5 @@
-import React from 'react';
-import { Close } from '@mui/icons-material';
+import React, { useRef, useState } from 'react';
+import { Close, CloudUpload, DeleteOutlined, ImageOutlined } from '@mui/icons-material';
 
 export default function ReservationFormModal({
   open,
@@ -10,6 +10,9 @@ export default function ReservationFormModal({
   onSave,
   onSubmit
 }) {
+  const fileInputRef = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
+
   if (!open) return null;
 
   const handleSave = onSave || onSubmit;
@@ -17,6 +20,52 @@ export default function ReservationFormModal({
   const handleFieldChange = (field, value) => {
     if (typeof onFormChange === 'function') {
       onFormChange(field, value);
+    }
+  };
+
+  const handleFileProcess = (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload a valid image file (PNG, JPG, JPEG, WEBP).');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      handleFieldChange('avatar', e.target.result);
+      handleFieldChange('avatarFileName', file.name);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileProcess(e.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileProcess(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleRemoveImage = (e) => {
+    e.stopPropagation();
+    handleFieldChange('avatar', '');
+    handleFieldChange('avatarFileName', '');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -212,7 +261,19 @@ export default function ReservationFormModal({
                   <option value="Delux">Delux</option>
                   <option value="Super Delux">Super Delux</option>
                   <option value="Vila">Vila</option>
+                  <option value="Single">Single</option>
+                  <option value="Double">Double</option>
                 </select>
+              </div>
+              <div className="md:col-span-1">
+                <label className="block text-[12px] text-gray-600 font-medium mb-1">Room / Room No.</label>
+                <input
+                  type="text"
+                  value={form.roomNo || form.room || ''}
+                  onChange={(e) => handleFieldChange('roomNo', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
+                  placeholder="e.g. 101, 102, 201"
+                />
               </div>
               <div className="md:col-span-1">
                 <label className="block text-[12px] text-gray-600 font-medium mb-1">Arrival Time</label>
@@ -335,12 +396,70 @@ export default function ReservationFormModal({
               </div>
               <div className="md:col-span-2">
                 <label className="block text-[12px] text-gray-600 font-medium mb-1">
-                  Upload or drag and drop file here
+                  Upload Guest Image / Photo
                 </label>
-                <div className="w-full p-4 border-2 border-dashed border-gray-300 rounded-md bg-white text-center cursor-pointer hover:bg-gray-50 transition-colors">
-                  <p className="text-[13px] text-gray-500 mb-2">No file chosen</p>
-                  <input type="file" className="text-[12px] text-gray-500" />
-                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+
+                {form.avatar ? (
+                  <div className="w-full p-4 border border-green-300 bg-green-50/40 rounded-lg flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={form.avatar}
+                        alt="Guest Preview"
+                        className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm"
+                      />
+                      <div>
+                        <p className="text-[13px] font-bold text-gray-800">
+                          {form.avatarFileName || 'Guest Photo Attached'}
+                        </p>
+                        <p className="text-[11px] text-green-700 font-medium">Image uploaded successfully</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                        className="px-3 py-1.5 bg-white border border-gray-200 text-[12px] font-semibold text-gray-700 rounded hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
+                        Change Image
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors cursor-pointer"
+                        title="Remove Image"
+                      >
+                        <DeleteOutlined sx={{ fontSize: 18 }} />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    className={`w-full p-6 border-2 border-dashed rounded-lg text-center cursor-pointer transition-colors ${
+                      isDragging
+                        ? 'border-[var(--primary-main)] bg-green-50/50'
+                        : 'border-gray-300 bg-white hover:bg-gray-50/80 hover:border-gray-400'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center justify-center">
+                      <CloudUpload className="text-gray-400 mb-2" sx={{ fontSize: 32 }} />
+                      <p className="text-[13px] font-semibold text-gray-700 mb-0.5">
+                        Click to upload or drag and drop image here
+                      </p>
+                      <p className="text-[11px] text-gray-400">PNG, JPG, JPEG, WEBP (Max 5MB)</p>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="md:col-span-2">
                 <label className="block text-[12px] text-gray-600 font-medium mb-1">Note</label>
