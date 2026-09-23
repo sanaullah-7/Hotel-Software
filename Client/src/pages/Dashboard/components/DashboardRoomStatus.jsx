@@ -17,7 +17,7 @@ export default function DashboardRoomStatus({
   const availableCount = roomInventory.filter((room) => room.status === 'Open').length;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-3">
       <KPICard
         title="Rooms Dirty"
         value={dirtyCount}

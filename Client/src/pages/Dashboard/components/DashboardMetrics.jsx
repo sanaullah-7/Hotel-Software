@@ -20,7 +20,7 @@ export default function DashboardMetrics({
   const paidCount = reservations.filter((reservation) => reservation.payment === 'Paid').length;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-3">
       <KPICard
         title="Reservation Today"
         value={reservationCount}
