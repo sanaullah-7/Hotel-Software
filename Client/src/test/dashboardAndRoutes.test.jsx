@@ -126,4 +126,23 @@ describe('Dashboard and Shared UI Components', () => {
     fireEvent.click(monthlyBtn);
     expect(monthlyBtn.className).toContain('text-[#1b7f43]');
   });
+
+  it('renders Occupancy with always-visible Clear button and functional clear action', async () => {
+    const { default: Occupancy } = await import('../features/occupancy/pages/Occupancy');
+    const { getByText, getByPlaceholderText } = render(
+      <MemoryRouter>
+        <Occupancy />
+      </MemoryRouter>
+    );
+
+    const searchInput = getByPlaceholderText('Search rooms, guests...');
+    fireEvent.change(searchInput, { target: { value: 'Deluxe' } });
+    expect(searchInput.value).toBe('Deluxe');
+
+    const clearBtn = getByText('Clear');
+    expect(clearBtn).toBeTruthy();
+    fireEvent.click(clearBtn);
+
+    expect(searchInput.value).toBe('');
+  });
 });
