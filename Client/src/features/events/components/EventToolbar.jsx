@@ -1,14 +1,14 @@
 import React from 'react';
 import {
-  Search as SearchIcon,
   FilterList as FilterIcon,
   GridView as GridIcon,
   TableRows as TableIcon,
-  Refresh as RefreshIcon,
   PictureAsPdf as PdfIcon,
   FileDownload as DownloadIcon,
   Delete as DeleteIcon
 } from '@mui/icons-material';
+import SearchInput from '../../../components/common/SearchInput';
+import RefreshButton from '../../../components/common/RefreshButton';
 
 export default function EventToolbar({
   searchQuery,
@@ -38,19 +38,14 @@ export default function EventToolbar({
       <div className="p-2 sm:p-2.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         {/* Left Side: Search Bar Input & Bulk Actions */}
         <div className="assigned-table-toolbar flex items-center gap-2 flex-1 max-w-md">
-          <div className="relative w-full sm:w-72">
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full pl-3 pr-8 py-1.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20 focus:border-[#1b7f43] transition-all"
-            />
-            <SearchIcon
-              sx={{ fontSize: 16 }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
-            />
-          </div>
+          <SearchInput
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+            variant="slate"
+            size="sm"
+            width="w-full sm:w-72"
+          />
 
           {selectedCount > 0 && (
             <button
@@ -105,13 +100,11 @@ export default function EventToolbar({
           </button>
 
           {/* Reload / Refresh Button */}
-          <button
+          <RefreshButton
             onClick={onRefresh}
             title="Refresh"
-            className="p-1.5 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl transition-all cursor-pointer"
-          >
-            <RefreshIcon sx={{ fontSize: 18 }} />
-          </button>
+            variant="square"
+          />
 
           {/* PDF Export Button */}
           <button

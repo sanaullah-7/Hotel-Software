@@ -1,13 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Popover } from '@mui/material';
 import {
-  Search,
   FilterList,
   AddCircleOutlined,
-  Refresh,
   TableChart,
   PictureAsPdf
 } from '@mui/icons-material';
+import SearchInput from '../../../components/common/SearchInput';
+import RefreshButton from '../../../components/common/RefreshButton';
 
 export default function ReservationToolbar({
   title = 'Bookings',
@@ -56,16 +56,13 @@ export default function ReservationToolbar({
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-[16px] font-bold text-gray-700 whitespace-nowrap">{title}</h1>
 
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search..."
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-[140px] lg:w-[180px] pl-3 pr-8 py-1.5 border border-gray-400 rounded-md text-[13px] text-gray-700 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
-          />
-          <Search className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500" sx={{ fontSize: 16 }} />
-        </div>
+        <SearchInput
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          width="w-[140px] lg:w-[180px]"
+          inputClassName="border-gray-400"
+        />
 
         {showDateFilter && (
           <div className="flex items-center bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
@@ -156,13 +153,11 @@ export default function ReservationToolbar({
         >
           <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#1b7f43]" />
         </button>
-        <button
+        <RefreshButton
           onClick={onRefresh}
-          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
           title="Refresh"
-        >
-          <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
-        </button>
+          variant="circle"
+        />
         <button
           onClick={onExportCSV}
           className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"

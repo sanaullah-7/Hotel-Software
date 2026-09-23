@@ -7,6 +7,7 @@ import {
   AttachMoney,
   CreditCard
 } from '@mui/icons-material';
+import KPICard from '../../../components/common/KPICard';
 
 export default function DashboardMetrics({
   reservations = [],
@@ -20,71 +21,48 @@ export default function DashboardMetrics({
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-4">
-      {/* Reservation Today */}
-      <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-        <div className="flex justify-between items-center mb-0.5">
-          <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">
-            Reservation Today
-          </span>
-          <PersonAdd className="text-blue-500 shrink-0" sx={{ fontSize: 16 }} />
-        </div>
-        <span className="text-lg font-bold text-gray-900">{reservationCount}</span>
-      </div>
-
-      {/* Occupied Rooms */}
-      <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-        <div className="flex justify-between items-center mb-0.5">
-          <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">
-            Occupied Rooms
-          </span>
-          <Bed className="text-teal-500 shrink-0" sx={{ fontSize: 16 }} />
-        </div>
-        <span className="text-lg font-bold text-gray-900">{occupiedCount}</span>
-      </div>
-
-      {/* Check-in Today */}
-      <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-        <div className="flex justify-between items-center mb-0.5">
-          <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">
-            Check-in Today
-          </span>
-          <Login className="text-green-500 shrink-0" sx={{ fontSize: 16 }} />
-        </div>
-        <span className="text-lg font-bold text-gray-900">{checkInCount}</span>
-      </div>
-
-      {/* Checkout Today */}
-      <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-        <div className="flex justify-between items-center mb-0.5">
-          <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">
-            Checkout Today
-          </span>
-          <Logout className="text-orange-500 shrink-0" sx={{ fontSize: 16 }} />
-        </div>
-        <span className="text-lg font-bold text-gray-900">{checkOutCount}</span>
-      </div>
-
-      {/* Revenue Today */}
-      <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-        <div className="flex justify-between items-center mb-0.5">
-          <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">
-            Revenue Today
-          </span>
-          <AttachMoney className="text-purple-500 shrink-0" sx={{ fontSize: 16 }} />
-        </div>
-        <span className="text-lg font-bold text-gray-900">$1,250</span>
-      </div>
-
-      {/* Payments Today */}
-      <div className="bg-white p-3 rounded-xl shadow-sm border border-gray-100 flex flex-col">
-        <div className="flex justify-between items-center mb-0.5">
-          <span className="text-gray-500 font-semibold text-[11px] whitespace-nowrap truncate pr-1">
-            Payments Today
-          </span>
-          <CreditCard className="text-indigo-500 shrink-0" sx={{ fontSize: 16 }} />
-        </div>
-        <span className="text-lg font-bold text-gray-900">{paidCount}</span>
-      </div>
+      <KPICard
+        title="Reservation Today"
+        value={reservationCount}
+        icon={PersonAdd}
+        iconColor="text-blue-500"
+        variant="compact"
+      />
+      <KPICard
+        title="Occupied Rooms"
+        value={occupiedCount}
+        icon={Bed}
+        iconColor="text-teal-500"
+        variant="compact"
+      />
+      <KPICard
+        title="Check-in Today"
+        value={checkInCount}
+        icon={Login}
+        iconColor="text-green-500"
+        variant="compact"
+      />
+      <KPICard
+        title="Checkout Today"
+        value={checkOutCount}
+        icon={Logout}
+        iconColor="text-orange-500"
+        variant="compact"
+      />
+      <KPICard
+        title="Revenue Today"
+        value="$1,250"
+        icon={AttachMoney}
+        iconColor="text-purple-500"
+        variant="compact"
+      />
+      <KPICard
+        title="Payments Today"
+        value={paidCount}
+        icon={CreditCard}
+        iconColor="text-indigo-500"
+        variant="compact"
+      />
     </div>
   );
 }

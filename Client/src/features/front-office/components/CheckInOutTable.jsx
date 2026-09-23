@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Search as SearchIcon,
   ChecklistRtl as ChecklistRtlIcon,
   Visibility as VisibilityIcon,
   Edit as EditIcon,
@@ -8,13 +7,11 @@ import {
   Login as LoginIcon,
   Logout as LogoutIcon,
   PendingActions as PendingActionsIcon,
-  Bookmark as BookmarkIcon,
-  KeyboardArrowDown as KeyboardArrowDownIcon,
-  FirstPage as FirstPageIcon,
-  LastPage as LastPageIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon
+  Bookmark as BookmarkIcon
 } from '@mui/icons-material';
+import SearchInput from '../../../components/common/SearchInput';
+import StatusBadge from '../../../components/common/StatusBadge';
+import PaginationControls from '../../../components/common/PaginationControls';
 
 export const PRIMARY = 'var(--primary-main)';
 
@@ -84,19 +81,15 @@ export default function CheckInOutTable({
 
       {/* Search */}
       <div className="p-2 border-b border-gray-100 flex items-center gap-3">
-        <div className="relative flex-1">
-          <SearchIcon
-            sx={{ fontSize: 18 }}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-          />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by guest name, room, or booking ID..."
-            className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-full text-[13px] focus:outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400 transition-shadow"
-          />
-        </div>
+        <SearchInput
+          value={searchQuery}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search by guest name, room, or booking ID..."
+          iconPosition="left"
+          variant="pill"
+          size="md"
+          className="flex-1"
+        />
         <span
           className="text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0"
           style={{ backgroundColor: '#eef2ff', color: PRIMARY }}
@@ -140,34 +133,30 @@ export default function CheckInOutTable({
                     className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
                   >
                     <td className="py-3 px-3">
-                      <span className="text-[12.5px] font-bold" style={{ color: PRIMARY }}>
-                        {guest.id}
+                      <span className="font-mono text-[11.5px] font-semibold text-gray-500">
+                        {guest.bookingId}
                       </span>
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-2.5">
                         <img
-                          src={avatarUrl(guest.name)}
+                          src={guest.avatar || avatarUrl(guest.name)}
                           alt={guest.name}
-                          className="w-8 h-8 rounded-full shrink-0"
+                          className="w-8 h-8 rounded-full object-cover shrink-0"
                         />
                         <div className="min-w-0">
-                          <p className="text-[12.5px] font-bold text-gray-900 leading-tight">
+                          <p className="font-bold text-[12.5px] text-gray-800 leading-tight truncate">
                             {guest.name}
                           </p>
-                          <p className="text-[11px] text-gray-400 leading-tight truncate">
-                            {guest.email}
-                          </p>
+                          <p className="text-[11px] text-gray-400 truncate">{guest.email}</p>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 px-3">
-                      <p className="text-[13px] font-bold text-gray-800 leading-tight">
+                      <p className="font-bold text-[12px] text-gray-800 leading-tight">
                         {guest.room}
                       </p>
-                      <p className="text-[10.5px] text-gray-400 leading-tight">
-                        {guest.roomType}
-                      </p>
+                      <p className="text-[10.5px] text-gray-400 capitalize">{guest.roomType}</p>
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-1 text-[11.5px] text-[var(--primary-dark)] font-semibold">
@@ -178,11 +167,13 @@ export default function CheckInOutTable({
                       </div>
                     </td>
                     <td className="py-3 px-3">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-bold ${STATUS_STYLES[guest.status]}`}
-                      >
-                        <StatusIcon sx={{ fontSize: 12 }} /> {guest.status}
-                      </span>
+                      <StatusBadge
+                        status={guest.status}
+                        stylesMap={STATUS_STYLES}
+                        icon={StatusIcon}
+                        size="xs"
+                        className="rounded-full px-2.5 py-1"
+                      />
                     </td>
                     <td className="py-3 px-3 text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -241,82 +232,18 @@ export default function CheckInOutTable({
       </div>
 
       {/* Footer / Pagination */}
-      <div className="p-3.5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-        <span className="text-[12px] text-gray-500">
-          Showing{' '}
-          <span className="font-semibold text-gray-700">
-            {filteredGuests.length === 0 ? 0 : indexOfFirstRow + 1}
-          </span>{' '}
-          -{' '}
-          <span className="font-semibold text-gray-700">
-            {Math.min(indexOfLastRow, filteredGuests.length)}
-          </span>{' '}
-          of{' '}
-          <span className="font-semibold text-gray-700">
-            {filteredGuests.length}
-          </span>{' '}
-          records
-        </span>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11.5px] text-gray-500 font-medium">Items per page:</span>
-            <div className="relative">
-              <select
-                value={rowsPerPage}
-                onChange={(e) => onRowsPerPageChange(Number(e.target.value))}
-                className="appearance-none pl-2.5 pr-6 py-1 border border-gray-200 rounded-lg text-[11.5px] font-semibold text-gray-700 bg-white focus:outline-none focus:border-emerald-400 cursor-pointer"
-              >
-                {[5, 10, 25, 50].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-              <KeyboardArrowDownIcon
-                sx={{ fontSize: 14 }}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-              />
-            </div>
-          </div>
-
-          <span className="text-[11.5px] text-gray-500 font-medium">
-            {filteredGuests.length === 0 ? 0 : indexOfFirstRow + 1}–
-            {Math.min(indexOfLastRow, filteredGuests.length)} of {filteredGuests.length}
-          </span>
-
-          <div className="flex items-center gap-0.5">
-            <button
-              onClick={() => onPageChange(1)}
-              disabled={currentPage === 1}
-              className="p-1 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
-            >
-              <FirstPageIcon fontSize="small" />
-            </button>
-            <button
-              onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
-              disabled={currentPage === 1}
-              className="p-1 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
-            >
-              <ChevronLeftIcon fontSize="small" />
-            </button>
-            <button
-              onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              className="p-1 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
-            >
-              <ChevronRightIcon fontSize="small" />
-            </button>
-            <button
-              onClick={() => onPageChange(totalPages)}
-              disabled={currentPage === totalPages}
-              className="p-1 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
-            >
-              <LastPageIcon fontSize="small" />
-            </button>
-          </div>
-        </div>
-      </div>
+      <PaginationControls
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalRecords={filteredGuests.length}
+        rowsPerPage={rowsPerPage}
+        rowsPerPageOptions={[5, 10, 25, 50]}
+        onPageChange={onPageChange}
+        onRowsPerPageChange={onRowsPerPageChange}
+        indexOfFirstRow={indexOfFirstRow}
+        indexOfLastRow={indexOfLastRow}
+        variant="standard"
+      />
     </div>
   );
 }

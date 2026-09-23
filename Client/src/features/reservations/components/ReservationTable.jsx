@@ -12,6 +12,8 @@ import {
   CancelOutlined
 } from '@mui/icons-material';
 import { getBookingDues } from '../../payment-billing/pages/paymentBillingStore';
+import StatusBadge from '../../../components/common/StatusBadge';
+import PaginationControls from '../../../components/common/PaginationControls';
 
 export const statusStyles = {
   Cancelled: 'bg-orange-100 text-orange-500',
@@ -94,9 +96,11 @@ export default function ReservationTable({
                 {visibleColumns['Room Type'] && <td className="py-3 px-2 text-[13px] text-gray-600">{booking.roomType}</td>}
                 {visibleColumns['Status'] && (
                   <td className="py-3 px-2">
-                    <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${statusStyles[booking.status]}`}>
-                      {booking.status}
-                    </span>
+                    <StatusBadge
+                      status={booking.status}
+                      stylesMap={statusStyles}
+                      size="sm"
+                    />
                   </td>
                 )}
                 {visibleColumns['Check In'] && (
@@ -117,9 +121,11 @@ export default function ReservationTable({
                 )}
                 {visibleColumns['Payment'] && (
                   <td className="py-3 px-2">
-                    <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${paymentStyles[booking.payment]}`}>
-                      {booking.payment}
-                    </span>
+                    <StatusBadge
+                      status={booking.payment}
+                      stylesMap={paymentStyles}
+                      size="sm"
+                    />
                   </td>
                 )}
                 {visibleColumns['Dues'] && (
@@ -158,25 +164,22 @@ export default function ReservationTable({
                     >
                       <MoreHoriz sx={{ fontSize: 20 }} />
                     </button>
-
-                    {/* Action Dropdown */}
                     {activeMenuId === booking.id && (
                       <div
                         ref={menuRef}
-                        onClick={(e) => e.stopPropagation()}
-                        className="absolute right-8 top-10 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.1)] rounded-md border border-gray-100 z-20 py-2 w-48 text-left animate-fade-in"
+                        className="absolute right-4 top-10 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-md border border-gray-100 z-50 py-2 w-44 animate-fade-in text-left"
                       >
                         <button
                           onClick={() => onOpenViewModal(booking)}
                           className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
                         >
-                          <SubjectOutlined className="text-[var(--primary-main)]" sx={{ fontSize: 18 }} /> View Details
+                          <SubjectOutlined className="text-[#10b981]" sx={{ fontSize: 18 }} /> View Booking
                         </button>
                         <button
                           onClick={() => onOpenEditModal(booking)}
                           className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
                         >
-                          <EditOutlined className="text-[var(--primary-main)]" sx={{ fontSize: 18 }} /> Edit Booking
+                          <EditOutlined className="text-[#6366f1]" sx={{ fontSize: 18 }} /> Edit Booking
                         </button>
                         <button
                           onClick={() => onConfirmDelete(booking)}
@@ -214,23 +217,11 @@ export default function ReservationTable({
       </div>
 
       {/* Pagination bar */}
-      <div className="p-4 mt-auto flex items-center justify-end gap-6 text-[12px] text-gray-600 border-t border-gray-100">
-        <div className="flex items-center gap-2">
-          <span>Items per page:</span>
-          <select className="border border-gray-300 rounded px-2 py-1 outline-none text-[12px]">
-            <option>10</option>
-            <option>20</option>
-            <option>50</option>
-          </select>
-        </div>
-        <span>
-          1 - {Math.min(10, bookings.length)} of {bookings.length}
-        </span>
-        <div className="flex items-center gap-4">
-          <span className="text-gray-400 cursor-not-allowed">{'<'}</span>
-          <span className="cursor-pointer hover:text-gray-900">{'>'}</span>
-        </div>
-      </div>
+      <PaginationControls
+        variant="compact"
+        totalRecords={bookings.length}
+        rowsPerPage={10}
+      />
     </div>
   );
 }
