@@ -56,7 +56,7 @@ export default function CheckInOutTable({
   return (
     <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden mt-2">
       {/* Header */}
-      <div className="p-2 border-b border-gray-100 flex items-center justify-between gap-3">
+      <div className="p-3 border-b border-gray-100 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-[12px] bg-[#ecfdf5] flex items-center justify-center shrink-0">
             <ChecklistRtlIcon style={{ color: PRIMARY }} sx={{ fontSize: 20 }} />
@@ -66,17 +66,10 @@ export default function CheckInOutTable({
               Check-in / Check-out Management
             </h3>
             <p className="text-[11.5px] text-gray-400">
-              Manage current guests and upcoming arrivals
+              Manage current guests, check-ins, and departures
             </p>
           </div>
         </div>
-        <button
-          onClick={onOpenCheckInModal}
-          className="flex items-center gap-1.5 text-white px-4 py-2 rounded-xl text-[12.5px] font-bold shadow-sm hover:brightness-110 transition-all cursor-pointer shrink-0"
-          style={{ backgroundColor: PRIMARY }}
-        >
-          <LoginIcon sx={{ fontSize: 16 }} /> Check-in Guest
-        </button>
       </div>
 
       {/* Search */}

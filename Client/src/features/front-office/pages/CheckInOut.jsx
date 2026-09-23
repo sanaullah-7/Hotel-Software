@@ -30,7 +30,6 @@ export default function CheckInOut() {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [viewGuest, setViewGuest] = useState(null);
-  const [checkInModalOpen, setCheckInModalOpen] = useState(false);
   const [checkInActionModal, setCheckInActionModal] = useState(null);
   const [checkOutActionModal, setCheckOutActionModal] = useState(null);
   const [editGuest, setEditGuest] = useState(null);
@@ -84,28 +83,6 @@ export default function CheckInOut() {
     setEditGuest(null);
   };
 
-  const handleAddGuest = (form) => {
-    const nextNum = guests.length
-      ? Math.max(...guests.map((g) => parseInt(g.id.split('-')[1], 10))) + 1
-      : 1001;
-    const newId = form.bookingId?.trim() || `BK-${nextNum}`;
-    const newGuest = {
-      id: newId,
-      bookingId: newId,
-      name: form.name.trim(),
-      email:
-        form.email.trim() ||
-        `${form.name.trim().toLowerCase().replace(/\s+/g, '.')}@example.com`,
-      room: form.room.trim(),
-      roomType: form.roomType,
-      checkIn: form.checkIn || '—',
-      checkOut: form.checkOut || '—',
-      status: form.status,
-    };
-    setGuests((prev) => [newGuest, ...prev]);
-    setCheckInModalOpen(false);
-  };
-
   return (
     <div className="animate-fade-in pt-1 pb-2">
       {/* SUMMARY CARDS */}
@@ -137,7 +114,6 @@ export default function CheckInOut() {
         totalPages={totalPages}
         indexOfFirstRow={indexOfFirstRow}
         indexOfLastRow={indexOfLastRow}
-        onOpenCheckInModal={() => setCheckInModalOpen(true)}
         onCheckInAction={(guest) => setCheckInActionModal(guest)}
         onCheckOutAction={(guest) => setCheckOutActionModal(guest)}
         onViewGuest={(guest) => setViewGuest(guest)}
@@ -155,14 +131,6 @@ export default function CheckInOut() {
             setViewGuest(null);
             handleEdit(current);
           }}
-        />
-      )}
-
-      {/* CREATE RECORD MODAL */}
-      {checkInModalOpen && (
-        <GuestFormModal
-          onClose={() => setCheckInModalOpen(false)}
-          onSave={handleAddGuest}
         />
       )}
 
