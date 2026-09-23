@@ -50,6 +50,7 @@ import Refunds from '../features/payment-billing/pages/Refunds';
 
 // Guests Module
 import Guests from '../features/guests/pages/Guests';
+import GuestProfile from '../features/guests/pages/GuestProfile';
 
 // Occupancy Module
 import Occupancy from '../features/occupancy/pages/Occupancy';
@@ -144,6 +145,7 @@ export default function AppRoutes() {
 
         {/* Guests Sub-Routes */}
         <Route path="/guests" element={<DashboardLayout><Guests /></DashboardLayout>} />
+        <Route path="/guests/:id" element={<DashboardLayout><GuestProfile /></DashboardLayout>} />
 
         {/* Occupancy Sub-Routes */}
         <Route path="/occupancy" element={<DashboardLayout><Occupancy /></DashboardLayout>} />

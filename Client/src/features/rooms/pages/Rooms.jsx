@@ -1,6 +1,6 @@
 import { jsPDF } from'jspdf';
 import autoTable from'jspdf-autotable';
-import { FilterList, Add, Refresh, Calculate, PictureAsPdf, EditOutlined, DeleteOutlined, Close, Search, KeyboardArrowLeft, KeyboardArrowRight, AddCircle, TableChart, ViewWeek, AddCircleOutlined, PhoneOutlined } from'@mui/icons-material';;;;;
+import { FilterList, Add, Refresh, Calculate, PictureAsPdf, EditOutlined, DeleteOutlined, Close, Search, KeyboardArrowLeft, KeyboardArrowRight, AddCircle, TableChart, ViewWeek, AddCircleOutlined, PhoneOutlined, Inventory2 } from'@mui/icons-material';
 import { 
  TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment,
  Checkbox, Menu 
@@ -30,12 +30,16 @@ import ChevronLeft from'@mui/icons-material/ChevronLeft';
 import ChevronRight from'@mui/icons-material/ChevronRight';
 import { IconButton } from'@mui/material';
 import { useEffect, useState } from'react';
-import { getRooms, addRoom, updateRoom, deleteRoom, ROOM_UPDATED_EVENT } from'../state/roomStore';
+import { getRooms, addRoom, updateRoom, deleteRoom, INITIAL_ROOMS, ROOM_UPDATED_EVENT } from'../state/roomStore';
+import RoomInventoryModal from'../../inventory/pages/components/RoomInventoryModal';
+import { getInventoryItems } from'../../inventory/pages/inventoryStore';
 
 export default function Rooms() {
  const [rooms, setRooms] = useState(getRooms());
  const [searchTerm, setSearchTerm] = useState('');
+ const [statusFilter, setStatusFilter] = useState('All');
  const [viewMode, setViewMode] = useState('table');
+ const [selectedRoomForStock, setSelectedRoomForStock] = useState(null);
  
  // Modals
  const [isModalOpen, setIsModalOpen] = useState(false);
@@ -69,10 +73,16 @@ export default function Rooms() {
  }, []);
 
  // Derived state
- const filteredRooms = rooms.filter(r => 
- r.roomNo.toLowerCase().includes(searchTerm.toLowerCase()) || 
- r.roomType.toLowerCase().includes(searchTerm.toLowerCase())
- );
+ const filteredRooms = rooms.filter(r => {
+ const matchesSearch = r.roomNo.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                       r.roomType.toLowerCase().includes(searchTerm.toLowerCase());
+ const matchesStatus = statusFilter === 'All' || 
+                       r.status === statusFilter ||
+                       (statusFilter === 'Open' && (r.status === 'Open' || r.status === 'Available')) ||
+                       (statusFilter === 'Booked' && (r.status === 'Booked' || r.status === 'Occupied')) ||
+                       (statusFilter === 'Inactive' && (r.status === 'Inactive' || r.status === 'Maintenance' || r.status === 'Out of Order'));
+ return matchesSearch && matchesStatus;
+ });
  
  const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
  const currentRooms = filteredRooms.slice((page - 1) * itemsPerPage, page * itemsPerPage);
@@ -158,18 +168,41 @@ export default function Rooms() {
  <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 flex-1 flex flex-col overflow-hidden">
  
  {/* Header Bar */}
- <div className="p-2 flex items-center justify-between border-b border-gray-100">
- <div className="flex items-center gap-4">
+ <div className="p-2 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-2">
+ <div className="flex flex-wrap items-center gap-4">
  <h2 className="text-[16px] font-bold text-gray-700">Rooms</h2>
  <div className="relative">
  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" sx={{ fontSize: 20 }} />
  <input 
  type="text" 
  placeholder="Search..." 
- value={searchTerm}
+ value={searchTerm} 
  onChange={e => setSearchTerm(e.target.value)}
- className="pl-9 pr-4 py-1.5 w-64 border border-gray-200 rounded-md text-[13.5px] outline-none focus:border-[var(--primary-main)]"
+ className="pl-9 pr-4 py-1.5 w-48 lg:w-64 border border-gray-200 rounded-md text-[13.5px] outline-none focus:border-[var(--primary-main)]"
  />
+ </div>
+
+ {/* Status Filter */}
+ <div className="flex items-center bg-white border border-gray-200 rounded-lg shadow-xs overflow-hidden">
+ {[
+   { label: 'All', value: 'All' },
+   { label: 'Available', value: 'Open' },
+   { label: 'Booked', value: 'Booked' },
+   { label: 'Maintenance', value: 'Inactive' },
+ ].map((f) => (
+   <button
+     key={f.value}
+     type="button"
+     onClick={() => { setStatusFilter(f.value); setPage(1); }}
+     className={`px-3 py-1 text-[12px] md:text-[13px] font-medium transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
+       statusFilter === f.value 
+         ? 'bg-[#e5f4eb] text-[#1b7f43] font-bold' 
+         : 'text-gray-600 hover:bg-gray-50'
+     }`}
+   >
+     {f.label}
+   </button>
+ ))}
  </div>
  </div>
  
@@ -182,14 +215,14 @@ export default function Rooms() {
  <FilterList sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
  </button>
  <button 
- onClick={handleOpenNew}
+ onClick={handleOpenNew} 
  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
  title="Add"
  >
  <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#1b7f43]" />
  </button>
  <button 
- onClick={() => setRooms(initialRooms)}
+ onClick={() => { setRooms(INITIAL_ROOMS); setSearchTerm(''); setStatusFilter('All'); }} 
  className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
  title="Refresh"
  >
@@ -270,6 +303,7 @@ export default function Rooms() {
  <div className="flex items-center justify-between border-t border-gray-100 pt-3">
  <span className="flex items-center gap-1 text-[12px] text-gray-500"><PhoneOutlined sx={{ fontSize: 14 }} />{room.mobile}</span>
  <div className="flex gap-1">
+ <button onClick={() => setSelectedRoomForStock(room.roomNo)} className="text-[#1b7f43] hover:bg-[#e5f4eb] p-1.5 rounded cursor-pointer" title="View room stock"><Inventory2 sx={{ fontSize: 18 }} /></button>
  <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-1.5 rounded cursor-pointer" title="Edit room"><EditOutlined sx={{ fontSize: 18 }} /></button>
  <button onClick={() => handleOpenDelete(room)} className="text-[#ef4444] hover:bg-red-50 p-1.5 rounded cursor-pointer" title="Delete room"><DeleteOutlined sx={{ fontSize: 18 }} /></button>
  </div>
@@ -302,10 +336,10 @@ export default function Rooms() {
  <tr key={room.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
  
  {visibleColumns.roomNo && (
- <td className="px-5 py-3">
+ <td className="px-5 py-3 cursor-pointer" onClick={() => setSelectedRoomForStock(room.roomNo)}>
  <div className="flex items-center gap-3">
  <img src={room.roomImage} alt="room" className="w-9 h-9 rounded-full object-cover shadow-sm border border-gray-200" />
- <span className="text-[13.5px] font-medium text-gray-700">{room.roomNo}</span>
+ <span className="text-[13.5px] font-bold text-gray-800 hover:text-[#1b7f43] hover:underline transition-colors" title="Click to view room stock">{room.roomNo}</span>
  </div>
  </td>
  )}
@@ -348,11 +382,14 @@ export default function Rooms() {
  
  {visibleColumns.actions && (
  <td className="px-5 py-3 text-center">
- <div className="flex items-center justify-center gap-3">
- <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded transition-colors cursor-pointer">
+ <div className="flex items-center justify-center gap-2">
+ <button onClick={() => setSelectedRoomForStock(room.roomNo)} className="text-[#1b7f43] hover:bg-[#e5f4eb] p-1 rounded transition-colors cursor-pointer" title="View room stock">
+ <Inventory2 sx={{ fontSize: 18 }} />
+ </button>
+ <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded transition-colors cursor-pointer" title="Edit room">
  <EditOutlined sx={{ fontSize: 18 }} />
  </button>
- <button onClick={() => handleOpenDelete(room)} className="text-[#ef4444] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer">
+ <button onClick={() => handleOpenDelete(room)} className="text-[#ef4444] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer" title="Delete room">
  <DeleteOutlined sx={{ fontSize: 18 }} />
  </button>
  </div>
@@ -550,6 +587,14 @@ export default function Rooms() {
  </div>
  </div>
  )}
+
+ {/* Room Stock / Inventory Breakdown Modal */}
+ <RoomInventoryModal
+   open={Boolean(selectedRoomForStock)}
+   onClose={() => setSelectedRoomForStock(null)}
+   roomNumber={selectedRoomForStock}
+   inventoryItems={getInventoryItems()}
+ />
 
  </div>
  );

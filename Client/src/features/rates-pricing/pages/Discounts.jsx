@@ -115,12 +115,7 @@ export default function Discounts() {
  <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in">
  {/* Top Action Bar (Heading Removed) */}
  <div className="flex items-center justify-end gap-1.5 flex-wrap">
- <button
- onClick={handleOpenAddModal}
- className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
- >
- + Add Discount
- </button>
+ 
  </div>
 
  {/* Stats Cards */}
@@ -262,6 +257,13 @@ export default function Discounts() {
  <option value="Presidential All-Inclusive VIP">Presidential All-Inclusive VIP</option>
  </select>
  </div>
+
+ <button
+ onClick={handleOpenAddModal}
+ className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+ >
+ + Add Discount
+ </button>
 
  </div>
 

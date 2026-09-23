@@ -1,40 +1,53 @@
-import React, { useState, useMemo } from'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams, useLocation, Link } from 'react-router-dom';
 import {
- TextField,
- InputAdornment,
- MenuItem,
- Button,
- Chip,
- IconButton,
- Tooltip,
- Snackbar,
- Alert,
-} from'@mui/material';
+  TextField,
+  InputAdornment,
+  MenuItem,
+  Button,
+  Chip,
+  IconButton,
+  Tooltip,
+  Snackbar,
+  Alert,
+} from '@mui/material';
 import {
- Search as SearchIcon,
- Clear as ClearIcon,
- ReceiptLong as InvoiceIcon,
- Payment as PaymentIcon,
- Visibility as ViewIcon,
- CheckCircle as PaidIcon,
- HourglassEmpty as PendingIcon,
- Warning as WarningIcon,
- TrendingUp as TrendingUpIcon,
- FilterList as FilterIcon,
- Print as PrintIcon,
-} from'@mui/icons-material';
+  Search as SearchIcon,
+  Clear as ClearIcon,
+  ReceiptLong as InvoiceIcon,
+  Payment as PaymentIcon,
+  Visibility as ViewIcon,
+  CheckCircle as PaidIcon,
+  HourglassEmpty as PendingIcon,
+  Warning as WarningIcon,
+  TrendingUp as TrendingUpIcon,
+  FilterList as FilterIcon,
+  Print as PrintIcon,
+  Person as PersonIcon,
+} from '@mui/icons-material';
 import {
- getInvoices,
- getPayments,
- recordInvoicePayment,
-} from'./paymentBillingStore';
-import InvoiceDetailModal from'./components/InvoiceDetailModal';
-import RecordPaymentModal from'./components/RecordPaymentModal';
+  getInvoices,
+  getPayments,
+  recordInvoicePayment,
+} from './paymentBillingStore';
+import InvoiceDetailModal from './components/InvoiceDetailModal';
+import RecordPaymentModal from './components/RecordPaymentModal';
 
 export default function Invoices() {
- const [invoices, setInvoices] = useState(() => getInvoices());
- const [searchTerm, setSearchTerm] = useState('');
- const [statusFilter, setStatusFilter] = useState('All');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+
+  const queryGuest = searchParams.get('guest') || searchParams.get('search') || location.state?.search || location.state?.guestName || '';
+  const [invoices, setInvoices] = useState(() => getInvoices());
+  const [searchTerm, setSearchTerm] = useState(queryGuest);
+  const [statusFilter, setStatusFilter] = useState('All');
+
+  useEffect(() => {
+    const q = searchParams.get('guest') || searchParams.get('search') || location.state?.search || location.state?.guestName || '';
+    if (q) {
+      setSearchTerm(q);
+    }
+  }, [searchParams, location.state]);
  
  // Modals state
  const [selectedInvoiceForDetail, setSelectedInvoiceForDetail] = useState(null);
@@ -120,11 +133,15 @@ export default function Invoices() {
  // Filtered list
  const filteredInvoices = useMemo(() => {
  return invoices.filter((inv) => {
- const matchesSearch =
- inv.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
- inv.guestName.toLowerCase().includes(searchTerm.toLowerCase()) ||
- inv.bookingId.toLowerCase().includes(searchTerm.toLowerCase()) ||
- String(inv.roomNumber).includes(searchTerm);
+ const term = (searchTerm || '').trim().toLowerCase();
+ if (!term && statusFilter === 'All') return true;
+
+ const matchesSearch = !term ||
+ inv.id.toLowerCase().includes(term) ||
+ inv.guestName.toLowerCase().includes(term) ||
+ inv.bookingId.toLowerCase().includes(term) ||
+ (inv.guestEmail && inv.guestEmail.toLowerCase().includes(term)) ||
+ String(inv.roomNumber).includes(term);
 
  const matchesStatus = statusFilter ==='All' || inv.status === statusFilter;
 
@@ -151,19 +168,27 @@ export default function Invoices() {
  };
 
  return (
- <div className="space-y-2 pb-2 animate-fade-in">
- {/* Top Action Bar (Heading Removed) */}
- <div className="flex items-center justify-end gap-1.5 flex-wrap">
+ <div className="space-y-2 pb-2 animate-fade-in pt-1">
+
+ {searchTerm && (
+ <div className="bg-[#e5f4eb] border border-[#1b7f43]/30 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs text-[#1b7f43] shadow-xs">
+ <div className="flex items-center gap-2">
+ <PersonIcon sx={{ fontSize: 18 }} className="text-[#1b7f43]" />
+ <span>
+ Showing invoices for guest: <strong className="text-gray-900 font-bold">{searchTerm}</strong>
+ </span>
+ </div>
  <button
- className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
  onClick={() => {
- setSelectedInvoiceForPayment(null);
- setIsRecordPaymentOpen(true);
+ setSearchTerm('');
+ setSearchParams({});
  }}
+ className="px-2.5 py-1 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-md border border-gray-200 transition text-[11px] cursor-pointer shadow-xs"
  >
- + Record Payment
+ Clear Filter / Show All Invoices
  </button>
  </div>
+ )}
 
  {/* Metric Cards */}
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -249,7 +274,18 @@ export default function Invoices() {
  </button>
  ))}
  </div>
+ <button
+ className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+ onClick={() => {
+ setSelectedInvoiceForPayment(null);
+ setIsRecordPaymentOpen(true);
+ }}
+ >
+ + Record Payment
+ </button>
  </div>
+
+ 
 
  {/* Invoices Table Container - Strictly 100% width with NO horizontal scroll */}
  <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden w-full">

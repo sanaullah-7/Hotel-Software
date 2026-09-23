@@ -8,12 +8,12 @@ import { addMissingIncident, ROOM_NUMBERS, INVENTORY_CATEGORIES } from'../invent
 
 const muiSelectSx = {'& .MuiOutlinedInput-root': {
  borderRadius:'6px',
- backgroundColor:'#ffffff',
+ backgroundColor:'var(--bg-paper)',
  fontSize:'12px',
- color:'#1f2937','& fieldset': { borderColor:'#e5e7eb', borderWidth:'1px' },'&:hover fieldset': { borderColor:'#9ca3af' },'&.Mui-focused fieldset': { borderColor:'#1b7f43', borderWidth:'1.5px' },
+ color:'var(--text-primary)','& fieldset': { borderColor:'#e5e7eb', borderWidth:'1px' },'&:hover fieldset': { borderColor:'#9ca3af' },'&.Mui-focused fieldset': { borderColor:'var(--primary-main)', borderWidth:'1.5px' },
  },'& .MuiInputLabel-root': {
  fontSize:'12px',
- color:'#6b7280','&.Mui-focused': { color:'#1b7f43' }
+ color:'var(--text-secondary)','&.Mui-focused': { color:'var(--primary-main)' }
  }
 };
 

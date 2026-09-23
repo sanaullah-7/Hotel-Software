@@ -118,19 +118,7 @@ export default function PendingPayments() {
  };
 
  return (
- <div className="space-y-2 pb-2 animate-fade-in">
- {/* Top Action Bar (Heading Removed) */}
- <div className="flex items-center justify-end gap-1.5 flex-wrap">
- <button
- className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
- onClick={() => {
- setSelectedInvoiceForPayment(null);
- setIsRecordPaymentOpen(true);
- }}
- >
- + Settle an Invoice
- </button>
- </div>
+ <div className="space-y-2 pb-2 animate-fade-in pt-1">
 
  {/* Summary Cards */}
  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -216,6 +204,15 @@ export default function PendingPayments() {
  </button>
  ))}
  </div>
+ <button
+ className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+ onClick={() => {
+ setSelectedInvoiceForPayment(null);
+ setIsRecordPaymentOpen(true);
+ }}
+ >
+ + Settle an Invoice
+ </button>
  </div>
 
  {/* Pending Invoices Table - Strictly 100% width with NO horizontal scroll */}

@@ -64,4 +64,40 @@ export function deleteGuest(id) {
   saveGuests(readGuests().filter((guest) => guest.id !== id));
 }
 
+export function getGuestById(id) {
+  if (!id) return null;
+  const allGuests = getGuests();
+  const normalizedId = String(id).toLowerCase();
+  
+  let guest = allGuests.find((g) => 
+    String(g.id).toLowerCase() === normalizedId ||
+    String(g.id).toLowerCase() === `gst-${normalizedId}` ||
+    (normalizedId.startsWith('gst-') && String(g.id).toLowerCase() === normalizedId.replace('gst-', ''))
+  );
+
+  // If still not found, check reservations directly
+  if (!guest) {
+    const reservations = getReservations();
+    const res = reservations.find((r) => 
+      String(r.id) === String(id) || 
+      `GST-${r.id}`.toLowerCase() === normalizedId ||
+      (r.name && r.name.toLowerCase() === normalizedId)
+    );
+    if (res) {
+      guest = {
+        id: `GST-${res.id}`,
+        name: res.name || 'Guest',
+        email: res.email || `${res.id}@guest.local`,
+        phone: res.mobile || '',
+        city: 'New York',
+        totalStays: 1,
+        status: 'Active',
+        avatar: res.avatar || 'https://i.pravatar.cc/150?u=guest',
+      };
+    }
+  }
+
+  return guest || null;
+}
+
 export { RESERVATIONS_UPDATED_EVENT };

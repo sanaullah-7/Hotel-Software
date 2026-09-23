@@ -7,7 +7,7 @@ import {
  Close, FaceOutlined, CalendarTodayOutlined,
  EmailOutlined, PhoneOutlined, Person, SubjectOutlined, LocalOfferOutlined
 } from'@mui/icons-material';
-import { useNavigate } from'react-router-dom';
+import { useNavigate, Link } from'react-router-dom';
 import Download from'@mui/icons-material/Download';
 import MoreVert from'@mui/icons-material/MoreVert';
 import Visibility from'@mui/icons-material/Visibility';
@@ -24,6 +24,7 @@ import ChevronLeft from'@mui/icons-material/ChevronLeft';
 import ChevronRight from'@mui/icons-material/ChevronRight';
 import { Menu, IconButton, Popover } from'@mui/material';
 import { getReservations, resetReservations, saveReservations, RESERVATIONS_UPDATED_EVENT } from '../state/reservationStore';
+import { getBookingDues } from '../../payment-billing/pages/paymentBillingStore';
 
 const initialBookings = [
  { id: 1, name:'John Deo', avatar:'https://i.pravatar.cc/150?img=11', package:'All inclusive', roomType:'Delux', status:'Cancelled', checkIn:'02/25/2023', checkOut:'02/28/2023', payment:'Paid', email:'test@email.com', mobile:'1234567890' },
@@ -51,6 +52,7 @@ const paymentStyles = {
 };
 
 export default function AllBookings({ title = 'Bookings', showDateFilter = false }) {
+  const navigate = useNavigate();
   const [bookings, setBookings] = useState(() => getReservations(initialBookings));
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('Daily');
@@ -82,7 +84,7 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
  
  // Columns Menu state
  const [visibleColumns, setVisibleColumns] = useState({
- Name: true, Package: true,'Room Type': true, Status: true,'Check In': true,'Check Out': true, Payment: true,
+ Name: true, Package: true,'Room Type': true, Status: true,'Check In': true,'Check Out': true, Payment: true, Dues: true,
  Email: true, Mobile: true, Actions: true
  });
  const [showColumnsMenu, setShowColumnsMenu] = useState(false);
@@ -134,7 +136,7 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
  resetReservations(initialBookings);
  setBookings(initialBookings);
  setVisibleColumns({
- Name: true, Package: true,'Room Type': true, Status: true,'Check In': true,'Check Out': true, Payment: true,
+ Name: true, Package: true,'Room Type': true, Status: true,'Check In': true,'Check Out': true, Payment: true, Dues: true,
  Email: true, Mobile: true, Actions: true
  });
  };
@@ -153,6 +155,10 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
  else if (col ==='Check In') val = b.checkIn;
  else if (col ==='Check Out') val = b.checkOut;
  else if (col ==='Payment') val = b.payment;
+ else if (col ==='Dues') {
+   const duesAmt = getBookingDues(b);
+   val = duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
+ }
  else if (col ==='Email') val = b.email;
  else if (col ==='Mobile') val = b.mobile;
  return`"${(val ||'').toString().replace(/"/g,'""')}"`;
@@ -202,6 +208,10 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
  else if (col ==='Check In') val = b.checkIn;
  else if (col ==='Check Out') val = b.checkOut;
  else if (col ==='Payment') val = b.payment;
+ else if (col ==='Dues') {
+   const duesAmt = getBookingDues(b);
+   val = duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
+ }
  else if (col ==='Email') val = b.email;
  else if (col ==='Mobile') val = b.mobile;
  html +=`<td>${val}</td>`;
@@ -470,6 +480,7 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
  {visibleColumns['Check In'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Check In</th>}
  {visibleColumns['Check Out'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Check Out</th>}
  {visibleColumns['Payment'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Payment</th>}
+ {visibleColumns['Dues'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Dues</th>}
  {visibleColumns['Email'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Email</th>}
  {visibleColumns['Mobile'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Mobile</th>}
  {visibleColumns['Actions'] && <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b] text-center">Actions</th>}
@@ -477,11 +488,18 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
  </thead>
  <tbody>
  {filteredBookings.map((booking) => (
- <tr key={booking.id} onClick={() => openViewModal(booking)} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer">
+ <tr key={booking.id} onClick={() => navigate(`/guests/${booking.guestId || `GST-${booking.id}`}`)} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer" title="Click to view Guest Profile">
  {visibleColumns['Name'] && (
  <td className="py-3 px-2 flex items-center gap-3">
  <img src={booking.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover shadow-sm" />
- <span className="text-[13px] text-gray-700 font-medium">{booking.name}</span>
+ <Link
+   to={`/guests/${booking.guestId || `GST-${booking.id}`}`}
+   onClick={(e) => e.stopPropagation()}
+   className="text-[13px] text-gray-800 font-medium hover:text-[#1b7f43] hover:underline transition-colors"
+   title="View Guest Profile"
+ >
+   {booking.name}
+ </Link>
  </td>
  )}
  {visibleColumns['Package'] && <td className="py-3 px-2 text-[13px] text-gray-600">{booking.package}</td>}
@@ -516,6 +534,18 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
  </span>
  </td>
  )}
+ {visibleColumns['Dues'] && (
+ <td className="py-3 px-2 text-[13px] font-medium text-gray-700">
+   {(() => {
+     const duesAmt = getBookingDues(booking);
+     return duesAmt > 0 ? (
+       <span className="text-red-600 font-bold">${duesAmt.toLocaleString()}</span>
+     ) : (
+       <span className="text-gray-400 font-normal">$0</span>
+     );
+   })()}
+ </td>
+ )}
  {visibleColumns['Email'] && (
  <td className="py-3 px-2 text-[13px] text-gray-600">
  <div className="flex items-center gap-1.5">
@@ -533,7 +563,7 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
  </td>
  )}
  {visibleColumns['Actions'] && (
- <td className="py-3 px-2 relative text-center">
+ <td className="py-3 px-2 relative text-center" onClick={(e) => e.stopPropagation()}>
  <button onClick={(e) => toggleMenu(e, booking.id)} className="text-gray-700 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center mx-auto transition-colors">
  <MoreHoriz sx={{ fontSize: 20 }} />
  </button>
