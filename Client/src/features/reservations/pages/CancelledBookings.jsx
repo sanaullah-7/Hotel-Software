@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from'react';
-import { FormControl, InputLabel, Select, MenuItem, TextField } from'@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, TextField, Typography, Box } from'@mui/material';
 import {
  Search, FilterList, AddCircleOutlined, Refresh,
  TableChart, PictureAsPdf, Close,
@@ -455,9 +455,23 @@ export default function CancelledBookings() {
  <MenuItem value="Cancelled">Cancelled</MenuItem>
  </Select>
  </FormControl>
-
- <TextField required type="date" label="Cancellation Date" name="cancellationDate" value={form.cancellationDate} onChange={(e)=>setForm({...form, cancellationDate: e.target.value})} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
-
+<Box>
+  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+    Cancellation Date
+  </Typography>
+  <TextField
+    required
+    type="date"
+    label=""
+    name="cancellationDate"
+    value={form.cancellationDate}
+    onChange={(e) => setForm({ ...form, cancellationDate: e.target.value })}
+    sx={muiInputSx}
+    size="small"
+    fullWidth
+    InputLabelProps={{ shrink: true }}
+  />
+</Box>
  <FormControl size="small" fullWidth sx={muiInputSx}>
  <InputLabel>Payment*</InputLabel>
  <Select name="payment" value={form.payment} label="Payment*" onChange={(e)=>setForm({...form, payment: e.target.value})}>

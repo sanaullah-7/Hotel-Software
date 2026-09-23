@@ -1,4 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Login from '../pages/Auth/Login';
+import AdminProfile from '../pages/Auth/AdminProfile';
+import Register from '../pages/Auth/Register';
 import DashboardLayout from '../layouts/DashboardLayout/DashboardLayout';
 import Dashboard from '../pages/Dashboard/Dashboard';
 
@@ -87,6 +90,9 @@ export default function AppRoutes() {
   return (
     <Router>
       <Routes>
+        <Route path="/admin/profile" element={<DashboardLayout><AdminProfile /></DashboardLayout>} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
 
         {/* Front Office Sub-Routes */}

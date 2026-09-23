@@ -234,12 +234,12 @@ const Topbar = () => {
           }}
         >
           <Avatar
-            src="https://i.pravatar.cc/150?u=admin"
+            src={`https://ui-avatars.com/api/?name=${localStorage.getItem('fullName') || 'Admin'}&background=random`}
             alt="admin"
             sx={{ width: 32, height: 32 }}
           />
           <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
-            admin
+            {localStorage.getItem('fullName') || 'Admin'}
           </Typography>
         </Box>
 
@@ -255,30 +255,30 @@ const Topbar = () => {
             sx: { mt: 1, minWidth: 200, borderRadius: 2 },
           }}
         >
-          <MenuItem onClick={handleProfileClose}>
-            <ListItemIcon>
-              <PersonIcon fontSize="small" />
-            </ListItemIcon>
-            Profile
-          </MenuItem>
-          <MenuItem onClick={handleProfileClose}>
-            <ListItemIcon>
-              <EditIcon fontSize="small" />
-            </ListItemIcon>
-            Edit profile
-          </MenuItem>
+          <MenuItem onClick={() => { handleProfileClose(); navigate('/admin/profile'); }}>
+              <ListItemIcon>
+                <PersonIcon fontSize="small" />
+              </ListItemIcon>
+              Profile
+            </MenuItem>
+          <MenuItem onClick={() => { handleProfileClose(); navigate('/admin/profile'); }}>
+              <ListItemIcon>
+                <EditIcon fontSize="small" />
+              </ListItemIcon>
+              Edit profile
+            </MenuItem>
           <MenuItem onClick={handleProfileClose}>
             <ListItemIcon>
               <RestoreIcon fontSize="small" />
             </ListItemIcon>
             Restore defaults
           </MenuItem>
-          <MenuItem onClick={handleProfileClose}>
-            <ListItemIcon>
-              <LogoutIcon fontSize="small" />
-            </ListItemIcon>
-            logout
-          </MenuItem>
+          <MenuItem onClick={() => { localStorage.clear(); handleProfileClose(); navigate('/login'); }}>
+              <ListItemIcon>
+                <LogoutIcon fontSize="small" />
+              </ListItemIcon>
+              Logout
+            </MenuItem>
         </Menu>
       </Box>
     </Box>

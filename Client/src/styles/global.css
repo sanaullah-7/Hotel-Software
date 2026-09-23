@@ -139,3 +139,23 @@ body {
     font-size: 19px;
   }
 }
+
+/* Centered hotel authentication card ? green theme comes from the root variables. */
+body:has(#root > .min-h-screen.flex.w-full) { background: linear-gradient(rgb(8 49 28 / .62), rgb(8 49 28 / .62)), url('https://images.unsplash.com/photo-1542314831-c6a4d14d8373?auto=format&fit=crop&w=2400&q=85') center / cover fixed; }
+#root > .min-h-screen.flex.w-full { width: min(920px, calc(100% - 48px)); min-height: 590px; margin: 24px auto; overflow: hidden; border: 1px solid rgb(255 255 255 / .5); border-radius: 14px; box-shadow: 0 24px 60px rgb(4 30 16 / .34); }
+#root > .min-h-screen.flex.w-full > div { min-height: 590px; }
+#root > .min-h-screen.flex.w-full > div:last-child::before { content: ''; position: absolute; inset: 0; z-index: 10; background: linear-gradient(180deg, rgb(7 63 32 / .32), rgb(4 39 20 / .8)); }
+#root > .min-h-screen.flex.w-full > div:last-child > div { z-index: 20; }
+#root > .min-h-screen.flex.w-full .MuiOutlinedInput-root { border-radius: 9px; background: #f8faf9; }
+#root > .min-h-screen.flex.w-full .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline { border-color: var(--primary-main); }
+#root > .min-h-screen.flex.w-full .MuiButton-contained { box-shadow: 0 7px 14px rgb(27 127 67 / .24); }
+#root > .min-h-screen.flex.w-full .MuiButton-outlined { border-radius: 9px; text-transform: none; }
+#root > .min-h-screen.flex.w-full h2 { letter-spacing: -.02em; }
+@media (max-width: 1023px) {
+  body:has(#root > .min-h-screen.flex.w-full) { background: #e7f1ea; }
+  #root > .min-h-screen.flex.w-full { width: min(520px, calc(100% - 32px)); min-height: 0; margin: 16px auto; border-color: #d9e6dd; }
+  #root > .min-h-screen.flex.w-full > div { min-height: 0; }
+}
+@media (max-width: 480px) {
+  #root > .min-h-screen.flex.w-full { width: 100%; min-height: 100vh; margin: 0; border: 0; border-radius: 0; }
+}

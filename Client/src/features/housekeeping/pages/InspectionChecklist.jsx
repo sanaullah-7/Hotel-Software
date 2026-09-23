@@ -1,7 +1,7 @@
-import { FilterList, AddCircleOutlined, Refresh, TableChart, PictureAsPdf } from'@mui/icons-material';
+import { FilterList, AddCircleOutlined, Refresh, TableChart, PictureAsPdf, Assignment, CheckCircle, Cancel, Star } from'@mui/icons-material';
 import React, { useState, useRef, useEffect } from'react';
 
-import { TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment , TablePagination } from'@mui/material';
+import { TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment , TablePagination, Box, Typography } from'@mui/material';
 
 const initialInspections = [
  {
@@ -362,34 +362,46 @@ export default function InspectionChecklist() {
  return (
  <div className="w-full h-full flex flex-col pt-1 min-h-screen gap-1">
  {/* Summary Cards */}
- <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Total Inspections</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{totalInspections}</p>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Passed</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{passedCount}</p>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Failed</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{failedCount}</p>
- </div>
- </div>
- <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-center gap-4 text-center">
- <div>
- <p className="text-[12px] font-bold text-gray-500">Average Score</p>
- <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{avgScore}%</p>
- </div>
- </div>
- </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Total Inspections</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{totalInspections}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+              <Assignment sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Passed</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{passedCount}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+              <CheckCircle sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Failed</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{failedCount}</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+              <Cancel sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-4">
+            <div className="text-left">
+              <p className="text-[12px] font-bold text-gray-500">Average Score</p>
+              <p className="text-[24px] font-bold text-gray-800 leading-none mt-1">{avgScore}%</p>
+            </div>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
+              <Star sx={{ fontSize: 18 }} />
+            </div>
+          </div>
+        </div>
 
- {/* Table Section */}
+        {/* Table Section */}
  <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 flex-1">
  {/* Table Header with Title & Button */}
  <div className="p-2.5 flex items-center justify-between border-b border-gray-100 gap-4">
@@ -562,19 +574,22 @@ export default function InspectionChecklist() {
  size="small" 
  fullWidth
  />
-
- <TextField 
- type="date" 
- label="Inspection Date*" 
- required
- value={form.inspectionDate} 
- onChange={e => setForm({...form, inspectionDate: e.target.value})} 
- sx={muiInputSx} 
- size="small" 
- fullWidth 
- InputLabelProps={{ shrink: true }} 
- />
-
+<Box>
+  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+    Inspection Date*
+  </Typography>
+  <TextField
+    type="date"
+    label=""
+    required
+    value={form.inspectionDate}
+    onChange={e => setForm({ ...form, inspectionDate: e.target.value })}
+    sx={muiInputSx}
+    size="small"
+    fullWidth
+    InputLabelProps={{ shrink: true }}
+  />
+</Box>
  <FormControl size="small" fullWidth sx={muiInputSx}>
  <InputLabel>Status*</InputLabel>
  <Select 

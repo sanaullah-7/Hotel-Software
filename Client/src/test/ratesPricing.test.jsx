@@ -5,7 +5,7 @@ import {
   getTaxes, addTax, updateTax, deleteTax, toggleTaxStatus,
   getFees, addFee, updateFee, deleteFee, toggleFeeStatus,
   resetRatesPricingStore, INITIAL_RATE_PLANS, INITIAL_DISCOUNTS, INITIAL_TAXES, INITIAL_FEES
-} from '../pages/RatesPricing/ratesPricingStore';
+} from '../features/rates-pricing/pages/ratesPricingStore';
 
 describe('Rates & Pricing Store Tests', () => {
   beforeEach(() => {

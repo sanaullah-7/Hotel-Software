@@ -32,6 +32,7 @@ import {
  WorkspacePremium as VipIcon,
  MonetizationOn as PointsIcon,
  Edit as EditIcon,
+  ExitToApp as ExitToAppIcon,
  CheckCircle as CheckCircleIcon,
  AccessTime as ClockIcon
 } from'@mui/icons-material';
@@ -60,7 +61,7 @@ const SectionCard = ({ title, icon, children }) => (
  </Box>
 );
 
-export default function GuestDetailsModal({ open, onClose, onEdit, room }) {
+export default function GuestDetailsModal({  open, onClose, onEdit, room , onCheckout }) {
  if (!room || !room.guest) return null;
 
  return (
@@ -115,11 +116,11 @@ export default function GuestDetailsModal({ open, onClose, onEdit, room }) {
  {/* Col 1 */}
  <SectionCard title="Guest Information" icon={<PersonIcon sx={{ color:'#2e7d32', fontSize: 18 }} />}>
  <InfoBlock icon={<PersonIcon fontSize="small" />} label="Full Name" value={room.guest.name} />
- <InfoBlock icon={<LocationOnIcon fontSize="small" />} label="Address" value="123 Elm Street, Springfield" />
- <InfoBlock icon={<PhoneIcon fontSize="small" />} label="Phone Number" value="+1-555-1234" />
- <InfoBlock icon={<EmailIcon fontSize="small" />} label="Email Address" value={`${room.guest.name.toLowerCase().replace('','')}@example.com`} />
+ <InfoBlock icon={<LocationOnIcon fontSize="small" />} label="Address" value={room.guest.address || "123 Elm Street, Springfield"} />
+ <InfoBlock icon={<PhoneIcon fontSize="small" />} label="Phone Number" value={room.guest.phone || "+1-555-1234"} />
+ <InfoBlock icon={<EmailIcon fontSize="small" />} label="Email Address" value={room.guest.email || (room.guest.name ? `${room.guest.name.toLowerCase().replace(/ /g,"")}@example.com` : "")} />
  <InfoBlock icon={<CreditCardIcon fontSize="small" />} label="ID Number" value={room.guest.id} />
- <InfoBlock icon={<FlagIcon fontSize="small" />} label="Nationality" value="American" />
+ <InfoBlock icon={<FlagIcon fontSize="small" />} label="Nationality" value={room.guest.nationality || "American"} />
  </SectionCard>
 
  {/* Col 2 */}
@@ -137,11 +138,11 @@ export default function GuestDetailsModal({ open, onClose, onEdit, room }) {
  </Box>
  } />
  <InfoBlock icon={<TagIcon fontSize="small" />} label="Booking Reference" valueNode={
- <Typography sx={{ color:'#15803d', backgroundColor:'#dcfce7', display:'inline-block', px: 1, py: 0.25, borderRadius: 1, fontSize:'12px', fontWeight: 700 }}>BK123CD456</Typography>
+ <Typography sx={{ color:'#15803d', backgroundColor:'#dcfce7', display:'inline-block', px: 1, py: 0.25, borderRadius: 1, fontSize:'12px', fontWeight: 700 }}>{room.guest.bookingRef || "BK123CD456"}</Typography>
  } />
- <InfoBlock icon={<GlobeIcon fontSize="small" />} label="Booking Source" value="Direct" />
+ <InfoBlock icon={<GlobeIcon fontSize="small" />} label="Booking Source" value={room.guest.bookingSource || "Direct"} />
  <InfoBlock icon={<PaymentIcon fontSize="small" />} label="Payment Status" valueNode={
- <Typography sx={{ color:'#15803d', backgroundColor:'#dcfce7', border:'1px solid #15803d', display:'inline-block', px: 1, py: 0.25, borderRadius: 1, fontSize:'11px', fontWeight: 700 }}>Paid</Typography>
+ <Typography sx={{ color:'#15803d', backgroundColor:'#dcfce7', border:'1px solid #15803d', display:'inline-block', px: 1, py: 0.25, borderRadius: 1, fontSize:'11px', fontWeight: 700 }}>{room.guest.paymentStatus || "Paid"}</Typography>
  } />
  <InfoBlock icon={<AttachMoneyIcon fontSize="small" />} label="Total Amount" valueNode={
  <Typography sx={{ color:'#15803d', fontSize:'15px', fontWeight: 800 }}>${room.guest.checkIn ?'2240' :'0'}</Typography>
@@ -187,7 +188,7 @@ export default function GuestDetailsModal({ open, onClose, onEdit, room }) {
  
  <Typography sx={{ fontSize:'10px', fontWeight: 700, color:'#64748b', textTransform:'uppercase', mb: 0.5, letterSpacing:'0.02em' }}>Special Requests</Typography>
  <Box sx={{ backgroundColor:'#f8fafc', p: 1.5, borderRadius: 2, mb: 2 }}>
- <Typography sx={{ fontSize:'12.5px', color:'#334155', fontWeight: 500 }}>Late check-in, extra pillows</Typography>
+ <Typography sx={{ fontSize:'12.5px', color:'#334155', fontWeight: 500 }}>{room.guest.specialRequests || "Late check-in, extra pillows"}</Typography>
  </Box>
  
  <Typography sx={{ fontSize:'10px', fontWeight: 700, color:'#64748b', textTransform:'uppercase', mb: 0.5, letterSpacing:'0.02em' }}>Internal Notes</Typography>
@@ -229,7 +230,11 @@ export default function GuestDetailsModal({ open, onClose, onEdit, room }) {
  <Typography sx={{ fontSize:'11px', fontWeight: 500 }}>Last cleaned: 9/17/24, 8:00 AM</Typography>
  </Box>
  <Box sx={{ display:'flex', alignItems:'center', gap: 2 }}>
- <Button onClick={onEdit} startIcon={<EditIcon sx={{ fontSize: 16 }} />} sx={{ color:'#16a34a', textTransform:'none', fontWeight: 700, fontSize:'13px' }}>
+ 
+          <Button onClick={onCheckout} startIcon={<ExitToAppIcon sx={{ fontSize: 16 }} />} sx={{ color: '#ef4444', textTransform: 'none', fontWeight: 700, fontSize: '13px', mr: 1 }}>
+            Checkout Guest
+          </Button>
+          <Button onClick={onEdit} startIcon={<EditIcon sx={{ fontSize: 16 }} />} sx={{ color:'#16a34a', textTransform:'none', fontWeight: 700, fontSize:'13px' }}>
  Edit Guest Details
  </Button>
  <Button onClick={onClose} variant="contained" startIcon={<CloseIcon sx={{ fontSize: 16 }} />} sx={{ backgroundColor:'#16a34a', color:'white', textTransform:'none', fontWeight: 700, fontSize:'13px', px: 2.5, borderRadius: 2, boxShadow:'none','&:hover': { backgroundColor:'#15803d', boxShadow:'none' } }}>

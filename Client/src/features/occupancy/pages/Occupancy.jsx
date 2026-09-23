@@ -1,4 +1,4 @@
-import { useState, useMemo } from'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
  Bed as BedIcon,
  CheckCircle as CheckCircleIcon,
@@ -28,8 +28,8 @@ import {
  InputLabel,
  Button
 } from'@mui/material';
-import CreateGuestModal from'./CreateGuestModal';
-import GuestDetailsModal from'./GuestDetailsModal';
+import CreateGuestModal from '../components/CreateGuestModal';
+import GuestDetailsModal from '../components/GuestDetailsModal';
 
 const initialRooms = [
  { number: 101, type:'Super Deluxe', floor: 1, status:'OCCUPIED', statusColor:'#ef4444', bed:'King Bed', adults: 2, children: 2, maxOccupancy: 4, price: 320, housekeeping:'Clean', housekeepingColor:'#1b7f43', amenities: ['wifi','ac','bar'], guest: { name:'John Doe', vip: true, id:'AB123CD456', checkIn:'Aug 1', checkOut:'Aug 7' }, note:'VIP guest, prefers sea view rooms' },
@@ -97,7 +97,21 @@ const BED_SIZE_OPTIONS = ['All Beds','King Bed','Queen Bed','Double Bed','Single
 const HOUSEKEEPING_OPTIONS = ['All Status','Clean','Dirty','Inspected','Out of Order'];
 
 export default function Occupancy() {
- const [rooms, setRooms] = useState(initialRooms);
+ const [rooms, setRooms] = useState(() => {
+    const savedRooms = localStorage.getItem('hotel_rooms');
+    if (savedRooms) {
+      try {
+        return JSON.parse(savedRooms);
+      } catch (e) {
+        console.error('Error parsing rooms from local storage', e);
+      }
+    }
+    return initialRooms;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('hotel_rooms', JSON.stringify(rooms));
+  }, [rooms]);
  const [modalOpen, setModalOpen] = useState(false);
  const [selectedRoom, setSelectedRoom] = useState(null);
 
@@ -124,16 +138,44 @@ export default function Occupancy() {
  };
 
  const handleSaveGuest = (updatedGuestData) => {
- setRooms(prev => prev.map(r => 
- r.number === selectedRoom.number 
- ? { ...r, guest: { ...r.guest, ...updatedGuestData }, status:'OCCUPIED', statusColor:'#ef4444' } 
- : r
- ));
- setModalOpen(false);
- setSelectedRoom(null);
- };
+    if (!selectedRoom) return;
+    setRooms(prev => prev.map(r => {
+      if (r.number === selectedRoom.number) {
+        return {
+          ...r,
+          status: 'OCCUPIED',
+          statusColor: '#ef4444',
+          guest: {
+            ...(r.guest || {}),
+            ...updatedGuestData
+          }
+        };
+      }
+      return r;
+    }));
+    setModalOpen(false);
+    setTimeout(() => setSelectedRoom(null), 150);
+  };
 
- const handleClear = () => {
+ 
+  const handleCheckoutGuest = () => {
+    if (!selectedRoom) return;
+    setRooms(prev => prev.map(r => {
+      if (r.number === selectedRoom.number) {
+        return {
+          ...r,
+          status: 'AVAILABLE',
+          statusColor: '#1b7f43',
+          guest: null
+        };
+      }
+      return r;
+    }));
+    setDetailsModalOpen(false);
+    setTimeout(() => setSelectedRoom(null), 150);
+  };
+
+  const handleClear = () => {
  setSearchQuery('');
  setStatusFilter('All Status');
  setTypeFilter('All Types');
@@ -171,7 +213,7 @@ export default function Occupancy() {
 
  return true;
  });
- }, [searchQuery, statusFilter, typeFilter, floorFilter, bedFilter, hkFilter]);
+ }, [rooms, searchQuery, statusFilter, typeFilter, floorFilter, bedFilter, hkFilter]);
 
  return (
  // FIX: removed the global`space-y-4` — it was auto-adding a margin-top to every
@@ -179,23 +221,49 @@ export default function Occupancy() {
  // Each section below now controls its own top margin explicitly.
  <div className="animate-fade-in">
  {/* SUMMARY CARDS */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
- <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
+   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
+     <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+       <div>
+         <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.length}</div>
+         <div className="text-[13px] text-gray-500 font-medium">Total Rooms</div>
+       </div>
+       <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+         <BedIcon sx={{ fontSize: 18 }} />
+       </div>
+     </div>
+     
+     <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+       <div>
+         <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.filter(r => r.status ==='AVAILABLE').length}</div>
+         <div className="text-[13px] text-gray-500 font-medium">Available</div>
+       </div>
+       <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+         <CheckCircleIcon sx={{ fontSize: 18 }} />
+       </div>
+     </div>
+     
+     <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+       <div>
+         <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.filter(r => r.status ==='OCCUPIED').length}</div>
+         <div className="text-[13px] text-gray-500 font-medium">Occupied</div>
+       </div>
+       <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+         <PersonIcon sx={{ fontSize: 18 }} />
+       </div>
+     </div>
+     
+     <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+       <div>
+         <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{Math.round((rooms.filter(r => r.status ==='OCCUPIED').length / rooms.length) * 100)}%</div>
+         <div className="text-[13px] text-gray-500 font-medium">Occupancy Rate</div>
+       </div>
+       <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
+         <BarChartIcon sx={{ fontSize: 18 }} />
+       </div>
+     </div>
+   </div>
 
- <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.length}</div><div className="text-[13px] text-gray-500 font-medium">Total Rooms</div></div>
- </div>
- <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
- <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.filter(r => r.status ==='AVAILABLE').length}</div><div className="text-[13px] text-gray-500 font-medium">Available</div></div>
- </div>
- <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
- <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{rooms.filter(r => r.status ==='OCCUPIED').length}</div><div className="text-[13px] text-gray-500 font-medium">Occupied</div></div>
- </div>
- <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center">
- <div><div className="text-2xl font-bold text-gray-900 leading-none mb-1">{Math.round((rooms.filter(r => r.status ==='OCCUPIED').length / rooms.length) * 100)}%</div><div className="text-[13px] text-gray-500 font-medium">Occupancy Rate</div></div>
- </div>
- </div>
-
- {/* ROOM CARDS & TABLE */}
+   {/* ROOM CARDS & TABLE */}
  <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5">
  {/* Table Header with Filters */}
  <div className="p-2.5 flex items-center justify-between border-b border-gray-100 gap-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
@@ -374,7 +442,7 @@ export default function Occupancy() {
 
  {/* MODALS */}
  <CreateGuestModal open={modalOpen} onClose={closeModal} onSave={handleSaveGuest} room={selectedRoom} />
- <GuestDetailsModal open={detailsModalOpen} onClose={closeDetailsModal} onEdit={handleEditGuest} room={selectedRoom} />
+ <GuestDetailsModal open={detailsModalOpen} onClose={closeDetailsModal} onEdit={handleEditGuest} onCheckout={handleCheckoutGuest} room={selectedRoom} />
  </div>
  );
 }

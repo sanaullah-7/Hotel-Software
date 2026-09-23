@@ -2,7 +2,9 @@ import React, { useState } from'react';
 import { FilterList, Add, Refresh, Calculate, PictureAsPdf, EditOutlined, DeleteOutlined, Close, Search, KeyboardArrowLeft, KeyboardArrowRight, AddCircle, TableChart, ViewWeek, AddCircleOutlined } from'@mui/icons-material';;;;
 import { 
  TextField, FormControl, InputLabel, Select, MenuItem,
- Checkbox, Menu 
+ Checkbox, Menu, 
+ Typography,
+ Box
 } from'@mui/material';
 import { jsPDF } from'jspdf';
 import autoTable from'jspdf-autotable';
@@ -377,10 +379,39 @@ export default function RatePricing() {
  <TextField required type="number" label="Base Rate*" value={form.baseRate} onChange={e => setForm({...form, baseRate: e.target.value})} sx={muiInputSx} size="small" fullWidth />
  <TextField type="number" label="Seasonal Rate" value={form.seasonalRate} onChange={e => setForm({...form, seasonalRate: e.target.value})} sx={muiInputSx} size="small" fullWidth />
  <TextField type="number" label="Promotional Rate" value={form.promotionalRate} onChange={e => setForm({...form, promotionalRate: e.target.value})} sx={muiInputSx} size="small" fullWidth />
- 
- <TextField required type="date" label="Effective Date*" InputLabelProps={{ shrink: true }} value={form.effectiveDate} onChange={e => setForm({...form, effectiveDate: e.target.value})} sx={muiInputSx} size="small" fullWidth />
- <TextField required type="date" label="End Date*" InputLabelProps={{ shrink: true }} value={form.endDate} onChange={e => setForm({...form, endDate: e.target.value})} sx={muiInputSx} size="small" fullWidth />
- 
+<Box>
+  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+    Effective Date*
+  </Typography>
+  <TextField
+    required
+    type="date"
+    label=""
+    InputLabelProps={{ shrink: true }}
+    value={form.effectiveDate}
+    onChange={e => setForm({ ...form, effectiveDate: e.target.value })}
+    sx={muiInputSx}
+    size="small"
+    fullWidth
+  />
+</Box>
+
+<Box>
+  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+    End Date*
+  </Typography>
+  <TextField
+    required
+    type="date"
+    label=""
+    InputLabelProps={{ shrink: true }}
+    value={form.endDate}
+    onChange={e => setForm({ ...form, endDate: e.target.value })}
+    sx={muiInputSx}
+    size="small"
+    fullWidth
+  />
+</Box>
  <FormControl size="small" fullWidth sx={muiInputSx}>
  <InputLabel>Status*</InputLabel>
  <Select required value={form.status} label="Status*" onChange={e => setForm({...form, status: e.target.value})}>

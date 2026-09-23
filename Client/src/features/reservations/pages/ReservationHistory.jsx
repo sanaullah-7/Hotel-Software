@@ -161,9 +161,9 @@ export default function ReservationHistory() {
  };
 
  return (
- <div className="space-y-4 max-w-[1600px] mx-auto pb-4 animate-fade-in">
+ <div className="max-w-[1600px] mx-auto pb-4 animate-fade-in">
  {/* Data Table */}
- <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mt-4">
+ <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden mt-1">
  {/* Table Top Controls */}
  <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 overflow-visible">
  <h3 className="text-gray-800 font-bold text-[14px] lg:text-[15px]">

@@ -1,0 +1,292 @@
+import authBg from '../../assets/images/auth-bg.jpg';
+import authCardBg from '../../assets/images/authcard.jpg';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton } from '@mui/material';
+import { Visibility, VisibilityOff, Email, Lock, Person, Business } from '@mui/icons-material';
+
+export default function Register() {
+  const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    hotelName: '',
+    password: '',
+    confirmPassword: ''
+  });
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleRegister = (e) => {
+    e.preventDefault();
+    if (formData.hotelName) {
+      localStorage.setItem('hotelName', formData.hotelName);
+    }
+    if (formData.fullName) {
+      localStorage.setItem('fullName', formData.fullName);
+    }
+    // Redirect to login or dashboard
+    navigate('/login');
+  };
+
+  return (
+    <div className="h-screen w-full flex items-center justify-center relative overflow-hidden bg-gray-900">
+      {/* Outer Background */}
+      <div className="absolute inset-0 z-0">
+        <img src={authBg} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
+      </div>
+
+      {/* Main Card */}
+      <div className="z-10 flex w-[95%] max-w-[1000px] h-[90vh] max-h-[700px] rounded-2xl shadow-2xl overflow-hidden border border-white/40 ring-1 ring-white/20">
+      {/* Left Image Side */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-gray-900 overflow-hidden">  
+        <div className="absolute inset-0 bg-black/60 z-10"></div>
+        <img src={authCardBg} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+        
+        <div className="relative z-20 w-full flex flex-col items-center justify-center p-12 text-center">
+          <div className="mb-6">
+            <svg className="w-12 h-12 text-[var(--primary-main)] mx-auto drop-shadow-md" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+            </svg>
+          </div>
+          <h2 className="text-4xl font-serif text-white font-bold mb-4 drop-shadow-lg">Join the Grand Team</h2>
+          <p className="text-lg text-white/90 mb-10 max-w-md drop-shadow-md">
+            Create your staff account and start managing five-star experiences today.
+          </p>
+          
+          <Link to="/login" className="inline-block">
+            <Button
+              variant="outlined"
+              sx={{
+                color: 'white',
+                borderColor: 'rgba(255,255,255,0.5)',
+                '&:hover': {
+                  borderColor: 'white',
+                  bgcolor: 'rgba(255,255,255,0.1)'
+                },
+                px: 6,
+                py: 1,
+                borderRadius: '30px',
+                textTransform: 'none',
+                fontWeight: 'bold',
+                backdropFilter: 'blur(4px)'
+              }}
+            >
+              Sign In Instead
+            </Button>
+          </Link>
+        </div>
+      </div>
+
+      {/* Right Form Side */}
+      <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 md:px-16 lg:px-20 bg-[#EFF4F8] relative overflow-y-auto no-scrollbar py-4">
+        <div className="max-w-md w-full mx-auto my-4">
+          <h2 className="text-4xl font-serif font-bold text-gray-900 mb-1 text-3xl">Create account</h2>
+          <p className="text-gray-500 mb-4 text-sm">Register a new staff account for the admin panel.</p>
+
+          <form onSubmit={handleRegister} className="space-y-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Full Name</label>
+              <TextField fullWidth size="small" sx={{ 
+                  backgroundColor: "white", 
+                  borderRadius: 1,
+                  "& .MuiOutlinedInput-root": {
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#22c55e",
+                    }
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#22c55e"
+                  }
+                }}
+                variant="outlined"
+                placeholder="e.g. Jordan Smith"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Person className="text-gray-400" fontSize="small" />
+                    </InputAdornment>
+                  ),
+                  className: "bg-gray-50 rounded-xl",
+                  sx: { '& fieldset': { borderColor: '#e5e7eb' } }
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
+              <TextField fullWidth size="small" sx={{ 
+                  backgroundColor: "white", 
+                  borderRadius: 1,
+                  "& .MuiOutlinedInput-root": {
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#22c55e",
+                    }
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#22c55e"
+                  }
+                }}
+                variant="outlined"
+                placeholder="you@example.com"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Email className="text-gray-400" fontSize="small" />
+                    </InputAdornment>
+                  ),
+                  className: "bg-gray-50 rounded-xl",
+                  sx: { '& fieldset': { borderColor: '#e5e7eb' } }
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Hotel Name</label>
+              <TextField fullWidth size="small" sx={{ 
+                  backgroundColor: "white", 
+                  borderRadius: 1,
+                  "& .MuiOutlinedInput-root": {
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#22c55e",
+                    }
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#22c55e"
+                  }
+                }}
+                variant="outlined"
+                placeholder="e.g. Aurelia Grand"
+                name="hotelName"
+                value={formData.hotelName}
+                onChange={handleChange}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Business className="text-gray-400" fontSize="small" />
+                    </InputAdornment>
+                  ),
+                  className: "bg-gray-50 rounded-xl",
+                  sx: { '& fieldset': { borderColor: '#e5e7eb' } }
+                }}
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Password</label>
+                <TextField fullWidth size="small" sx={{ 
+                  backgroundColor: "white", 
+                  borderRadius: 1,
+                  "& .MuiOutlinedInput-root": {
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#22c55e",
+                    }
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#22c55e"
+                  }
+                }}
+                  variant="outlined"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Min. 6 chars"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock className="text-gray-400" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    className: "bg-gray-50 rounded-xl",
+                    sx: { '& fieldset': { borderColor: '#e5e7eb' } }
+                  }}
+                />
+              </div>
+
+              <div className="flex-1">
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Confirm</label>
+                <TextField fullWidth size="small" sx={{ 
+                  backgroundColor: "white", 
+                  borderRadius: 1,
+                  "& .MuiOutlinedInput-root": {
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#22c55e",
+                    }
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#22c55e"
+                  }
+                }}
+                  variant="outlined"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Repeat"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock className="text-gray-400" fontSize="small" />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">
+                          {showPassword ? <VisibilityOff className="text-gray-400" fontSize="small" /> : <Visibility className="text-gray-400" fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                    className: "bg-gray-50 rounded-xl",
+                    sx: { '& fieldset': { borderColor: '#e5e7eb' } }
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center mt-1 mb-3">
+              <FormControlLabel
+                control={<Checkbox required sx={{ color: "#d1d5db", p: 0.5, pr: 1, "&.Mui-checked": { color: "#22c55e" } }} />}
+                label={
+                  <span className="text-[13px] text-gray-600 font-medium">
+                    I agree to the <a href="#" className="text-[var(--primary-main)] hover:underline font-bold">Terms of Service</a> & <a href="#" className="text-[var(--primary-main)] hover:underline font-bold">Privacy Policy</a>
+                  </span>
+                }
+              />
+            </div>
+
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              disableElevation
+              sx={{
+                bgcolor: 'var(--primary-main)',
+                '&:hover': { bgcolor: 'var(--primary-dark)' },
+                py: 1.5,
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontWeight: 'bold',
+                fontSize: '1rem'
+              }}
+            >
+              Create Account
+            </Button>
+          </form>
+        </div>
+      </div>
+          </div>
+    </div>
+  );
+}
