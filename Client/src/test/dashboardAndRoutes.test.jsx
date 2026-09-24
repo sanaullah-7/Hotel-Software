@@ -223,5 +223,52 @@ describe('Dashboard and Shared UI Components', () => {
     expect(queryByTitle('Export CSV')).toBeTruthy();
     expect(queryByTitle('Export PDF')).toBeTruthy();
   });
+
+  it('renders ReservationHistory with working date filters, Dues column, and Export CSV', async () => {
+    const { default: ReservationHistory } = await import('../features/reservations/pages/ReservationHistory');
+    const { getByText, queryByText, getByTitle } = render(
+      <MemoryRouter>
+        <ReservationHistory />
+      </MemoryRouter>
+    );
+
+    // 1. Verify Dues column exists and Remaining does NOT exist
+    expect(getByText('Dues', { selector: 'th' })).toBeTruthy();
+    expect(queryByText('Remaining', { selector: 'th' })).toBeNull();
+
+    // 2. Verify all other required headers are present
+    expect(getByText('Res ID', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Guest Name', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Mobile No', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Room / Type', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Reservation Date', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Check-In', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Check-Out', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Inventory', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Total Price', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Payment', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Action', { selector: 'th' })).toBeTruthy();
+
+    // 3. Test Daily filter (default active)
+    expect(getByText('Sarah Smith')).toBeTruthy();
+
+    // 4. Test Monthly filter
+    const monthlyBtn = getByText('Monthly', { selector: 'button' });
+    fireEvent.click(monthlyBtn);
+    expect(getByText('John Doe')).toBeTruthy();
+    expect(getByText('Sarah Smith')).toBeTruthy();
+
+    // 5. Test Yearly filter
+    const yearlyBtn = getByText('Yearly', { selector: 'button' });
+    fireEvent.click(yearlyBtn);
+    expect(getByText('Ahsan Khan')).toBeTruthy();
+    expect(getByText('Maria Garcia')).toBeTruthy();
+
+    // 6. Test Export CSV button exists and is clickable
+    const exportBtn = getByTitle('Export CSV');
+    expect(exportBtn).toBeTruthy();
+    fireEvent.click(exportBtn);
+  });
 });
+
 
