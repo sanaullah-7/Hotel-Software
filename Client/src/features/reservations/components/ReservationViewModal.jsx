@@ -1,0 +1,191 @@
+import React from 'react';
+import {
+  EditOutlined,
+  SubjectOutlined,
+  LocalOfferOutlined,
+  CalendarTodayOutlined,
+  PhoneOutlined,
+  EmailOutlined,
+  MeetingRoomOutlined
+} from '@mui/icons-material';
+import ModalShell from '../../../components/common/ModalShell';
+import StatusBadge from '../../../components/common/StatusBadge';
+import { statusStyles, paymentStyles } from './ReservationTable';
+
+export default function ReservationViewModal({
+  open,
+  booking,
+  onClose,
+  onEdit
+}) {
+  if (!open || !booking) return null;
+
+  const headerContent = (
+    <div className="flex items-center justify-between w-full pr-3">
+      <div className="flex items-center gap-4">
+        <img
+          src={booking.avatar}
+          alt="Avatar"
+          className="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover"
+        />
+        <div className="flex flex-col">
+          <h2 className="text-white text-[20px] font-bold leading-tight">{booking.name}</h2>
+          <span className="text-white/80 text-[13px]">{booking.status}</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => {
+            onClose();
+            onEdit(booking);
+          }}
+          className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
+          title="Edit Booking"
+        >
+          <EditOutlined sx={{ fontSize: 16 }} />
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <ModalShell
+      open={open}
+      onClose={onClose}
+      maxWidth="max-w-[800px]"
+      headerContent={headerContent}
+      showCloseButton={true}
+    >
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Room */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
+          <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
+            <MeetingRoomOutlined sx={{ fontSize: 20 }} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Assigned Room
+            </span>
+            <span className="text-[14px] font-bold text-gray-800">
+              Room {booking.roomNo || booking.room || '101'} ({booking.roomType || 'Standard'})
+            </span>
+          </div>
+        </div>
+
+        {/* Package */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
+          <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
+            <SubjectOutlined sx={{ fontSize: 20 }} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Package
+            </span>
+            <span className="text-[14px] font-bold text-gray-800">{booking.package}</span>
+          </div>
+        </div>
+
+        {/* Room Type */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
+          <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
+            <SubjectOutlined sx={{ fontSize: 20 }} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Room Type
+            </span>
+            <span className="text-[14px] font-bold text-gray-800">{booking.roomType}</span>
+          </div>
+        </div>
+
+        {/* Status */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
+          <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
+            <LocalOfferOutlined sx={{ fontSize: 20 }} />
+          </div>
+          <div className="flex flex-col items-start">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Status
+            </span>
+            <StatusBadge
+              status={booking.status}
+              stylesMap={statusStyles}
+              size="md"
+              className="mt-0.5"
+            />
+          </div>
+        </div>
+
+        {/* Check In */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
+          <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
+            <CalendarTodayOutlined sx={{ fontSize: 20 }} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Check In
+            </span>
+            <span className="text-[14px] font-bold text-gray-800">{booking.checkIn}</span>
+          </div>
+        </div>
+
+        {/* Check Out */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
+          <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
+            <CalendarTodayOutlined sx={{ fontSize: 20 }} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Check Out
+            </span>
+            <span className="text-[14px] font-bold text-gray-800">{booking.checkOut}</span>
+          </div>
+        </div>
+
+        {/* Payment */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
+          <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
+            <LocalOfferOutlined sx={{ fontSize: 20 }} />
+          </div>
+          <div className="flex flex-col items-start">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Payment
+            </span>
+            <StatusBadge
+              status={booking.payment}
+              stylesMap={paymentStyles}
+              size="md"
+              className="mt-0.5"
+            />
+          </div>
+        </div>
+
+        {/* Mobile */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
+          <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
+            <PhoneOutlined sx={{ fontSize: 20 }} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Mobile
+            </span>
+            <span className="text-[14px] font-bold text-gray-800">{booking.mobile}</span>
+          </div>
+        </div>
+
+        {/* Email */}
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
+          <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
+            <EmailOutlined sx={{ fontSize: 20 }} />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
+              Email
+            </span>
+            <span className="text-[14px] font-bold text-gray-800 break-all">{booking.email}</span>
+          </div>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}

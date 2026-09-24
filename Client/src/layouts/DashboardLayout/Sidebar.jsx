@@ -13,13 +13,13 @@ import {
   Payments as RatesPricingIcon,
   ReceiptLong as PaymentBillingIcon,
   People as HRIcon,
+  PersonPin as GuestsIcon,
   BarChart as ReportsIcon,
   Settings as SettingsIcon,
   RestaurantMenu as RestaurantIcon,
   Celebration as EventsIcon,
   AutoAwesome as AssistantIcon,
 } from '@mui/icons-material';
-
 
 // Reusable submenu renderer
 const renderSubItems = (items, pathname) => {
@@ -56,7 +56,6 @@ const renderSubItems = (items, pathname) => {
   );
 };
 
-
 // Reusable dropdown component
 const DropdownSection = ({
   isOpen,
@@ -71,6 +70,7 @@ const DropdownSection = ({
   return (
     <li>
       <button
+        type="button"
         onClick={toggle}
         title={!isOpen ? label : undefined}
         className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
@@ -134,6 +134,20 @@ const DropdownSection = ({
   );
 };
 
+// Group Header for visual domain separation
+const NavGroupHeader = ({ title, isOpen }) => {
+  if (!isOpen) {
+    return <div className="my-2 border-t border-gray-100" />;
+  }
+  return (
+    <li className="pt-3 pb-1 px-3 list-none">
+      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+        {title}
+      </span>
+    </li>
+  );
+};
+
 export default function Sidebar() {
   const location = useLocation();
   const pathname = location.pathname;
@@ -144,6 +158,7 @@ export default function Sidebar() {
   const isFrontOfficeActive = pathname.startsWith('/front-office');
   const isReservationActive = pathname.startsWith('/reservation');
   const isRoomsActive = pathname.startsWith('/rooms');
+  const isGuestsActive = pathname.startsWith('/guests');
   const isHousekeepingActive = pathname.startsWith('/housekeeping');
   const isInventoryActive = pathname.startsWith('/inventory');
   const isRatesPricingActive = pathname.startsWith('/rates-pricing');
@@ -159,265 +174,87 @@ export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
 
   // Dropdown states
-  const [isFrontOfficeOpen, setIsFrontOfficeOpen] =
-    useState(isFrontOfficeActive);
-
-  const [isReservationOpen, setIsReservationOpen] =
-    useState(isReservationActive);
-
-  const [isRoomsOpen, setIsRoomsOpen] =
-    useState(isRoomsActive);
-
-  const [isHousekeepingOpen, setIsHousekeepingOpen] =
-    useState(isHousekeepingActive);
-
-  const [isInventoryOpen, setIsInventoryOpen] =
-    useState(isInventoryActive);
-
-  const [isRatesPricingOpen, setIsRatesPricingOpen] =
-    useState(isRatesPricingActive);
-
-  const [isPaymentBillingOpen, setIsPaymentBillingOpen] =
-    useState(isPaymentBillingActive);
-
-  const [isHROpen, setIsHROpen] =
-    useState(isHRActive);
-
-  const [isReportsOpen, setIsReportsOpen] =
-    useState(isReportsActive);
-
-  const [isSettingsOpen, setIsSettingsOpen] =
-    useState(isSettingsActive);
-
-  const [isRestaurantOpen, setIsRestaurantOpen] =
-    useState(isRestaurantActive);
-
+  const [isFrontOfficeOpen, setIsFrontOfficeOpen] = useState(isFrontOfficeActive);
+  const [isReservationOpen, setIsReservationOpen] = useState(isReservationActive);
+  const [isRoomsOpen, setIsRoomsOpen] = useState(isRoomsActive);
+  const [isHousekeepingOpen, setIsHousekeepingOpen] = useState(isHousekeepingActive);
+  const [isInventoryOpen, setIsInventoryOpen] = useState(isInventoryActive);
+  const [isRatesPricingOpen, setIsRatesPricingOpen] = useState(isRatesPricingActive);
+  const [isPaymentBillingOpen, setIsPaymentBillingOpen] = useState(isPaymentBillingActive);
+  const [isHROpen, setIsHROpen] = useState(isHRActive);
+  const [isReportsOpen, setIsReportsOpen] = useState(isReportsActive);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(isSettingsActive);
+  const [isRestaurantOpen, setIsRestaurantOpen] = useState(isRestaurantActive);
   const [isEventsOpen, setIsEventsOpen] = useState(isEventsActive);
 
   // Sub menu data
   const frontOfficeSubItems = [
-    {
-      label: 'Operations Alerts',
-      id: 'operations-alerts',
-      path: '/front-office/operations-alerts',
-    },
-    {
-      label: 'Check-in/Check-out',
-      id: 'check-in-out',
-      path: '/front-office/check-in-out',
-    },
-    {
-      label: 'Guest Complaint',
-      id: 'guest-complaint',
-      path: '/front-office/guest-complaint',
-    },
+    { label: 'Operations Alerts', id: 'operations-alerts', path: '/front-office/operations-alerts' },
+    { label: 'Check-in/Check-out', id: 'check-in-out', path: '/front-office/check-in-out' },
+    { label: 'Guest Complaint', id: 'guest-complaint', path: '/front-office/guest-complaint' },
   ];
 
   const reservationSubItems = [
-    {
-      label: 'All Reservations',
-      id: 'all-reservations',
-      path: '/reservation/all',
-    },
-    {
-      label: 'Reservation History',
-      id: 'reservation-history',
-      path: '/reservation/history',
-    },
-    {
-      label: 'Cancel Booking',
-      id: 'cancel-booking',
-      path: '/reservation/cancelled',
-    },
-    {
-      label: 'Group Booking',
-      id: 'group-booking',
-      path: '/reservation/group',
-    },
-    {
-      label: 'Add New Reservation',
-      id: 'add-new-reservation',
-      path: '/reservation/new',
-    },
+    { label: 'All Reservations', id: 'all-reservations', path: '/reservation/all' },
+    { label: 'Reservation History', id: 'reservation-history', path: '/reservation/history' },
+    { label: 'Cancel Booking', id: 'cancel-booking', path: '/reservation/cancelled' },
+    { label: 'Group Booking', id: 'group-booking', path: '/reservation/group' },
+    { label: 'Add New Reservation', id: 'add-new-reservation', path: '/reservation/new' },
   ];
 
   const roomsSubItems = [
-    {
-      label: 'All Rooms',
-      id: 'all-rooms',
-      path: '/rooms',
-    },
-    {
-      label: 'Room Types',
-      id: 'room-types',
-      path: '/rooms/room-types',
-    },
-    {
-      label: 'Rate & Pricing',
-      id: 'rate-pricing',
-      path: '/rooms/rate-pricing',
-    },
-    {
-      label: 'Add Room',
-      id: 'add-room',
-      path: '/rooms/new',
-    },
+    { label: 'All Rooms', id: 'all-rooms', path: '/rooms' },
+    { label: 'Room Types', id: 'room-types', path: '/rooms/room-types' },
+    { label: 'Rate & Pricing', id: 'rate-pricing', path: '/rooms/rate-pricing' },
+    { label: 'Add Room', id: 'add-room', path: '/rooms/new' },
   ];
 
   const housekeepingSubItems = [
-    {
-      label: 'Room Cleaning',
-      id: 'rooms-cleaning',
-      path: '/housekeeping/rooms-cleaning',
-    },
-    {
-      label: 'Cleaning Schedule',
-      id: 'cleaning-schedule',
-      path: '/housekeeping/cleaning-schedule',
-    },
-    {
-      label: 'Lost and Found',
-      id: 'lost-and-found',
-      path: '/housekeeping/lost-and-found',
-    },
-    {
-      label: 'Inspection Checklist',
-      id: 'inspection-checklist',
-      path: '/housekeeping/inspection-checklist',
-    },
+    { label: 'Room Cleaning', id: 'rooms-cleaning', path: '/housekeeping/rooms-cleaning' },
+    { label: 'Cleaning Schedule', id: 'cleaning-schedule', path: '/housekeeping/cleaning-schedule' },
+    { label: 'Lost and Found', id: 'lost-and-found', path: '/housekeeping/lost-and-found' },
+    { label: 'Inspection Checklist', id: 'inspection-checklist', path: '/housekeeping/inspection-checklist' },
   ];
 
   const inventorySubItems = [
-    {
-      label: 'Stock',
-      id: 'stock',
-      path: '/inventory',
-    },
-    {
-      label: 'Guest Charges',
-      id: 'guest-charges',
-      path: '/inventory/guest-charges',
-    },
-    {
-      label: 'Missing Items',
-      id: 'missing-items',
-      path: '/inventory/missing',
-    },
+    { label: 'Stock', id: 'stock', path: '/inventory' },
+    { label: 'Guest Charges', id: 'guest-charges', path: '/inventory/guest-charges' },
+    { label: 'Missing Items', id: 'missing-items', path: '/inventory/missing' },
   ];
 
   const ratesPricingSubItems = [
-    {
-      label: 'Rate Plans',
-      id: 'rate-plans',
-      path: '/rates-pricing/rate-plans',
-    },
-    {
-      label: 'Discounts',
-      id: 'discounts',
-      path: '/rates-pricing/discounts',
-    },
-    {
-      label: 'Taxes & Fees',
-      id: 'taxes-fees',
-      path: '/rates-pricing/taxes-fees',
-    },
+    { label: 'Rate Plans', id: 'rate-plans', path: '/rates-pricing/rate-plans' },
+    { label: 'Discounts', id: 'discounts', path: '/rates-pricing/discounts' },
+    { label: 'Taxes & Fees', id: 'taxes-fees', path: '/rates-pricing/taxes-fees' },
   ];
 
   const paymentBillingSubItems = [
-    {
-      label: 'Invoices',
-      id: 'invoices',
-      path: '/payment-billing/invoices',
-    },
-    {
-      label: 'Payment History',
-      id: 'payment-history',
-      path: '/payment-billing/payment-history',
-    },
-    {
-      label: 'Pending Payments',
-      id: 'pending-payments',
-      path: '/payment-billing/pending-payments',
-    },
-    {
-      label: 'Refunds',
-      id: 'refunds',
-      path: '/payment-billing/refunds',
-    },
+    { label: 'Invoices', id: 'invoices', path: '/payment-billing/invoices' },
+    { label: 'Payment History', id: 'payment-history', path: '/payment-billing/payment-history' },
+    { label: 'Pending Payments', id: 'pending-payments', path: '/payment-billing/pending-payments' },
+    { label: 'Refunds', id: 'refunds', path: '/payment-billing/refunds' },
   ];
 
   const hrSubItems = [
-    {
-      label: 'All Staff',
-      id: 'all-staff',
-      path: '/hr/staff',
-    },
-    {
-      label: 'Add Staff',
-      id: 'add-staff',
-      path: '/hr/staff/add',
-    },
-    {
-      label: 'Leave Requests',
-      id: 'leave-requests',
-      path: '/hr/leave-requests',
-    },
-    {
-      label: 'Attendance Sheet',
-      id: 'attendance-sheet',
-      path: '/hr/attendance',
-    },
-    {
-      label: "Today's Attendance",
-      id: 'todays-attendance',
-      path: '/hr/attendance/today',
-    },
-    {
-      label: 'Employee Salary',
-      id: 'employee-salary',
-      path: '/hr/employee-salary',
-    },
+    { label: 'All Staff', id: 'all-staff', path: '/hr/staff' },
+    { label: 'Add Staff', id: 'add-staff', path: '/hr/staff/add' },
+    { label: 'Leave Requests', id: 'leave-requests', path: '/hr/leave-requests' },
+    { label: 'Attendance Sheet', id: 'attendance-sheet', path: '/hr/attendance' },
+    { label: "Today's Attendance", id: 'todays-attendance', path: '/hr/attendance/today' },
+    { label: 'Employee Salary', id: 'employee-salary', path: '/hr/employee-salary' },
   ];
 
   const restaurantSubItems = [
-    {
-      label: 'Menu',
-      id: 'menu',
-      path: '/restaurant/menu',
-    },
-    {
-      label: 'Orders',
-      id: 'orders',
-      path: '/restaurant/orders',
-    },
+    { label: 'Menu', id: 'menu', path: '/restaurant/menu' },
+    { label: 'Orders', id: 'orders', path: '/restaurant/orders' },
   ];
 
   const reportsSubItems = [
-    {
-      label: 'Stock',
-      id: 'stock',
-      path: '/reports/stock',
-    },
-    {
-      label: 'Expense',
-      id: 'expense',
-      path: '/reports/expense',
-    },
-    {
-      label: 'Revenue Report',
-      id: 'revenue',
-      path: '/reports/revenue',
-    },
-    {
-      label: 'Occupancy Report',
-      id: 'occupancy',
-      path: '/reports/occupancy',
-    },
-    {
-      label: 'Expense Vs Revenue',
-      id: 'expense-vs-revenue',
-      path: '/reports/expense-vs-revenue',
-    },
+    { label: 'Stock', id: 'stock', path: '/reports/stock' },
+    { label: 'Expense', id: 'expense', path: '/reports/expense' },
+    { label: 'Revenue Report', id: 'revenue', path: '/reports/revenue' },
+    { label: 'Occupancy Report', id: 'occupancy', path: '/reports/occupancy' },
+    { label: 'Expense Vs Revenue', id: 'expense-vs-revenue', path: '/reports/expense-vs-revenue' },
   ];
 
   const eventsSubItems = [
@@ -427,16 +264,8 @@ export default function Sidebar() {
   ];
 
   const settingsSubItems = [
-    {
-      label: 'Hotel Profile',
-      id: 'hotel-profile',
-      path: '/settings/hotel-profile',
-    },
-    {
-      label: 'Policies',
-      id: 'policies',
-      path: '/settings/policies',
-    },
+    { label: 'Hotel Profile', id: 'hotel-profile', path: '/settings/hotel-profile' },
+    { label: 'Policies', id: 'policies', path: '/settings/policies' },
   ];
 
   // Generic dropdown toggle
@@ -449,82 +278,6 @@ export default function Sidebar() {
     }
   };
 
-  const handleToggleFrontOffice = () =>
-    toggleDropdown(setIsFrontOfficeOpen);
-
-  const handleToggleReservation = () =>
-    toggleDropdown(setIsReservationOpen);
-
-  const handleToggleRooms = () =>
-    toggleDropdown(setIsRoomsOpen);
-
-  const handleToggleHousekeeping = () =>
-    toggleDropdown(setIsHousekeepingOpen);
-
-  const handleToggleInventory = () =>
-    toggleDropdown(setIsInventoryOpen);
-
-  const handleToggleRatesPricing = () =>
-    toggleDropdown(setIsRatesPricingOpen);
-
-  const handleTogglePaymentBilling = () =>
-    toggleDropdown(setIsPaymentBillingOpen);
-
-  const handleToggleHR = () =>
-    toggleDropdown(setIsHROpen);
-
-  const handleToggleReports = () =>
-    toggleDropdown(setIsReportsOpen);
-
-  const handleToggleSettings = () =>
-    toggleDropdown(setIsSettingsOpen);
-
-  const handleToggleRestaurant = () =>
-    toggleDropdown(setIsRestaurantOpen);
-
-  const handleToggleEvents = () =>
-    toggleDropdown(setIsEventsOpen);
-
-  // Reusable submenu renderer
-  const renderSubItems = (items) => {
-    return (
-      <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
-        {items.map((subItem) => {
-          const isSelected = pathname === subItem.path;
-
-          return (
-            <Link
-              key={subItem.id}
-              to={subItem.path}
-              className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
-                isSelected
-                  ? 'bg-[#dcefe5] text-[#1b7f43]'
-                  : 'hover:bg-white/60 text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              {isSelected ? (
-                <div className="w-2.5 h-2.5 rounded-full bg-[#1b7f43] ring-3 ring-[#1b7f43]/20 mr-3 shrink-0" />
-              ) : (
-                <div className="w-2 h-2 rounded-full bg-[#3b82f6] mr-3 shrink-0 ml-0.5" />
-              )}
-
-              <span
-                className={`text-[13px] whitespace-nowrap truncate ${
-                  isSelected
-                    ? 'font-bold text-[#1b7f43]'
-                    : 'font-semibold'
-                }`}
-              >
-                {subItem.label}
-              </span>
-            </Link>
-          );
-        })}
-      </div>
-    );
-  };
-
-  
   return (
     <aside
       className={`${
@@ -569,6 +322,9 @@ export default function Sidebar() {
       <nav className="flex-1 px-3 pt-2 pb-6 overflow-y-auto overflow-x-hidden hide-scrollbar">
         <ul className="space-y-1.5">
 
+          {/* GROUP 1: OPERATIONS & FRONT DESK */}
+          <NavGroupHeader title="Operations" isOpen={isOpen} />
+
           {/* Dashboard */}
           <li>
             <Link
@@ -593,9 +349,7 @@ export default function Sidebar() {
 
                 <span
                   className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
-                    isOpen
-                      ? 'opacity-100 block truncate'
-                      : 'opacity-0 hidden'
+                    isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isDashboardActive
                       ? 'text-gray-900 font-bold'
@@ -632,9 +386,7 @@ export default function Sidebar() {
 
                 <span
                   className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
-                    isOpen
-                      ? 'opacity-100 block truncate'
-                      : 'opacity-0 hidden'
+                    isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isOccupancyActive
                       ? 'text-gray-900 font-bold'
@@ -653,11 +405,14 @@ export default function Sidebar() {
             pathname={pathname}
             active={isFrontOfficeActive}
             open={isFrontOfficeOpen}
-            toggle={handleToggleFrontOffice}
+            toggle={() => toggleDropdown(setIsFrontOfficeOpen)}
             icon={FrontOfficeIcon}
             label="Front Office"
             items={frontOfficeSubItems}
           />
+
+          {/* GROUP 2: BOOKINGS & ROOMS */}
+          <NavGroupHeader title="Bookings & Rooms" isOpen={isOpen} />
 
           {/* Reservation */}
           <DropdownSection
@@ -665,7 +420,7 @@ export default function Sidebar() {
             pathname={pathname}
             active={isReservationActive}
             open={isReservationOpen}
-            toggle={handleToggleReservation}
+            toggle={() => toggleDropdown(setIsReservationOpen)}
             icon={BookingIcon}
             label="Reservation"
             items={reservationSubItems}
@@ -677,11 +432,51 @@ export default function Sidebar() {
             pathname={pathname}
             active={isRoomsActive}
             open={isRoomsOpen}
-            toggle={handleToggleRooms}
+            toggle={() => toggleDropdown(setIsRoomsOpen)}
             icon={RoomIcon}
             label="Rooms"
             items={roomsSubItems}
           />
+
+          {/* Guests */}
+          <li>
+            <Link
+              to="/guests"
+              title={!isOpen ? 'Guests' : undefined}
+              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+                isGuestsActive
+                  ? 'bg-[#f4f9f6] text-[#1b7f43]'
+                  : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
+              } ${isOpen ? 'justify-between' : 'justify-center'}`}
+            >
+              <div className="flex items-center min-w-0">
+                <div
+                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                    isGuestsActive
+                      ? 'bg-[#e5f4eb] text-[#1b7f43]'
+                      : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
+                  }`}
+                >
+                  <GuestsIcon sx={{ fontSize: 19 }} />
+                </div>
+
+                <span
+                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                    isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
+                  } ${
+                    isGuestsActive
+                      ? 'text-gray-900 font-bold'
+                      : 'text-gray-600 group-hover:text-gray-900 font-medium'
+                  }`}
+                >
+                  Guests
+                </span>
+              </div>
+            </Link>
+          </li>
+
+          {/* GROUP 3: FACILITY & SERVICES */}
+          <NavGroupHeader title="Facility & Services" isOpen={isOpen} />
 
           {/* Housekeeping */}
           <DropdownSection
@@ -689,7 +484,7 @@ export default function Sidebar() {
             pathname={pathname}
             active={isHousekeepingActive}
             open={isHousekeepingOpen}
-            toggle={handleToggleHousekeeping}
+            toggle={() => toggleDropdown(setIsHousekeepingOpen)}
             icon={HousekeepingIcon}
             label="Housekeeping"
             items={housekeepingSubItems}
@@ -701,46 +496,10 @@ export default function Sidebar() {
             pathname={pathname}
             active={isInventoryActive}
             open={isInventoryOpen}
-            toggle={handleToggleInventory}
+            toggle={() => toggleDropdown(setIsInventoryOpen)}
             icon={InventoryIcon}
             label="Inventory"
             items={inventorySubItems}
-          />
-
-          {/* Rates & Pricing */}
-          <DropdownSection
-            isOpen={isOpen}
-            pathname={pathname}
-            active={isRatesPricingActive}
-            open={isRatesPricingOpen}
-            toggle={handleToggleRatesPricing}
-            icon={RatesPricingIcon}
-            label="Rates & Pricing"
-            items={ratesPricingSubItems}
-          />
-
-          {/* Payment & Billing */}
-          <DropdownSection
-            isOpen={isOpen}
-            pathname={pathname}
-            active={isPaymentBillingActive}
-            open={isPaymentBillingOpen}
-            toggle={handleTogglePaymentBilling}
-            icon={PaymentBillingIcon}
-            label="Payment & Billing"
-            items={paymentBillingSubItems}
-          />
-
-          {/* Human Resources */}
-          <DropdownSection
-            isOpen={isOpen}
-            pathname={pathname}
-            active={isHRActive}
-            open={isHROpen}
-            toggle={handleToggleHR}
-            icon={HRIcon}
-            label="Human Resources"
-            items={hrSubItems}
           />
 
           {/* Restaurant */}
@@ -749,7 +508,7 @@ export default function Sidebar() {
             pathname={pathname}
             active={isRestaurantActive}
             open={isRestaurantOpen}
-            toggle={handleToggleRestaurant}
+            toggle={() => toggleDropdown(setIsRestaurantOpen)}
             icon={RestaurantIcon}
             label="Restaurant"
             items={restaurantSubItems}
@@ -761,10 +520,52 @@ export default function Sidebar() {
             pathname={pathname}
             active={isEventsActive}
             open={isEventsOpen}
-            toggle={handleToggleEvents}
+            toggle={() => toggleDropdown(setIsEventsOpen)}
             icon={EventsIcon}
             label="Events & Banquets"
             items={eventsSubItems}
+          />
+
+          {/* GROUP 4: FINANCE & BILLING */}
+          <NavGroupHeader title="Finance & Billing" isOpen={isOpen} />
+
+          {/* Payment & Billing */}
+          <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
+            active={isPaymentBillingActive}
+            open={isPaymentBillingOpen}
+            toggle={() => toggleDropdown(setIsPaymentBillingOpen)}
+            icon={PaymentBillingIcon}
+            label="Payment & Billing"
+            items={paymentBillingSubItems}
+          />
+
+          {/* Rates & Pricing */}
+          <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
+            active={isRatesPricingActive}
+            open={isRatesPricingOpen}
+            toggle={() => toggleDropdown(setIsRatesPricingOpen)}
+            icon={RatesPricingIcon}
+            label="Rates & Pricing"
+            items={ratesPricingSubItems}
+          />
+
+          {/* GROUP 5: MANAGEMENT & ADMIN */}
+          <NavGroupHeader title="Management & Admin" isOpen={isOpen} />
+
+          {/* Human Resources */}
+          <DropdownSection
+            isOpen={isOpen}
+            pathname={pathname}
+            active={isHRActive}
+            open={isHROpen}
+            toggle={() => toggleDropdown(setIsHROpen)}
+            icon={HRIcon}
+            label="Human Resources"
+            items={hrSubItems}
           />
 
           {/* Reports */}
@@ -773,7 +574,7 @@ export default function Sidebar() {
             pathname={pathname}
             active={isReportsActive}
             open={isReportsOpen}
-            toggle={handleToggleReports}
+            toggle={() => toggleDropdown(setIsReportsOpen)}
             icon={ReportsIcon}
             label="Reports"
             items={reportsSubItems}
@@ -803,9 +604,7 @@ export default function Sidebar() {
 
                 <span
                   className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
-                    isOpen
-                      ? 'opacity-100 block truncate'
-                      : 'opacity-0 hidden'
+                    isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isAssistantActive
                       ? 'text-gray-900 font-bold'
@@ -824,7 +623,7 @@ export default function Sidebar() {
             pathname={pathname}
             active={isSettingsActive}
             open={isSettingsOpen}
-            toggle={handleToggleSettings}
+            toggle={() => toggleDropdown(setIsSettingsOpen)}
             icon={SettingsIcon}
             label="Hotel Settings"
             items={settingsSubItems}

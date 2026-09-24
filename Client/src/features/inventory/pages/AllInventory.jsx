@@ -21,14 +21,14 @@ import AddStockItemModal from'./components/AddStockItemModal';
 
 const muiSelectSx = {'& .MuiOutlinedInput-root': {
  borderRadius:'8px',
- backgroundColor:'#ffffff',
+ backgroundColor:'var(--bg-paper)',
  fontSize:'12px',
- color:'#1f2937','& fieldset': { borderColor:'#e5e7eb', borderWidth:'1.2px' },'&:hover fieldset': { borderColor:'#9ca3af' },'&.Mui-focused fieldset': { borderColor:'#1b7f43', borderWidth:'1.5px' },
+ color:'var(--text-primary)','& fieldset': { borderColor:'#e5e7eb', borderWidth:'1.2px' },'&:hover fieldset': { borderColor:'#9ca3af' },'&.Mui-focused fieldset': { borderColor:'var(--primary-main)', borderWidth:'1.5px' },
  },'& .MuiSelect-select': {
  padding:'6px 12px',
  },'& .MuiInputLabel-root': {
  fontSize:'12px',
- color:'#6b7280','&.Mui-focused': { color:'#1b7f43' }
+ color:'var(--text-secondary)','&.Mui-focused': { color:'var(--primary-main)' }
  }
 };
 
@@ -200,43 +200,10 @@ export default function AllInventory() {
  };
 
  return (
- <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in">
+ <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in pt-1">
  
  {/* Top Action Buttons (Heading Removed) */}
- <div className="flex items-center justify-end gap-1.5 flex-wrap">
- <button 
- onClick={handleRefresh} 
- disabled={isRefreshing}
- title="Refresh Data & Reset Filters"
- className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
- >
- {isRefreshing ?'Refreshing...' :'Refresh'}
- </button>
-
- <button 
- onClick={handleExportCSV}
- className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition shadow-xs cursor-pointer"
- >
- Export CSV
- </button>
-
- <button 
- onClick={() => {
- setPrefilledItemForIncident(null);
- setIncidentModalOpen(true);
- }}
- className="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded text-xs font-medium transition cursor-pointer"
- >
- Report Missing
- </button>
-
- <button 
- onClick={() => setAddStockModalOpen(true)}
- className="px-3 py-1 bg-[#1b7f43] hover:bg-[#166b37] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
- >
- + Add Stock
- </button>
- </div>
+ 
 
  {/* KPI SUMMARY CARDS - Simplified, Compact, No Decorative Icons */}
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -318,28 +285,39 @@ export default function AllInventory() {
  )}
  </div>
 
- {/* Quick Room Fast-Filter Pills */}
- <div className="flex items-center gap-1 shrink-0 py-0.5 flex-wrap">
- <span className="text-[10.5px] font-bold text-gray-400 uppercase mr-1">Quick Rooms:</span>
- {['All','101','102','201','203','205','301','Storage'].map((r) => {
- const isActive = selectedRoom === r;
- return (
- <button
- key={r}
- onClick={() => {
- setSelectedRoom(r);
- setCurrentPage(1);
- }}
- className={`px-2 py-0.5 rounded text-[10.5px] font-bold transition cursor-pointer ${
- isActive 
- ?'bg-[#1b7f43] text-white shadow-xs' 
- :'bg-gray-100 text-gray-600 hover:bg-gray-200'
- }`}
+ <div className="flex items-center justify-end gap-1.5 flex-wrap">
+ <button 
+ onClick={handleRefresh} 
+ disabled={isRefreshing}
+ title="Refresh Data & Reset Filters"
+ className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
  >
- {r ==='All' ?'All Rooms' : r ==='Storage' ?'Storage Only' :`Rm ${r}`}
+ {isRefreshing ?'Refreshing...' :'Refresh'}
  </button>
- );
- })}
+
+ <button 
+ onClick={handleExportCSV}
+ className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition shadow-xs cursor-pointer"
+ >
+ Export CSV
+ </button>
+
+ <button 
+ onClick={() => {
+ setPrefilledItemForIncident(null);
+ setIncidentModalOpen(true);
+ }}
+ className="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded text-xs font-medium transition cursor-pointer"
+ >
+ Report Missing
+ </button>
+
+ <button 
+ onClick={() => setAddStockModalOpen(true)}
+ className="px-3 py-1 bg-[#1b7f43] hover:bg-[#166b37] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+ >
+ + Add Stock
+ </button>
  </div>
 
  </div>

@@ -11,6 +11,7 @@ import PageHeader from'../../../components/common/PageHeader';
 import StatSummaryCard from'../../../components/common/StatSummaryCard';
 import DataGridTable from'../../../components/tables/DataGridTable';
 import { mockExpenses } from'../../../utils/mockData';
+import '../../assigned-ui/formStyles.css';
 
 export default function ExpenseManagement() {
  const [searchTerm, setSearchTerm] = useState('');
@@ -61,7 +62,7 @@ export default function ExpenseManagement() {
  ];
 
  return (
- <div className="p-2">
+ <div className="assigned-form-surface p-2">
  <div className="flex justify-between items-center mb-6">
  <PageHeader title="Expense Management" breadcrumb="Reports / Expense Management" />
  <Button 

@@ -37,7 +37,15 @@ export default function AppBreadcrumbs() {
     'leave-requests': 'Leave Requests',
     'attendance': 'Attendance Sheet',
     'today': "Today's Attendance",
-    'employee-salary': 'Employee Salary'
+    'employee-salary': 'Employee Salary',
+    'reports': 'Reports',
+    'events': 'Events & Banquets',
+    'all-events': 'All Events',
+    'add-event': 'Add Event',
+    'banquet-manager': 'Banquet Manager',
+    'settings': 'Settings',
+    'hotel-settings': 'Hotel Settings',
+    'policies': 'Policies'
   };
 
   const formatName = (name) => {

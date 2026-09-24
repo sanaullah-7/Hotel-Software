@@ -152,7 +152,7 @@ export default function PaymentHistory() {
  };
 
  return (
- <div className="space-y-2 pb-2 animate-fade-in">
+ <div className="space-y-2 pb-2 animate-fade-in pt-1">
  {/* Metric Cards (Heading Removed) */}
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
  {/* Gross Transactions */}

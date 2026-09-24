@@ -9,11 +9,11 @@ import {
 
 const muiInputSx = {'& .MuiOutlinedInput-root': {
  borderRadius:'10px',
- backgroundColor:'#ffffff',
- fontSize:'13px','& fieldset': { borderColor:'#e5e7eb', borderWidth:'1.2px' },'&:hover fieldset': { borderColor:'#9ca3af' },'&.Mui-focused fieldset': { borderColor:'#1b7f43', borderWidth:'1.5px' },
+ backgroundColor:'var(--bg-paper)',
+ fontSize:'13px','& fieldset': { borderColor:'#e5e7eb', borderWidth:'1.2px' },'&:hover fieldset': { borderColor:'#9ca3af' },'&.Mui-focused fieldset': { borderColor:'var(--primary-main)', borderWidth:'1.5px' },
  },'& .MuiInputLabel-root': {
  fontSize:'13px',
- color:'#6b7280','&.Mui-focused': { color:'#1b7f43' }
+ color:'var(--text-secondary)','&.Mui-focused': { color:'var(--primary-main)' }
  }
 };
 

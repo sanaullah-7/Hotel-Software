@@ -10,7 +10,7 @@ import {
   INITIAL_INVOICES,
   INITIAL_PAYMENTS,
   INITIAL_REFUNDS,
-} from '../pages/PaymentBilling/paymentBillingStore';
+} from '../features/payment-billing/pages/paymentBillingStore';
 
 describe('Payment & Billing Store Tests', () => {
   beforeEach(() => {

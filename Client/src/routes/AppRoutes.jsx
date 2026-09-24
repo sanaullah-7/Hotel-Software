@@ -36,7 +36,6 @@ import InspectionChecklist from '../features/housekeeping/pages/InspectionCheckl
 
 // Inventory Module Pages
 import AllInventory from '../features/inventory/pages/AllInventory';
-import AddInventory from '../features/inventory/pages/AddInventory';
 import GuestCharges from '../features/inventory/pages/GuestCharges';
 import MissingInventory from '../features/inventory/pages/MissingInventory';
 
@@ -53,6 +52,7 @@ import Refunds from '../features/payment-billing/pages/Refunds';
 
 // Guests Module
 import Guests from '../features/guests/pages/Guests';
+import GuestProfile from '../features/guests/pages/GuestProfile';
 
 // Occupancy Module
 import Occupancy from '../features/occupancy/pages/Occupancy';
@@ -89,10 +89,12 @@ export default function AppRoutes() {
   return (
     <Router>
       <Routes>
+        {/* Core & Auth Routes */}
         <Route path="/admin/profile" element={<DashboardLayout><AdminProfile /></DashboardLayout>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
+        <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
 
         {/* Front Office Sub-Routes */}
         <Route path="/front-office" element={<DashboardLayout><OperationsAlerts /></DashboardLayout>} />
@@ -101,19 +103,27 @@ export default function AppRoutes() {
         <Route path="/front-office/registration-forms" element={<DashboardLayout><RegistrationForms /></DashboardLayout>} />
         <Route path="/front-office/registration-forms/new" element={<DashboardLayout><NewRegistrationForm /></DashboardLayout>} />
         <Route path="/front-office/guest-complaint" element={<DashboardLayout><GuestComplaint /></DashboardLayout>} />
+        <Route path="/front-office/guest-complaints" element={<DashboardLayout><GuestComplaint /></DashboardLayout>} />
 
         {/* Reservation Sub-Routes */}
-        <Route path="/reservation" element={<Navigate to="/reservation/new" replace />} />
-        <Route path="/reservation/new" element={<DashboardLayout><AddReservation /></DashboardLayout>} />
+        <Route path="/reservation" element={<Navigate to="/reservation/all" replace />} />
         <Route path="/reservation/all" element={<DashboardLayout><AllReservations /></DashboardLayout>} />
+        <Route path="/reservation/new" element={<DashboardLayout><AddReservation /></DashboardLayout>} />
+        <Route path="/reservation/add" element={<DashboardLayout><AddReservation /></DashboardLayout>} />
         <Route path="/reservation/history" element={<DashboardLayout><ReservationHistory /></DashboardLayout>} />
         <Route path="/reservation/edit" element={<DashboardLayout><EditReservation /></DashboardLayout>} />
+        <Route path="/reservation/edit/:id" element={<DashboardLayout><EditReservation /></DashboardLayout>} />
         <Route path="/reservation/cancelled" element={<DashboardLayout><CancelledBookings /></DashboardLayout>} />
         <Route path="/reservation/group" element={<DashboardLayout><GroupReservations /></DashboardLayout>} />
+        <Route path="/reservations" element={<Navigate to="/reservation/all" replace />} />
+        <Route path="/reservations/all" element={<Navigate to="/reservation/all" replace />} />
+        <Route path="/reservations/new" element={<Navigate to="/reservation/new" replace />} />
 
         {/* Rooms Sub-Routes */}
         <Route path="/rooms" element={<DashboardLayout><Rooms /></DashboardLayout>} />
+        <Route path="/rooms/all" element={<DashboardLayout><Rooms /></DashboardLayout>} />
         <Route path="/rooms/new" element={<DashboardLayout><AddRoom /></DashboardLayout>} />
+        <Route path="/rooms/add" element={<DashboardLayout><AddRoom /></DashboardLayout>} />
         <Route path="/rooms/room-types" element={<DashboardLayout><RoomTypes /></DashboardLayout>} />
         <Route path="/rooms/rate-pricing" element={<DashboardLayout><RatePricing /></DashboardLayout>} />
 
@@ -129,6 +139,7 @@ export default function AppRoutes() {
         {/* Inventory Sub-Routes */}
         <Route path="/inventory" element={<DashboardLayout><AllInventory /></DashboardLayout>} />
         <Route path="/inventory/stock" element={<DashboardLayout><AllInventory /></DashboardLayout>} />
+        <Route path="/inventory/all" element={<DashboardLayout><AllInventory /></DashboardLayout>} />
         <Route path="/inventory/guest-charges" element={<DashboardLayout><GuestCharges /></DashboardLayout>} />
         <Route path="/inventory/charges" element={<DashboardLayout><GuestCharges /></DashboardLayout>} />
         <Route path="/inventory/add" element={<DashboardLayout><GuestCharges /></DashboardLayout>} />
@@ -140,6 +151,8 @@ export default function AppRoutes() {
         <Route path="/rates-pricing/rate-plans" element={<DashboardLayout><RatePlans /></DashboardLayout>} />
         <Route path="/rates-pricing/discounts" element={<DashboardLayout><Discounts /></DashboardLayout>} />
         <Route path="/rates-pricing/taxes-fees" element={<DashboardLayout><TaxesFees /></DashboardLayout>} />
+        <Route path="/rates" element={<Navigate to="/rates-pricing/rate-plans" replace />} />
+        <Route path="/pricing" element={<Navigate to="/rates-pricing/rate-plans" replace />} />
 
         {/* Payment & Billing Sub-Routes */}
         <Route path="/payment-billing" element={<Navigate to="/payment-billing/invoices" replace />} />
@@ -147,30 +160,41 @@ export default function AppRoutes() {
         <Route path="/payment-billing/payment-history" element={<DashboardLayout><PaymentHistory /></DashboardLayout>} />
         <Route path="/payment-billing/pending-payments" element={<DashboardLayout><PendingPayments /></DashboardLayout>} />
         <Route path="/payment-billing/refunds" element={<DashboardLayout><Refunds /></DashboardLayout>} />
+        <Route path="/payments" element={<Navigate to="/payment-billing/invoices" replace />} />
+        <Route path="/billing" element={<Navigate to="/payment-billing/invoices" replace />} />
 
         {/* Guests Sub-Routes */}
         <Route path="/guests" element={<DashboardLayout><Guests /></DashboardLayout>} />
+        <Route path="/guests/:id" element={<DashboardLayout><GuestProfile /></DashboardLayout>} />
+        <Route path="/guest/:id" element={<DashboardLayout><GuestProfile /></DashboardLayout>} />
 
         {/* Occupancy Sub-Routes */}
         <Route path="/occupancy" element={<DashboardLayout><Occupancy /></DashboardLayout>} />
 
         {/* HR Sub-Routes */}
+        <Route path="/hr" element={<Navigate to="/hr/staff" replace />} />
         <Route path="/hr/staff" element={<DashboardLayout><AllStaff /></DashboardLayout>} />
+        <Route path="/hr/staff/all" element={<DashboardLayout><AllStaff /></DashboardLayout>} />
         <Route path="/hr/staff/add" element={<DashboardLayout><AddStaff /></DashboardLayout>} />
+        <Route path="/hr/staff/new" element={<DashboardLayout><AddStaff /></DashboardLayout>} />
         <Route path="/hr/staff/:id" element={<DashboardLayout><StaffProfile /></DashboardLayout>} />
         <Route path="/hr/staff/:id/edit" element={<DashboardLayout><EditStaff /></DashboardLayout>} />
         <Route path="/hr/leave-requests" element={<DashboardLayout><LeaveRequests /></DashboardLayout>} />
         <Route path="/hr/attendance" element={<DashboardLayout><AttendanceSheet /></DashboardLayout>} />
         <Route path="/hr/attendance/today" element={<DashboardLayout><TodaysAttendance /></DashboardLayout>} />
+        <Route path="/hr/attendance/todays-attendance" element={<DashboardLayout><TodaysAttendance /></DashboardLayout>} />
         <Route path="/hr/employee-salary" element={<DashboardLayout><EmployeeSalary /></DashboardLayout>} />
+        <Route path="/hr/salary" element={<DashboardLayout><EmployeeSalary /></DashboardLayout>} />
 
         {/* Reports Sub-Routes */}
         <Route path="/reports" element={<Navigate to="/reports/stock" replace />} />
         <Route path="/reports/:tab" element={<DashboardLayout><ReportsPage /></DashboardLayout>} />
 
         {/* Settings Sub-Routes */}
+        <Route path="/settings" element={<Navigate to="/settings/hotel-profile" replace />} />
         <Route path="/settings/hotel-profile" element={<DashboardLayout><HotelProfile /></DashboardLayout>} />
         <Route path="/settings/policies" element={<DashboardLayout><Policies /></DashboardLayout>} />
+        <Route path="/hotel-settings" element={<Navigate to="/hotel-settings/hotel-profile" replace />} />
         <Route path="/hotel-settings/hotel-profile" element={<DashboardLayout><HotelProfile /></DashboardLayout>} />
         <Route path="/hotel-settings/policies" element={<DashboardLayout><Policies /></DashboardLayout>} />
 
@@ -183,11 +207,14 @@ export default function AppRoutes() {
         <Route path="/events" element={<Navigate to="/events/all-events" replace />} />
         <Route path="/events/all-events" element={<DashboardLayout><AllEvents /></DashboardLayout>} />
         <Route path="/events/add-event" element={<DashboardLayout><AddEvent /></DashboardLayout>} />
+        <Route path="/events/new" element={<DashboardLayout><AddEvent /></DashboardLayout>} />
         <Route path="/events/banquet-manager" element={<DashboardLayout><BanquetManager /></DashboardLayout>} />
 
         {/* Assistant Route */}
         <Route path="/ai-assistant" element={<DashboardLayout><LuxuriaAssistant /></DashboardLayout>} />
 
+        {/* Fallback Catch-All Route */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );

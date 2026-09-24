@@ -266,18 +266,18 @@ export default function Occupancy() {
    {/* ROOM CARDS & TABLE */}
  <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5">
  {/* Table Header with Filters */}
- <div className="p-2.5 flex items-center justify-between border-b border-gray-100 gap-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
- <div className="flex flex-nowrap items-end gap-2 shrink-0">
+ <div className="p-3 border-b border-gray-100">
+ <div className="flex flex-wrap items-end gap-2.5 w-full">
  
  <TextField
  variant="outlined" size="small" placeholder="Search rooms, guests..."
  value={searchQuery}
  onChange={(e) => setSearchQuery(e.target.value)}
  InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color:'text.secondary', ml: -0.5, mr: 0.5 }} /></InputAdornment> }}
- sx={{ minWidth: 150, flexBasis: 140, maxWidth: 160,'& .MuiInputBase-root': { height:'32px', backgroundColor:'white', fontSize:'12px', borderRadius:'8px' },'& .MuiOutlinedInput-input': { padding:'0 8px' },'& fieldset': { borderColor:'#e5e7eb', borderWidth:'1.2px' },'&:hover fieldset': { borderColor:'#9ca3af' },'& .Mui-focused fieldset': { borderColor:'#1b7f43 !important', borderWidth:'1.5px !important' } }}
+ sx={{ minWidth: 140, flexGrow: 1, maxWidth: { xs: '100%', sm: 180 },'& .MuiInputBase-root': { height:'32px', backgroundColor:'white', fontSize:'12px', borderRadius:'8px' },'& .MuiOutlinedInput-input': { padding:'0 8px' },'& fieldset': { borderColor:'#e5e7eb', borderWidth:'1.2px' },'&:hover fieldset': { borderColor:'#9ca3af' },'& .Mui-focused fieldset': { borderColor:'#1b7f43 !important', borderWidth:'1.5px !important' } }}
  />
  
- <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
+ <FormControl size="small" sx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
  <InputLabel>Status</InputLabel>
  <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} label="Status">
  {STATUS_OPTIONS.map(opt => (
@@ -290,59 +290,57 @@ export default function Occupancy() {
  </Select>
  </FormControl>
 
- <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
+ <FormControl size="small" sx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
  <InputLabel>Room Type</InputLabel>
  <Select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)} label="Room Type">
  {ROOM_TYPE_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
  </Select>
  </FormControl>
 
- <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
+ <FormControl size="small" sx={{ minWidth: 90, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
  <InputLabel>Floor</InputLabel>
  <Select value={floorFilter} onChange={(e) => setFloorFilter(e.target.value)} label="Floor">
  {FLOOR_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
  </Select>
  </FormControl>
 
- <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
+ <FormControl size="small" sx={{ minWidth: 90, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
  <InputLabel>Bed Size</InputLabel>
  <Select value={bedFilter} onChange={(e) => setBedFilter(e.target.value)} label="Bed Size">
  {BED_SIZE_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
  </Select>
  </FormControl>
 
- <FormControl size="small" sx={{ minWidth: 105, ...muiSelectSx }}>
+ <FormControl size="small" sx={{ minWidth: 100, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
  <InputLabel>Housekeeping</InputLabel>
  <Select value={hkFilter} onChange={(e) => setHkFilter(e.target.value)} label="Housekeeping">
  {HOUSEKEEPING_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
  </Select>
  </FormControl>
 
- <div className="flex flex-col gap-0.1">
+ <div className="flex flex-col gap-0.5 flex-grow sm:flex-grow-0">
  <span className="text-[10px] font-semibold text-gray-500 pl-0.5">
  Check-in From
  </span>
  <TextField type="date" size="small"
  value={checkInDate} onChange={(e) => setCheckInDate(e.target.value)}
- sx={{ minWidth: 140, ...dateFieldSx }}
+ sx={{ minWidth: 130, ...dateFieldSx }}
  />
  </div>
- <div className="flex flex-col gap-0.1">
+ <div className="flex flex-col gap-0.5 flex-grow sm:flex-grow-0">
  <span className="text-[10px] font-semibold text-gray-500 pl-0.5">
  Check-out To
  </span>
  <TextField type="date" size="small"
  value={checkOutDate} onChange={(e) => setCheckOutDate(e.target.value)}
- sx={{ minWidth: 140, ...dateFieldSx }}
+ sx={{ minWidth: 130, ...dateFieldSx }}
  />
  </div>
  <Button variant="outlined" color="error" size="small" startIcon={<FilterAltOffIcon sx={{ fontSize: 16 }} />}
  onClick={handleClear}
- sx={{ height:'32px', textTransform:'none', fontSize:'12px', minWidth: 75, px: 1, backgroundColor:'white', borderRadius:'8px', borderColor:'#e5e7eb', color:'#ef4444','&:hover': { backgroundColor:'#fef2f2', borderColor:'#ef4444' } }}
+ sx={{ height:'32px', textTransform:'none', fontSize:'12px', minWidth: 80, px: 1.5, backgroundColor:'white', borderRadius:'8px', borderColor:'#e5e7eb', color:'#ef4444', flexShrink: 0,'&:hover': { backgroundColor:'#fef2f2', borderColor:'#ef4444' } }}
  >Clear</Button>
  </div>
- 
- 
  </div>
 
  {/* Table */}

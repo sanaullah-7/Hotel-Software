@@ -137,19 +137,7 @@ export default function Refunds() {
  };
 
  return (
- <div className="space-y-2 pb-2 animate-fade-in">
- {/* Top Action Bar (Heading Removed) */}
- <div className="flex items-center justify-end gap-1.5 flex-wrap">
- <button
- className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
- onClick={() => {
- setSelectedPaymentForRefund(null);
- setIsProcessRefundOpen(true);
- }}
- >
- + Process Refund
- </button>
- </div>
+ <div className="space-y-2 pb-2 animate-fade-in pt-1">
 
  {/* Metric Cards */}
  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
@@ -243,6 +231,15 @@ export default function Refunds() {
  </button>
  ))}
  </div>
+ <button
+ className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+ onClick={() => {
+ setSelectedPaymentForRefund(null);
+ setIsProcessRefundOpen(true);
+ }}
+ >
+ + Process Refund
+ </button>
  </div>
 
  {/* Refunds Table */}

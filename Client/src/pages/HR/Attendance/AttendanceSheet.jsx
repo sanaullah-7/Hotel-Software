@@ -442,7 +442,7 @@ export default function AttendanceSheet() {
  <div className="w-full md:w-auto">
  <button
  onClick={handleUpdateSheet}
- className="w-full md:w-auto h-[40px] px-6 rounded-lg bg-[#5d5fef] hover:bg-[#4d4fd9] active:bg-[#4345c2] text-white font-medium text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer"
+ className="w-full md:w-auto h-[40px] px-6 rounded-lg bg-[green] hover:bg-green-800 active:bg-[#4345c2] text-white font-medium text-sm flex items-center justify-center gap-2 shadow-sm transition-all duration-200 cursor-pointer"
  >
  <FlashOnIcon sx={{ fontSize: 18 }} />
  <span>Update Sheet</span>
@@ -457,7 +457,7 @@ export default function AttendanceSheet() {
  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3.5 pb-4 border-b border-slate-100">
  {/* Dynamic Month Pill */}
  <div className="flex items-center gap-3 flex-wrap">
- <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#5d5fef]/10 text-[#5d5fef] font-semibold text-xs sm:text-sm">
+ <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#D0FAE5] text-[#218E6C] font-semibold text-xs sm:text-sm">
  <InfoOutlinedIcon sx={{ fontSize: 16 }} />
  <span>
  {appliedMonth} {appliedYear}

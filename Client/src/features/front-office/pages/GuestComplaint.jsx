@@ -5,6 +5,7 @@ import {
   PersonOutlined, Hotel, CalendarToday,
   EditOutlined, DeleteOutlined, SubjectOutlined, LocalOfferOutlined, FlagOutlined, NotesOutlined, MeetingRoomOutlined, Person
 } from '@mui/icons-material';
+import { Tooltip } from '@mui/material';
 import ReportProblem from '@mui/icons-material/ReportProblem';
 import CheckCircle from '@mui/icons-material/CheckCircle';
 import PendingActions from '@mui/icons-material/PendingActions';
@@ -21,13 +22,13 @@ import Edit from '@mui/icons-material/Edit';
 import Delete from '@mui/icons-material/Delete';
 
 const initialComplaints = [
-  { id: 1, date: '05/20/2024', guestName: 'John Doe', roomNo: '101', type: 'Plumbing', description: 'Leaking tap ...', priority: 'Medium', status: 'Open' },
-  { id: 2, date: '05/19/2024', guestName: 'Jane Smith', roomNo: '205', type: 'Housekeeping', description: 'Towels not r...', priority: 'Low', status: 'Resolved' },
-  { id: 3, date: '05/18/2024', guestName: 'Robert Brown', roomNo: '302', type: 'Electrical', description: 'Waitlight not...', priority: 'High', status: 'In Progress' },
-  { id: 4, date: '05/21/2024', guestName: 'Emily Johns...', roomNo: '105', type: 'Noise', description: 'Loud noise f...', priority: 'Medium', status: 'Open' },
-  { id: 5, date: '05/22/2024', guestName: 'Michael Wils...', roomNo: '210', type: 'Air Conditio...', description: 'AC not cooli...', priority: 'High', status: 'In Progress' },
-  { id: 6, date: '05/23/2024', guestName: 'Sarah Miller', roomNo: '315', type: 'Housekeeping', description: 'Room not cl...', priority: 'Medium', status: 'Open' },
-  { id: 7, date: '05/24/2024', guestName: 'David Ander...', roomNo: '118', type: 'Plumbing', description: 'Shower drai...', priority: 'High', status: 'Resolved' }
+  { id: 1, date: '05/20/2024', guestName: 'John Doe', roomNo: '101', type: 'Plumbing', description: 'Leaking tap in bathroom causing water accumulation on floor', priority: 'Medium', status: 'Open' },
+  { id: 2, date: '05/19/2024', guestName: 'Jane Smith', roomNo: '205', type: 'Housekeeping', description: 'Towels not replaced and bathroom amenities missing after cleaning', priority: 'Low', status: 'Resolved' },
+  { id: 3, date: '05/18/2024', guestName: 'Robert Brown', roomNo: '302', type: 'Electrical', description: 'Waitlight not functioning properly in master bedroom area', priority: 'High', status: 'In Progress' },
+  { id: 4, date: '05/21/2024', guestName: 'Emily Johnson', roomNo: '105', type: 'Noise', description: 'Loud noise from adjacent room late at night interrupting sleep', priority: 'Medium', status: 'Open' },
+  { id: 5, date: '05/22/2024', guestName: 'Michael Wilson', roomNo: '210', type: 'Air Conditioning', description: 'AC not cooling properly during daytime hours and makes noise', priority: 'High', status: 'In Progress' },
+  { id: 6, date: '05/23/2024', guestName: 'Sarah Miller', roomNo: '315', type: 'Housekeeping', description: 'Room not cleaned during regular morning housekeeping schedule', priority: 'Medium', status: 'Open' },
+  { id: 7, date: '05/24/2024', guestName: 'David Anderson', roomNo: '118', type: 'Plumbing', description: 'Shower drain draining very slowly and backing up into tub', priority: 'High', status: 'Resolved' }
 ];
 
 const priorityStyles = {
@@ -65,6 +66,8 @@ export default function GuestComplaint() {
   };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [complaintToDelete, setComplaintToDelete] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const filterMenuRef = useRef(null);
 
@@ -150,6 +153,19 @@ export default function GuestComplaint() {
       ]);
     }
     setIsModalOpen(false);
+  };
+
+  const confirmDelete = (complaint) => {
+    setComplaintToDelete(complaint);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (complaintToDelete) {
+      setComplaints(complaints.filter(c => c.id !== complaintToDelete.id));
+      setIsDeleteModalOpen(false);
+      setComplaintToDelete(null);
+    }
   };
 
   const handleRefresh = () => {
@@ -250,17 +266,18 @@ export default function GuestComplaint() {
   const filteredComplaints = complaints.filter(c => 
     c.guestName.toLowerCase().includes(search.toLowerCase()) || 
     c.roomNo.toLowerCase().includes(search.toLowerCase()) ||
-    c.type.toLowerCase().includes(search.toLowerCase())
+    c.type.toLowerCase().includes(search.toLowerCase()) ||
+    c.description.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="pt-1 w-full animate-fade-in relative">
       
       {/* Main Card */}
-      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-visible relative">
+      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden relative">
         
         {/* Header Options */}
-        <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b border-gray-100 gap-4 overflow-visible">
+        <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b border-gray-100 gap-4">
           <div className="flex items-center gap-4 w-full md:w-auto">
             <h2 className="text-gray-600 font-semibold text-[17px] whitespace-nowrap">Guest Complaint Management</h2>
             <div className="relative w-full md:w-64 flex-1">
@@ -276,36 +293,7 @@ export default function GuestComplaint() {
           </div>
           
           <div className="flex items-center gap-2 relative">
-            <div className="relative" ref={filterMenuRef}>
-              <button 
-                onClick={() => setShowColumnsMenu(!showColumnsMenu)}
-                className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors cursor-pointer"
-                title="Show/Hide Column"
-              >
-                <FilterList className="text-[var(--primary-main)]" sx={{ fontSize: 20 }} />
-              </button>
-              
-              {showColumnsMenu && (
-                <div className="absolute right-0 top-12 mt-1 w-52 bg-[#f8f9fa] shadow-xl border border-gray-200 rounded z-50 overflow-hidden flex flex-col max-h-80">
-                  <div className="px-4 py-3 border-b border-gray-200">
-                    <span className="text-[13px] font-bold text-gray-800">Show/Hide Column</span>
-                  </div>
-                  <div className="p-2 overflow-y-auto custom-scrollbar flex-1">
-                    {Object.keys(visibleColumns).map(col => (
-                      <label key={col} className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded cursor-pointer">
-                        <div className={`w-4 h-4 rounded-sm flex items-center justify-center border ${visibleColumns[col] ? 'bg-[#1b7f43] border-[#1b7f43]' : 'bg-white border-gray-300'}`}>
-                          {visibleColumns[col] && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
-                        </div>
-                        <span className="text-[14px] text-gray-700">{col}</span>
-                        <input type="checkbox" checked={visibleColumns[col]} onChange={() => toggleColumn(col)} className="hidden" />
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <button onClick={openNewModal} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-green-50 transition-colors cursor-pointer">
+            <button onClick={openNewModal} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-green-50 transition-colors cursor-pointer" title="Add Complaint">
               <AddCircleOutlined sx={{ fontSize: 24 }} className="text-[#1b7f43]" />
             </button>
             <button onClick={handleRefresh} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
@@ -320,56 +308,86 @@ export default function GuestComplaint() {
           </div>
         </div>
         
-        {/* Table */}
-        <div className="overflow-x-auto w-full pb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <table className="w-full text-left whitespace-nowrap min-w-max">
+        {/* Table - Non-scrolling with table-fixed and hover tooltips for long text */}
+        <div className="w-full overflow-hidden">
+          <table className="w-full text-left border-collapse table-fixed">
             <thead>
               <tr className="border-b border-gray-100 bg-white">
-                {visibleColumns['Date'] && <th className="py-5 px-6 text-[13px] font-bold text-[#1e293b]">Date</th>}
-                {visibleColumns['Guest Name'] && <th className="py-5 px-6 text-[13px] font-bold text-[#1e293b]">Guest Name</th>}
-                {visibleColumns['Room No'] && <th className="py-5 px-6 text-[13px] font-bold text-[#1e293b]">Room No</th>}
-                {visibleColumns['Complaint Type'] && <th className="py-5 px-6 text-[13px] font-bold text-[#1e293b]">Complaint Type</th>}
-                {visibleColumns['Description'] && <th className="py-5 px-6 text-[13px] font-bold text-[#1e293b]">Description</th>}
-                {visibleColumns['Priority'] && <th className="py-5 px-6 text-[13px] font-bold text-[#1e293b]">Priority</th>}
-                {visibleColumns['Status'] && <th className="py-5 px-6 text-[13px] font-bold text-[#1e293b]">Status</th>}
-                {visibleColumns['Actions'] && <th className="py-5 px-6 text-[13px] font-bold text-[#1e293b] text-center">Actions</th>}
+                {visibleColumns['Date'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[12%]">Date</th>}
+                {visibleColumns['Guest Name'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[15%]">Guest Name</th>}
+                {visibleColumns['Room No'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[9%]">Room No</th>}
+                {visibleColumns['Complaint Type'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[15%]">Complaint Type</th>}
+                {visibleColumns['Description'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[27%]">Description</th>}
+                {visibleColumns['Priority'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[11%]">Priority</th>}
+                {visibleColumns['Status'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[11%]">Status</th>}
+                {visibleColumns['Actions'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] text-center w-[10%]">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {filteredComplaints.map(complaint => (
                 <tr key={complaint.id} onClick={() => openViewModal(complaint)} className="border-b border-gray-50 hover:bg-gray-50/50 cursor-pointer">
                   {visibleColumns['Date'] && (
-                    <td className="py-4 px-6 text-[13.5px] text-[#475569] font-medium flex items-center gap-2">
-                      <CalendarToday sx={{ fontSize: 16 }} className="text-gray-700" />
-                      {complaint.date}
+                    <td className="py-3.5 px-4 text-[13px] text-[#475569] font-medium">
+                      <div className="flex items-center gap-1.5 whitespace-nowrap">
+                        <CalendarToday sx={{ fontSize: 15 }} className="text-gray-700 shrink-0" />
+                        <span className="truncate">{complaint.date}</span>
+                      </div>
                     </td>
                   )}
-                  {visibleColumns['Guest Name'] && <td className="py-4 px-6 text-[13.5px] text-[#475569] font-medium">{complaint.guestName}</td>}
-                  {visibleColumns['Room No'] && <td className="py-4 px-6 text-[13.5px] text-[#475569] font-medium">{complaint.roomNo}</td>}
-                  {visibleColumns['Complaint Type'] && <td className="py-4 px-6 text-[13.5px] text-[#475569] font-medium">{complaint.type}</td>}
-                  {visibleColumns['Description'] && <td className="py-4 px-6 text-[13.5px] text-[#475569] font-medium">{complaint.description}</td>}
+                  {visibleColumns['Guest Name'] && (
+                    <td className="py-3.5 px-4 text-[13px] text-[#475569] font-medium">
+                      <Tooltip title={complaint.guestName} arrow placement="top">
+                        <span className="truncate block cursor-default">
+                          {complaint.guestName}
+                        </span>
+                      </Tooltip>
+                    </td>
+                  )}
+                  {visibleColumns['Room No'] && (
+                    <td className="py-3.5 px-4 text-[13px] text-[#475569] font-medium whitespace-nowrap">
+                      {complaint.roomNo}
+                    </td>
+                  )}
+                  {visibleColumns['Complaint Type'] && (
+                    <td className="py-3.5 px-4 text-[13px] text-[#475569] font-medium">
+                      <Tooltip title={complaint.type} arrow placement="top">
+                        <span className="truncate block cursor-default">
+                          {complaint.type}
+                        </span>
+                      </Tooltip>
+                    </td>
+                  )}
+                  {visibleColumns['Description'] && (
+                    <td className="py-3.5 px-4 text-[13px] text-[#475569] font-medium">
+                      <Tooltip title={complaint.description} arrow placement="top">
+                        <span className="truncate block cursor-default">
+                          {complaint.description}
+                        </span>
+                      </Tooltip>
+                    </td>
+                  )}
                   {visibleColumns['Priority'] && (
-                    <td className="py-4 px-6">
-                      <span className={`px-3 py-1.5 rounded-md text-[12px] font-bold ${priorityStyles[complaint.priority]}`}>
+                    <td className="py-3.5 px-4">
+                      <span className={`px-2.5 py-1 rounded-md text-[11.5px] font-bold whitespace-nowrap inline-block ${priorityStyles[complaint.priority]}`}>
                         {complaint.priority}
                       </span>
                     </td>
                   )}
                   {visibleColumns['Status'] && (
-                    <td className="py-4 px-6">
-                      <span className={`px-3 py-1.5 rounded-md text-[12px] font-bold ${statusStyles[complaint.status]}`}>
+                    <td className="py-3.5 px-4">
+                      <span className={`px-2.5 py-1 rounded-md text-[11.5px] font-bold whitespace-nowrap inline-block ${statusStyles[complaint.status]}`}>
                         {complaint.status}
                       </span>
                     </td>
                   )}
                   {visibleColumns['Actions'] && (
-                    <td className="py-3 px-6">
-                      <div className="flex items-center justify-center gap-2">
-                        <button onClick={(e) => { e.stopPropagation(); openEditModal(complaint); }} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer group">
-                          <EditOutlined className="text-[var(--primary-main)] group-hover:text-[var(--primary-main)]" sx={{ fontSize: 20 }} />
+                    <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button onClick={(e) => { e.stopPropagation(); openEditModal(complaint); }} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer group" title="Edit Complaint">
+                          <EditOutlined className="text-[var(--primary-main)]" sx={{ fontSize: 18 }} />
                         </button>
-                        <button onClick={(e) => e.stopPropagation()} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer group">
-                          <DeleteOutlined className="text-[#f97316] group-hover:text-orange-600" sx={{ fontSize: 20 }} />
+                        <button onClick={(e) => { e.stopPropagation(); confirmDelete(complaint); }} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer group" title="Delete Complaint">
+                          <DeleteOutlined className="text-[#f97316] group-hover:text-orange-600" sx={{ fontSize: 18 }} />
                         </button>
                       </div>
                     </td>
@@ -387,7 +405,7 @@ export default function GuestComplaint() {
           </table>
         </div>
       </div>
-            {/* View Complaint Modal */}
+      {/* View Complaint Modal */}
       {isViewModalOpen && viewingComplaint && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsViewModalOpen(false)}>
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-[800px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
@@ -500,7 +518,7 @@ export default function GuestComplaint() {
         </div>
       )}
 
-      {/* New Complaint Modal */}
+      {/* New / Edit Complaint Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsModalOpen(false)}>
           <div className="bg-white rounded-lg shadow-2xl w-full max-w-[750px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
@@ -528,7 +546,7 @@ export default function GuestComplaint() {
                 <div className="relative">
                   <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-gray-600 font-medium z-10">Room No*</label>
                   <input 
-                    type="text"
+                    type="text" 
                     value={form.roomNo}
                     onChange={(e) => setForm({...form, roomNo: e.target.value})}
                     className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-md text-[14px] text-gray-700 focus:border-[var(--primary-main)] focus:outline-none focus:ring-1 focus:ring-[var(--primary-main)] transition-all" 
@@ -539,7 +557,7 @@ export default function GuestComplaint() {
                 <div className="relative">
                   <label className="absolute -top-2 left-3 bg-white px-1 text-[12px] text-gray-600 font-medium z-10">Date*</label>
                   <input 
-                    type="date"
+                    type="date" 
                     value={form.date}
                     onChange={(e) => setForm({...form, date: e.target.value})}
                     className="w-full px-4 py-3 border border-gray-300 rounded-md text-[14px] focus:border-[var(--primary-main)] focus:outline-none focus:ring-1 focus:ring-[var(--primary-main)] transition-all text-gray-700" 
@@ -626,11 +644,42 @@ export default function GuestComplaint() {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && complaintToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}>
+          <div className="bg-[#fcf8fa] rounded-xl shadow-2xl w-[320px] p-6 text-center animate-scale-in border border-gray-100" onClick={e => e.stopPropagation()}>
+            <h2 className="text-[22px] font-medium text-gray-800 mb-6 text-left">Are you sure?</h2>
+            
+            <div className="text-left space-y-3 mb-8 text-[14px] text-gray-700">
+              <p>
+                Guest: <span className="text-gray-600 font-medium">{complaintToDelete.guestName}</span>
+              </p>
+              <p>
+                Room: <span className="text-gray-600 font-medium">{complaintToDelete.roomNo}</span>
+              </p>
+              <p>
+                Type: <span className="text-gray-600 font-medium">{complaintToDelete.type}</span>
+              </p>
+            </div>
+
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={handleDelete}
+                className="px-5 py-2 rounded-full bg-[#c23e3e] hover:bg-red-700 text-white font-bold text-[14px] transition-colors shadow-sm cursor-pointer"
+              >
+                Delete
+              </button>
+              <button
+                onClick={() => setIsDeleteModalOpen(false)}
+                className="px-5 py-2 rounded-full bg-[#0a6c32] hover:bg-green-800 text-white font-bold text-[14px] transition-colors shadow-sm cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
-
-
-
-
-

@@ -19,14 +19,14 @@ import ChargeDetailModal from'./components/ChargeDetailModal';
 
 const muiSelectSx = {'& .MuiOutlinedInput-root': {
  borderRadius:'8px',
- backgroundColor:'#ffffff',
+ backgroundColor:'var(--bg-paper)',
  fontSize:'12px',
- color:'#1f2937','& fieldset': { borderColor:'#e5e7eb', borderWidth:'1.2px' },'&:hover fieldset': { borderColor:'#9ca3af' },'&.Mui-focused fieldset': { borderColor:'#1b7f43', borderWidth:'1.5px' },
+ color:'var(--text-primary)','& fieldset': { borderColor:'#e5e7eb', borderWidth:'1.2px' },'&:hover fieldset': { borderColor:'#9ca3af' },'&.Mui-focused fieldset': { borderColor:'var(--primary-main)', borderWidth:'1.5px' },
  },'& .MuiSelect-select': {
  padding:'6px 12px',
  },'& .MuiInputLabel-root': {
  fontSize:'12px',
- color:'#6b7280','&.Mui-focused': { color:'#1b7f43' }
+ color:'var(--text-secondary)','&.Mui-focused': { color:'var(--primary-main)' }
  }
 };
 
@@ -186,35 +186,6 @@ export default function GuestCharges() {
  return (
  <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in">
  
- {/* Top Action Bar */}
- <div className="flex items-center justify-end gap-1.5 flex-wrap">
- <button 
- onClick={handleRefresh} 
- disabled={isRefreshing}
- title="Refresh Data & Reset Filters"
- className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
- >
- {isRefreshing ?'Refreshing...' :'Refresh'}
- </button>
-
- <button 
- onClick={handleExportCSV}
- className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition shadow-xs cursor-pointer"
- >
- Export CSV
- </button>
-
- <button 
- onClick={() => {
- setPrefilledChargeData(null);
- setIsAddModalOpen(true);
- }}
- className="px-3 py-1 bg-[#1b7f43] hover:bg-[#166b37] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1"
- >
- <span>+ Add Guest Charge</span>
- </button>
- </div>
-
  {/* KPI SUMMARY CARDS */}
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
  {/* Total Charges */}
@@ -373,8 +344,37 @@ export default function GuestCharges() {
  </FormControl>
  </div>
 
+ {/* Filter Actions */}
+ <div className="col-span-2 sm:col-span-2 flex items-center justify-end gap-1.5 flex-wrap">
+ <button 
+ onClick={handleRefresh} 
+ disabled={isRefreshing}
+ title="Refresh Data & Reset Filters"
+ className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
+ >
+ {isRefreshing ?'Refreshing...' :'Refresh'}
+ </button>
+
+ <button 
+ onClick={handleExportCSV}
+ className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition shadow-xs cursor-pointer"
+ >
+ Export CSV
+ </button>
+
+ <button 
+ onClick={() => {
+ setPrefilledChargeData(null);
+ setIsAddModalOpen(true);
+ }}
+ className="px-3 py-1 bg-[#1b7f43] hover:bg-[#166b37] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1"
+ >
+ <span>+ Add Guest Charge</span>
+ </button>
+ </div>
+
  {/* Reset Filters */}
- <div className="col-span-2 sm:col-span-2 flex justify-end">
+ <div className="col-span-2 sm:col-span-4 flex justify-end">
  {hasActiveFilters && (
  <button
  onClick={handleResetFilters}

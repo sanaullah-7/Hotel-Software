@@ -1,8 +1,15 @@
+import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import AppBreadcrumbs from './AppBreadcrumbs';
 
 export default function DashboardLayout({ children }) {
+  const location = useLocation();
+  const isMinimizedPadding =
+    location.pathname.startsWith('/events') ||
+    location.pathname.startsWith('/settings') ||
+    location.pathname.startsWith('/hotel-settings') ||
+    location.pathname.startsWith('/reports');
+
   return (
     <div 
       className="flex h-screen w-full overflow-hidden font-sans bg-[var(--bg-default)] text-[var(--text-primary)]"

@@ -214,6 +214,149 @@ export const INITIAL_INVOICES = [
       },
     ],
   },
+  {
+    id: 'INV-2026-007',
+    invoiceNumber: 'INV-2026-007',
+    guestName: 'John Deo',
+    guestEmail: 'test@email.com',
+    guestPhone: '1234567890',
+    bookingId: 'BK-1',
+    roomNumber: '101',
+    roomType: 'Delux',
+    checkIn: '02/25/2023',
+    checkOut: '02/28/2023',
+    issueDate: '2023-02-25',
+    dueDate: '2023-02-28',
+    currency: 'USD',
+    subtotal: 390.00,
+    discount: 0.00,
+    taxesAndFees: 60.00,
+    tax: 60.00,
+    totalAmount: 450.00,
+    paidAmount: 450.00,
+    balanceDue: 0.00,
+    status: 'Paid',
+    notes: 'All-inclusive package settled via credit card.',
+    items: [
+      { description: 'Delux Room (3 Nights @ $130/night)', rate: 130.00, qty: 3, amount: 390.00 },
+      { description: 'Taxes & Surcharges', rate: 60.00, qty: 1, amount: 60.00 },
+    ],
+    payments: [
+      {
+        paymentId: 'PAY-2026-007',
+        paymentDate: '2023-02-25 14:00',
+        amount: 450.00,
+        paymentMethod: 'Credit Card',
+        transactionRef: 'TXN-9021881',
+        recordedBy: 'Front Desk',
+      },
+    ],
+  },
+  {
+    id: 'INV-2026-008',
+    invoiceNumber: 'INV-2026-008',
+    guestName: 'Sarah Smith',
+    guestEmail: 'test@email.com',
+    guestPhone: '1234567890',
+    bookingId: 'BK-2',
+    roomNumber: '205',
+    roomType: 'Super Delux',
+    checkIn: '02/12/2023',
+    checkOut: '02/15/2023',
+    issueDate: '2023-02-12',
+    dueDate: '2023-02-15',
+    currency: 'USD',
+    subtotal: 600.00,
+    discount: 0.00,
+    taxesAndFees: 80.00,
+    tax: 80.00,
+    totalAmount: 680.00,
+    paidAmount: 0.00,
+    balanceDue: 680.00,
+    status: 'Unpaid',
+    notes: 'Business package; balance due at checkout.',
+    items: [
+      { description: 'Super Delux (3 Nights @ $200/night)', rate: 200.00, qty: 3, amount: 600.00 },
+      { description: 'State & Tourism Taxes', rate: 80.00, qty: 1, amount: 80.00 },
+    ],
+    payments: [],
+  },
+  {
+    id: 'INV-2026-009',
+    invoiceNumber: 'INV-2026-009',
+    guestName: 'John Smith',
+    guestEmail: 'john.smith@example.com',
+    guestPhone: '+1234567890',
+    bookingId: 'BK-1001',
+    roomNumber: '101',
+    roomType: 'Deluxe',
+    checkIn: '2026-05-20',
+    checkOut: '2026-05-22',
+    issueDate: '2026-05-20',
+    dueDate: '2026-05-22',
+    currency: 'USD',
+    subtotal: 750.00,
+    discount: 0.00,
+    taxesAndFees: 120.00,
+    tax: 120.00,
+    totalAmount: 870.00,
+    paidAmount: 870.00,
+    balanceDue: 0.00,
+    status: 'Paid',
+    notes: 'Settled upon arrival.',
+    items: [
+      { description: 'Deluxe Room (2 Nights @ $375/night)', rate: 375.00, qty: 2, amount: 750.00 },
+      { description: 'Hotel Surcharges', rate: 120.00, qty: 1, amount: 120.00 },
+    ],
+    payments: [
+      {
+        paymentId: 'PAY-2026-009',
+        paymentDate: '2026-05-20 12:30',
+        amount: 870.00,
+        paymentMethod: 'Credit Card',
+        transactionRef: 'TXN-9021899',
+        recordedBy: 'Front Desk',
+      },
+    ],
+  },
+  {
+    id: 'INV-2026-010',
+    invoiceNumber: 'INV-2026-010',
+    guestName: 'Sarah Johnson',
+    guestEmail: 'sarah.johnson@example.com',
+    guestPhone: '+1234567893',
+    bookingId: 'BK-1002',
+    roomNumber: '205',
+    roomType: 'Suite',
+    checkIn: '2026-05-19',
+    checkOut: '2026-05-21',
+    issueDate: '2026-05-19',
+    dueDate: '2026-05-21',
+    currency: 'USD',
+    subtotal: 820.00,
+    discount: 0.00,
+    taxesAndFees: 130.00,
+    tax: 130.00,
+    totalAmount: 950.00,
+    paidAmount: 950.00,
+    balanceDue: 0.00,
+    status: 'Paid',
+    notes: 'Corporate suite settlement.',
+    items: [
+      { description: 'Suite (2 Nights @ $410/night)', rate: 410.00, qty: 2, amount: 820.00 },
+      { description: 'Taxes and Fees', rate: 130.00, qty: 1, amount: 130.00 },
+    ],
+    payments: [
+      {
+        paymentId: 'PAY-2026-010',
+        paymentDate: '2026-05-19 15:00',
+        amount: 950.00,
+        paymentMethod: 'Credit Card',
+        transactionRef: 'TXN-9021900',
+        recordedBy: 'Front Desk',
+      },
+    ],
+  },
 ];
 
 export const INITIAL_PAYMENTS = [
@@ -706,3 +849,44 @@ export const resetPaymentBillingStore = () => {
   localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(INITIAL_PAYMENTS));
   localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(INITIAL_REFUNDS));
 };
+
+// Calculate outstanding dues / balance for a booking from centralized billing data
+export const getBookingDues = (booking) => {
+  if (!booking) return 0;
+  try {
+    const invoices = getInvoices();
+    const invoice = invoices.find((inv) =>
+      (booking.bookingId && inv.bookingId === booking.bookingId) ||
+      (booking.id && (inv.bookingId === `BK-${booking.id}` || inv.bookingId === String(booking.id))) ||
+      (booking.name && inv.guestName && inv.guestName.toLowerCase() === booking.name.toLowerCase()) ||
+      (booking.email && inv.guestEmail && inv.guestEmail.toLowerCase() === booking.email.toLowerCase())
+    );
+
+    if (invoice) {
+      return Number(invoice.balanceDue) || 0;
+    }
+
+    if (booking.payment === 'Paid') {
+      return 0;
+    }
+
+    if (booking.remainingPrice !== undefined && booking.remainingPrice !== null) {
+      const num = Number(String(booking.remainingPrice).replace(/[^0-9.-]+/g, ''));
+      if (!isNaN(num)) return num;
+    }
+
+    if (booking.dues !== undefined && booking.dues !== null) {
+      const num = Number(String(booking.dues).replace(/[^0-9.-]+/g, ''));
+      if (!isNaN(num)) return num;
+    }
+
+    if (booking.payment === 'Unpaid' || booking.payment === 'Pending') {
+      return 150.00;
+    }
+
+    return 0;
+  } catch {
+    return booking.payment === 'Paid' ? 0 : 150.00;
+  }
+};
+

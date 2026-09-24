@@ -24,29 +24,8 @@ import {
  KeyboardArrowDown as ArrowDownIcon,
  Close as CloseIcon
 } from'@mui/icons-material';
-
-// Custom toggle switch matching Luxuria's UI with checkmark thumb
-const ToggleSwitch = ({ checked, onChange }) => (
- <button
- type="button"
- onClick={onChange}
- className={`w-12 h-6 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-200 ease-in-out shrink-0 ${
- checked ?'bg-[#4f46e5]' :'bg-[#cbd5e1]'
- }`}
- >
- <div
- className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ease-in-out flex items-center justify-center ${
- checked ?'translate-x-6' :'translate-x-0'
- }`}
- >
- {checked && (
- <svg className="w-2.5 h-2.5 text-[#4f46e5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
- <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
- </svg>
- )}
- </div>
- </button>
-);
+import ToggleSwitch from '../components/ToggleSwitch';
+import '../../assigned-ui/formStyles.css';
 
 export default function Policies() {
  // Accordion open/close states
@@ -218,7 +197,7 @@ export default function Policies() {
  const activeGuestIdCount = guestIdRules.filter((r) => r.active).length;
 
  return (
- <div className="w-full space-y-2 pb-1 font-sans">
+ <div className="assigned-form-surface w-full space-y-2 pb-1 font-sans">
  {/* Toast Notification */}
  {toastMessage && (
  <div className="fixed top-20 right-8 z-50 flex items-center gap-2 bg-[#1e293b] text-white px-3 py-2 rounded-xl shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
@@ -553,7 +532,7 @@ export default function Policies() {
  <button
  type="button"
  onClick={handleApplyConfiguration}
- className="px-4 py-2 bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-xl font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+ className="assigned-primary-button px-4 py-2 rounded-full font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
  >
  <CheckIcon sx={{ fontSize: 16 }} />
  Apply Policy Configuration
@@ -566,14 +545,14 @@ export default function Policies() {
  {isModalOpen && (
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4">
  <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-100 animate-in fade-in zoom-in duration-200">
- <div className="flex items-center justify-between pb-3 border-b border-gray-100">
- <h4 className="font-bold text-gray-900 text-base">
+ <div className="assigned-modal-header flex items-center justify-between -mx-6 -mt-6 px-6 py-4 mb-3 border-b border-gray-100">
+ <h4 className="font-bold text-white text-base">
  Add New {modalCategory} Rule
  </h4>
  <button
  type="button"
  onClick={() => setIsModalOpen(false)}
- className="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition"
+ className="assigned-modal-close p-1.5 rounded-full transition"
  >
  <CloseIcon sx={{ fontSize: 20 }} />
  </button>
@@ -611,13 +590,13 @@ export default function Policies() {
  <button
  type="button"
  onClick={() => setIsModalOpen(false)}
- className="px-4 py-2 border border-gray-300 text-gray-700 text-xs font-semibold rounded-xl hover:bg-gray-50 transition"
+ className="assigned-secondary-button px-4 py-2 text-xs font-semibold rounded-full transition"
  >
  Cancel
  </button>
  <button
  type="submit"
- className="px-4 py-2 bg-[#4f46e5] text-white text-xs font-semibold rounded-xl hover:bg-[#4338ca] transition"
+ className="assigned-primary-button px-4 py-2 text-xs font-semibold rounded-full transition"
  >
  Add Rule
  </button>

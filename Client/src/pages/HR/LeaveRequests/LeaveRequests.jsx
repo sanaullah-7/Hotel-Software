@@ -34,6 +34,9 @@ import {
  Alert,
  InputAdornment
 } from'@mui/material';
+import MetricCards from '../components/MetricCards';
+import '../../../features/assigned-ui/formStyles.css';
+import '../../../features/assigned-ui/toolbarStyles.css';
 
 // Icons
 
@@ -571,38 +574,8 @@ export default function LeaveRequests() {
  }, [data]);
 
  return (
- <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden bg-[#f8fafc] flex flex-col gap-1">
- {/* ── Compact Leave Management Summary Cards ─────────────────────────────── */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
- {leaveStats.map((card) => {
- const IconComp = card.icon;
- return (
- <div
- key={card.id}
- className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
- >
- <div className="flex items-center gap-1.5 min-w-0">
- <div className={`p-1 rounded-md ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}>
- <IconComp sx={{ fontSize: 15 }} />
- </div>
- <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
- {card.title}
- </span>
- </div>
- <div className="flex items-baseline justify-between mt-1">
- <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
- {card.value}
- </span>
- {card.subtext && (
- <span className="text-[10px] text-[var(--text-secondary)] font-normal hidden xl:inline">
- {card.subtext}
- </span>
- )}
- </div>
- </div>
- );
- })}
- </div>
+ <div className="assigned-form-surface p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden bg-[#f8fafc] flex flex-col gap-1">
+ <MetricCards cards={leaveStats} compactSubtext />
 
  {/* 2. Main White Table Card Container */}
  <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] p-2 sm:p-2.5">
@@ -633,7 +606,7 @@ export default function LeaveRequests() {
  </div>
 
  {/* Right Toolbar Action Icons */}
- <div className="flex items-center gap-1.5 sm:gap-2 self-end md:self-auto">
+ <div className="assigned-table-toolbar flex items-center gap-1.5 sm:gap-2 self-end md:self-auto">
  {/* Bulk Delete Button if rows selected */}
  {selectedIds.length > 0 && (
  <Tooltip title={`Delete ${selectedIds.length} Selected`}>
@@ -657,8 +630,8 @@ export default function LeaveRequests() {
  width: 34,
  height: 34,
  borderRadius:'8px',
- backgroundColor:'#f1f5f9',
- color:'#475569','&:hover': { backgroundColor:'#e2e8f0' }
+ backgroundColor:'#22c55e',
+ color:'#22c55e','&:hover': { backgroundColor:'#e2e8f0' }
  }}
  >
  <FilterListIcon fontSize="small" />
@@ -675,7 +648,7 @@ export default function LeaveRequests() {
  height: 34,
  borderRadius:'8px',
  backgroundColor:'#22c55e',
- color:'#ffffff','&:hover': { backgroundColor:'#16a34a' }
+ color:'#10b981','&:hover': { backgroundColor:'#16a34a' }
  }}
  >
  <AddIcon fontSize="small" />
@@ -691,7 +664,7 @@ export default function LeaveRequests() {
  width: 34,
  height: 34,
  borderRadius:'8px',
- backgroundColor:'#f1f5f9',
+ backgroundColor:'#475569',
  color:'#475569','&:hover': { backgroundColor:'#e2e8f0' }
  }}
  >
@@ -702,6 +675,7 @@ export default function LeaveRequests() {
  {/* Export Excel Button */}
  <Tooltip title="Export to Excel">
  <IconButton
+ className="toolbar-export-icon"
  size="small"
  onClick={handleExportExcel}
  sx={{
@@ -709,7 +683,7 @@ export default function LeaveRequests() {
  height: 34,
  borderRadius:'8px',
  backgroundColor:'#0284c7',
- color:'#ffffff','&:hover': { backgroundColor:'#0369a1' }
+ color:'#3b82f6','&:hover': { backgroundColor:'#0369a1' }
  }}
  >
  <TableChartIcon fontSize="small" />
@@ -719,6 +693,7 @@ export default function LeaveRequests() {
  {/* Export PDF Button */}
  <Tooltip title="Export to PDF">
  <IconButton
+ className="toolbar-export-icon"
  size="small"
  onClick={handleExportPdf}
  sx={{
@@ -726,7 +701,7 @@ export default function LeaveRequests() {
  height: 34,
  borderRadius:'8px',
  backgroundColor:'#ef4444',
- color:'#ffffff','&:hover': { backgroundColor:'#dc2626' }
+ color:'#ef4444','&:hover': { backgroundColor:'#dc2626' }
  }}
  >
  <PictureAsPdfIcon fontSize="small" />
@@ -1056,6 +1031,7 @@ export default function LeaveRequests() {
 
  {/* 6."New Leave Request" / Edit Modal Dialog */}
  <Dialog
+ className="assigned-form-surface"
  open={isModalOpen}
  onClose={() => setIsModalOpen(false)}
  maxWidth="md"
@@ -1068,7 +1044,7 @@ export default function LeaveRequests() {
  }}
  >
  {/* Modal Header Banner */}
- <div className="bg-[#5d5fef] px-5 py-3.5 flex items-center justify-between text-white">
+ <div className="assigned-modal-header px-5 py-3.5 flex items-center justify-between text-white">
  <div className="flex items-center gap-3">
  <div className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center">
  <PersonOutlinedIcon sx={{ fontSize: 22, color:'#ffffff' }} />
@@ -1275,14 +1251,14 @@ export default function LeaveRequests() {
  <div className="flex items-center gap-3 pt-3">
  <button
  type="submit"
- className="px-6 py-2 bg-[#5d5fef] hover:bg-[#4d4fd9] text-white text-sm font-medium rounded-full shadow-sm transition-all cursor-pointer"
+ className="assigned-primary-button px-6 py-2 text-sm font-medium rounded-full shadow-sm transition-all cursor-pointer"
  >
  Save
  </button>
  <button
  type="button"
  onClick={() => setIsModalOpen(false)}
- className="px-6 py-2 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-full border border-gray-300 transition-all cursor-pointer"
+ className="assigned-secondary-button px-6 py-2 text-sm font-medium rounded-full transition-all cursor-pointer"
  >
  Cancel
  </button>

@@ -125,24 +125,7 @@ export default function RatePlans() {
  : 0;
 
  return (
- <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in">
- {/* Top Action Bar (Heading Removed) */}
- <div className="flex items-center justify-end gap-1.5 flex-wrap">
- <button
- onClick={handleResetDefaults}
- title="Reset to default mock data"
- className="px-2.5 py-1 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
- >
- Reset Demo
- </button>
-
- <button
- onClick={handleOpenAddModal}
- className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
- >
- + Add Rate Plan
- </button>
- </div>
+ <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in pt-1">
 
  {/* 5 Stats Cards */}
  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
@@ -257,6 +240,7 @@ export default function RatePlans() {
  </div>
  </div>
 
+
  {/* Right Controls: Room Type Filter & Meal Plan Filter */}
  <div className="flex flex-wrap items-center gap-2">
  {/* Room Type Selector */}
@@ -292,7 +276,24 @@ export default function RatePlans() {
  </select>
  </div>
 
+ 
+ <button
+ onClick={handleResetDefaults}
+ title="Reset to default mock data"
+ className="px-2.5 py-1 bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
+ >
+ Reset Demo
+ </button>
+
+ <button
+ onClick={handleOpenAddModal}
+ className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+ >
+ + Add Rate Plan
+ </button>
  </div>
+
+ 
 
  {/* Data Table - Strictly 100% width with NO horizontal scroll */}
  <div className="w-full">

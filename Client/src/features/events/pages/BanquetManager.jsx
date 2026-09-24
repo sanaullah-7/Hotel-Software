@@ -18,99 +18,11 @@ import {
  CheckCircle as CheckCircleIcon,
  Print as PrintIcon
 } from'@mui/icons-material';
-
-// Initial BEO Events list matching the Luxuria template exactly
-const INITIAL_EVENTS = [
- {
- id:'BEO-401',
- title:'Vance & Sterling Royal Wedding Gala',
- client:'Baroness Evelyn Vance â€¢ Vance Family Trust',
- venue:'Grand Crystal Ballroom',
- status:'Confirmed & Deposit Paid',
- statusType:'confirmed',
- schedule:'Oct 28, 2026 (18:00 â€“ 23:30)',
- attendance:'320 Guests (Round Table Banquet (10-top))',
- catering:'6-Course Michelin Gala Dinner & Vintage Champagne Toast',
- totalPrice:'$68,500',
- depositPaid:'$35,000',
- avSetup:'Full Line Array Audio, 4K LED Backdrop & Stage Spotlight',
- coordinator:'Marcella Dubois (Senior Event Director)',
- },
- {
- id:'BEO-402',
- title:'Global Private Wealth & Tech Summit 2026',
- client:'Julian Thorne â€¢ Thorne Capital Partners',
- venue:'Grand Crystal Ballroom',
- status:'BEO In Preparation',
- statusType:'in-prep',
- schedule:'Nov 04, 2026 (08:30 â€“ 17:00)',
- attendance:'380 Guests (Theater Keynote & Stage)',
- catering:'Executive All-Day Coffee Bar & Gourmet Buffet Luncheon',
- totalPrice:'$42,000',
- depositPaid:'$20,000',
- avSetup:'Dual Projectors, Live Webcast Rig & 8 Wireless Lapel Mics',
- coordinator:'Jonathan Sterling (Conference Lead)',
- },
- {
- id:'BEO-403',
- title:'Haute Horlogerie Luxury Watch Showcase',
- client:'Genevieve Moreau â€¢ Vacheron & Patek Guild',
- venue:'Skyline Rooftop Pavilion',
- status:'In-Progress Live Event',
- statusType:'in-progress',
- schedule:'Today (19:00 â€“ 23:00)',
- attendance:'140 Guests (Cocktail Reception Standing)',
- catering:'Beluga Caviar Tasting, Truffle CanapÃ©s & Sommelier Wine Pairing',
- totalPrice:'$29,800',
- depositPaid:'$29,800',
- avSetup:'Ambient DJ Sound System & Museum-Grade Vitrine Lighting',
- coordinator:'Elena Rostova (VIP Hospitality)',
- },
- {
- id:'BEO-404',
- title:'Diplomatic Corps Autumn Ambassadorial Dinner',
- client:'Ambassador Henri Zhao â€¢ Consular Diplomatic Mission',
- venue:'Royal Executive Boardroom',
- status:'Confirmed & Deposit Paid',
- statusType:'confirmed',
- schedule:'Oct 30, 2026 (19:30 â€“ 22:30)',
- attendance:'28 Guests (U-Shape Executive)',
- catering:'Private Chef 5-Course State Banquet with Wine Pairing',
- totalPrice:'$12,400',
- depositPaid:'$12,400',
- avSetup:'Encrypted Video Teleconference & Interpretation Booths',
- coordinator:'Marcella Dubois (Senior Event Director)',
- },
- {
- id:'BEO-405',
- title:'Luminis Biotech European Board Meeting',
- client:'Dr. Aris Thorne â€¢ Luminis Therapeutics',
- venue:'Botanical Garden Terrace',
- status:'BEO In Preparation',
- statusType:'in-prep',
- schedule:'Nov 12, 2026 (11:00 â€“ 16:00)',
- attendance:'160 Guests (Classroom & Workshop)',
- catering:'Farm-to-Table Organic Garden Lunch & Artisan Gelato Bar',
- totalPrice:'$24,800',
- depositPaid:'$10,000',
- avSetup:'High-Brightness Laser Displays & Polycom Hybrid Audio',
- coordinator:'Jonathan Sterling (Conference Lead)',
- },
-];
-
-const VENUE_FILTERS = [
- { id:'all', label:'All Venues', icon: VenueIcon },
- { id:'grand-crystal', label:'Grand Crystal Ballroom', pax:'450 Pax' },
- { id:'skyline-rooftop', label:'Skyline Rooftop Pavilion', pax:'180 Pax' },
- { id:'royal-executive', label:'Royal Executive Boardroom', pax:'35 Pax' },
- { id:'botanical-garden', label:'Botanical Garden Terrace', pax:'220 Pax' },
-];
-
-const STATUS_FILTERS = ['All Statuses','Confirmed & Deposit Paid','BEO In Preparation','In-Progress Live Event','Completed & Invoiced',
-];
+import { INITIAL_BANQUET_EVENTS, STATUS_FILTERS, VENUE_FILTERS } from '../data/banquetData';
+import '../../assigned-ui/formStyles.css';
 
 export default function BanquetManager() {
- const [events, setEvents] = useState(INITIAL_EVENTS);
+ const [events, setEvents] = useState(INITIAL_BANQUET_EVENTS);
  const [selectedVenue, setSelectedVenue] = useState('all');
  const [selectedStatus, setSelectedStatus] = useState('All Statuses');
  const [searchQuery, setSearchQuery] = useState('');
@@ -217,7 +129,7 @@ export default function BanquetManager() {
  });
 
  return (
- <div className="w-full space-y-2 pb-1" style={{ fontFamily:'Inter, sans-serif' }}>
+ <div className="assigned-form-surface w-full space-y-2 pb-1" style={{ fontFamily:'Inter, sans-serif' }}>
 
  {/* â”€â”€ Toast Notification â”€â”€ */}
  {toastMessage && (
@@ -531,7 +443,7 @@ export default function BanquetManager() {
  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
  <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full border border-slate-100 max-h-[90vh] overflow-y-auto">
  {/* Modal Header */}
- <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
+ <div className="assigned-modal-header flex items-center justify-between px-5 py-4 border-b border-slate-100">
  <div className="flex items-center gap-3">
  <div className="w-9 h-9 rounded-lg bg-[var(--primary-main)]/10 text-[var(--primary-main)] flex items-center justify-center">
  <BeoIcon sx={{ fontSize: 20 }} />
@@ -637,13 +549,13 @@ export default function BanquetManager() {
  <div className="w-9 h-9 rounded-lg bg-[var(--primary-main)] text-white flex items-center justify-center">
  <AddIcon sx={{ fontSize: 19 }} />
  </div>
- <h4 className="font-bold text-[var(--text-primary)] text-sm">
+ <h4 className="font-bold text-white text-sm">
  Generate New Banquet Event Order
  </h4>
  </div>
  <button
  onClick={() => setIsGenerateModalOpen(false)}
- className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+ className="assigned-modal-close p-1.5 rounded-full transition cursor-pointer"
  >
  <CloseIcon sx={{ fontSize: 18 }} />
  </button>
@@ -774,13 +686,13 @@ export default function BanquetManager() {
  <button
  type="button"
  onClick={() => setIsGenerateModalOpen(false)}
- className="px-4 py-1.5 border border-slate-200 text-[var(--text-secondary)] text-xs font-semibold rounded-lg hover:bg-slate-50 hover:text-[var(--text-primary)] transition cursor-pointer"
+ className="assigned-secondary-button px-4 py-1.5 text-xs font-semibold rounded-full transition cursor-pointer"
  >
  Cancel
  </button>
  <button
  type="submit"
- className="px-5 py-1.5 bg-[var(--primary-main)] text-white text-xs font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition shadow-sm cursor-pointer"
+ className="assigned-primary-button px-5 py-1.5 text-xs font-semibold rounded-full transition shadow-sm cursor-pointer"
  >
  Generate BEO
  </button>
