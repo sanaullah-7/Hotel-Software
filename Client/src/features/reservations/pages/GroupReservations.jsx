@@ -244,7 +244,7 @@ export default function GroupReservations() {
  {/* Top Header */}
  <div className="bg-white rounded-[6px] p-2 flex items-center justify-between border-b border-gray-100">
  <div className="flex items-center gap-4">
- <h1 className="text-[16px] font-bold text-gray-700">Group Reservations</h1>
+ <h1 className="text-[16px] font-bold text-gray-700">Group Booking</h1>
  <div className="relative">
  <input 
  type="text" 

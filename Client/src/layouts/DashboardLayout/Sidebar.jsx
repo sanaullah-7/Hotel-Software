@@ -195,11 +195,11 @@ export default function Sidebar() {
   ];
 
   const reservationSubItems = [
-    { label: 'All Reservations', id: 'all-reservations', path: '/reservation/all' },
-    { label: 'Reservation History', id: 'reservation-history', path: '/reservation/history' },
-    { label: 'Cancel Booking', id: 'cancel-booking', path: '/reservation/cancelled' },
+    { label: 'All Booking', id: 'all-reservations', path: '/reservation/all' },
+    { label: 'Booking History', id: 'reservation-history', path: '/reservation/history' },
+    { label: 'Canceled Booking', id: 'cancel-booking', path: '/reservation/cancelled' },
     { label: 'Group Booking', id: 'group-booking', path: '/reservation/group' },
-    { label: 'Add New Reservation', id: 'add-new-reservation', path: '/reservation/new' },
+    { label: 'Add New Booking', id: 'add-new-reservation', path: '/reservation/new' },
   ];
 
   const roomsSubItems = [
@@ -414,7 +414,7 @@ export default function Sidebar() {
           {/* GROUP 2: BOOKINGS & ROOMS */}
           <NavGroupHeader title="Bookings & Rooms" isOpen={isOpen} />
 
-          {/* Reservation */}
+          {/* Booking */}
           <DropdownSection
             isOpen={isOpen}
             pathname={pathname}
@@ -422,7 +422,7 @@ export default function Sidebar() {
             open={isReservationOpen}
             toggle={() => toggleDropdown(setIsReservationOpen)}
             icon={BookingIcon}
-            label="Reservation"
+            label="Booking"
             items={reservationSubItems}
           />
 

@@ -254,7 +254,7 @@ export default function ReservationHistory() {
         <body>
           <div class="header">
             <div>
-              <h1 class="title">Reservation Invoice</h1>
+              <h1 class="title">Booking Invoice</h1>
               <div style="font-size: 13px; color: #64748b;">Statement & Details</div>
             </div>
             <div style="text-align: right;">
@@ -386,7 +386,7 @@ export default function ReservationHistory() {
         {/* Table Top Controls */}
         <div className="p-3 sm:p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="text-gray-800 font-bold text-[14px] lg:text-[15px] whitespace-nowrap">
-            Reservation History
+            Booking History
           </h3>
 
           <div className="flex flex-row items-center space-x-2 ml-auto">
@@ -624,7 +624,7 @@ export default function ReservationHistory() {
             <DialogTitle sx={{ pb: 1, borderBottom: '1px solid #f1f5f9' }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-800 text-[16px]">Reservation Details</span>
+                  <span className="font-bold text-gray-800 text-[16px]">Booking Details</span>
                   <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#e5f4eb] text-[#1b7f43]">
                     {selectedRes.id}
                   </span>

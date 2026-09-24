@@ -28,7 +28,7 @@ const initialBookings = [
   { id: 10, name: 'Pooja Patel', avatar: 'https://i.pravatar.cc/150?img=22', package: 'Business', roomType: 'Super Delux', status: 'Cancelled', checkIn: '02/09/2023', checkOut: '02/12/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
 ];
 
-export default function AllBookings({ title = 'Bookings', showDateFilter = false }) {
+export default function AllBookings({ title = 'All Booking', showDateFilter = false }) {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState(() => getReservations(initialBookings));
   const [search, setSearch] = useState('');
