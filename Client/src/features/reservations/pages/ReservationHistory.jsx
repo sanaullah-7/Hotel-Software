@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Search, Download, MoreVert, Visibility, Print, ChevronLeft, ChevronRight,
-  Inventory2, KeyboardArrowDown, Close, Person, Phone, Hotel, Event, CheckCircle
+  Inventory2, KeyboardArrowDown, Close, Person, Phone, Hotel, Event, CheckCircle,
+  TableChart
 } from '@mui/icons-material';
 import { 
   Menu, MenuItem, IconButton, Popover, Dialog, DialogTitle, DialogContent, DialogActions
@@ -466,15 +467,13 @@ export default function ReservationHistory() {
               )}
             </div>
             
-            {/* CSV Button */}
+            {/* Export CSV Button */}
             <button 
               onClick={handleExportCSV}
-              className="flex items-center space-x-1 bg-[var(--primary-main)] hover:brightness-110 text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm transition-all shrink-0 cursor-pointer"
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer shrink-0"
               title="Export CSV"
             >
-              <Download sx={{ fontSize: 14 }} />
-              <span className="hidden sm:inline">Export CSV</span>
-              <span className="inline sm:hidden">CSV</span>
+              <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
             </button>
           </div>
         </div>

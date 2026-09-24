@@ -24,7 +24,7 @@ import {
 // Reusable submenu renderer
 const renderSubItems = (items, pathname) => {
   return (
-    <div className="bg-[#f0f4fa] rounded-2xl p-1.5 space-y-1">
+    <div className="bg-[#f0f4fa] rounded-xl p-1 space-y-0.5">
       {items.map((subItem) => {
         const isSelected = pathname === subItem.path;
 
@@ -32,7 +32,7 @@ const renderSubItems = (items, pathname) => {
           <Link
             key={subItem.id}
             to={subItem.path}
-            className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
+            className={`flex items-center px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer no-underline ${
               isSelected
                 ? 'bg-[#dcefe5] text-[#1b7f43]'
                 : 'hover:bg-[#dcefe5] text-slate-600 hover:text-[#1b7f43]'
@@ -44,7 +44,7 @@ const renderSubItems = (items, pathname) => {
               <div className="w-2 h-2 rounded-full bg-[#86efac] mr-3 shrink-0 ml-0.5" />
             )}
 
-            <span className={`text-[12.5px] font-semibold transition-colors ${
+            <span className={`text-[12px] font-semibold transition-colors ${
               isSelected ? 'text-[#1b7f43]' : 'text-slate-600 group-hover:text-[#1b7f43]'
             }`}>
               {subItem.label}
@@ -73,7 +73,7 @@ const DropdownSection = ({
         type="button"
         onClick={toggle}
         title={!isOpen ? label : undefined}
-        className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
+        className={`w-full flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 cursor-pointer border-none text-left ${
           active
             ? 'bg-[#f0f9f4] text-[#1b7f43]'
             : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -81,7 +81,7 @@ const DropdownSection = ({
       >
         <div className="flex items-center min-w-0">
           <div
-            className={`flex items-center justify-center w-9 h-9 rounded-xl shrink-0 transition-colors ${
+            className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-colors ${
               active
                 ? 'bg-[#e5f4eb] text-[#1b7f43]'
                 : 'bg-gray-50 text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
@@ -91,7 +91,7 @@ const DropdownSection = ({
           </div>
 
           <span
-            className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+            className={`ml-3 text-[13px] whitespace-nowrap transition-opacity duration-200 ${
               isOpen
                 ? 'opacity-100 block truncate'
                 : 'opacity-0 hidden'
@@ -140,8 +140,8 @@ const NavGroupHeader = ({ title, isOpen }) => {
     return <div className="my-2 border-t border-gray-100" />;
   }
   return (
-    <li className="pt-3 pb-1 px-3 list-none">
-      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
+    <li className="pt-2.5 pb-0.5 px-2.5 list-none">
+      <span className="text-[9.5px] font-bold text-gray-400 uppercase tracking-wider block">
         {title}
       </span>
     </li>
@@ -298,7 +298,7 @@ export default function Sidebar() {
       </button>
 
       {/* Logo */}
-      <div className="h-16 flex items-center justify-center border-b border-transparent overflow-hidden mt-2">
+      <div className="h-13 flex items-center justify-center border-b border-transparent overflow-hidden mt-1">
         <h1 className="font-bold tracking-wide text-gray-800 whitespace-nowrap transition-all duration-300">
           {isOpen ? (
             <span className="text-2xl">
@@ -319,8 +319,8 @@ export default function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 pt-2 pb-6 overflow-y-auto overflow-x-hidden hide-scrollbar">
-        <ul className="space-y-1.5">
+      <nav className="flex-1 px-2.5 pt-1 pb-4 overflow-y-auto overflow-x-hidden hide-scrollbar">
+        <ul className="space-y-0.5">
 
           {/* GROUP 1: OPERATIONS & FRONT DESK */}
           <NavGroupHeader title="Operations" isOpen={isOpen} />
@@ -330,7 +330,7 @@ export default function Sidebar() {
             <Link
               to="/"
               title={!isOpen ? 'Dashboard' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
                 isDashboardActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -338,7 +338,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-colors ${
+                  className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-colors ${
                     isDashboardActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
@@ -348,7 +348,7 @@ export default function Sidebar() {
                 </div>
 
                 <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-3 text-[13px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isDashboardActive
@@ -367,7 +367,7 @@ export default function Sidebar() {
             <Link
               to="/occupancy"
               title={!isOpen ? 'Occupancy' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
                 isOccupancyActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -375,7 +375,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${
                     isOccupancyActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
@@ -385,7 +385,7 @@ export default function Sidebar() {
                 </div>
 
                 <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-3 text-[13px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isOccupancyActive
@@ -443,7 +443,7 @@ export default function Sidebar() {
             <Link
               to="/guests"
               title={!isOpen ? 'Guests' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
                 isGuestsActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -451,7 +451,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${
                     isGuestsActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
@@ -461,7 +461,7 @@ export default function Sidebar() {
                 </div>
 
                 <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-3 text-[13px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isGuestsActive
@@ -585,7 +585,7 @@ export default function Sidebar() {
             <Link
               to="/ai-assistant"
               title={!isOpen ? 'AI Assistant' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
                 isAssistantActive
                   ? 'bg-[#dcefe5] text-[var(--primary-main)]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -593,7 +593,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${
                     isAssistantActive
                       ? 'bg-[#cce7d6] text-[var(--primary-main)]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
@@ -603,7 +603,7 @@ export default function Sidebar() {
                 </div>
 
                 <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-3 text-[13px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isAssistantActive
