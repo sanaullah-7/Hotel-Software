@@ -1,7 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Popover } from '@mui/material';
 import {
-  FilterList,
   AddCircleOutlined,
   TableChart,
   PictureAsPdf
@@ -20,16 +19,11 @@ export default function ReservationToolbar({
   onCustomStartDateChange,
   customEndDate,
   onCustomEndDateChange,
-  visibleColumns,
-  onToggleColumn,
   onOpenNewModal,
   onRefresh,
   onExportCSV,
   onExportPDF
 }) {
-  const [showColumnsMenu, setShowColumnsMenu] = useState(false);
-  const filterMenuRef = useRef(null);
-
   const [customAnchorEl, setCustomAnchorEl] = useState(null);
 
   const handleCustomClick = (event) => {
@@ -40,16 +34,6 @@ export default function ReservationToolbar({
   const handleCustomClose = () => {
     setCustomAnchorEl(null);
   };
-
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
-        setShowColumnsMenu(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   return (
     <div className="bg-white rounded-[6px] p-2 flex flex-col xl:flex-row xl:items-center justify-between border-b border-gray-100 gap-3">
@@ -114,38 +98,6 @@ export default function ReservationToolbar({
       </div>
 
       <div className="flex items-center gap-2">
-        <div className="relative" ref={filterMenuRef}>
-          <button
-            onClick={() => setShowColumnsMenu(!showColumnsMenu)}
-            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
-            title="Filter"
-          >
-            <FilterList sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
-          </button>
-          {showColumnsMenu && (
-            <div className="absolute right-0 top-10 w-48 bg-[#f8f9fa] shadow-[0_4px_20px_rgba(0,0,0,0.1)] rounded-md border border-gray-100 z-50 py-2 animate-fade-in">
-              <div className="px-4 py-2 border-b border-gray-100 text-[12px] font-bold text-gray-700">
-                Show/Hide Column
-              </div>
-              <div className="max-h-[250px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-                {Object.keys(visibleColumns).map((col) => (
-                  <label
-                    key={col}
-                    className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer gap-3 text-[13px] text-gray-700 transition-colors"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={visibleColumns[col]}
-                      onChange={() => onToggleColumn(col)}
-                      className="w-4 h-4 accent-[#1b7f43] cursor-pointer rounded-sm"
-                    />
-                    {col}
-                  </label>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
         <button
           onClick={onOpenNewModal}
           className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"

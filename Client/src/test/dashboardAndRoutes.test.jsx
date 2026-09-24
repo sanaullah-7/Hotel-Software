@@ -186,4 +186,42 @@ describe('Dashboard and Shared UI Components', () => {
     // Complaint John Doe should now be deleted
     expect(queryByText('John Doe')).toBeNull();
   });
+
+  it('renders AllReservations with no Email column and no column selection filter', async () => {
+    const { default: AllReservations } = await import('../features/reservations/pages/AllReservations');
+    const { getByText, queryByText, queryByTitle, container } = render(
+      <MemoryRouter>
+        <AllReservations />
+      </MemoryRouter>
+    );
+
+    // Verify expected columns exist
+    expect(getByText('Name', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Package', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Room Type', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Status', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Check In', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Check Out', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Payment', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Dues', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Mobile', { selector: 'th' })).toBeTruthy();
+    expect(getByText('Actions', { selector: 'th' })).toBeTruthy();
+
+    // Verify Email column does NOT exist in table headers
+    expect(queryByText('Email', { selector: 'th' })).toBeNull();
+
+    // Verify Email text does not appear in table body cells
+    expect(queryByText('test@email.com')).toBeNull();
+
+    // Verify Filter / Show/Hide Column button is not in the toolbar
+    expect(queryByTitle('Filter')).toBeNull();
+    expect(queryByText('Show/Hide Column')).toBeNull();
+
+    // Verify other toolbar buttons remain intact
+    expect(queryByTitle('Add Booking')).toBeTruthy();
+    expect(queryByTitle('Refresh')).toBeTruthy();
+    expect(queryByTitle('Export CSV')).toBeTruthy();
+    expect(queryByTitle('Export PDF')).toBeTruthy();
+  });
 });
+

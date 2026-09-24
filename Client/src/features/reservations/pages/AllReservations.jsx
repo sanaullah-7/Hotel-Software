@@ -49,21 +49,6 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
 
-  // Columns visibility state
-  const [visibleColumns, setVisibleColumns] = useState({
-    Name: true,
-    Package: true,
-    'Room Type': true,
-    Status: true,
-    'Check In': true,
-    'Check Out': true,
-    Payment: true,
-    Dues: true,
-    Email: true,
-    Mobile: true,
-    Actions: true
-  });
-
   // Action Menu state
   const [activeMenuId, setActiveMenuId] = useState(null);
 
@@ -116,19 +101,6 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
     setSearch('');
     resetReservations(initialBookings);
     setBookings(initialBookings);
-    setVisibleColumns({
-      Name: true,
-      Package: true,
-      'Room Type': true,
-      Status: true,
-      'Check In': true,
-      'Check Out': true,
-      Payment: true,
-      Dues: true,
-      Email: true,
-      Mobile: true,
-      Actions: true
-    });
   };
 
   // Filter Bookings
@@ -139,12 +111,13 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
       (b.mobile && b.mobile.includes(search))
   );
 
+  const exportColumns = ['Name', 'Package', 'Room Type', 'Status', 'Check In', 'Check Out', 'Payment', 'Dues', 'Mobile'];
+
   const handleExportCSV = () => {
-    const activeCols = Object.keys(visibleColumns).filter((col) => visibleColumns[col] && col !== 'Actions');
-    let csvContent = activeCols.join(',') + '\n';
+    let csvContent = exportColumns.join(',') + '\n';
 
     filteredBookings.forEach((b) => {
-      const row = activeCols.map((col) => {
+      const row = exportColumns.map((col) => {
         let val = '';
         if (col === 'Name') val = b.name;
         else if (col === 'Package') val = b.package;
@@ -156,8 +129,7 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
         else if (col === 'Dues') {
           const duesAmt = getBookingDues(b);
           val = duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
-        } else if (col === 'Email') val = b.email;
-        else if (col === 'Mobile') val = b.mobile;
+        } else if (col === 'Mobile') val = b.mobile;
         return `"${(val || '').toString().replace(/"/g, '""')}"`;
       });
       csvContent += row.join(',') + '\n';
@@ -171,7 +143,6 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
   };
 
   const handleExportPDF = () => {
-    const activeCols = Object.keys(visibleColumns).filter((col) => visibleColumns[col] && col !== 'Actions');
     let html = `
       <html>
       <head>
@@ -190,13 +161,13 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
         <div class="meta">Generated on: ${new Date().toLocaleDateString()}</div>
         <table>
           <thead>
-            <tr>${activeCols.map((c) => `<th>${c}</th>`).join('')}</tr>
+            <tr>${exportColumns.map((c) => `<th>${c}</th>`).join('')}</tr>
           </thead>
           <tbody>`;
 
     filteredBookings.forEach((b) => {
       html += '<tr>';
-      activeCols.forEach((col) => {
+      exportColumns.forEach((col) => {
         let val = '';
         if (col === 'Name') val = b.name;
         else if (col === 'Package') val = b.package;
@@ -208,8 +179,7 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
         else if (col === 'Dues') {
           const duesAmt = getBookingDues(b);
           val = duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
-        } else if (col === 'Email') val = b.email;
-        else if (col === 'Mobile') val = b.mobile;
+        } else if (col === 'Mobile') val = b.mobile;
         html += `<td>${val}</td>`;
       });
       html += '</tr>';
@@ -227,10 +197,6 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
     const printWindow = window.open('', '_blank');
     printWindow.document.write(html);
     printWindow.document.close();
-  };
-
-  const toggleColumn = (col) => {
-    setVisibleColumns((prev) => ({ ...prev, [col]: !prev[col] }));
   };
 
   const toggleMenu = (e, id) => {
@@ -454,8 +420,6 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
         onCustomStartDateChange={setCustomStartDate}
         customEndDate={customEndDate}
         onCustomEndDateChange={setCustomEndDate}
-        visibleColumns={visibleColumns}
-        onToggleColumn={toggleColumn}
         onOpenNewModal={openNewModal}
         onRefresh={handleRefresh}
         onExportCSV={handleExportCSV}
@@ -464,7 +428,6 @@ export default function AllBookings({ title = 'Bookings', showDateFilter = false
 
       <ReservationTable
         bookings={filteredBookings}
-        visibleColumns={visibleColumns}
         activeMenuId={activeMenuId}
         onToggleMenu={toggleMenu}
         onCloseMenu={() => setActiveMenuId(null)}
