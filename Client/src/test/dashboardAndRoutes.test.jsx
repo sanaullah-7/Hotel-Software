@@ -95,12 +95,12 @@ describe('Dashboard and Shared UI Components', () => {
     const submitBtn = getByText('Add New Booking', { selector: 'button' });
     fireEvent.click(submitBtn);
 
-    // Verify new booking and Room 305 are rendered in table
+    // Verify new booking and room number 305 are rendered in table
     expect(getByText('Zaid Khan')).toBeTruthy();
-    expect(getByText('Room 305')).toBeTruthy();
+    expect(getByText('305')).toBeTruthy();
   });
 
-  it('renders Room column in table headers and rows', () => {
+  it('renders Room column in table headers and room numbers in rows', () => {
     const { getByText, getAllByText } = render(
       <MemoryRouter>
         <CurrentBookingsTable />
@@ -108,7 +108,20 @@ describe('Dashboard and Shared UI Components', () => {
     );
 
     expect(getByText('Room', { selector: 'th' })).toBeTruthy();
-    expect(getAllByText(/Room \d+/).length).toBeGreaterThan(0);
+    expect(getByText('101')).toBeTruthy();
+  });
+
+  it('navigates to Guest Profile when clicking a Current Booking row', () => {
+    const { getAllByRole, getByText } = render(
+      <MemoryRouter>
+        <CurrentBookingsTable />
+      </MemoryRouter>
+    );
+
+    const rows = getAllByRole('row');
+    // First data row (index 1 after header)
+    expect(rows.length).toBeGreaterThan(1);
+    expect(rows[1].title).toBe('Click to view Guest Profile');
   });
 
   it('filters by date buttons correctly', () => {

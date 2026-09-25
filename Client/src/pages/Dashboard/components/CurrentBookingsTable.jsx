@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Popover } from '@mui/material';
 import {
   CalendarTodayOutlined,
@@ -21,6 +21,7 @@ import {
   saveReservations,
   RESERVATIONS_UPDATED_EVENT
 } from '../../../features/reservations/state/reservationStore';
+import { getGuests } from '../../../features/guests/state/guestStore';
 import { getBookingDues } from '../../../features/payment-billing/pages/paymentBillingStore';
 import StatusBadge from '../../../components/common/StatusBadge';
 import SearchInput from '../../../components/common/SearchInput';
@@ -34,16 +35,16 @@ import ReservationCancelModal from '../../../features/reservations/components/Re
 import { statusStyles, paymentStyles } from '../../../features/reservations/components/ReservationTable';
 
 const initialBookings = [
-  { id: 1, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=11', roomNo: '101', package: 'All inclusive', roomType: 'Delux', status: 'Cancelled', checkIn: '02/25/2023', checkOut: '02/28/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 2, name: 'Sarah Smith', avatar: 'https://i.pravatar.cc/150?img=5', roomNo: '102', package: 'Business', roomType: 'Super Delux', status: 'Booked', checkIn: '02/12/2023', checkOut: '02/15/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 3, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=12', roomNo: '103', package: 'All inclusive', roomType: 'Super Delux', status: 'CheckIn', checkIn: '02/25/2023', checkOut: '02/26/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 4, name: 'Jay Soni', avatar: 'https://i.pravatar.cc/150?img=33', roomNo: '104', package: 'Business', roomType: 'Delux', status: 'Cancelled', checkIn: '02/21/2023', checkOut: '02/23/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 5, name: 'Smita Pari...', avatar: 'https://i.pravatar.cc/150?img=44', roomNo: '105', package: 'All inclusive', roomType: 'Vila', status: 'CheckOut', checkIn: '02/16/2023', checkOut: '02/19/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 6, name: 'Pankaj Sin...', avatar: 'https://i.pravatar.cc/150?img=55', roomNo: '106', package: 'Wedding', roomType: 'Double', status: 'Booked', checkIn: '02/11/2023', checkOut: '02/14/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 7, name: 'Pankaj Sin...', avatar: 'https://i.pravatar.cc/150?img=56', roomNo: '201', package: 'Business', roomType: 'Single', status: 'Booked', checkIn: '02/27/2023', checkOut: '02/28/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 8, name: 'Jay Soni', avatar: 'https://i.pravatar.cc/150?img=34', roomNo: '202', package: 'All inclusive', roomType: 'Delux', status: 'Booked', checkIn: '02/17/2023', checkOut: '02/20/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 9, name: 'Smita Pari...', avatar: 'https://i.pravatar.cc/150?img=45', roomNo: '203', package: 'Wedding', roomType: 'Delux', status: 'CheckOut', checkIn: '02/07/2023', checkOut: '02/10/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
-  { id: 10, name: 'Pooja Patel', avatar: 'https://i.pravatar.cc/150?img=22', roomNo: '204', package: 'Business', roomType: 'Super Delux', status: 'Cancelled', checkIn: '02/09/2023', checkOut: '02/12/2023', payment: 'Unpaid', email: 'test@email.com', mobile: '1234567890' },
+  { id: 1, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=11', roomNo: '101', package: 'All inclusive', roomType: 'Delux', status: 'Cancelled', checkIn: '02/25/2023', checkOut: '02/28/2023', payment: 'Paid', email: 'john.deo@example.com', mobile: '+1 (555) 123-4567' },
+  { id: 2, name: 'Sarah Smith', avatar: 'https://i.pravatar.cc/150?img=5', roomNo: '102', package: 'Business', roomType: 'Super Delux', status: 'Booked', checkIn: '02/12/2023', checkOut: '02/15/2023', payment: 'Unpaid', email: 'sarah.smith@example.com', mobile: '+1 (555) 234-5678' },
+  { id: 3, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=12', roomNo: '103', package: 'All inclusive', roomType: 'Super Delux', status: 'CheckIn', checkIn: '02/25/2023', checkOut: '02/26/2023', payment: 'Paid', email: 'john.deo@example.com', mobile: '+1 (555) 123-4567' },
+  { id: 4, name: 'Jay Soni', avatar: 'https://i.pravatar.cc/150?img=33', roomNo: '104', package: 'Business', roomType: 'Delux', status: 'Cancelled', checkIn: '02/21/2023', checkOut: '02/23/2023', payment: 'Paid', email: 'jay.soni@example.com', mobile: '+1 (555) 345-6789' },
+  { id: 5, name: 'Smita Parikh', avatar: 'https://i.pravatar.cc/150?img=44', roomNo: '105', package: 'All inclusive', roomType: 'Vila', status: 'CheckOut', checkIn: '02/16/2023', checkOut: '02/19/2023', payment: 'Unpaid', email: 'smita.parikh@example.com', mobile: '+1 (555) 456-7890' },
+  { id: 6, name: 'Pankaj Singh', avatar: 'https://i.pravatar.cc/150?img=55', roomNo: '106', package: 'Wedding', roomType: 'Double', status: 'Booked', checkIn: '02/11/2023', checkOut: '02/14/2023', payment: 'Unpaid', email: 'pankaj.singh@example.com', mobile: '+1 (555) 567-8901' },
+  { id: 7, name: 'Pankaj Singh', avatar: 'https://i.pravatar.cc/150?img=56', roomNo: '201', package: 'Business', roomType: 'Single', status: 'Booked', checkIn: '02/27/2023', checkOut: '02/28/2023', payment: 'Unpaid', email: 'pankaj.singh@example.com', mobile: '+1 (555) 567-8901' },
+  { id: 8, name: 'Jay Soni', avatar: 'https://i.pravatar.cc/150?img=34', roomNo: '202', package: 'All inclusive', roomType: 'Delux', status: 'Booked', checkIn: '02/17/2023', checkOut: '02/20/2023', payment: 'Paid', email: 'jay.soni@example.com', mobile: '+1 (555) 345-6789' },
+  { id: 9, name: 'Smita Parikh', avatar: 'https://i.pravatar.cc/150?img=45', roomNo: '203', package: 'Wedding', roomType: 'Delux', status: 'CheckOut', checkIn: '02/07/2023', checkOut: '02/10/2023', payment: 'Paid', email: 'smita.parikh@example.com', mobile: '+1 (555) 456-7890' },
+  { id: 10, name: 'Pooja Patel', avatar: 'https://i.pravatar.cc/150?img=22', roomNo: '204', package: 'Business', roomType: 'Super Delux', status: 'Cancelled', checkIn: '02/09/2023', checkOut: '02/12/2023', payment: 'Unpaid', email: 'pooja.patel@example.com', mobile: '+1 (555) 678-9012' },
 ];
 
 // Helper to parse date strings safely
@@ -65,12 +66,35 @@ export default function CurrentBookingsTable({
   title = 'Current Booking',
   showDateFilter = true
 }) {
-  const [bookings, setBookings] = useState(() => getReservations(initialBookings));
+  const navigate = useNavigate();
+  const [bookings, setBookings] = useState(() => {
+    const existing = getReservations();
+    if (existing && existing.length > 0) return existing;
+    saveReservations(initialBookings);
+    return initialBookings;
+  });
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('All');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [customAnchorEl, setCustomAnchorEl] = useState(null);
+
+  const getGuestIdForBooking = (booking) => {
+    if (booking.guestId) return booking.guestId;
+    const allGuests = getGuests();
+    const found = allGuests.find((g) =>
+      (booking.email && g.email && g.email.toLowerCase() === booking.email.toLowerCase()) ||
+      (booking.name && g.name && g.name.toLowerCase() === booking.name.toLowerCase()) ||
+      String(g.id).toLowerCase() === `gst-${booking.id}`.toLowerCase() ||
+      String(g.id).toLowerCase() === String(booking.id).toLowerCase()
+    );
+    return found?.id || `GST-${booking.id}`;
+  };
+
+  const handleRowClick = (booking) => {
+    const guestId = getGuestIdForBooking(booking);
+    navigate(`/guests/${guestId}`);
+  };
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -130,6 +154,10 @@ export default function CurrentBookingsTable({
   };
 
   useEffect(() => {
+    const existing = getReservations();
+    if (!existing || existing.length === 0) {
+      saveReservations(initialBookings);
+    }
     const syncReservations = () => setBookings(getReservations(initialBookings));
     window.addEventListener('storage', syncReservations);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
@@ -604,9 +632,9 @@ export default function CurrentBookingsTable({
             {filteredBookings.map((booking) => (
               <tr
                 key={booking.id}
-                onClick={() => openViewModal(booking)}
+                onClick={() => handleRowClick(booking)}
                 className="border-b border-gray-50 hover:bg-gray-50/60 transition-colors cursor-pointer"
-                title="Click to view details"
+                title="Click to view Guest Profile"
               >
                 {/* Name */}
                 <td className="py-2.5 px-2">
@@ -616,21 +644,18 @@ export default function CurrentBookingsTable({
                       alt="Avatar"
                       className="w-7 h-7 rounded-full object-cover shadow-xs shrink-0"
                     />
-                    <Link
-                      to={`/guests/${booking.guestId || `GST-${booking.id}`}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-[12px] text-gray-800 font-bold hover:text-[#1b7f43] hover:underline transition-colors truncate max-w-[110px]"
-                      title="View Guest Profile"
+                    <span
+                      className="text-[12px] text-gray-800 font-bold hover:text-[#1b7f43] transition-colors truncate max-w-[110px]"
                     >
                       {booking.name}
-                    </Link>
+                    </span>
                   </div>
                 </td>
 
                 {/* Room */}
                 <td className="py-2.5 px-2">
                   <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-gray-100 text-gray-800 border border-gray-200 whitespace-nowrap">
-                    Room {booking.roomNo || booking.room || '101'}
+                    {booking.roomNo || booking.room || '101'}
                   </span>
                 </td>
 

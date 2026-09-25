@@ -22,25 +22,61 @@ function readGuests() {
 }
 
 export function getGuests() {
-  const guests = readGuests();
-  const byEmail = new Map(guests.map((guest) => [guest.email, guest]));
+  const savedGuests = readGuests();
+  const guestMap = new Map();
 
-  getReservations().forEach((reservation) => {
-    const email = reservation.email || `${reservation.id}@guest.local`;
-    const existing = byEmail.get(email);
-    byEmail.set(email, {
-      id: existing?.id || `GST-${reservation.id}`,
-      name: reservation.name || existing?.name || 'Guest',
-      email,
-      phone: reservation.mobile || existing?.phone || '',
-      city: existing?.city || '',
-      totalStays: (existing?.totalStays || 0) + 1,
-      status: existing?.status || 'Active',
-      avatar: existing?.avatar || 'https://i.pravatar.cc/150?u=guest',
-    });
+  // 1. Seed with all saved guests (they take absolute priority)
+  savedGuests.forEach((g) => {
+    guestMap.set(String(g.id).toLowerCase(), { ...g });
   });
 
-  return Array.from(byEmail.values());
+  // Helper maps for matching reservations to saved guests
+  const byId = new Map(savedGuests.map((g) => [String(g.id).toLowerCase(), g]));
+  const byEmail = new Map(savedGuests.filter((g) => g.email).map((g) => [g.email.toLowerCase(), g]));
+
+  // 2. Merge reservations
+  getReservations().forEach((reservation) => {
+    const resGuestId = reservation.guestId
+      ? String(reservation.guestId).toLowerCase()
+      : `gst-${reservation.id}`.toLowerCase();
+    const email = (reservation.email || `${reservation.id}@guest.local`).toLowerCase();
+
+    // Check if matching saved guest exists by ID or email
+    const existing = byId.get(resGuestId) || byEmail.get(email) || guestMap.get(resGuestId);
+
+    if (existing) {
+      const key = String(existing.id).toLowerCase();
+      const current = guestMap.get(key) || existing;
+      // Keep saved guest's edited fields! Do NOT let reservation defaults overwrite them.
+      guestMap.set(key, {
+        id: current.id,
+        name: current.name || reservation.name || 'Guest',
+        email: current.email || reservation.email || `${reservation.id}@guest.local`,
+        phone: current.phone || reservation.mobile || '',
+        city: current.city || '',
+        totalStays: current.totalStays !== undefined ? current.totalStays : 1,
+        status: current.status || 'Active',
+        avatar: current.avatar || reservation.avatar || 'https://i.pravatar.cc/150?u=guest',
+      });
+    } else {
+      const newGuestId = reservation.guestId || `GST-${reservation.id}`;
+      const key = String(newGuestId).toLowerCase();
+      if (!guestMap.has(key)) {
+        guestMap.set(key, {
+          id: newGuestId,
+          name: reservation.name || 'Guest',
+          email: reservation.email || `${reservation.id}@guest.local`,
+          phone: reservation.mobile || '',
+          city: '',
+          totalStays: 1,
+          status: 'Active',
+          avatar: reservation.avatar || 'https://i.pravatar.cc/150?u=guest',
+        });
+      }
+    }
+  });
+
+  return Array.from(guestMap.values());
 }
 
 export function saveGuests(guests) {
@@ -55,31 +91,51 @@ export function addGuest(guest) {
 }
 
 export function updateGuest(id, updates) {
-  const guests = readGuests().map((guest) => guest.id === id ? { ...guest, ...updates } : guest);
-  saveGuests(guests);
-  return guests.find((guest) => guest.id === id);
+  const normalizedId = String(id).toLowerCase();
+  const currentGuests = readGuests();
+  const index = currentGuests.findIndex((guest) =>
+    String(guest.id).toLowerCase() === normalizedId ||
+    String(guest.id).toLowerCase() === `gst-${normalizedId}` ||
+    (normalizedId.startsWith('gst-') && String(guest.id).toLowerCase() === normalizedId.replace('gst-', ''))
+  );
+
+  let updatedList;
+  let updatedGuest;
+  if (index >= 0) {
+    updatedGuest = { ...currentGuests[index], ...updates };
+    updatedList = [...currentGuests];
+    updatedList[index] = updatedGuest;
+  } else {
+    // If not previously in saved guests list, fetch full guest object and merge updates
+    const existingFull = getGuestById(id) || {};
+    updatedGuest = { ...existingFull, ...updates, id };
+    updatedList = [updatedGuest, ...currentGuests];
+  }
+
+  saveGuests(updatedList);
+  return updatedGuest;
 }
 
 export function deleteGuest(id) {
-  saveGuests(readGuests().filter((guest) => guest.id !== id));
+  const normalizedId = String(id).toLowerCase();
+  saveGuests(readGuests().filter((guest) => String(guest.id).toLowerCase() !== normalizedId));
 }
 
 export function getGuestById(id) {
   if (!id) return null;
   const allGuests = getGuests();
   const normalizedId = String(id).toLowerCase();
-  
-  let guest = allGuests.find((g) => 
+
+  let guest = allGuests.find((g) =>
     String(g.id).toLowerCase() === normalizedId ||
     String(g.id).toLowerCase() === `gst-${normalizedId}` ||
     (normalizedId.startsWith('gst-') && String(g.id).toLowerCase() === normalizedId.replace('gst-', ''))
   );
 
-  // If still not found, check reservations directly
   if (!guest) {
     const reservations = getReservations();
-    const res = reservations.find((r) => 
-      String(r.id) === String(id) || 
+    const res = reservations.find((r) =>
+      String(r.id) === String(id) ||
       `GST-${r.id}`.toLowerCase() === normalizedId ||
       (r.name && r.name.toLowerCase() === normalizedId)
     );
