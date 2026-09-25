@@ -73,6 +73,7 @@ export default function EmployeeSalary() {
  handleSort,
  paginatedSalaries,
  sortedSalaries,
+ filteredSalaries,
  handleSelectAll,
  handleSelectRow,
  isAllSelected,
