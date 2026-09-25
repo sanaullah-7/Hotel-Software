@@ -451,6 +451,7 @@ export function useTodaysAttendance() {
     handleSort,
     paginatedRecords,
     sortedRecords,
+    filteredRecords,
     handleSelectAll,
     handleSelectRow,
     isAllSelected,

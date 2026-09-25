@@ -72,6 +72,7 @@ export default function TodaysAttendance() {
         handleSort,
         paginatedRecords,
         sortedRecords,
+        filteredRecords,
         handleSelectAll,
         handleSelectRow,
         isAllSelected,
