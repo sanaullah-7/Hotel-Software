@@ -59,14 +59,14 @@ import Occupancy from '../features/occupancy/pages/Occupancy';
 import CarParking from '../features/car-parking/pages/CarParking';
 
 // HR Module Pages
-import AllStaff from '../pages/HR/Staff/AllStaff';
-import AddStaff from '../pages/HR/Staff/AddStaff';
-import EditStaff from '../pages/HR/Staff/EditStaff';
-import StaffProfile from '../pages/HR/Staff/StaffProfile';
-import LeaveRequests from '../pages/HR/LeaveRequests/LeaveRequests';
-import AttendanceSheet from '../pages/HR/Attendance/AttendanceSheet';
-import TodaysAttendance from '../pages/HR/Attendance/TodaysAttendance';
-import EmployeeSalary from '../pages/HR/Salary/EmployeeSalary';
+import AllStaff from '../features/staff/pages/AllStaff';
+import AddStaff from '../features/staff/pages/AddStaff';
+import EditStaff from '../features/staff/pages/EditStaff';
+import StaffProfile from '../features/staff/pages/StaffProfile';
+import LeaveRequests from '../features/staff/pages/LeaveRequests';
+import AttendanceSheet from '../features/staff/pages/AttendanceSheet';
+import TodaysAttendance from '../features/staff/pages/TodaysAttendance';
+import EmployeeSalary from '../features/staff/pages/EmployeeSalary';
 
 // Reports Module Pages
 import ReportsPage from '../features/reports/pages/ReportsPage';
