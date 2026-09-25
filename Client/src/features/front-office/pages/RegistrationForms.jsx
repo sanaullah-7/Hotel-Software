@@ -112,8 +112,8 @@ export default function RegistrationForms() {
  </div>
  </div>
 
- <div className="hide-scrollbar">
- <table className="w-full text-left min-w-max">
+ <div className="w-full overflow-x-auto min-w-0 hide-scrollbar">
+ <table className="w-full text-left min-w-[700px]">
  <thead>
  <tr className="border-b border-gray-100 bg-gray-50/50">
  <th className="py-2.5 px-4 text-[12px] font-bold text-gray-700">Form ID</th>

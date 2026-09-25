@@ -2,14 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Popover } from '@mui/material';
 import {
-  CalendarTodayOutlined,
-  PhoneOutlined,
-  MoreHoriz,
-  SubjectOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  LogoutOutlined,
-  CancelOutlined,
   AddCircleOutlined,
   TableChart,
   PictureAsPdf
@@ -23,7 +15,6 @@ import {
 } from '../../../features/reservations/state/reservationStore';
 import { getGuests } from '../../../features/guests/state/guestStore';
 import { getBookingDues } from '../../../features/payment-billing/pages/paymentBillingStore';
-import StatusBadge from '../../../components/common/StatusBadge';
 import SearchInput from '../../../components/common/SearchInput';
 import RefreshButton from '../../../components/common/RefreshButton';
 import PaginationControls from '../../../components/common/PaginationControls';
@@ -32,35 +23,8 @@ import ReservationViewModal from '../../../features/reservations/components/Rese
 import ReservationFormModal from '../../../features/reservations/components/ReservationFormModal';
 import ReservationDeleteModal from '../../../features/reservations/components/ReservationDeleteModal';
 import ReservationCancelModal from '../../../features/reservations/components/ReservationCancelModal';
-import { statusStyles, paymentStyles } from '../../../features/reservations/components/ReservationTable';
-
-const initialBookings = [
-  { id: 1, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=11', roomNo: '101', package: 'All inclusive', roomType: 'Delux', status: 'Cancelled', checkIn: '02/25/2023', checkOut: '02/28/2023', payment: 'Paid', email: 'john.deo@example.com', mobile: '+1 (555) 123-4567' },
-  { id: 2, name: 'Sarah Smith', avatar: 'https://i.pravatar.cc/150?img=5', roomNo: '102', package: 'Business', roomType: 'Super Delux', status: 'Booked', checkIn: '02/12/2023', checkOut: '02/15/2023', payment: 'Unpaid', email: 'sarah.smith@example.com', mobile: '+1 (555) 234-5678' },
-  { id: 3, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=12', roomNo: '103', package: 'All inclusive', roomType: 'Super Delux', status: 'CheckIn', checkIn: '02/25/2023', checkOut: '02/26/2023', payment: 'Paid', email: 'john.deo@example.com', mobile: '+1 (555) 123-4567' },
-  { id: 4, name: 'Jay Soni', avatar: 'https://i.pravatar.cc/150?img=33', roomNo: '104', package: 'Business', roomType: 'Delux', status: 'Cancelled', checkIn: '02/21/2023', checkOut: '02/23/2023', payment: 'Paid', email: 'jay.soni@example.com', mobile: '+1 (555) 345-6789' },
-  { id: 5, name: 'Smita Parikh', avatar: 'https://i.pravatar.cc/150?img=44', roomNo: '105', package: 'All inclusive', roomType: 'Vila', status: 'CheckOut', checkIn: '02/16/2023', checkOut: '02/19/2023', payment: 'Unpaid', email: 'smita.parikh@example.com', mobile: '+1 (555) 456-7890' },
-  { id: 6, name: 'Pankaj Singh', avatar: 'https://i.pravatar.cc/150?img=55', roomNo: '106', package: 'Wedding', roomType: 'Double', status: 'Booked', checkIn: '02/11/2023', checkOut: '02/14/2023', payment: 'Unpaid', email: 'pankaj.singh@example.com', mobile: '+1 (555) 567-8901' },
-  { id: 7, name: 'Pankaj Singh', avatar: 'https://i.pravatar.cc/150?img=56', roomNo: '201', package: 'Business', roomType: 'Single', status: 'Booked', checkIn: '02/27/2023', checkOut: '02/28/2023', payment: 'Unpaid', email: 'pankaj.singh@example.com', mobile: '+1 (555) 567-8901' },
-  { id: 8, name: 'Jay Soni', avatar: 'https://i.pravatar.cc/150?img=34', roomNo: '202', package: 'All inclusive', roomType: 'Delux', status: 'Booked', checkIn: '02/17/2023', checkOut: '02/20/2023', payment: 'Paid', email: 'jay.soni@example.com', mobile: '+1 (555) 345-6789' },
-  { id: 9, name: 'Smita Parikh', avatar: 'https://i.pravatar.cc/150?img=45', roomNo: '203', package: 'Wedding', roomType: 'Delux', status: 'CheckOut', checkIn: '02/07/2023', checkOut: '02/10/2023', payment: 'Paid', email: 'smita.parikh@example.com', mobile: '+1 (555) 456-7890' },
-  { id: 10, name: 'Pooja Patel', avatar: 'https://i.pravatar.cc/150?img=22', roomNo: '204', package: 'Business', roomType: 'Super Delux', status: 'Cancelled', checkIn: '02/09/2023', checkOut: '02/12/2023', payment: 'Unpaid', email: 'pooja.patel@example.com', mobile: '+1 (555) 678-9012' },
-];
-
-// Helper to parse date strings safely
-const parseDate = (dateStr) => {
-  if (!dateStr) return null;
-  if (dateStr.includes('/')) {
-    const [m, d, y] = dateStr.split('/');
-    return new Date(Number(y), Number(m) - 1, Number(d));
-  }
-  if (dateStr.includes('-')) {
-    const [y, m, d] = dateStr.split('-');
-    return new Date(Number(y), Number(m) - 1, Number(d));
-  }
-  const parsed = new Date(dateStr);
-  return isNaN(parsed.getTime()) ? null : parsed;
-};
+import { initialBookings, parseDate } from '../data/currentBookingsData';
+import BookingsGridTable from './BookingsGridTable';
 
 export default function CurrentBookingsTable({
   title = 'Current Booking',
@@ -192,7 +156,6 @@ export default function CurrentBookingsTable({
 
   // Functional Date + Search Filter
   const filteredBookings = bookings.filter((b) => {
-    // 1. Search query match
     const q = search.toLowerCase().trim();
     if (q) {
       const matchName = b.name && b.name.toLowerCase().includes(q);
@@ -205,32 +168,19 @@ export default function CurrentBookingsTable({
       }
     }
 
-    // 2. Date filter match
     if (dateFilter === 'All') return true;
 
     const checkInDate = parseDate(b.checkIn);
     if (!checkInDate) return true;
 
-    // Anchor reference
     const refYear = checkInDate.getFullYear();
     const refMonth = checkInDate.getMonth();
     const refDay = checkInDate.getDate();
 
-    if (dateFilter === 'Daily') {
-      return refDay >= 20 && refDay <= 28;
-    }
-
-    if (dateFilter === 'Weekly') {
-      return refDay >= 10 && refDay <= 20;
-    }
-
-    if (dateFilter === 'Monthly') {
-      return refMonth === 1 || refMonth === new Date().getMonth();
-    }
-
-    if (dateFilter === 'Yearly') {
-      return refYear === 2023 || refYear === new Date().getFullYear();
-    }
+    if (dateFilter === 'Daily') return refDay >= 20 && refDay <= 28;
+    if (dateFilter === 'Weekly') return refDay >= 10 && refDay <= 20;
+    if (dateFilter === 'Monthly') return refMonth === 1 || refMonth === new Date().getMonth();
+    if (dateFilter === 'Yearly') return refYear === 2023 || refYear === new Date().getFullYear();
 
     if (dateFilter === 'Custom') {
       if (!customStartDate && !customEndDate) return true;
@@ -245,7 +195,6 @@ export default function CurrentBookingsTable({
     return true;
   });
 
-  // Action Menu Handlers
   const toggleMenu = (e, id) => {
     e.stopPropagation();
     setActiveMenuId(activeMenuId === id ? null : id);
@@ -427,7 +376,6 @@ export default function CurrentBookingsTable({
     persistBookings(updated);
   };
 
-  // Export CSV (Without Email Column, With Room Column)
   const handleExportCSV = () => {
     const cols = ['Name', 'Room', 'Room Type', 'Package', 'Status', 'Check In', 'Check Out', 'Payment', 'Dues', 'Mobile'];
     let csvContent = cols.join(',') + '\n';
@@ -456,7 +404,6 @@ export default function CurrentBookingsTable({
     link.click();
   };
 
-  // Export PDF (Without Email Column, With Room Column)
   const handleExportPDF = () => {
     const cols = ['Name', 'Room', 'Room Type', 'Package', 'Status', 'Check In', 'Check Out', 'Payment', 'Dues', 'Mobile'];
     let html = `
@@ -513,7 +460,7 @@ export default function CurrentBookingsTable({
 
   return (
     <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
-      {/* ─── Dashboard Toolbar (Tight & Functional, Selection Filter Removed) ─── */}
+      {/* Dashboard Toolbar */}
       <div className="p-3 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-3">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-[15px] font-bold text-gray-800 whitespace-nowrap">{title}</h2>
@@ -578,7 +525,7 @@ export default function CurrentBookingsTable({
           )}
         </div>
 
-        {/* Right Side Actions: Add, Refresh, CSV, PDF (Column Filter Removed) */}
+        {/* Right Side Actions */}
         <div className="flex items-center gap-1.5">
           <button
             onClick={openNewModal}
@@ -610,177 +557,21 @@ export default function CurrentBookingsTable({
         </div>
       </div>
 
-      {/* ─── Table With Room Column and Without Overflow Scrolling ─── */}
-      <div className="w-full">
-        <table className="w-full text-left border-collapse table-auto">
-          <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/50">
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Name</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Room</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Room Type</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Package</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Status</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Check In</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Check Out</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Payment</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Dues</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide">Mobile</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredBookings.map((booking) => (
-              <tr
-                key={booking.id}
-                onClick={() => handleRowClick(booking)}
-                className="border-b border-gray-50 hover:bg-gray-50/60 transition-colors cursor-pointer"
-                title="Click to view Guest Profile"
-              >
-                {/* Name */}
-                <td className="py-2.5 px-2">
-                  <div className="flex items-center gap-1.5">
-                    <img
-                      src={booking.avatar}
-                      alt="Avatar"
-                      className="w-7 h-7 rounded-full object-cover shadow-xs shrink-0"
-                    />
-                    <span
-                      className="text-[12px] text-gray-800 font-bold hover:text-[#1b7f43] transition-colors truncate max-w-[110px]"
-                    >
-                      {booking.name}
-                    </span>
-                  </div>
-                </td>
+      {/* Grid Table */}
+      <BookingsGridTable
+        filteredBookings={filteredBookings}
+        handleRowClick={handleRowClick}
+        activeMenuId={activeMenuId}
+        toggleMenu={toggleMenu}
+        setActiveMenuId={setActiveMenuId}
+        openViewModal={openViewModal}
+        openEditModal={openEditModal}
+        confirmDelete={confirmDelete}
+        handleCheckout={handleCheckout}
+        confirmCancel={confirmCancel}
+      />
 
-                {/* Room */}
-                <td className="py-2.5 px-2">
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-gray-100 text-gray-800 border border-gray-200 whitespace-nowrap">
-                    {booking.roomNo || booking.room || '101'}
-                  </span>
-                </td>
-
-                {/* Room Type */}
-                <td className="py-2.5 px-2 text-[11.5px] text-gray-600">{booking.roomType}</td>
-
-                {/* Package */}
-                <td className="py-2.5 px-2 text-[11.5px] text-gray-600">{booking.package}</td>
-
-                {/* Status */}
-                <td className="py-2.5 px-2">
-                  <StatusBadge
-                    status={booking.status}
-                    stylesMap={statusStyles}
-                    size="xs"
-                  />
-                </td>
-
-                {/* Check In */}
-                <td className="py-2.5 px-2 text-[11px] text-gray-600">
-                  <div className="flex items-center gap-1 whitespace-nowrap">
-                    <CalendarTodayOutlined sx={{ fontSize: 11 }} className="text-gray-400" />
-                    {booking.checkIn}
-                  </div>
-                </td>
-
-                {/* Check Out */}
-                <td className="py-2.5 px-2 text-[11px] text-gray-600">
-                  <div className="flex items-center gap-1 whitespace-nowrap">
-                    <CalendarTodayOutlined sx={{ fontSize: 11 }} className="text-gray-400" />
-                    {booking.checkOut}
-                  </div>
-                </td>
-
-                {/* Payment */}
-                <td className="py-2.5 px-2">
-                  <StatusBadge
-                    status={booking.payment}
-                    stylesMap={paymentStyles}
-                    size="xs"
-                  />
-                </td>
-
-                {/* Dues */}
-                <td className="py-2.5 px-2 text-[11.5px] font-semibold">
-                  {(() => {
-                    const duesAmt = getBookingDues(booking);
-                    return duesAmt > 0 ? (
-                      <span className="text-red-600 font-bold">${duesAmt.toLocaleString()}</span>
-                    ) : (
-                      <span className="text-gray-400 font-normal">$0</span>
-                    );
-                  })()}
-                </td>
-
-                {/* Mobile */}
-                <td className="py-2.5 px-2 text-[11px] text-gray-600">
-                  <div className="flex items-center gap-1 whitespace-nowrap">
-                    <PhoneOutlined sx={{ fontSize: 11 }} className="text-emerald-500" />
-                    {booking.mobile}
-                  </div>
-                </td>
-
-                {/* Actions */}
-                <td className="py-2.5 px-2 text-center relative" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={(e) => toggleMenu(e, booking.id)}
-                    className="text-gray-600 hover:bg-gray-100 rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors cursor-pointer"
-                  >
-                    <MoreHoriz sx={{ fontSize: 18 }} />
-                  </button>
-
-                  {activeMenuId === booking.id && (
-                    <div
-                      className="absolute right-3 top-9 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-lg border border-gray-100 z-50 py-1.5 w-40 animate-fade-in text-left"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        onClick={() => { setActiveMenuId(null); openViewModal(booking); }}
-                        className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
-                      >
-                        <SubjectOutlined className="text-[#10b981]" sx={{ fontSize: 16 }} /> View Details
-                      </button>
-                      <button
-                        onClick={() => { setActiveMenuId(null); openEditModal(booking); }}
-                        className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
-                      >
-                        <EditOutlined className="text-[#6366f1]" sx={{ fontSize: 16 }} /> Edit Booking
-                      </button>
-                      <button
-                        onClick={() => { setActiveMenuId(null); confirmDelete(booking); }}
-                        className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
-                      >
-                        <DeleteOutlined className="text-[#ef4444]" sx={{ fontSize: 16 }} /> Delete
-                      </button>
-                      <button
-                        onClick={() => { setActiveMenuId(null); handleCheckout(booking.id); }}
-                        className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
-                      >
-                        <LogoutOutlined className="text-[#64748b]" sx={{ fontSize: 16 }} /> Check Out
-                      </button>
-                      <button
-                        onClick={() => { setActiveMenuId(null); confirmCancel(booking); }}
-                        className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
-                      >
-                        <CancelOutlined className="text-[#64748b]" sx={{ fontSize: 16 }} /> Cancel Booking
-                      </button>
-                    </div>
-                  )}
-                </td>
-              </tr>
-            ))}
-
-            {filteredBookings.length === 0 && (
-              <tr>
-                <td colSpan={11} className="py-8 text-center text-gray-400 text-xs">
-                  No bookings found matching criteria.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* ─── Compact Pagination ─── */}
+      {/* Compact Pagination */}
       <PaginationControls
         variant="compact"
         totalRecords={filteredBookings.length}
@@ -789,7 +580,7 @@ export default function CurrentBookingsTable({
         onRowsPerPageChange={setRowsPerPage}
       />
 
-      {/* ─── Modals ─── */}
+      {/* Modals */}
       <ReservationViewModal
         open={isViewModalOpen}
         booking={viewingBooking}

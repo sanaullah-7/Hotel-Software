@@ -346,7 +346,7 @@ export default function Guests() {
         </div>
 
         {/* Table Content */}
-        <div className="w-full overflow-x-auto">
+        <div className="w-full overflow-x-auto min-w-0">
           <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="border-b border-gray-100 bg-white">

@@ -52,20 +52,32 @@ export default function ReservationTable({
 
   return (
     <div className="bg-white rounded-b-xl shadow-sm flex-1 flex flex-col">
-      <div className="overflow-x-auto w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <table className="w-full text-left whitespace-nowrap">
+      <div className="w-full max-lg:overflow-x-auto lg:overflow-x-hidden min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <table className="w-full text-left table-fixed max-lg:min-w-[850px]">
+          <colgroup>
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '9%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '9%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '10%' }} />
+            <col style={{ width: '9%' }} />
+            <col style={{ width: '7%' }} />
+            <col style={{ width: '14%' }} />
+            <col style={{ width: '8%' }} />
+          </colgroup>
           <thead>
             <tr className="border-b border-gray-100 bg-white">
-              <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Name</th>
-              <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Package</th>
-              <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Room Type</th>
-              <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Status</th>
-              <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Check In</th>
-              <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Check Out</th>
-              <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Payment</th>
-              <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Dues</th>
-              <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Mobile</th>
-              <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b] text-center">Actions</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Name</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Package</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Room Type</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Status</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Check In</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Check Out</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Payment</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Dues</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Mobile</th>
+              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide text-center whitespace-nowrap">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -76,46 +88,58 @@ export default function ReservationTable({
                 className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer"
                 title="Click anywhere to view Guest Profile"
               >
-                <td className="py-3 px-2 flex items-center gap-3">
-                  <img src={booking.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover shadow-sm shrink-0" />
-                  <Link
-                    to={`/guests/${booking.guestId || `GST-${booking.id}`}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-[13px] text-gray-800 font-medium hover:text-[#1b7f43] hover:underline transition-colors"
-                    title="View Guest Profile"
-                  >
-                    {booking.name}
-                  </Link>
+                <td className="py-2 px-2 whitespace-nowrap">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <img src={booking.avatar} alt="Avatar" className="w-7 h-7 rounded-full object-cover shadow-sm shrink-0" />
+                    <Link
+                      to={`/guests/${booking.guestId || `GST-${booking.id}`}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[12px] text-gray-800 font-bold hover:text-[#1b7f43] transition-colors truncate block max-w-full"
+                      title="View Guest Profile"
+                    >
+                      {booking.name}
+                    </Link>
+                  </div>
                 </td>
-                <td className="py-3 px-2 text-[13px] text-gray-600">{booking.package}</td>
-                <td className="py-3 px-2 text-[13px] text-gray-600">{booking.roomType}</td>
-                <td className="py-3 px-2">
+                <td className="py-2 px-2 text-[11.5px] text-gray-600 whitespace-nowrap truncate">{booking.package}</td>
+                <td className="py-2 px-2 text-[11.5px] text-gray-600 whitespace-nowrap truncate">{booking.roomType}</td>
+                <td className="py-2 px-2 whitespace-nowrap">
                   <StatusBadge
                     status={booking.status}
                     stylesMap={statusStyles}
-                    size="sm"
+                    size="xs"
                   />
                 </td>
-                <td className="py-3 px-2 text-[13px] text-gray-600">
-                  <div className="flex items-center gap-1.5">
-                    <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
-                    {booking.checkIn}
+                <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 whitespace-nowrap font-medium text-gray-800">
+                      <CalendarTodayOutlined sx={{ fontSize: 12 }} className="text-gray-400" />
+                      {booking.checkIn}
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-normal pl-4">
+                      {booking.checkInTime || '02:00 PM'}
+                    </span>
                   </div>
                 </td>
-                <td className="py-3 px-2 text-[13px] text-gray-600">
-                  <div className="flex items-center gap-1.5">
-                    <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
-                    {booking.checkOut}
+                <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5 whitespace-nowrap font-medium text-gray-800">
+                      <CalendarTodayOutlined sx={{ fontSize: 12 }} className="text-gray-400" />
+                      {booking.checkOut}
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-normal pl-4">
+                      {booking.checkOutTime || '11:00 AM'}
+                    </span>
                   </div>
                 </td>
-                <td className="py-3 px-2">
+                <td className="py-2 px-2 whitespace-nowrap">
                   <StatusBadge
                     status={booking.payment}
                     stylesMap={paymentStyles}
-                    size="sm"
+                    size="xs"
                   />
                 </td>
-                <td className="py-3 px-2 text-[13px] font-medium text-gray-700">
+                <td className="py-2 px-2 text-[11.5px] font-semibold whitespace-nowrap">
                   {(() => {
                     const duesAmt = getBookingDues(booking);
                     return duesAmt > 0 ? (
@@ -125,13 +149,13 @@ export default function ReservationTable({
                     );
                   })()}
                 </td>
-                <td className="py-3 px-2 text-[13px] text-gray-600">
-                  <div className="flex items-center gap-1.5">
-                    <PhoneOutlined sx={{ fontSize: 14 }} className="text-green-500" />
+                <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">
+                  <div className="flex items-center gap-1.5 whitespace-nowrap">
+                    <PhoneOutlined sx={{ fontSize: 12 }} className="text-green-500" />
                     {booking.mobile}
                   </div>
                 </td>
-                <td className="py-3 px-2 relative text-center" onClick={(e) => e.stopPropagation()}>
+                <td className="py-2 px-2 relative text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={(e) => onToggleMenu(e, booking.id)}
                     className="text-gray-700 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center mx-auto transition-colors"
@@ -141,7 +165,7 @@ export default function ReservationTable({
                   {activeMenuId === booking.id && (
                     <div
                       ref={menuRef}
-                      className="absolute right-4 top-10 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-md border border-gray-100 z-50 py-2 w-44 animate-fade-in text-left"
+                      className="absolute right-2 top-8 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-md border border-gray-100 z-50 py-2 w-44 animate-fade-in text-left"
                     >
                       <button
                         onClick={() => onOpenViewModal(booking)}

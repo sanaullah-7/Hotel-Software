@@ -10,6 +10,7 @@ import {
   IconButton,
 } from '@mui/material';
 import {
+  Menu as MenuIcon,
   Search as SearchIcon,
   Person as PersonIcon,
   Logout as LogoutIcon,
@@ -19,7 +20,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import CommandPalette from './CommandPalette';
 
-const Topbar = () => {
+const Topbar = ({ onMobileNavToggle }) => {
   const navigate = useNavigate();
   // State for profile menu
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
@@ -93,28 +94,38 @@ const Topbar = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          px: 3,
+          px: { xs: 1.5, sm: 3 },
           py: 1.5,
           bgcolor: 'white',
           borderBottom: '1px solid #e5e7eb',
           flexShrink: 0,
         }}
       >
-        <AppBreadcrumbs />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <IconButton
+            onClick={onMobileNavToggle}
+            sx={{ display: { xs: 'flex', md: 'none' }, color: 'text.secondary', p: 0.5 }}
+            size="small"
+            aria-label="Toggle Navigation"
+          >
+            <MenuIcon sx={{ fontSize: 22 }} />
+          </IconButton>
+          <AppBreadcrumbs />
+        </Box>
 
         {/* Right side container for Search and Profile */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {/* Global search command palette trigger */}
-          <Box sx={{ position: 'relative', width: 260 }}>
+          <Box sx={{ position: 'relative', width: { xs: 140, sm: 260 } }}>
           <button
             onClick={() => setIsCommandPaletteOpen(true)}
-            className="w-full flex items-center justify-between px-3 py-1 bg-[#f8fafc] border border-[#e5e7eb] rounded-lg cursor-pointer transition-colors hover:bg-white hover:border-slate-300 group"
+            className="w-full flex items-center justify-between px-2 sm:px-3 py-1 bg-[#f8fafc] border border-[#e5e7eb] rounded-lg cursor-pointer transition-colors hover:bg-white hover:border-slate-300 group"
           >
-            <div className="flex items-center gap-2 text-slate-400">
-              <SearchIcon sx={{ fontSize: 18 }} className="group-hover:text-emerald-500 transition-colors" />
-              <span className="text-[13px]">Search rooms, guests, actions...</span>
+            <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400 min-w-0">
+              <SearchIcon sx={{ fontSize: 18 }} className="group-hover:text-emerald-500 transition-colors shrink-0" />
+              <span className="text-[12px] sm:text-[13px] truncate">Search...</span>
             </div>
-            <div className="flex items-center gap-1 border border-slate-200 bg-slate-100 rounded px-1.5 py-0.5 text-[11px] font-bold text-slate-500">
+            <div className="hidden sm:flex items-center gap-1 border border-slate-200 bg-slate-100 rounded px-1.5 py-0.5 text-[11px] font-bold text-slate-500 shrink-0">
               ⌘K
             </div>
           </button>
@@ -147,7 +158,7 @@ const Topbar = () => {
               alt="admin"
               sx={{ width: 32, height: 32 }}
             />
-            <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary' }}>
+            <Typography variant="body2" sx={{ fontWeight: 500, color: 'text.primary', display: { xs: 'none', sm: 'block' } }}>
               {profileName}
             </Typography>
           </Box>

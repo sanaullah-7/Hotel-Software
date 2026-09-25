@@ -119,7 +119,7 @@ export default function ReservationsTab({ reservations = [], guest }) {
         </div>
 
         {/* Table Content */}
-        <div className="overflow-x-auto hide-scrollbar">
+        <div className="w-full overflow-x-auto min-w-0 hide-scrollbar">
           <table className="w-full text-left border-collapse min-w-[700px]">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">

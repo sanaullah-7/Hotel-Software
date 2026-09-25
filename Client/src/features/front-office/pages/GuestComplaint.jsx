@@ -308,34 +308,34 @@ export default function GuestComplaint() {
           </div>
         </div>
         
-        {/* Table - Non-scrolling with table-fixed and hover tooltips for long text */}
-        <div className="w-full overflow-hidden">
-          <table className="w-full text-left border-collapse table-fixed">
+        {/* Table - Non-scrolling on desktop, scrollable on mobile */}
+        <div className="w-full max-lg:overflow-x-auto lg:overflow-x-hidden min-w-0">
+          <table className="w-full text-left border-collapse table-fixed max-lg:min-w-[800px]">
             <thead>
               <tr className="border-b border-gray-100 bg-white">
-                {visibleColumns['Date'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[12%]">Date</th>}
-                {visibleColumns['Guest Name'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[15%]">Guest Name</th>}
-                {visibleColumns['Room No'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[9%]">Room No</th>}
-                {visibleColumns['Complaint Type'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[15%]">Complaint Type</th>}
-                {visibleColumns['Description'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[27%]">Description</th>}
-                {visibleColumns['Priority'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[11%]">Priority</th>}
-                {visibleColumns['Status'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] w-[11%]">Status</th>}
-                {visibleColumns['Actions'] && <th className="py-4 px-4 text-[13px] font-bold text-[#1e293b] text-center w-[10%]">Actions</th>}
+                {visibleColumns['Date'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[11%]">Date</th>}
+                {visibleColumns['Guest Name'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[14%]">Guest Name</th>}
+                {visibleColumns['Room No'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[8%]">Room No</th>}
+                {visibleColumns['Complaint Type'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[14%]">Complaint Type</th>}
+                {visibleColumns['Description'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[29%]">Description</th>}
+                {visibleColumns['Priority'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[9%]">Priority</th>}
+                {visibleColumns['Status'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[9%]">Status</th>}
+                {visibleColumns['Actions'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide text-center whitespace-nowrap w-[6%]">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {filteredComplaints.map(complaint => (
                 <tr key={complaint.id} onClick={() => openViewModal(complaint)} className="border-b border-gray-50 hover:bg-gray-50/50 cursor-pointer">
                   {visibleColumns['Date'] && (
-                    <td className="py-3.5 px-4 text-[13px] text-[#475569] font-medium">
+                    <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium whitespace-nowrap">
                       <div className="flex items-center gap-1.5 whitespace-nowrap">
-                        <CalendarToday sx={{ fontSize: 15 }} className="text-gray-700 shrink-0" />
+                        <CalendarToday sx={{ fontSize: 13 }} className="text-gray-700 shrink-0" />
                         <span className="truncate">{complaint.date}</span>
                       </div>
                     </td>
                   )}
                   {visibleColumns['Guest Name'] && (
-                    <td className="py-3.5 px-4 text-[13px] text-[#475569] font-medium">
+                    <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium">
                       <Tooltip title={complaint.guestName} arrow placement="top">
                         <span className="truncate block cursor-default">
                           {complaint.guestName}
@@ -344,12 +344,12 @@ export default function GuestComplaint() {
                     </td>
                   )}
                   {visibleColumns['Room No'] && (
-                    <td className="py-3.5 px-4 text-[13px] text-[#475569] font-medium whitespace-nowrap">
+                    <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium whitespace-nowrap">
                       {complaint.roomNo}
                     </td>
                   )}
                   {visibleColumns['Complaint Type'] && (
-                    <td className="py-3.5 px-4 text-[13px] text-[#475569] font-medium">
+                    <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium">
                       <Tooltip title={complaint.type} arrow placement="top">
                         <span className="truncate block cursor-default">
                           {complaint.type}
@@ -358,7 +358,7 @@ export default function GuestComplaint() {
                     </td>
                   )}
                   {visibleColumns['Description'] && (
-                    <td className="py-3.5 px-4 text-[13px] text-[#475569] font-medium">
+                    <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium">
                       <Tooltip title={complaint.description} arrow placement="top">
                         <span className="truncate block cursor-default">
                           {complaint.description}
@@ -367,15 +367,15 @@ export default function GuestComplaint() {
                     </td>
                   )}
                   {visibleColumns['Priority'] && (
-                    <td className="py-3.5 px-4">
-                      <span className={`px-2.5 py-1 rounded-md text-[11.5px] font-bold whitespace-nowrap inline-block ${priorityStyles[complaint.priority]}`}>
+                    <td className="py-2.5 px-2 whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-bold whitespace-nowrap inline-block ${priorityStyles[complaint.priority]}`}>
                         {complaint.priority}
                       </span>
                     </td>
                   )}
                   {visibleColumns['Status'] && (
-                    <td className="py-3.5 px-4">
-                      <span className={`px-2.5 py-1 rounded-md text-[11.5px] font-bold whitespace-nowrap inline-block ${statusStyles[complaint.status]}`}>
+                    <td className="py-2.5 px-2 whitespace-nowrap">
+                      <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-bold whitespace-nowrap inline-block ${statusStyles[complaint.status]}`}>
                         {complaint.status}
                       </span>
                     </td>

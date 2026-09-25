@@ -51,8 +51,8 @@ export default function EventsTableView({
   onDelete
 }) {
   return (
-    <div className="">
-      <table className="w-full text-left border-collapse">
+    <div className="w-full overflow-x-auto min-w-0">
+      <table className="w-full text-left border-collapse min-w-[750px]">
         <thead>
           <tr className="border-b border-slate-100 bg-slate-50/70 text-slate-600 text-xs font-bold uppercase tracking-wider select-none">
             <th className="py-2 px-2.5 w-10 text-center">

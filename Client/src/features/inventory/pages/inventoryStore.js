@@ -1,1161 +1,27 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
-// Hotel Inventory Data Store & State Management
+import {
+  INVENTORY_CATEGORIES,
+  INVENTORY_STATUSES,
+  CHARGE_TYPES,
+  CHARGE_STATUSES,
+  ROOM_NUMBERS,
+  STORAGE_LOCATIONS,
+  INITIAL_INVENTORY_ITEMS,
+  INITIAL_GUEST_CHARGES,
+  INITIAL_MISSING_INCIDENTS
+} from '../data/inventoryDemoData.js';
 
-export const INVENTORY_CATEGORIES = [
-  'All Categories',
-  'Bathroom',
-  'Bedroom',
-  'Electronics',
-  'Furniture',
-  'Kitchen',
-  'Cleaning',
-  'Amenities',
-  'Linens'
-];
-
-export const INVENTORY_STATUSES = [
-  'All Statuses',
-  'Available',
-  'Low Stock',
-  'Out of Stock',
-  'Missing'
-];
-
-export const ROOM_NUMBERS = [
-  '101', '102', '103', '104', '105',
-  '201', '202', '203', '204', '205',
-  '301', '302', '303', '304', '305'
-];
-
-export const STORAGE_LOCATIONS = [
-  'Central Linen Storage (Basement)',
-  'Housekeeping Closet (Floor 1)',
-  'Housekeeping Closet (Floor 2)',
-  'Housekeeping Closet (Floor 3)',
-  'Main Maintenance Depot',
-  'Kitchen & Dining Pantry',
-  'Front Desk Supply Cabinet'
-];
-
-export const INITIAL_INVENTORY_ITEMS = [
-  // Room 203 specific items
-  {
-    id: 'INV-1001',
-    sku: 'BTH-TWL-001',
-    itemName: 'Bath Towel (Egyptian Cotton)',
-    category: 'Bathroom',
-    locationType: 'Room',
-    roomNumber: '203',
-    location: 'Room 203 - Bathroom',
-    quantity: 4,
-    unitPrice: 12.50,
-    totalValue: 50.00,
-    minimumStock: 2,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Royal Linen & Textile Corp.',
-    purchaseDate: '2026-06-15',
-    lastUpdated: '2026-09-12',
-    description: '600 GSM white premium plush cotton bath towels with hotel embroidery.',
-    notes: 'Restocked during checkout turnaround.'
-  },
-  {
-    id: 'INV-1002',
-    sku: 'BTH-HND-002',
-    itemName: 'Hand Towel',
-    category: 'Bathroom',
-    locationType: 'Room',
-    roomNumber: '203',
-    location: 'Room 203 - Bathroom',
-    quantity: 2,
-    unitPrice: 6.00,
-    totalValue: 12.00,
-    minimumStock: 2,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Royal Linen & Textile Corp.',
-    purchaseDate: '2026-06-15',
-    lastUpdated: '2026-09-12',
-    description: 'Pure cotton hand towels 40x70cm.',
-    notes: 'Good condition.'
-  },
-  {
-    id: 'INV-1003',
-    sku: 'BTH-SOP-005',
-    itemName: 'Organic Soap Bar (50g)',
-    category: 'Bathroom',
-    locationType: 'Room',
-    roomNumber: '203',
-    location: 'Room 203 - Bathroom Vanity',
-    quantity: 2,
-    unitPrice: 1.80,
-    totalValue: 3.60,
-    minimumStock: 2,
-    condition: 'New',
-    status: 'Available',
-    supplier: 'EcoSpa Amenities Ltd.',
-    purchaseDate: '2026-08-01',
-    lastUpdated: '2026-09-14',
-    description: 'Lemongrass scented herbal guest soap.',
-    notes: 'Freshly placed.'
-  },
-  {
-    id: 'INV-1004',
-    sku: 'BTH-SHP-006',
-    itemName: 'Luxury Botanical Shampoo (60ml)',
-    category: 'Bathroom',
-    locationType: 'Room',
-    roomNumber: '203',
-    location: 'Room 203 - Shower Shelf',
-    quantity: 1,
-    unitPrice: 2.20,
-    totalValue: 2.20,
-    minimumStock: 2,
-    condition: 'New',
-    status: 'Low Stock',
-    supplier: 'EcoSpa Amenities Ltd.',
-    purchaseDate: '2026-08-01',
-    lastUpdated: '2026-09-14',
-    description: 'Hydrating botanical shampoo miniature bottle.',
-    notes: 'Needs refill during evening service.'
-  },
-  {
-    id: 'INV-1005',
-    sku: 'BED-PLW-010',
-    itemName: 'Down Feather Pillow (King)',
-    category: 'Bedroom',
-    locationType: 'Room',
-    roomNumber: '203',
-    location: 'Room 203 - Bed',
-    quantity: 2,
-    unitPrice: 28.00,
-    totalValue: 56.00,
-    minimumStock: 2,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'SlumberLux Bedding Co.',
-    purchaseDate: '2026-03-10',
-    lastUpdated: '2026-09-08',
-    description: 'Hypoallergenic goose feather & down blend pillow.',
-    notes: 'Pillow protectors fitted.'
-  },
-  {
-    id: 'INV-1006',
-    sku: 'BED-BLK-012',
-    itemName: 'Microfiber Thermal Blanket',
-    category: 'Bedroom',
-    locationType: 'Room',
-    roomNumber: '203',
-    location: 'Room 203 - Bed & Wardrobe',
-    quantity: 1,
-    unitPrice: 45.00,
-    totalValue: 45.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'SlumberLux Bedding Co.',
-    purchaseDate: '2026-03-10',
-    lastUpdated: '2026-09-08',
-    description: 'Warm, breathable double-layer blanket in taupe gray.',
-    notes: 'Dry cleaned weekly.'
-  },
-  {
-    id: 'INV-1007',
-    sku: 'ELC-TVR-021',
-    itemName: 'Smart TV Remote Controller',
-    category: 'Electronics',
-    locationType: 'Room',
-    roomNumber: '203',
-    location: 'Room 203 - Nightstand',
-    quantity: 0,
-    unitPrice: 24.00,
-    totalValue: 0.00,
-    minimumStock: 1,
-    condition: 'Fair',
-    status: 'Missing',
-    supplier: 'Sony Hospitality Solutions',
-    purchaseDate: '2026-01-20',
-    lastUpdated: '2026-09-14',
-    description: 'Voice remote with Netflix and HDMI quick buttons.',
-    notes: 'Missing post checkout on Sep 14. Incident MI-00024 filed.'
-  },
-  {
-    id: 'INV-1008',
-    sku: 'ELC-TVS-020',
-    itemName: '55" 4K UHD Smart Hospitality TV',
-    category: 'Electronics',
-    locationType: 'Room',
-    roomNumber: '203',
-    location: 'Room 203 - Wall Mount',
-    quantity: 1,
-    unitPrice: 480.00,
-    totalValue: 480.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Sony Hospitality Solutions',
-    purchaseDate: '2026-01-20',
-    lastUpdated: '2026-08-30',
-    description: 'Hotel mode TV with customized welcome screen and casting.',
-    notes: 'Serial #SN-492048-TV.'
-  },
-  {
-    id: 'INV-1009',
-    sku: 'ELC-ACR-025',
-    itemName: 'Air Conditioner Remote',
-    category: 'Electronics',
-    locationType: 'Room',
-    roomNumber: '203',
-    location: 'Room 203 - Wall Cradle',
-    quantity: 1,
-    unitPrice: 18.00,
-    totalValue: 18.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Daikin Climate Systems',
-    purchaseDate: '2025-11-15',
-    lastUpdated: '2026-09-01',
-    description: 'Inverter AC remote with digital display and wall bracket.',
-    notes: 'Batteries replaced on Sep 1.'
-  },
-
-  // Room 101 Items
-  {
-    id: 'INV-1010',
-    sku: 'BTH-TWL-001',
-    itemName: 'Bath Towel (Egyptian Cotton)',
-    category: 'Bathroom',
-    locationType: 'Room',
-    roomNumber: '101',
-    location: 'Room 101 - Bathroom',
-    quantity: 3,
-    unitPrice: 12.50,
-    totalValue: 37.50,
-    minimumStock: 2,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Royal Linen & Textile Corp.',
-    purchaseDate: '2026-06-15',
-    lastUpdated: '2026-09-13',
-    description: '600 GSM white premium plush cotton bath towels.',
-    notes: 'Checked daily.'
-  },
-  {
-    id: 'INV-1011',
-    sku: 'BTH-DRY-015',
-    itemName: 'Ionic Hair Dryer 1800W',
-    category: 'Electronics',
-    locationType: 'Room',
-    roomNumber: '101',
-    location: 'Room 101 - Bathroom Cabinet',
-    quantity: 1,
-    unitPrice: 38.00,
-    totalValue: 38.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Philips Pro Appliances',
-    purchaseDate: '2026-02-14',
-    lastUpdated: '2026-09-10',
-    description: 'Foldable wall-mounted ionic hair dryer with cool shot.',
-    notes: 'Working perfectly.'
-  },
-  {
-    id: 'INV-1012',
-    sku: 'APP-KET-030',
-    itemName: 'Electric Cordless Kettle 1.2L',
-    category: 'Kitchen',
-    locationType: 'Room',
-    roomNumber: '101',
-    location: 'Room 101 - Coffee Station',
-    quantity: 1,
-    unitPrice: 32.00,
-    totalValue: 32.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Hamilton Beach Commercial',
-    purchaseDate: '2026-04-10',
-    lastUpdated: '2026-09-11',
-    description: 'Stainless steel double-wall electric kettle with auto shut-off.',
-    notes: 'Descaled last week.'
-  },
-
-  // Room 102 Items
-  {
-    id: 'INV-1013',
-    sku: 'ELC-TVR-021',
-    itemName: 'Smart TV Remote Controller',
-    category: 'Electronics',
-    locationType: 'Room',
-    roomNumber: '102',
-    location: 'Room 102 - TV Table',
-    quantity: 1,
-    unitPrice: 24.00,
-    totalValue: 24.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Sony Hospitality Solutions',
-    purchaseDate: '2026-01-20',
-    lastUpdated: '2026-09-13',
-    description: 'Voice remote with Netflix and HDMI quick buttons.',
-    notes: 'Operational.'
-  },
-  {
-    id: 'INV-1014',
-    sku: 'FUR-IRN-040',
-    itemName: 'Steam Iron & Stand Set',
-    category: 'Amenities',
-    locationType: 'Room',
-    roomNumber: '102',
-    location: 'Room 102 - Wardrobe',
-    quantity: 0,
-    unitPrice: 55.00,
-    totalValue: 0.00,
-    minimumStock: 1,
-    condition: 'Damaged',
-    status: 'Out of Stock',
-    supplier: 'Tefal Commercial Services',
-    purchaseDate: '2025-10-05',
-    lastUpdated: '2026-09-14',
-    description: 'Anti-calc ceramic soleplate steam iron with compact board.',
-    notes: 'Sent to maintenance for cord repair.'
-  },
-
-  // Room 201 (Suite) Items
-  {
-    id: 'INV-1015',
-    sku: 'APP-MFR-050',
-    itemName: 'Silent Absorption Mini Fridge 40L',
-    category: 'Kitchen',
-    locationType: 'Room',
-    roomNumber: '201',
-    location: 'Room 201 - Living Bar',
-    quantity: 1,
-    unitPrice: 220.00,
-    totalValue: 220.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Dometic Hospitality Tech',
-    purchaseDate: '2025-12-01',
-    lastUpdated: '2026-09-10',
-    description: 'Silent cooling 0dB mini bar refrigerator with glass door.',
-    notes: 'Stocked with beverages.'
-  },
-  {
-    id: 'INV-1016',
-    sku: 'BTH-RBE-008',
-    itemName: 'Waffle Weave Bathrobe (L)',
-    category: 'Bathroom',
-    locationType: 'Room',
-    roomNumber: '201',
-    location: 'Room 201 - Master Bath',
-    quantity: 0,
-    unitPrice: 35.00,
-    totalValue: 0.00,
-    minimumStock: 2,
-    condition: 'Fair',
-    status: 'Missing',
-    supplier: 'Royal Linen & Textile Corp.',
-    purchaseDate: '2026-05-18',
-    lastUpdated: '2026-09-15',
-    description: '100% natural cotton luxury waffle robe with belt.',
-    notes: 'Missing after checkout. Incident MI-00025 filed.'
-  },
-  {
-    id: 'INV-1017',
-    sku: 'FUR-LMP-062',
-    itemName: 'Dimmable Bedside Lamp',
-    category: 'Furniture',
-    locationType: 'Room',
-    roomNumber: '201',
-    location: 'Room 201 - Bedside Tables',
-    quantity: 2,
-    unitPrice: 42.00,
-    totalValue: 84.00,
-    minimumStock: 2,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Luceo Lighting Design',
-    purchaseDate: '2026-02-10',
-    lastUpdated: '2026-08-20',
-    description: 'Brushed brass base with integrated USB-C charging ports.',
-    notes: 'Touch sensors functional.'
-  },
-
-  // Room 205 Items
-  {
-    id: 'INV-1018',
-    sku: 'BTH-DRY-015',
-    itemName: 'Ionic Hair Dryer 1800W',
-    category: 'Electronics',
-    locationType: 'Room',
-    roomNumber: '205',
-    location: 'Room 205 - Bathroom Cabinet',
-    quantity: 1,
-    unitPrice: 38.00,
-    totalValue: 38.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Philips Pro Appliances',
-    purchaseDate: '2026-02-14',
-    lastUpdated: '2026-09-05',
-    description: 'Foldable wall-mounted ionic hair dryer.',
-    notes: 'Inspected.'
-  },
-  {
-    id: 'INV-1019',
-    sku: 'BED-ST3-014',
-    itemName: 'King Luxury Fitted Bedsheet Set',
-    category: 'Linens',
-    locationType: 'Room',
-    roomNumber: '205',
-    location: 'Room 205 - Master Bed',
-    quantity: 1,
-    unitPrice: 48.00,
-    totalValue: 48.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'SlumberLux Bedding Co.',
-    purchaseDate: '2026-04-01',
-    lastUpdated: '2026-09-14',
-    description: '400 thread count sateen stripe white bedsheet set.',
-    notes: 'Freshly laundered.'
-  },
-
-  // Room 301 Items
-  {
-    id: 'INV-1020',
-    sku: 'ELC-SPK-035',
-    itemName: 'Bluetooth Alarm Clock & Speaker',
-    category: 'Electronics',
-    locationType: 'Room',
-    roomNumber: '301',
-    location: 'Room 301 - Bedside Desk',
-    quantity: 1,
-    unitPrice: 65.00,
-    totalValue: 65.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'JBL Commercial Audio',
-    purchaseDate: '2026-03-25',
-    lastUpdated: '2026-09-12',
-    description: 'Wireless Qi charging bedside alarm clock speaker.',
-    notes: 'Firmware updated.'
-  },
-  {
-    id: 'INV-1021',
-    sku: 'BTH-GLS-044',
-    itemName: 'Crystal Whiskey Tumbler Set (2pc)',
-    category: 'Kitchen',
-    locationType: 'Room',
-    roomNumber: '301',
-    location: 'Room 301 - Mini Bar Cabinet',
-    quantity: 0,
-    unitPrice: 16.00,
-    totalValue: 0.00,
-    minimumStock: 1,
-    condition: 'Broken',
-    status: 'Missing',
-    supplier: 'Schott Zwiesel Glassware',
-    purchaseDate: '2026-05-10',
-    lastUpdated: '2026-09-13',
-    description: 'Lead-free crystal whiskey glasses with etched hotel insignia.',
-    notes: 'Reported missing/broken on checkout. Incident MI-00026.'
-  },
-
-  // Central Storage / Hotel-Wide Items
-  {
-    id: 'INV-2001',
-    sku: 'BLK-TWL-101',
-    itemName: 'Bath Towels Bulk Reserve (600 GSM)',
-    category: 'Linens',
-    locationType: 'Storage',
-    roomNumber: '-',
-    location: 'Central Linen Storage (Basement)',
-    quantity: 120,
-    unitPrice: 10.50,
-    totalValue: 1260.00,
-    minimumStock: 40,
-    condition: 'New',
-    status: 'Available',
-    supplier: 'Royal Linen & Textile Corp.',
-    purchaseDate: '2026-07-01',
-    lastUpdated: '2026-09-14',
-    description: 'Bulk boxed bath towels for floor replenishment.',
-    notes: '6 cartons on Shelf B2.'
-  },
-  {
-    id: 'INV-2002',
-    sku: 'BLK-PLW-105',
-    itemName: 'Extra Goose Down Pillows',
-    category: 'Bedroom',
-    locationType: 'Storage',
-    roomNumber: '-',
-    location: 'Central Linen Storage (Basement)',
-    quantity: 24,
-    unitPrice: 24.00,
-    totalValue: 576.00,
-    minimumStock: 10,
-    condition: 'New',
-    status: 'Available',
-    supplier: 'SlumberLux Bedding Co.',
-    purchaseDate: '2026-07-01',
-    lastUpdated: '2026-09-02',
-    description: 'Individually vacuum-sealed guest request pillows.',
-    notes: 'Shelf C1.'
-  },
-  {
-    id: 'INV-2003',
-    sku: 'CLN-DIS-200',
-    itemName: 'Hospital-Grade Disinfectant Concentrate (5L)',
-    category: 'Cleaning',
-    locationType: 'Storage',
-    roomNumber: '-',
-    location: 'Housekeeping Closet (Floor 2)',
-    quantity: 6,
-    unitPrice: 34.00,
-    totalValue: 204.00,
-    minimumStock: 4,
-    condition: 'New',
-    status: 'Available',
-    supplier: 'Diversey Hygiene Systems',
-    purchaseDate: '2026-08-10',
-    lastUpdated: '2026-09-15',
-    description: 'Broad-spectrum sanitizing chemical for room touchpoints.',
-    notes: 'Proper dilution instructions posted.'
-  },
-  {
-    id: 'INV-2004',
-    sku: 'CLN-VAC-210',
-    itemName: 'Commercial HEPA Backpack Vacuum',
-    category: 'Cleaning',
-    locationType: 'Storage',
-    roomNumber: '-',
-    location: 'Housekeeping Closet (Floor 2)',
-    quantity: 3,
-    unitPrice: 310.00,
-    totalValue: 930.00,
-    minimumStock: 2,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Kärcher Professional',
-    purchaseDate: '2025-11-20',
-    lastUpdated: '2026-09-05',
-    description: 'Quiet lightweight commercial backpack vacuum with filter bags.',
-    notes: 'Filters changed Sep 1.'
-  },
-  {
-    id: 'INV-2005',
-    sku: 'AMN-KIT-305',
-    itemName: 'Bamboo Dental & Shaving Kits (50/pack)',
-    category: 'Amenities',
-    locationType: 'Storage',
-    roomNumber: '-',
-    location: 'Housekeeping Closet (Floor 1)',
-    quantity: 8,
-    unitPrice: 22.00,
-    totalValue: 176.00,
-    minimumStock: 12,
-    condition: 'New',
-    status: 'Low Stock',
-    supplier: 'EcoSpa Amenities Ltd.',
-    purchaseDate: '2026-06-20',
-    lastUpdated: '2026-09-15',
-    description: 'Eco-friendly biodegradable dental kits with kraft packaging.',
-    notes: 'Reorder triggered with supplier.'
-  },
-  {
-    id: 'INV-2006',
-    sku: 'ELC-BLB-400',
-    itemName: 'Warm White LED Spotlight Bulbs 7W (Pack of 10)',
-    category: 'Electronics',
-    locationType: 'Storage',
-    roomNumber: '-',
-    location: 'Main Maintenance Depot',
-    quantity: 5,
-    unitPrice: 18.50,
-    totalValue: 92.50,
-    minimumStock: 8,
-    condition: 'New',
-    status: 'Low Stock',
-    supplier: 'Philips Lighting Solutions',
-    purchaseDate: '2026-05-30',
-    lastUpdated: '2026-09-14',
-    description: 'GU10 2700K warm spotlight replacement bulbs.',
-    notes: 'Low stock notification sent to procurement.'
-  },
-  {
-    id: 'INV-2007',
-    sku: 'BTH-PAP-500',
-    itemName: '3-Ply Embossed Toilet Rolls (48 Rolls/Case)',
-    category: 'Bathroom',
-    locationType: 'Storage',
-    roomNumber: '-',
-    location: 'Central Linen Storage (Basement)',
-    quantity: 14,
-    unitPrice: 28.00,
-    totalValue: 392.00,
-    minimumStock: 5,
-    condition: 'New',
-    status: 'Available',
-    supplier: 'Kimberly-Clark Professional',
-    purchaseDate: '2026-08-25',
-    lastUpdated: '2026-09-10',
-    description: 'FSC-certified soft embossed 3-ply guest bathroom paper.',
-    notes: 'Adequate stock.'
-  },
-  {
-    id: 'INV-2008',
-    sku: 'ELC-TVR-021',
-    itemName: 'Spare Smart TV Remotes (Sony/Samsung)',
-    category: 'Electronics',
-    locationType: 'Storage',
-    roomNumber: '-',
-    location: 'Front Desk Supply Cabinet',
-    quantity: 4,
-    unitPrice: 24.00,
-    totalValue: 96.00,
-    minimumStock: 5,
-    condition: 'New',
-    status: 'Low Stock',
-    supplier: 'Sony Hospitality Solutions',
-    purchaseDate: '2026-07-15',
-    lastUpdated: '2026-09-14',
-    description: 'Pre-programmed replacement remotes for fast front desk dispatch.',
-    notes: 'Need 10 more units.'
-  },
-  {
-    id: 'INV-2009',
-    sku: 'APP-COF-600',
-    itemName: 'Nespresso Espresso Capsule Pods (Box of 100)',
-    category: 'Kitchen',
-    locationType: 'Storage',
-    roomNumber: '-',
-    location: 'Kitchen & Dining Pantry',
-    quantity: 12,
-    unitPrice: 62.00,
-    totalValue: 744.00,
-    minimumStock: 4,
-    condition: 'New',
-    status: 'Available',
-    supplier: 'Nespresso Professional',
-    purchaseDate: '2026-09-01',
-    lastUpdated: '2026-09-15',
-    description: 'Ristretto and Lungo assorted gourmet coffee capsules.',
-    notes: 'Stocked in all Suite rooms.'
-  },
-  {
-    id: 'INV-2010',
-    sku: 'BTH-SLP-700',
-    itemName: 'Velvet Open-Toe Guest Slippers (Pair)',
-    category: 'Amenities',
-    locationType: 'Storage',
-    roomNumber: '-',
-    location: 'Housekeeping Closet (Floor 3)',
-    quantity: 0,
-    unitPrice: 3.50,
-    totalValue: 0.00,
-    minimumStock: 30,
-    condition: 'New',
-    status: 'Out of Stock',
-    supplier: 'EcoSpa Amenities Ltd.',
-    purchaseDate: '2026-07-20',
-    lastUpdated: '2026-09-15',
-    description: 'Thick sole anti-slip luxury guest bedroom slippers.',
-    notes: 'Shipment delayed at customs. Expected next Monday.'
-  },
-
-  // Additional Room Items
-  {
-    id: 'INV-1022',
-    sku: 'FUR-HNG-080',
-    itemName: 'Anti-Theft Wooden Suit Hangers (Set of 6)',
-    category: 'Furniture',
-    locationType: 'Room',
-    roomNumber: '104',
-    location: 'Room 104 - Wardrobe Closet',
-    quantity: 6,
-    unitPrice: 4.50,
-    totalValue: 27.00,
-    minimumStock: 6,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Hotel Supplies International',
-    purchaseDate: '2026-01-10',
-    lastUpdated: '2026-08-15',
-    description: 'Solid lotus wood anti-theft ring hangers with skirt clips.',
-    notes: 'All securely locked to wardrobe rail.'
-  },
-  {
-    id: 'INV-1023',
-    sku: 'ELC-SAF-090',
-    itemName: 'Digital Electronic Laptop Safe 17"',
-    category: 'Electronics',
-    locationType: 'Room',
-    roomNumber: '104',
-    location: 'Room 104 - Wardrobe Shelf',
-    quantity: 1,
-    unitPrice: 160.00,
-    totalValue: 160.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Elsafe Hospitality Security',
-    purchaseDate: '2025-08-12',
-    lastUpdated: '2026-09-02',
-    description: 'Keypad digital safe with master emergency audit key override.',
-    notes: 'Master pin validated.'
-  },
-  {
-    id: 'INV-1024',
-    sku: 'BED-DVT-018',
-    itemName: 'All-Season Microfiber Duvet Insert (Queen)',
-    category: 'Linens',
-    locationType: 'Room',
-    roomNumber: '105',
-    location: 'Room 105 - Bed',
-    quantity: 1,
-    unitPrice: 52.00,
-    totalValue: 52.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'SlumberLux Bedding Co.',
-    purchaseDate: '2026-04-10',
-    lastUpdated: '2026-09-11',
-    description: '300 GSM breathable box-stitched hypoallergenic duvet insert.',
-    notes: 'Inspected.'
-  },
-  {
-    id: 'INV-1025',
-    sku: 'BTH-MAT-003',
-    itemName: 'Embossed Foot Bath Mat',
-    category: 'Bathroom',
-    locationType: 'Room',
-    roomNumber: '202',
-    location: 'Room 202 - Shower Exit',
-    quantity: 2,
-    unitPrice: 8.50,
-    totalValue: 17.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Royal Linen & Textile Corp.',
-    purchaseDate: '2026-06-15',
-    lastUpdated: '2026-09-14',
-    description: '800 GSM heavy-weight textured absorbent floor mat.',
-    notes: 'Replaced daily.'
-  },
-  {
-    id: 'INV-1026',
-    sku: 'ELC-TVR-021',
-    itemName: 'Smart TV Remote Controller',
-    category: 'Electronics',
-    locationType: 'Room',
-    roomNumber: '204',
-    location: 'Room 204 - Bedside Table',
-    quantity: 1,
-    unitPrice: 24.00,
-    totalValue: 24.00,
-    minimumStock: 1,
-    condition: 'Good',
-    status: 'Available',
-    supplier: 'Sony Hospitality Solutions',
-    purchaseDate: '2026-01-20',
-    lastUpdated: '2026-09-13',
-    description: 'Voice remote with Netflix and HDMI quick buttons.',
-    notes: 'Checked.'
-  },
-  {
-    id: 'INV-1027',
-    sku: 'BTH-DRY-015',
-    itemName: 'Ionic Hair Dryer 1800W',
-    category: 'Electronics',
-    locationType: 'Room',
-    roomNumber: '302',
-    location: 'Room 302 - Vanity Mirror',
-    quantity: 0,
-    unitPrice: 38.00,
-    totalValue: 0.00,
-    minimumStock: 1,
-    condition: 'Fair',
-    status: 'Missing',
-    supplier: 'Philips Pro Appliances',
-    purchaseDate: '2026-02-14',
-    lastUpdated: '2026-09-13',
-    description: 'Foldable wall-mounted ionic hair dryer.',
-    notes: 'Missing post guest checkout. Incident MI-00027.'
-  }
-];
-
-export const CHARGE_TYPES = [
-  'All Types',
-  'Consumption',
-  'Damage',
-  'External Order',
-  'Other'
-];
-
-export const CHARGE_STATUSES = [
-  'All Statuses',
-  'Added to Folio',
-  'Pending',
-  'Paid',
-  'Invoiced'
-];
-
-export const INITIAL_GUEST_CHARGES = [
-  {
-    id: 'GC-1001',
-    guestName: 'Ahmed Khan',
-    roomNumber: '205',
-    chargeType: 'Consumption',
-    itemName: 'Coca-Cola (330ml Can)',
-    inventoryItemId: 'INV-2009',
-    quantity: 2,
-    unitPrice: 150,
-    amount: 300,
-    status: 'Added to Folio',
-    date: 'Today',
-    reportedDate: '2026-09-18',
-    folioId: 'FOL-205-01',
-    notes: 'Minibar consumption recorded during morning room turnaround.',
-    deductedFromStock: true
-  },
-  {
-    id: 'GC-1002',
-    guestName: 'Ahmed Khan',
-    roomNumber: '205',
-    chargeType: 'Damage',
-    itemName: 'King Luxury Fitted Bedsheet',
-    inventoryItemId: 'INV-1019',
-    quantity: 1,
-    unitPrice: 2500,
-    amount: 2500,
-    status: 'Pending',
-    date: 'Today',
-    reportedDate: '2026-09-18',
-    folioId: 'FOL-205-01',
-    notes: 'Permanent dye stain on bedsheet set. Pending guest billing authorization.',
-    deductedFromStock: true
-  },
-  {
-    id: 'GC-1003',
-    guestName: 'John Smith',
-    roomNumber: '302',
-    chargeType: 'External Order',
-    itemName: 'Pizza & Beverage Delivery',
-    inventoryItemId: null,
-    quantity: 1,
-    unitPrice: 2000,
-    amount: 2000,
-    status: 'Added to Folio',
-    date: 'Today',
-    reportedDate: '2026-09-18',
-    folioId: 'FOL-302-04',
-    notes: 'External restaurant delivery arranged via Front Desk concierge. No stock deduction.',
-    deductedFromStock: false
-  },
-  {
-    id: 'GC-1004',
-    guestName: 'Sarah Johnson',
-    roomNumber: '101',
-    chargeType: 'Consumption',
-    itemName: 'Organic Soap & Spa Amenity Set',
-    inventoryItemId: 'INV-1003',
-    quantity: 3,
-    unitPrice: 180,
-    amount: 540,
-    status: 'Added to Folio',
-    date: 'Yesterday',
-    reportedDate: '2026-09-17',
-    folioId: 'FOL-101-02',
-    notes: 'Extra guest vanity amenities provided on request.',
-    deductedFromStock: true
-  },
-  {
-    id: 'GC-1005',
-    guestName: 'David Miller',
-    roomNumber: '201',
-    chargeType: 'Damage',
-    itemName: 'Waffle Weave Bathrobe (L)',
-    inventoryItemId: 'INV-1016',
-    quantity: 1,
-    unitPrice: 3500,
-    amount: 3500,
-    status: 'Added to Folio',
-    date: '2026-09-15',
-    reportedDate: '2026-09-15',
-    folioId: 'FOL-201-03',
-    notes: 'Missing post-checkout bathrobe billed directly to incidental deposit (Incident MI-00025).',
-    deductedFromStock: true
-  },
-  {
-    id: 'GC-1006',
-    guestName: 'Elena Rostova',
-    roomNumber: '301',
-    chargeType: 'Damage',
-    itemName: 'Crystal Whiskey Tumbler Set (2pc)',
-    inventoryItemId: 'INV-1021',
-    quantity: 1,
-    unitPrice: 1600,
-    amount: 1600,
-    status: 'Paid',
-    date: '2026-09-14',
-    reportedDate: '2026-09-14',
-    folioId: 'FOL-301-01',
-    notes: 'Settled at reception upon early departure checkout.',
-    deductedFromStock: true
-  },
-  {
-    id: 'GC-1007',
-    guestName: 'Robert Vance',
-    roomNumber: '203',
-    chargeType: 'External Order',
-    itemName: 'Airport Executive Taxi Transfer',
-    inventoryItemId: null,
-    quantity: 1,
-    unitPrice: 4500,
-    amount: 4500,
-    status: 'Added to Folio',
-    date: '2026-09-13',
-    reportedDate: '2026-09-13',
-    folioId: 'FOL-203-05',
-    notes: 'Third-party limousine dispatch booked via Concierge desk.',
-    deductedFromStock: false
-  },
-  {
-    id: 'GC-1008',
-    guestName: 'Carlos Rodriguez',
-    roomNumber: '102',
-    chargeType: 'Other',
-    itemName: 'Express Laundry & Pressing Service',
-    inventoryItemId: null,
-    quantity: 1,
-    unitPrice: 1200,
-    amount: 1200,
-    status: 'Added to Folio',
-    date: '2026-09-12',
-    reportedDate: '2026-09-12',
-    folioId: 'FOL-102-02',
-    notes: 'Same-day steam dry cleaning charge.',
-    deductedFromStock: false
-  }
-];
-
-export const INITIAL_MISSING_INCIDENTS = [
-  {
-    id: 'MI-00024',
-    incidentNumber: 'MI-00024',
-    inventoryItemId: 'INV-1007',
-    itemName: 'Smart TV Remote Controller',
-    category: 'Electronics',
-    roomNumber: '203',
-    location: 'Room 203',
-    expectedQty: 1,
-    quantity: 1,
-    missingQty: 1,
-    unitValue: 24.00,
-    totalLoss: 24.00,
-    condition: 'Missing',
-    reportedDate: 'Today',
-    reportedBy: 'Housekeeping (Jane Smith)',
-    reason: 'Not found in room during post-checkout inspection',
-    status: 'Under Investigation',
-    assignedTo: 'Housekeeping Supervisor (Sarah M.)',
-    guestName: 'Robert Vance (Res #RES-409)',
-    notes: 'Checked behind bed frame, under sofa, and drawers. Front desk contacted guest to inquire.',
-    resolutionType: null,
-    resolutionDate: null,
-    resolutionNotes: null,
-    timeline: [
-      { date: '2026-09-18 11:30 AM', action: 'Incident Reported', user: 'Jane Smith (Housekeeper)', detail: 'Missing remote noticed while preparing room for next check-in.' },
-      { date: '2026-09-18 01:15 PM', action: 'Under Investigation', user: 'Sarah M. (Supervisor)', detail: 'Assigned inspection team to double check laundry hampers and luggage carts.' },
-      { date: '2026-09-18 03:40 PM', action: 'Guest Inquired', user: 'Front Desk Team', detail: 'Sent courteous email to guest inquiring if accidentally packed.' }
-    ]
-  },
-  {
-    id: 'MI-00025',
-    incidentNumber: 'MI-00025',
-    inventoryItemId: 'INV-1016',
-    itemName: 'Waffle Weave Bathrobe (L)',
-    category: 'Bathroom',
-    roomNumber: '201',
-    location: 'Room 201',
-    expectedQty: 2,
-    quantity: 1,
-    missingQty: 1,
-    unitValue: 35.00,
-    totalLoss: 35.00,
-    condition: 'Missing',
-    reportedDate: 'Today',
-    reportedBy: 'Housekeeping (Bilal K.)',
-    reason: 'Bathrobe missing from wardrobe after checkout',
-    status: 'Reported',
-    assignedTo: 'Duty Manager (Farhan A.)',
-    guestName: 'David Miller (Res #RES-415)',
-    notes: 'Only 1 out of 2 suite bathrobes was present during checkout inventory count.',
-    resolutionType: null,
-    resolutionDate: null,
-    resolutionNotes: null,
-    timeline: [
-      { date: '2026-09-18 10:15 AM', action: 'Incident Logged', user: 'Bilal K. (Housekeeper)', detail: 'Discovered during 10:00 AM turnaround cleaning.' }
-    ]
-  },
-  {
-    id: 'MI-00026',
-    incidentNumber: 'MI-00026',
-    inventoryItemId: 'INV-1021',
-    itemName: 'Crystal Whiskey Tumbler Set (2pc)',
-    category: 'Kitchen',
-    roomNumber: '301',
-    location: 'Room 301',
-    expectedQty: 2,
-    quantity: 1,
-    missingQty: 1,
-    unitValue: 16.00,
-    totalLoss: 16.00,
-    condition: 'Broken / Missing',
-    reportedDate: 'Yesterday',
-    reportedBy: 'Housekeeping (Ali R.)',
-    reason: 'Broken in trash bin / missing glass',
-    status: 'Replaced',
-    assignedTo: 'Housekeeping Supervisor (Sarah M.)',
-    guestName: 'Elena Rostova (Res #RES-398)',
-    notes: 'Glass was accidentally broken by guest, charged to incidental folio $16.00 and replaced from storage.',
-    resolutionType: 'Replaced',
-    resolutionDate: '2026-09-17',
-    resolutionNotes: 'New boxed crystal glasses retrieved from central bar store and placed in 301.',
-    timeline: [
-      { date: '2026-09-17 02:20 PM', action: 'Incident Reported', user: 'Ali R. (Housekeeper)', detail: 'Broken pieces found in bin during room service cleaning.' },
-      { date: '2026-09-17 04:00 PM', action: 'Under Investigation', user: 'Sarah M.', detail: 'Verified with guest account. Charge applied with guest consent.' },
-      { date: '2026-09-17 09:30 AM', action: 'Replacement Provided', user: 'Sarah M.', detail: 'Replaced from Central Pantry stock. Incident closed.' }
-    ]
-  },
-  {
-    id: 'MI-00027',
-    incidentNumber: 'MI-00027',
-    inventoryItemId: 'INV-1027',
-    itemName: 'Ionic Hair Dryer 1800W',
-    category: 'Electronics',
-    roomNumber: '302',
-    location: 'Room 302',
-    expectedQty: 1,
-    quantity: 1,
-    missingQty: 1,
-    unitValue: 38.00,
-    totalLoss: 38.00,
-    condition: 'Missing',
-    reportedDate: '2026-09-15',
-    reportedBy: 'Housekeeping (Jane Smith)',
-    reason: 'Bathroom bracket empty',
-    status: 'Recovered',
-    assignedTo: 'Security Head (Tariq M.)',
-    guestName: 'Marcus Aurel (Res #RES-401)',
-    notes: 'Found in hotel lost & found holding bag, was placed in wrong housekeeping cart during floor turn.',
-    resolutionType: 'Recovered',
-    resolutionDate: '2026-09-16',
-    resolutionNotes: 'Hair dryer verified, tested, sanitized, and returned to Room 302 bracket.',
-    timeline: [
-      { date: '2026-09-15 09:00 AM', action: 'Reported Missing', user: 'Jane Smith', detail: 'Noted empty dryer bracket on wall.' },
-      { date: '2026-09-15 11:00 AM', action: 'Under Investigation', user: 'Tariq M. (Security)', detail: 'Reviewing cart logs.' },
-      { date: '2026-09-16 08:45 AM', action: 'Item Recovered', user: 'Tariq M.', detail: 'Found in cart 3B storage compartment and reinstalled.' }
-    ]
-  },
-  {
-    id: 'MI-00028',
-    incidentNumber: 'MI-00028',
-    inventoryItemId: 'INV-1014',
-    itemName: 'Steam Iron & Stand Set',
-    category: 'Amenities',
-    roomNumber: '102',
-    location: 'Room 102',
-    expectedQty: 1,
-    quantity: 1,
-    missingQty: 1,
-    unitValue: 55.00,
-    totalLoss: 55.00,
-    condition: 'Damaged / Missing',
-    reportedDate: '2026-09-14',
-    reportedBy: 'Housekeeping (Alice Green)',
-    reason: 'Power cord damaged and detached',
-    status: 'Written Off',
-    assignedTo: 'General Manager (Hassan K.)',
-    guestName: 'Internal Maintenance',
-    notes: 'Excessive wear and tear beyond economical repair. Deemed obsolete.',
-    resolutionType: 'Written Off',
-    resolutionDate: '2026-09-15',
-    resolutionNotes: 'Approved for electronic scrap write-off. Replaced with newer model in 102.',
-    timeline: [
-      { date: '2026-09-14 03:10 PM', action: 'Damage / Loss Logged', user: 'Alice Green', detail: 'Cord burnt out.' },
-      { date: '2026-09-14 10:00 AM', action: 'Inspected by Tech', user: 'Maintenance Lead', detail: 'Repairs exceed replacement cost.' },
-      { date: '2026-09-15 02:00 PM', action: 'Written Off', user: 'Hassan K.', detail: 'Formally written off asset ledger.' }
-    ]
-  },
-  {
-    id: 'MI-00029',
-    incidentNumber: 'MI-00029',
-    inventoryItemId: 'INV-1010',
-    itemName: 'Bath Towel (Egyptian Cotton)',
-    category: 'Linens',
-    roomNumber: '205',
-    location: 'Room 205',
-    expectedQty: 3,
-    quantity: 1,
-    missingQty: 1,
-    unitValue: 12.50,
-    totalLoss: 12.50,
-    condition: 'Missing',
-    reportedDate: 'Today',
-    reportedBy: 'Housekeeping',
-    reason: '1 of 3 bath towels unaccounted for at checkout inspection.',
-    status: 'Reported',
-    assignedTo: 'Housekeeping Supervisor',
-    guestName: 'Ahmed Khan (Res #RES-420)',
-    notes: 'Awaiting supervisor decision on guest charge.',
-    resolutionType: null,
-    resolutionDate: null,
-    resolutionNotes: null,
-    timeline: [
-      { date: '2026-09-18 10:00 AM', action: 'Logged Missing', user: 'Housekeeping', detail: 'Found missing during post checkout audit.' }
-    ]
-  },
-  {
-    id: 'MI-00030',
-    incidentNumber: 'MI-00030',
-    inventoryItemId: 'INV-1019',
-    itemName: 'King Luxury Fitted Bedsheet',
-    category: 'Linens',
-    roomNumber: '302',
-    location: 'Room 302',
-    expectedQty: 2,
-    quantity: 1,
-    missingQty: 1,
-    unitValue: 48.00,
-    totalLoss: 48.00,
-    condition: 'Missing',
-    reportedDate: 'Today',
-    reportedBy: 'Housekeeping',
-    reason: 'Extra bedsheet set missing from linen closet shelf.',
-    status: 'Under Investigation',
-    assignedTo: 'Duty Manager',
-    guestName: 'John Smith (Res #RES-418)',
-    notes: 'Investigating if sent to offsite laundry service.',
-    resolutionType: null,
-    resolutionDate: null,
-    resolutionNotes: null,
-    timeline: [
-      { date: '2026-09-18 09:30 AM', action: 'Audit Discrepancy', user: 'Housekeeping', detail: 'Expected 2, counted 1.' }
-    ]
-  }
-];
+export {
+  INVENTORY_CATEGORIES,
+  INVENTORY_STATUSES,
+  CHARGE_TYPES,
+  CHARGE_STATUSES,
+  ROOM_NUMBERS,
+  STORAGE_LOCATIONS,
+  INITIAL_INVENTORY_ITEMS,
+  INITIAL_GUEST_CHARGES,
+  INITIAL_MISSING_INCIDENTS
+};
 
 // LocalStorage helpers with automatic initialization
 const STORAGE_KEY_ITEMS = 'hotel_inventory_items_v2';
@@ -1178,7 +44,7 @@ export const getInventoryItems = () => {
 export const saveInventoryItems = (items) => {
   localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
   window.dispatchEvent(new Event('inventory_update'));
-    try { addAuditLog({ module: 'Inventory', action: 'Updated Record', description: 'INVENTORY_CATEGORIES was called.', importance: 'Normal' }); } catch(e){}
+  try { addAuditLog({ module: 'Inventory', action: 'Updated Record', description: 'Inventory items saved.', importance: 'Normal' }); } catch(e){}
 };
 
 export const getMissingIncidents = () => {
@@ -1197,7 +63,7 @@ export const getMissingIncidents = () => {
 export const saveMissingIncidents = (incidents) => {
   localStorage.setItem(STORAGE_KEY_INCIDENTS, JSON.stringify(incidents));
   window.dispatchEvent(new Event('inventory_incidents_update'));
-    try { addAuditLog({ module: 'Inventory', action: 'Updated Record', description: 'getMissingIncidents was called.', importance: 'Normal' }); } catch(e){}
+  try { addAuditLog({ module: 'Inventory', action: 'Updated Record', description: 'Missing incidents saved.', importance: 'Normal' }); } catch(e){}
 };
 
 // CRUD Operations
@@ -1215,7 +81,6 @@ export const addInventoryItem = (item) => {
     purchaseDate: item.purchaseDate || new Date().toISOString().split('T')[0],
   };
 
-  // Determine status automatically if not manually forced
   if (newItem.quantity === 0) {
     newItem.status = newItem.status === 'Missing' ? 'Missing' : 'Out of Stock';
   } else if (newItem.quantity <= newItem.minimumStock) {
@@ -1233,67 +98,86 @@ export const updateInventoryItem = (id, updates) => {
   const items = getInventoryItems();
   const updated = items.map(item => {
     if (item.id === id) {
-      const merged = { ...item, ...updates, lastUpdated: new Date().toISOString().split('T')[0] };
+      const merged = { ...item, ...updates };
       merged.quantity = Number(merged.quantity) || 0;
       merged.unitPrice = Number(merged.unitPrice) || 0;
       merged.totalValue = merged.quantity * merged.unitPrice;
-      
-      if (!updates.status) {
-        if (merged.quantity === 0) {
-          merged.status = item.status === 'Missing' ? 'Missing' : 'Out of Stock';
-        } else if (merged.quantity <= merged.minimumStock) {
-          merged.status = 'Low Stock';
-        } else {
-          merged.status = 'Available';
-        }
+      merged.minimumStock = Number(merged.minimumStock) || 0;
+      merged.lastUpdated = new Date().toISOString().split('T')[0];
+
+      if (merged.quantity === 0) {
+        merged.status = merged.status === 'Missing' ? 'Missing' : 'Out of Stock';
+      } else if (merged.quantity <= merged.minimumStock) {
+        merged.status = 'Low Stock';
+      } else {
+        merged.status = 'Available';
       }
       return merged;
     }
     return item;
   });
   saveInventoryItems(updated);
-  try { addAuditLog({ module: 'Inventory', action: 'Updated Inventory', description: `Item updated.`, importance: 'Normal' }); } catch(e) {}
+  return updated;
 };
 
 export const deleteInventoryItem = (id) => {
   const items = getInventoryItems();
   const updated = items.filter(item => item.id !== id);
   saveInventoryItems(updated);
-  try { addAuditLog({ module: 'Inventory', action: 'Deleted Inventory', description: `Item deleted.`, importance: 'Critical' }); } catch(e) {}
+  return updated;
 };
 
-// Incidents Management
-export const addMissingIncident = (incidentData) => {
+export const reportMissingIncident = (incidentData) => {
   const incidents = getMissingIncidents();
+  const items = getInventoryItems();
+  const targetItem = items.find(i => i.id === incidentData.inventoryItemId);
+
+  const missingQty = Number(incidentData.quantity) || 1;
+  const unitValue = targetItem ? targetItem.unitPrice : (Number(incidentData.unitValue) || 25);
+  const totalLoss = missingQty * unitValue;
+
+  const timestamp = `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
   const newIncident = {
-    ...incidentData,
-    id: `MI-${String(incidents.length + 29).padStart(5, '0')}`,
-    incidentNumber: `MI-${String(incidents.length + 29).padStart(5, '0')}`,
-    quantity: Number(incidentData.quantity) || 1,
-    unitValue: Number(incidentData.unitValue) || 0,
-    totalLoss: (Number(incidentData.quantity) || 1) * (Number(incidentData.unitValue) || 0),
-    reportedDate: incidentData.reportedDate || new Date().toISOString().split('T')[0],
-    status: incidentData.status || 'Reported',
+    id: `MI-${Math.floor(10000 + Math.random() * 90000)}`,
+    incidentNumber: `MI-${Math.floor(10000 + Math.random() * 90000)}`,
+    inventoryItemId: incidentData.inventoryItemId,
+    itemName: targetItem ? targetItem.itemName : (incidentData.itemName || 'Inventory Item'),
+    category: targetItem ? targetItem.category : (incidentData.category || 'General'),
+    roomNumber: incidentData.roomNumber || (targetItem ? targetItem.roomNumber : 'N/A'),
+    location: incidentData.location || (targetItem ? targetItem.location : 'Hotel Premises'),
+    expectedQty: targetItem ? targetItem.quantity : missingQty,
+    quantity: missingQty,
+    missingQty: missingQty,
+    unitValue: unitValue,
+    totalLoss: totalLoss,
+    condition: 'Missing',
+    reportedDate: 'Today',
+    reportedBy: incidentData.reportedBy || 'Housekeeping Staff',
+    reason: incidentData.reason || 'Missing item logged during routine inspection',
+    status: 'Reported',
+    assignedTo: incidentData.assignedTo || 'Housekeeping Supervisor',
+    guestName: incidentData.guestName || 'N/A',
+    notes: incidentData.notes || '',
     timeline: [
-      {
-        date: `${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-        action: 'Incident Logged',
-        user: incidentData.reportedBy || 'Staff',
-        detail: incidentData.reason || 'Missing item logged.'
-      }
+      { date: timestamp, action: 'Logged Missing', user: incidentData.reportedBy || 'Housekeeping', detail: incidentData.reason || 'Missing item logged' }
     ]
   };
 
-  const updatedIncidents = [newIncident, ...incidents];
-  saveMissingIncidents(updatedIncidents);
-
-  // If tied to an inventory item, update its status
-  if (incidentData.inventoryItemId) {
-    updateInventoryItem(incidentData.inventoryItemId, { status: 'Missing' });
+  if (targetItem) {
+    const newQty = Math.max(0, targetItem.quantity - missingQty);
+    updateInventoryItem(targetItem.id, {
+      quantity: newQty,
+      status: newQty === 0 ? 'Out of Stock' : 'Missing'
+    });
   }
 
+  const updatedIncidents = [newIncident, ...incidents];
+  saveMissingIncidents(updatedIncidents);
   return newIncident;
 };
+
+export const addMissingIncident = reportMissingIncident;
 
 export const updateIncidentStatus = (incidentId, newStatus, resolutionData = {}) => {
   const incidents = getMissingIncidents();
@@ -1330,7 +214,6 @@ export const updateIncidentStatus = (incidentId, newStatus, resolutionData = {})
 
   saveMissingIncidents(updatedIncidents);
 
-  // Update underlying inventory item if found / resolved
   const incident = incidents.find(i => i.id === incidentId);
   if (incident && incident.inventoryItemId) {
     if (newStatus === 'Recovered' || newStatus === 'Replaced') {
@@ -1409,7 +292,6 @@ export const getRoomInventoryBreakdown = (roomNumber, items) => {
 
 export const getStorageReserveForItem = (item, allItems = []) => {
   if (!item) return null;
-  // Look for storage records with same SKU or matching category/name
   const storageItems = allItems.filter(i => i.locationType === 'Storage');
   const exactMatch = storageItems.find(i => i.sku === item.sku);
   if (exactMatch) {
@@ -1419,7 +301,6 @@ export const getStorageReserveForItem = (item, allItems = []) => {
       status: exactMatch.status
     };
   }
-  // Category match fallback
   const categoryMatches = storageItems.filter(i => i.category === item.category);
   if (categoryMatches.length > 0) {
     const totalCatUnits = categoryMatches.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0);
@@ -1449,7 +330,7 @@ export const getGuestCharges = () => {
 export const saveGuestCharges = (charges) => {
   localStorage.setItem(STORAGE_KEY_CHARGES, JSON.stringify(charges));
   window.dispatchEvent(new Event('guest_charges_update'));
-    try { addAuditLog({ module: 'Inventory', action: 'Created Record', description: 'addInventoryItem was called.', importance: 'Normal' }); } catch(e){}
+  try { addAuditLog({ module: 'Inventory', action: 'Created Record', description: 'addInventoryItem was called.', importance: 'Normal' }); } catch(e){}
 };
 
 export const addGuestCharge = (chargeData) => {
@@ -1477,8 +358,6 @@ export const addGuestCharge = (chargeData) => {
     deductedFromStock: chargeData.chargeType === 'Consumption' || chargeData.chargeType === 'Damage'
   };
 
-  // Only reduce hotel stock if the charge is for an actual hotel inventory item consumed/damaged
-  // Do NOT reduce hotel stock for external orders or services
   if (newCharge.deductedFromStock && newCharge.inventoryItemId) {
     const items = getInventoryItems();
     const targetItem = items.find(i => i.id === newCharge.inventoryItemId);
@@ -1556,4 +435,3 @@ export const computeGuestChargeMetrics = (charges) => {
     externalOrderAmount
   };
 };
-

@@ -419,8 +419,8 @@ export default function CleaningSchedule() {
         {/* Table Section */}
  <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 flex-1">
  {/* Table Header with Title & Button */}
- <div className="p-2.5 flex items-center justify-between border-b border-gray-100 gap-4">
- <div className="flex flex-nowrap items-center gap-4 shrink-0">
+ <div className="p-2.5 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-3">
+ <div className="flex flex-wrap items-center gap-3">
  <h1 className="text-[18px] font-bold text-gray-800">Today's Cleaning Schedule</h1>
  <input 
  type="text" 
@@ -473,8 +473,8 @@ export default function CleaningSchedule() {
  </div>
  
  {/* Table */}
- <div className="flex-1 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar]:h-2">
- <table className="w-full text-left">
+ <div className="flex-1 w-full overflow-x-auto min-w-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar]:h-2">
+ <table className="w-full text-left min-w-[700px]">
  <thead>
  <tr className="bg-gray-50/50 border-b border-gray-100">
  {visibleColumns['Room No'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Room No</th>}

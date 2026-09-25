@@ -245,8 +245,8 @@ export default function Refunds() {
  {/* Refunds Table */}
  {/* Refunds Table - Strictly 100% width with NO horizontal scroll */}
  <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden w-full">
- <div className="w-full">
- <table className="w-full table-fixed text-left border-collapse">
+ <div className="w-full max-lg:overflow-x-auto lg:overflow-x-hidden min-w-0">
+ <table className="w-full table-fixed text-left border-collapse max-lg:min-w-[850px]">
  <colgroup>
  <col style={{ width:'10%' }} />
  <col style={{ width:'9%' }} />

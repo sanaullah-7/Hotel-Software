@@ -170,8 +170,8 @@ export default function AuditLog() {
         </div>
 
         {/* Table Area */}
-        <div className="w-full flex-1 overflow-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <table className="w-full text-left">
+        <div className="w-full flex-1 overflow-x-auto min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <table className="w-full text-left min-w-[750px]">
             <thead className="bg-gray-50/50 sticky top-0 z-10">
               <tr>
                 <th className="py-3 px-3 text-[12px] font-bold text-gray-700 w-32">Date & Time</th>
