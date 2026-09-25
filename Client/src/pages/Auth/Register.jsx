@@ -28,8 +28,26 @@ export default function Register() {
     if (formData.fullName) {
       localStorage.setItem('fullName', formData.fullName);
     }
-    // Redirect to login or dashboard
-    navigate('/login');
+    if (formData.email) {
+      localStorage.setItem('userEmail', formData.email);
+    }
+    if (formData.password) {
+      localStorage.setItem('userPassword', formData.password);
+    }
+    localStorage.setItem('registeredUser', JSON.stringify({
+      fullName: formData.fullName,
+      email: formData.email,
+      hotelName: formData.hotelName,
+      password: formData.password
+    }));
+
+    // Redirect to login page so user must sign in with created account
+    navigate('/login', { 
+      state: { 
+        message: 'Account created successfully! Please sign in with your credentials.', 
+        email: formData.email 
+      } 
+    });
   };
 
   return (

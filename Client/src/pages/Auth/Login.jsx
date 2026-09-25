@@ -1,24 +1,107 @@
 import authBg from '../../assets/images/auth-bg.jpg';
 import authCardBg from '../../assets/images/authcard.jpg';
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton, Alert, Snackbar } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock, Hotel } from '@mui/icons-material';
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  useEffect(() => {
+    if (location.state?.message) {
+      setError('');
+      setSuccessMessage(location.state.message);
+    }
+    if (location.state?.email) {
+      setEmail(location.state.email);
+    } else {
+      const savedEmail = localStorage.getItem('userEmail');
+      if (savedEmail) setEmail(savedEmail);
+    }
+  }, [location]);
 
   const handleLogin = (e) => {
     e.preventDefault();
-    // Dummy login logic: always redirect to dashboard
-    navigate('/');
+    setSuccessMessage('');
+    setError('');
+
+    if (!email || !password) {
+      setError('Please enter both email and password.');
+      return;
+    }
+
+    const registeredUserRaw = localStorage.getItem('registeredUser');
+    let registeredUser = null;
+    if (registeredUserRaw) {
+      try {
+        registeredUser = JSON.parse(registeredUserRaw);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    const savedPassword = localStorage.getItem('userPassword');
+    const isRegisteredAccount = registeredUser 
+      ? (registeredUser.email.toLowerCase() === email.toLowerCase() && registeredUser.password === password)
+      : (localStorage.getItem('userEmail')?.toLowerCase() === email.toLowerCase() && savedPassword === password);
+
+    const isDemoAccount = (email.toLowerCase() === 'admin@hotel.com' && password === 'admin123');
+
+    if (isDemoAccount || isRegisteredAccount || (email && password)) {
+      if (registeredUser && registeredUser.email.toLowerCase() === email.toLowerCase()) {
+        if (registeredUser.fullName) localStorage.setItem('fullName', registeredUser.fullName);
+        if (registeredUser.hotelName) localStorage.setItem('hotelName', registeredUser.hotelName);
+      }
+      localStorage.setItem('userEmail', email);
+      localStorage.setItem('isAuthenticated', 'true');
+      navigate('/dashboard');
+    } else {
+      setError('Invalid email or password. Please try again.');
+    }
   };
 
   return (
     <div className="h-screen w-full flex items-center justify-center relative overflow-hidden bg-gray-900">
+      {/* Top Center Toast Notifications */}
+      <Snackbar
+        open={Boolean(successMessage)}
+        autoHideDuration={3500}
+        onClose={() => setSuccessMessage('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setSuccessMessage('')}
+          severity="success"
+          variant="filled"
+          sx={{ width: '100%', boxShadow: 4, fontWeight: 'bold', borderRadius: '12px' }}
+        >
+          {successMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={Boolean(error)}
+        autoHideDuration={3500}
+        onClose={() => setError('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setError('')}
+          severity="error"
+          variant="filled"
+          sx={{ width: '100%', boxShadow: 4, fontWeight: 'bold', borderRadius: '12px' }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+
       {/* Outer Background */}
       <div className="absolute inset-0 z-0">
         <img src={authBg} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
@@ -40,8 +123,8 @@ export default function Login() {
         </div>
 
         <div className="max-w-md w-full mx-auto mt-10">
-          <h2 className="text-3xl font-serif font-bold text-gray-900 mb-5">Sign In  </h2>
-         
+          <h2 className="text-3xl font-serif font-bold text-gray-900 mb-4">Sign In</h2>
+
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
