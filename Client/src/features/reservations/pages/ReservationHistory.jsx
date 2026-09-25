@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   Search, Download, MoreVert, Visibility, Print, ChevronLeft, ChevronRight,
-  Inventory2, KeyboardArrowDown, Close, Person, Phone, Hotel, Event, CheckCircle
+  Inventory2, KeyboardArrowDown, Close, Person, Phone, Hotel, Event, CheckCircle,
+  TableChart
 } from '@mui/icons-material';
 import { 
   Menu, MenuItem, IconButton, Popover, Dialog, DialogTitle, DialogContent, DialogActions
@@ -254,7 +255,7 @@ export default function ReservationHistory() {
         <body>
           <div class="header">
             <div>
-              <h1 class="title">Reservation Invoice</h1>
+              <h1 class="title">Booking Invoice</h1>
               <div style="font-size: 13px; color: #64748b;">Statement & Details</div>
             </div>
             <div style="text-align: right;">
@@ -386,7 +387,7 @@ export default function ReservationHistory() {
         {/* Table Top Controls */}
         <div className="p-3 sm:p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="text-gray-800 font-bold text-[14px] lg:text-[15px] whitespace-nowrap">
-            Reservation History
+            Booking History
           </h3>
 
           <div className="flex flex-row items-center space-x-2 ml-auto">
@@ -466,15 +467,13 @@ export default function ReservationHistory() {
               )}
             </div>
             
-            {/* CSV Button */}
+            {/* Export CSV Button */}
             <button 
               onClick={handleExportCSV}
-              className="flex items-center space-x-1 bg-[var(--primary-main)] hover:brightness-110 text-white px-2.5 py-1.5 rounded-lg text-[11px] font-bold shadow-sm transition-all shrink-0 cursor-pointer"
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer shrink-0"
               title="Export CSV"
             >
-              <Download sx={{ fontSize: 14 }} />
-              <span className="hidden sm:inline">Export CSV</span>
-              <span className="inline sm:hidden">CSV</span>
+              <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
             </button>
           </div>
         </div>
@@ -624,7 +623,7 @@ export default function ReservationHistory() {
             <DialogTitle sx={{ pb: 1, borderBottom: '1px solid #f1f5f9' }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-gray-800 text-[16px]">Reservation Details</span>
+                  <span className="font-bold text-gray-800 text-[16px]">Booking Details</span>
                   <span className="px-2 py-0.5 rounded text-[11px] font-bold bg-[#e5f4eb] text-[#1b7f43]">
                     {selectedRes.id}
                   </span>

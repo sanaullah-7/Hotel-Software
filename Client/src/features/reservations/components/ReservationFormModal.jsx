@@ -81,7 +81,7 @@ export default function ReservationFormModal({
         {/* Header */}
         <div className="bg-[var(--primary-main)] px-5 py-4 flex items-center justify-between shrink-0">
           <h2 className="text-white text-[16px] font-bold">
-            {editingId ? 'Edit Booking' : 'Add Booking'}
+            {editingId ? 'Edit Booking' : 'Add New Booking'}
           </h2>
           <button
             onClick={onClose}
@@ -491,7 +491,7 @@ export default function ReservationFormModal({
             }}
             className="px-5 py-2 rounded text-[13.5px] font-bold text-white bg-[var(--primary-main)] hover:bg-green-700 transition-colors cursor-pointer shadow-sm"
           >
-            {editingId ? 'Save Changes' : 'Add Booking'}
+            {editingId ? 'Save Changes' : 'Add New Booking'}
           </button>
         </div>
       </div>

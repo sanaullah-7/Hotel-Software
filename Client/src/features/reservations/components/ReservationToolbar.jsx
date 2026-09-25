@@ -9,7 +9,7 @@ import SearchInput from '../../../components/common/SearchInput';
 import RefreshButton from '../../../components/common/RefreshButton';
 
 export default function ReservationToolbar({
-  title = 'Bookings',
+  title = 'All Booking',
   search,
   onSearchChange,
   showDateFilter = false,
@@ -101,7 +101,7 @@ export default function ReservationToolbar({
         <button
           onClick={onOpenNewModal}
           className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
-          title="Add Booking"
+          title="Add New Booking"
         >
           <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#1b7f43]" />
         </button>

@@ -11,6 +11,12 @@ export default function AppBreadcrumbs() {
 
   // Helper to format path segments into readable text
   const customSegmentLabels = {
+    'reservation': 'Booking',
+    'all': 'All Booking',
+    'history': 'Booking History',
+    'cancelled': 'Canceled Booking',
+    'group': 'Group Booking',
+    'new': 'Add New Booking',
     'rates-pricing': 'Rates & Pricing',
     'rate-plans': 'Rate Plans',
     'taxes-fees': 'Taxes & Fees',

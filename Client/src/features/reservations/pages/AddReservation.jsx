@@ -293,7 +293,7 @@ export default function AddReservation() {
  className="px-6 py-2.5 text-sm font-bold text-white bg-[#1b7f43] hover:bg-[#156736] rounded-xl shadow-sm transition-all flex items-center gap-2"
  >
  <Save sx={{ fontSize: 18 }} />
- Save Reservation
+ Save Booking
  </button>
  </div>
  </form>

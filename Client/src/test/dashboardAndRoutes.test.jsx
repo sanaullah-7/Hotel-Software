@@ -71,9 +71,9 @@ describe('Dashboard and Shared UI Components', () => {
     const addBtn = getByTitle('Add Booking');
     fireEvent.click(addBtn);
 
-    // Verify modal opened with 'Add Booking' header and button
-    expect(getByText('Add Booking', { selector: 'h2' })).toBeTruthy();
-    expect(getByText('Add Booking', { selector: 'button' })).toBeTruthy();
+    // Verify modal opened with 'Add New Booking' header and button
+    expect(getByText('Add New Booking', { selector: 'h2' })).toBeTruthy();
+    expect(getByText('Add New Booking', { selector: 'button' })).toBeTruthy();
 
     // Type into inputs
     const firstNameInput = getByPlaceholderText('First Name');
@@ -91,16 +91,16 @@ describe('Dashboard and Shared UI Components', () => {
     expect(mobileInput.value).toBe('5551234');
     expect(roomInput.value).toBe('305');
 
-    // Click Add Booking
-    const submitBtn = getByText('Add Booking', { selector: 'button' });
+    // Click Add New Booking
+    const submitBtn = getByText('Add New Booking', { selector: 'button' });
     fireEvent.click(submitBtn);
 
-    // Verify new booking and Room 305 are rendered in table
+    // Verify new booking and room number 305 are rendered in table
     expect(getByText('Zaid Khan')).toBeTruthy();
-    expect(getByText('Room 305')).toBeTruthy();
+    expect(getByText('305')).toBeTruthy();
   });
 
-  it('renders Room column in table headers and rows', () => {
+  it('renders Room column in table headers and room numbers in rows', () => {
     const { getByText, getAllByText } = render(
       <MemoryRouter>
         <CurrentBookingsTable />
@@ -108,7 +108,20 @@ describe('Dashboard and Shared UI Components', () => {
     );
 
     expect(getByText('Room', { selector: 'th' })).toBeTruthy();
-    expect(getAllByText(/Room \d+/).length).toBeGreaterThan(0);
+    expect(getByText('101')).toBeTruthy();
+  });
+
+  it('navigates to Guest Profile when clicking a Current Booking row', () => {
+    const { getAllByRole, getByText } = render(
+      <MemoryRouter>
+        <CurrentBookingsTable />
+      </MemoryRouter>
+    );
+
+    const rows = getAllByRole('row');
+    // First data row (index 1 after header)
+    expect(rows.length).toBeGreaterThan(1);
+    expect(rows[1].title).toBe('Click to view Guest Profile');
   });
 
   it('filters by date buttons correctly', () => {
@@ -218,7 +231,7 @@ describe('Dashboard and Shared UI Components', () => {
     expect(queryByText('Show/Hide Column')).toBeNull();
 
     // Verify other toolbar buttons remain intact
-    expect(queryByTitle('Add Booking')).toBeTruthy();
+    expect(queryByTitle('Add New Booking')).toBeTruthy();
     expect(queryByTitle('Refresh')).toBeTruthy();
     expect(queryByTitle('Export CSV')).toBeTruthy();
     expect(queryByTitle('Export PDF')).toBeTruthy();

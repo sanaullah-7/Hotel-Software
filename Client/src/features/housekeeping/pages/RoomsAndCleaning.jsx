@@ -1,28 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { FormControl, InputLabel, Select, MenuItem, TextField, Box, Typography } from '@mui/material';
 import {
-  Search, FilterList, AddCircleOutlined, Refresh,
+  Search, AddCircleOutlined, Refresh,
   TableChart, PictureAsPdf, Close, EditOutlined, DeleteOutlined,
-  CalendarTodayOutlined, MeetingRoomOutlined, CleaningServicesOutlined, 
+  MeetingRoomOutlined, CleaningServicesOutlined, 
   EventOutlined, AccessTimeOutlined, PersonOutlined, FlagOutlined
 } from '@mui/icons-material';
-import Add from '@mui/icons-material/Add';
-import Bed from '@mui/icons-material/Bed';
-import CleaningServices from '@mui/icons-material/CleaningServices';
-import CheckCircle from '@mui/icons-material/CheckCircle';
-import VerifiedUser from '@mui/icons-material/VerifiedUser';
-import BuildCircle from '@mui/icons-material/BuildCircle';
-import Warning from '@mui/icons-material/Warning';
-import Edit from '@mui/icons-material/Edit';
-import Delete from '@mui/icons-material/Delete';
-import ChevronLeft from '@mui/icons-material/ChevronLeft';
-import ChevronRight from '@mui/icons-material/ChevronRight';
-import MoreVert from '@mui/icons-material/MoreVert';
-import TaskAlt from '@mui/icons-material/TaskAlt';
-import Block from '@mui/icons-material/Block';
-import NotificationsActive from '@mui/icons-material/NotificationsActive';
-import Cancel from '@mui/icons-material/Cancel';
-import { IconButton, Menu, Dialog } from '@mui/material';
 
 const initialRecords = [
   { id: 1, roomNo: '101', floor: '1', guestName: 'John Doe', cleaningStatus: 'Scheduled', scheduledDate: '08-07-2024', scheduledTime: '09:00', assignedStaff: 'Alice Smith', completionTime: '', notes: 'No special instructions.', priority: 'Standard', cleaningType: 'Full Clean', lastCleanedDate: '08/06/2024', frequency: 'Daily' },
@@ -51,18 +34,13 @@ export default function RoomsAndCleaning() {
   const [records, setRecords] = useState(initialRecords);
   const [search, setSearch] = useState('');
   
-  // Columns Menu state
+  // Columns state
   const [visibleColumns, setVisibleColumns] = useState({
-    'Room No': true, Floor: true, 'Guest Name': true,
-    'Cleaning Status': true, 'Date': true,
-    'Assigned Staff': true, 'Completion Time': true, Notes: true,
-    Priority: true, 'Cleaning Type': true, 'Last Cleaned Date': true, Frequency: true, Actions: true
+    Room: true, Guest: true,
+    'Cleaning Type': true, Status: true, Priority: true,
+    'Assigned Staff': true, 'Completed At': true, Notes: true,
+    'Last Cleaned': true, Actions: true
   });
-  const [showColumnsMenu, setShowColumnsMenu] = useState(false);
-  const filterMenuRef = useRef(null);
-  
-  // Selected Rows
-  
   
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,25 +64,15 @@ export default function RoomsAndCleaning() {
     setIsViewModalOpen(true);
   };
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (filterMenuRef.current && !filterMenuRef.current.contains(event.target)) {
-        setShowColumnsMenu(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const handleRefresh = () => {
     setSearch('');
     setRecords(initialRecords);
     
     setVisibleColumns({
-      'Room No': true, Floor: true, 'Guest Name': true,
-      'Cleaning Status': true, 'Date': true,
-      'Assigned Staff': true, 'Completion Time': true, Notes: true,
-      Priority: true, 'Cleaning Type': true, 'Last Cleaned Date': true, Frequency: true, Actions: true
+      Room: true, Guest: true,
+      'Cleaning Type': true, Status: true, Priority: true,
+      'Assigned Staff': true, 'Completed At': true, Notes: true,
+      'Last Cleaned': true, Actions: true
     });
   };
 
@@ -115,24 +83,21 @@ export default function RoomsAndCleaning() {
   );
 
   const handleExportCSV = () => {
-    const activeCols = Object.keys(visibleColumns).filter(col => visibleColumns[col] && col !== 'Actions' );
+    const activeCols = Object.keys(visibleColumns).filter(col => visibleColumns[col] && col !== 'Actions');
     let csvContent = activeCols.join(',') + '\n';
     
     filteredRecords.forEach(r => {
       const row = activeCols.map(col => {
         let val = '';
-        if (col === 'Room No') val = r.roomNo;
-        else if (col === 'Floor') val = r.floor;
-        else if (col === 'Guest Name') val = r.guestName;
-        else if (col === 'Cleaning Status') val = r.cleaningStatus;
-        else if (col === 'Date') val = r.scheduledDate + ' ' + r.scheduledTime;
-        else if (col === 'Assigned Staff') val = r.assignedStaff;
-        else if (col === 'Completion Time') val = r.completionTime;
-        else if (col === 'Notes') val = r.notes;
-        else if (col === 'Priority') val = r.priority;
+        if (col === 'Room') val = r.roomNo;
+        else if (col === 'Guest') val = r.guestName;
         else if (col === 'Cleaning Type') val = r.cleaningType;
-        else if (col === 'Last Cleaned Date') val = r.lastCleanedDate;
-        else if (col === 'Frequency') val = r.frequency;
+        else if (col === 'Status') val = r.cleaningStatus;
+        else if (col === 'Priority') val = r.priority;
+        else if (col === 'Assigned Staff') val = r.assignedStaff;
+        else if (col === 'Completed At') val = r.completionTime;
+        else if (col === 'Notes') val = r.notes;
+        else if (col === 'Last Cleaned') val = r.lastCleanedDate;
         return `"${(val || '').toString().replace(/"/g, '""')}"`;
       });
       csvContent += row.join(',') + '\n';
@@ -146,68 +111,59 @@ export default function RoomsAndCleaning() {
   };
 
   const handleExportPDF = () => {
-    const activeCols = Object.keys(visibleColumns).filter(col => visibleColumns[col] && col !== 'Actions' );
+    const activeCols = Object.keys(visibleColumns).filter(col => visibleColumns[col] && col !== 'Actions');
     let html = `
-      <html>
-        <head>
-          <title>Room Cleaning Report</title>
-          <style>
-            body { font-family: sans-serif; padding: 20px; color: #333; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
-            th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
-            th { background-color: #f8fafc; font-weight: 600; color: #1e293b; }
-            h2 { color: #0f172a; margin-bottom: 5px; }
-            .meta { color: #64748b; font-size: 13px; margin-bottom: 20px; }
-          </style>
-        </head>
-        <body>
-          <h2>Room Cleaning Report</h2>
-          <div class="meta">Generated on: ${new Date().toLocaleDateString()}</div>
-          <table>
-            <thead>
-              <tr>${activeCols.map(c => `<th>${c}</th>`).join('')}</tr>
-            </thead>
-            <tbody>
-    `;
-    
+    <html>
+    <head>
+      <title>Room Cleaning Report</title>
+      <style>
+        body { font-family: sans-serif; padding: 20px; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        th, td { border: 1px solid #e2e8f0; padding: 8px 10px; text-align: left; }
+        th { background-color: #f8fafc; font-weight: 600; color: #1e293b; }
+        h2 { color: #0f172a; margin-bottom: 5px; }
+        .meta { color: #64748b; font-size: 12px; margin-bottom: 20px; }
+      </style>
+    </head>
+    <body>
+      <h2>Room Cleaning Report</h2>
+      <div class="meta">Generated on: ${new Date().toLocaleDateString()}</div>
+      <table>
+        <thead>
+          <tr>${activeCols.map(c => `<th>${c}</th>`).join('')}</tr>
+        </thead>
+        <tbody>`;
+        
     filteredRecords.forEach(r => {
       html += '<tr>';
       activeCols.forEach(col => {
         let val = '';
-        if (col === 'Room No') val = r.roomNo;
-        else if (col === 'Floor') val = r.floor;
-        else if (col === 'Guest Name') val = r.guestName;
-        else if (col === 'Cleaning Status') val = r.cleaningStatus;
-        else if (col === 'Date') val = r.scheduledDate + ' ' + r.scheduledTime;
-        else if (col === 'Assigned Staff') val = r.assignedStaff;
-        else if (col === 'Completion Time') val = r.completionTime;
-        else if (col === 'Notes') val = r.notes;
-        else if (col === 'Priority') val = r.priority;
+        if (col === 'Room') val = r.roomNo;
+        else if (col === 'Guest') val = r.guestName;
         else if (col === 'Cleaning Type') val = r.cleaningType;
-        else if (col === 'Last Cleaned Date') val = r.lastCleanedDate;
-        else if (col === 'Frequency') val = r.frequency;
-        html += `<td>${val}</td>`;
+        else if (col === 'Status') val = r.cleaningStatus;
+        else if (col === 'Priority') val = r.priority;
+        else if (col === 'Assigned Staff') val = r.assignedStaff;
+        else if (col === 'Completed At') val = r.completionTime;
+        else if (col === 'Notes') val = r.notes;
+        else if (col === 'Last Cleaned') val = r.lastCleanedDate;
+        html += `<td>${val || ''}</td>`;
       });
       html += '</tr>';
     });
     
     html += `
-            </tbody>
-          </table>
-          <script>
-            window.onload = () => { window.print(); setTimeout(() => window.close(), 500); };
-          </script>
-        </body>
-      </html>
-    `;
+        </tbody>
+      </table>
+      <script>
+        window.onload = () => { window.print(); setTimeout(() => window.close(), 500); };
+      </script>
+    </body>
+    </html>`;
     
     const printWindow = window.open('', '_blank');
     printWindow.document.write(html);
     printWindow.document.close();
-  };
-
-  const toggleColumn = (col) => {
-    setVisibleColumns(prev => ({ ...prev, [col]: !prev[col] }));
   };
 
   const openNewModal = () => {
@@ -228,11 +184,11 @@ export default function RoomsAndCleaning() {
       scheduledDate: record.scheduledDate,
       scheduledTime: record.scheduledTime,
       assignedStaff: record.assignedStaff,
-      completionTime: record.completionTime || '',
+      completionTime: record.completionTime,
       cleaningStatus: record.cleaningStatus,
       priority: record.priority,
-      notes: record.notes || '',
-      cleaningType: record.cleaningType || 'Full Clean'
+      notes: record.notes,
+      cleaningType: record.cleaningType
     });
     setIsModalOpen(true);
   };
@@ -242,7 +198,7 @@ export default function RoomsAndCleaning() {
     if (editingId) {
       setRecords(records.map(r => r.id === editingId ? { ...r, ...form } : r));
     } else {
-      setRecords([...records, { ...form, id: records.length + 1, floor: '1', frequency: 'Daily', lastCleanedDate: '' }]);
+      setRecords([...records, { ...form, id: records.length + 1, floor: '1', lastCleanedDate: new Date().toLocaleDateString(), frequency: 'Daily' }]);
     }
     setIsModalOpen(false);
   };
@@ -295,29 +251,6 @@ export default function RoomsAndCleaning() {
         </div>
         
         <div className="flex items-center gap-2">
-          <div className="relative" ref={filterMenuRef}>
-            <button onClick={() => setShowColumnsMenu(!showColumnsMenu)} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Filter">
-              <FilterList sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
-            </button>
-            {showColumnsMenu && (
-              <div className="absolute right-0 top-10 w-48 bg-transparent shadow-[0_4px_20px_rgba(0,0,0,0.1)] rounded-md border border-gray-100 z-50 py-2 animate-fade-in">
-                <div className="px-4 py-2 border-b border-gray-100 text-[11px] font-bold text-gray-700">Show/Hide Column</div>
-                <div className="max-h-[250px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-[var(--primary-main)] [&::-webkit-scrollbar-thumb]:rounded-full">
-                  {Object.keys(visibleColumns).map(col => (
-                    <label key={col} className="flex items-center px-4 py-2 hover:bg-gray-100 cursor-pointer gap-3 text-[13px] text-gray-700 transition-colors">
-                      <input 
-                        type="checkbox" 
-                        checked={visibleColumns[col]} 
-                        onChange={() => toggleColumn(col)} 
-                        className="w-4 h-4 accent-[var(--primary-main)] cursor-pointer rounded-sm" 
-                      />
-                      {col}
-                    </label>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
           <button onClick={openNewModal} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="New Record">
             <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
           </button>
@@ -334,23 +267,20 @@ export default function RoomsAndCleaning() {
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-b-xl shadow-sm border border-gray-100 flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-x-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar]:h-2">
+      <div className="bg-white rounded-b-xl shadow-sm border border-gray-100 flex-1 flex flex-col">
+        <div className="flex-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
           <table className="w-full text-left whitespace-nowrap">
             <thead>
               <tr className="border-b border-gray-100 bg-white">
-                
-                {visibleColumns['Room No'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Room</th>}
-                {visibleColumns['Floor'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Floor</th>}
-                {visibleColumns['Guest Name'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Guest Name</th>}
-                {visibleColumns['Cleaning Status'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Cleaning Status</th>}
-                {visibleColumns['Assigned Staff'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Assigned Staff</th>}
-                {visibleColumns['Completion Time'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Completion Time</th>}
-                {visibleColumns['Notes'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Notes</th>}
-                {visibleColumns['Priority'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Priority</th>}
+                {visibleColumns['Room'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Room</th>}
+                {visibleColumns['Guest'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Guest</th>}
                 {visibleColumns['Cleaning Type'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Cleaning Type</th>}
-                {visibleColumns['Last Cleaned Date'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Last Cleaned Date</th>}
-                {visibleColumns['Frequency'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Frequency</th>}
+                {visibleColumns['Status'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Status</th>}
+                {visibleColumns['Priority'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Priority</th>}
+                {visibleColumns['Assigned Staff'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Assigned Staff</th>}
+                {visibleColumns['Completed At'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Completed At</th>}
+                {visibleColumns['Notes'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Notes</th>}
+                {visibleColumns['Last Cleaned'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Last Cleaned</th>}
                 {visibleColumns['Actions'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Actions</th>}
               </tr>
             </thead>
@@ -361,23 +291,17 @@ export default function RoomsAndCleaning() {
                   onClick={() => openViewModal(record)} 
                   className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer ${index % 2 !== 0 ? 'bg-gray-50/30' : ''}`}
                 >
+                  {visibleColumns['Room'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.roomNo}</td>}
+                  {visibleColumns['Guest'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.guestName}</td>}
+                  {visibleColumns['Cleaning Type'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.cleaningType}</td>}
                   
-                  {visibleColumns['Room No'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.roomNo}</td>}
-                  {visibleColumns['Floor'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.floor}</td>}
-                  {visibleColumns['Guest Name'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.guestName}</td>}
-                  
-                  {visibleColumns['Cleaning Status'] && (
+                  {visibleColumns['Status'] && (
                     <td className="py-3 px-1">
                       <span className={`px-1 py-0.5 rounded-[4px] text-[11px] font-medium ${statusStyles[record.cleaningStatus]}`}>
                         {record.cleaningStatus}
                       </span>
                     </td>
                   )}
-                  
-                 
-                  {visibleColumns['Assigned Staff'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.assignedStaff}</td>}
-                  {visibleColumns['Completion Time'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.completionTime}</td>}
-                  {visibleColumns['Notes'] && <td className="py-3 px-1 text-[11px] text-gray-500 truncate max-w-[80px]" title={record.notes}>{record.notes}</td>}
                   
                   {visibleColumns['Priority'] && (
                     <td className="py-3 px-1">
@@ -387,16 +311,17 @@ export default function RoomsAndCleaning() {
                     </td>
                   )}
 
-                  {visibleColumns['Cleaning Type'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.cleaningType}</td>}
+                  {visibleColumns['Assigned Staff'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.assignedStaff}</td>}
+                  {visibleColumns['Completed At'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.completionTime}</td>}
+                  {visibleColumns['Notes'] && <td className="py-3 px-1 text-[11px] text-gray-500 truncate max-w-[80px]" title={record.notes}>{record.notes}</td>}
                   
-                  {visibleColumns['Last Cleaned Date'] && (
+                  {visibleColumns['Last Cleaned'] && (
                     <td className="py-3 px-1 text-[11px] text-gray-600">
                       <div className="flex items-center gap-1.5">
                         {record.lastCleanedDate}
                       </div>
                     </td>
                   )}
-                  {visibleColumns['Frequency'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.frequency}</td>}
 
                   {visibleColumns['Actions'] && (
                     <td className="py-3 px-1 relative">
@@ -414,7 +339,7 @@ export default function RoomsAndCleaning() {
               ))}
               {filteredRecords.length === 0 && (
                 <tr>
-                  <td colSpan="15" className="py-8 text-center text-gray-500 text-sm">
+                  <td colSpan="10" className="py-8 text-center text-gray-500 text-sm">
                     No records found.
                   </td>
                 </tr>
