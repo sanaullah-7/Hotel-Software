@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../audit/state/auditStore.js';
 // Hotel Inventory Data Store & State Management
 
 export const INVENTORY_CATEGORIES = [
@@ -1177,6 +1178,7 @@ export const getInventoryItems = () => {
 export const saveInventoryItems = (items) => {
   localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
   window.dispatchEvent(new Event('inventory_update'));
+    try { addAuditLog({ module: 'Inventory', action: 'Updated Record', description: 'INVENTORY_CATEGORIES was called.', importance: 'Normal' }); } catch(e){}
 };
 
 export const getMissingIncidents = () => {
@@ -1195,6 +1197,7 @@ export const getMissingIncidents = () => {
 export const saveMissingIncidents = (incidents) => {
   localStorage.setItem(STORAGE_KEY_INCIDENTS, JSON.stringify(incidents));
   window.dispatchEvent(new Event('inventory_incidents_update'));
+    try { addAuditLog({ module: 'Inventory', action: 'Updated Record', description: 'getMissingIncidents was called.', importance: 'Normal' }); } catch(e){}
 };
 
 // CRUD Operations
@@ -1249,12 +1252,14 @@ export const updateInventoryItem = (id, updates) => {
     return item;
   });
   saveInventoryItems(updated);
+  try { addAuditLog({ module: 'Inventory', action: 'Updated Inventory', description: `Item updated.`, importance: 'Normal' }); } catch(e) {}
 };
 
 export const deleteInventoryItem = (id) => {
   const items = getInventoryItems();
   const updated = items.filter(item => item.id !== id);
   saveInventoryItems(updated);
+  try { addAuditLog({ module: 'Inventory', action: 'Deleted Inventory', description: `Item deleted.`, importance: 'Critical' }); } catch(e) {}
 };
 
 // Incidents Management
@@ -1444,6 +1449,7 @@ export const getGuestCharges = () => {
 export const saveGuestCharges = (charges) => {
   localStorage.setItem(STORAGE_KEY_CHARGES, JSON.stringify(charges));
   window.dispatchEvent(new Event('guest_charges_update'));
+    try { addAuditLog({ module: 'Inventory', action: 'Created Record', description: 'addInventoryItem was called.', importance: 'Normal' }); } catch(e){}
 };
 
 export const addGuestCharge = (chargeData) => {

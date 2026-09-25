@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../../../features/audit/state/auditStore.js';
 import { useState, useMemo } from 'react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';

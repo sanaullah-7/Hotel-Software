@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../audit/state/auditStore.js';
 import React, { useState } from'react';
 import { 
  Search, CheckCircle, Warning, Edit, VerifiedUser, PlayArrow, AssignmentInd, MoreVert, Cancel, AssignmentTurnedIn
@@ -77,7 +78,8 @@ export default function Inspection() {
  } : r);
  setInspections(newRooms.filter(r => r.status ==='Inspection Required'));
  saveRooms(newRooms);
- window.dispatchEvent(new Event('hk_update'));
+  try { addAuditLog({ module: 'Housekeeping', action: 'Updated Room Status', description: `Room status updated.`, importance: 'Normal' }); } catch(e) {}
+  window.dispatchEvent(new Event('hk_update'));
  setEditingRowId(null);
  };
 
@@ -92,7 +94,8 @@ export default function Inspection() {
  inspectionComments: comment 
  } : r);
  saveRooms(newRooms);
- window.dispatchEvent(new Event('hk_update'));
+  try { addAuditLog({ module: 'Housekeeping', action: 'Updated Room Status', description: `Room status updated.`, importance: 'Normal' }); } catch(e) {}
+  window.dispatchEvent(new Event('hk_update'));
  setInspectDialogOpen(false);
  setSelectedRoomId(null);
  };
@@ -108,7 +111,8 @@ export default function Inspection() {
  inspectionComments: comment 
  } : r);
  saveRooms(newRooms);
- window.dispatchEvent(new Event('hk_update'));
+  try { addAuditLog({ module: 'Housekeeping', action: 'Updated Room Status', description: `Room status updated.`, importance: 'Normal' }); } catch(e) {}
+  window.dispatchEvent(new Event('hk_update'));
  setInspectDialogOpen(false);
  setSelectedRoomId(null);
  };

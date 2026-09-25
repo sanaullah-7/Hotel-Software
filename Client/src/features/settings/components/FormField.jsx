@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function FormField({ label, icon: Icon, value, onChange, name, placeholder, multiline = false, rows = 3 }) {
+export default function FormField({ label, icon: Icon, value, onChange, name, placeholder, multiline = false, rows = 3, readOnly = false }) {
   return (
     <div className="relative group w-full">
       <fieldset className="border border-gray-300 group-focus-within:border-[var(--primary-main)] rounded-md px-3 py-1.5 transition-colors bg-white">
@@ -21,7 +21,8 @@ export default function FormField({ label, icon: Icon, value, onChange, name, pl
               value={value}
               onChange={onChange}
               placeholder={placeholder}
-              className="w-full bg-transparent border-none outline-none text-gray-800 text-sm font-medium resize-y"
+              className={`w-full bg-transparent border-none outline-none text-gray-800 text-sm font-medium resize-y ${readOnly ? 'opacity-80 pointer-events-none' : ''}`}
+              readOnly={readOnly}
             />
           ) : (
             <input
@@ -30,7 +31,8 @@ export default function FormField({ label, icon: Icon, value, onChange, name, pl
               value={value}
               onChange={onChange}
               placeholder={placeholder}
-              className="w-full bg-transparent border-none outline-none text-gray-800 text-sm font-medium"
+              className={`w-full bg-transparent border-none outline-none text-gray-800 text-sm font-medium ${readOnly ? 'opacity-80 pointer-events-none' : ''}`}
+              readOnly={readOnly}
             />
           )}
         </div>

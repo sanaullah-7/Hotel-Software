@@ -1,4 +1,5 @@
 import { mockStaff } from '../../../utils/mockData';
+import { addAuditLog } from '../../../features/audit/state/auditStore';
 
 export const STAFF_STORAGE_KEY = 'luxuria_staff_data';
 
@@ -81,6 +82,15 @@ export const addStaffMember = (formData) => {
 
   const updatedStaff = [newStaff, ...currentStaff];
   saveStoredStaff(updatedStaff);
+  
+  addAuditLog({
+    module: 'Human Resources',
+    action: 'Added Staff',
+    recordId: newStaff.empId,
+    description: `Staff member ${newStaff.name} was added.`,
+    importance: 'Important'
+  });
+  
   return newStaff;
 };
 
@@ -94,14 +104,39 @@ export const updateStaffMember = (id, updatedFields) => {
     return staff;
   });
   saveStoredStaff(updatedStaff);
+
+  const updatedPerson = updatedStaff.find(s => String(s.id) === String(id) || String(s.empId) === String(id));
+  if (updatedPerson) {
+    addAuditLog({
+      module: 'Human Resources',
+      action: 'Updated Staff',
+      recordId: updatedPerson.empId,
+      description: `Staff member ${updatedPerson.name} was updated.`,
+      importance: 'Normal'
+    });
+  }
+
   return updatedStaff;
 };
 
 // Delete a staff member by ID
 export const deleteStaffMember = (id) => {
   const currentStaff = getStoredStaff();
+  const deletedPerson = currentStaff.find(staff => String(staff.id) === String(id) || String(staff.empId) === String(id));
+  
   const updatedStaff = currentStaff.filter(staff => String(staff.id) !== String(id) && String(staff.empId) !== String(id));
   saveStoredStaff(updatedStaff);
+
+  if (deletedPerson) {
+    addAuditLog({
+      module: 'Human Resources',
+      action: 'Deleted Staff',
+      recordId: deletedPerson.empId,
+      description: `Staff member ${deletedPerson.name} was deleted.`,
+      importance: 'Critical'
+    });
+  }
+
   return updatedStaff;
 };
 

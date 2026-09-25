@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../audit/state/auditStore.js';
 // ============================================================
 // Restaurant Store — Single Source of Truth
 // All restaurant data lives here. Import getters/setters in
@@ -181,6 +182,7 @@ export function placeOrder(payload) {
   notify();
   // Persist to localStorage so sibling tabs pick it up
   window.dispatchEvent(new Event('restaurant_update'));
+    try { addAuditLog({ module: 'Restaurant', action: 'Updated Record', description: 'CATEGORIES was called.', importance: 'Normal' }); } catch(e){}
 }
 
 export function updateOrder(id, payload) {

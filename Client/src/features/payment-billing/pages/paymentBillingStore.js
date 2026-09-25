@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../audit/state/auditStore.js';
 // Central Local Store & Mock Data for Payment & Billing Module
 
 export const INITIAL_INVOICES = [
@@ -590,6 +591,7 @@ export const addInvoice = (newInvoice) => {
 
   const updated = [invoiceWithId, ...invoices];
   saveInvoices(updated);
+  try { addAuditLog({ module: 'Payment & Billing', action: 'Created Invoice', recordId: invoiceWithId.invoiceNumber, description: `Invoice ${invoiceWithId.invoiceNumber} created.`, importance: 'Important' }); } catch(e) {}
   return updated;
 };
 
@@ -608,9 +610,9 @@ export const updateInvoice = (invoiceId, updatedFields) => {
     return inv;
   });
   saveInvoices(updated);
+  try { addAuditLog({ module: 'Payment & Billing', action: 'Updated Invoice', recordId: invoiceId, description: `Invoice ${invoiceId} updated.`, importance: 'Normal' }); } catch(e) {}
   return updated;
 };
-
 export const deleteInvoice = (invoiceId) => {
   const invoices = getInvoices();
   const updated = invoices.filter((inv) => inv.id !== invoiceId && inv.invoiceNumber !== invoiceId);

@@ -56,6 +56,7 @@ import GuestProfile from '../features/guests/pages/GuestProfile';
 
 // Occupancy Module
 import Occupancy from '../features/occupancy/pages/Occupancy';
+import CarParking from '../features/car-parking/pages/CarParking';
 
 // HR Module Pages
 import AllStaff from '../pages/HR/Staff/AllStaff';
@@ -70,6 +71,7 @@ import EmployeeSalary from '../pages/HR/Salary/EmployeeSalary';
 // Reports Module Pages
 import ReportsPage from '../features/reports/pages/ReportsPage';
 
+import AuditLog from '../features/audit/pages/AuditLog';
 // Settings Module Pages
 import HotelProfile from '../features/settings/pages/HotelProfile';
 import Policies from '../features/settings/pages/Policies';
@@ -90,7 +92,7 @@ export default function AppRoutes() {
     <Router>
       <Routes>
         {/* Core & Auth Routes */}
-        <Route path="/admin/profile" element={<DashboardLayout><AdminProfile /></DashboardLayout>} />
+        
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
@@ -135,6 +137,15 @@ export default function AppRoutes() {
         <Route path="/housekeeping/cleaning-schedule" element={<DashboardLayout><CleaningSchedule /></DashboardLayout>} />
         <Route path="/housekeeping/lost-and-found" element={<DashboardLayout><LostAndFound /></DashboardLayout>} />
         <Route path="/housekeeping/inspection-checklist" element={<DashboardLayout><InspectionChecklist /></DashboardLayout>} />
+
+        <Route path="/guests" element={<DashboardLayout><Guests /></DashboardLayout>} />
+        <Route path="/guests/profile" element={<DashboardLayout><GuestProfile /></DashboardLayout>} />
+        
+        {/* Occupancy Module */}
+        <Route path="/occupancy" element={<DashboardLayout><Occupancy /></DashboardLayout>} />
+        
+        {/* Car Parking Route */}
+        <Route path="/car-parking" element={<DashboardLayout><CarParking /></DashboardLayout>} />
 
         {/* Inventory Sub-Routes */}
         <Route path="/inventory" element={<DashboardLayout><AllInventory /></DashboardLayout>} />
@@ -190,6 +201,7 @@ export default function AppRoutes() {
         <Route path="/reports" element={<Navigate to="/reports/stock" replace />} />
         <Route path="/reports/:tab" element={<DashboardLayout><ReportsPage /></DashboardLayout>} />
 
+        <Route path="/audit-log" element={<DashboardLayout><AuditLog /></DashboardLayout>} />
         {/* Settings Sub-Routes */}
         <Route path="/settings" element={<Navigate to="/settings/hotel-profile" replace />} />
         <Route path="/settings/hotel-profile" element={<DashboardLayout><HotelProfile /></DashboardLayout>} />

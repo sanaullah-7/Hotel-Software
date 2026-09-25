@@ -14,6 +14,8 @@ import ReservationViewModal from '../components/ReservationViewModal';
 import ReservationFormModal from '../components/ReservationFormModal';
 import ReservationDeleteModal from '../components/ReservationDeleteModal';
 import ReservationCancelModal from '../components/ReservationCancelModal';
+import { addAuditLog } from '../../audit/state/auditStore.js';
+
 
 const initialBookings = [
   { id: 1, name: 'John Deo', avatar: 'https://i.pravatar.cc/150?img=11', package: 'All inclusive', roomType: 'Delux', status: 'Cancelled', checkIn: '02/25/2023', checkOut: '02/28/2023', payment: 'Paid', email: 'test@email.com', mobile: '1234567890' },
