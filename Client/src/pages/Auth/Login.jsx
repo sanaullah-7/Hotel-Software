@@ -34,15 +34,14 @@ export default function Login() {
             H
           </div>
           <div>
-            <h1 className="font-bold text-gray-900 leading-tight">Hotel Admin</h1>
+            <h1 className="font-bold text-gray-900 leading-tight">Hotel</h1>
             <p className="text-[10px] text-gray-500 font-medium tracking-wider uppercase">Management System</p>
           </div>
         </div>
 
         <div className="max-w-md w-full mx-auto mt-10">
-          <h2 className="text-3xl font-serif font-bold text-gray-900 mb-1">Welcome back</h2>
-          <p className="text-gray-500 text-sm mb-5">Sign in to manage reservations, rooms and guests.</p>
-
+          <h2 className="text-3xl font-serif font-bold text-gray-900 mb-5">Sign In  </h2>
+         
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>

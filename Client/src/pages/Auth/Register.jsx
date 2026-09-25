@@ -85,8 +85,8 @@ export default function Register() {
       {/* Right Form Side */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 md:px-16 lg:px-20 bg-[#EFF4F8] relative overflow-y-auto no-scrollbar py-4">
         <div className="max-w-md w-full mx-auto my-4">
-          <h2 className="text-4xl font-serif font-bold text-gray-900 mb-1 text-3xl">Create account</h2>
-          <p className="text-gray-500 mb-4 text-sm">Register a new staff account for the admin panel.</p>
+          <h2 className="text-4xl font-serif font-bold text-gray-900 mb-5 text-3xl">Create account</h2>
+
 
           <form onSubmit={handleRegister} className="space-y-3">
             <div>
@@ -104,7 +104,7 @@ export default function Register() {
                   }
                 }}
                 variant="outlined"
-                placeholder="e.g. Jordan Smith"
+                placeholder="full name"
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
@@ -135,7 +135,7 @@ export default function Register() {
                   }
                 }}
                 variant="outlined"
-                placeholder="you@example.com"
+                placeholder="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
@@ -166,7 +166,7 @@ export default function Register() {
                   }
                 }}
                 variant="outlined"
-                placeholder="e.g. Aurelia Grand"
+                placeholder="hotel name"
                 name="hotelName"
                 value={formData.hotelName}
                 onChange={handleChange}
@@ -199,7 +199,7 @@ export default function Register() {
                 }}
                   variant="outlined"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Min. 6 chars"
+                  placeholder="new password"
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
@@ -255,7 +255,7 @@ export default function Register() {
               </div>
             </div>
 
-            <div className="flex items-center mt-1 mb-3">
+            <div className="flex  items-center mt-1 mb-3">
               <FormControlLabel
                 control={<Checkbox required sx={{ color: "#d1d5db", p: 0.5, pr: 1, "&.Mui-checked": { color: "#22c55e" } }} />}
                 label={
