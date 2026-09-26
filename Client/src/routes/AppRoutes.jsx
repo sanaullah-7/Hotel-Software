@@ -187,7 +187,7 @@ export default function AppRoutes() {
         <Route path="/hr/salary" element={<DashboardLayout><EmployeeSalary /></DashboardLayout>} />
 
         {/* Reports Sub-Routes */}
-        <Route path="/reports" element={<Navigate to="/reports/stock" replace />} />
+        <Route path="/reports" element={<Navigate to="/reports/expense" replace />} />
         <Route path="/reports/:tab" element={<DashboardLayout><ReportsPage /></DashboardLayout>} />
 
         {/* Settings Sub-Routes */}

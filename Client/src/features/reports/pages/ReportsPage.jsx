@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from'react';
 import { useParams, useNavigate } from'react-router-dom';
-import StockReport from'./tabs/StockReport';
 import ExpenseReport from'./tabs/ExpenseReport';
 import RevenueReport from'./tabs/RevenueReport';
 import OccupancyReportTab from'./tabs/OccupancyReportTab';
@@ -31,18 +30,15 @@ export default function ReportsPage() {
 
  {/* Tab Panels */}
  <ReportTabPanel value={activeTab} index={0}>
- <StockReport />
- </ReportTabPanel>
- <ReportTabPanel value={activeTab} index={1}>
  <ExpenseReport />
  </ReportTabPanel>
- <ReportTabPanel value={activeTab} index={2}>
+ <ReportTabPanel value={activeTab} index={1}>
  <RevenueReport />
  </ReportTabPanel>
- <ReportTabPanel value={activeTab} index={3}>
+ <ReportTabPanel value={activeTab} index={2}>
  <OccupancyReportTab />
  </ReportTabPanel>
- <ReportTabPanel value={activeTab} index={4}>
+ <ReportTabPanel value={activeTab} index={3}>
  <ExpenseVsRevenueTab />
  </ReportTabPanel>
  </div>

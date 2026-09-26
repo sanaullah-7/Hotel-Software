@@ -250,7 +250,6 @@ export default function Sidebar() {
   ];
 
   const reportsSubItems = [
-    { label: 'Stock', id: 'stock', path: '/reports/stock' },
     { label: 'Expense', id: 'expense', path: '/reports/expense' },
     { label: 'Revenue Report', id: 'revenue', path: '/reports/revenue' },
     { label: 'Occupancy Report', id: 'occupancy', path: '/reports/occupancy' },
