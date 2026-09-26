@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Person } from '@mui/icons-material';
 
@@ -71,7 +71,7 @@ export default function GuestProfile() {
     setSearchParams({ tab: tabId }, { replace: true });
   };
 
-  const loadData = () => {
+  const loadData = useCallback(() => {
     const g = getGuestById(id);
     setGuest(g);
 
@@ -155,7 +155,7 @@ export default function GuestProfile() {
       (d.room && guestRooms.has(String(d.room)))
     );
     setDocuments(guestDocsList);
-  };
+  }, [id]);
 
   useEffect(() => {
     loadData();
@@ -171,7 +171,7 @@ export default function GuestProfile() {
       window.removeEventListener('guest_charges_update', loadData);
       window.removeEventListener('storage', loadData);
     };
-  }, [id]);
+  }, [id, loadData]);
 
   // Handle Edit Guest
   const handleSaveGuest = (updatedFields) => {

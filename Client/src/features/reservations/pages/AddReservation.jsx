@@ -8,6 +8,7 @@ import {
  TextField, MenuItem, FormControl, InputLabel, Select
 } from'@mui/material';
 import { getReservations, saveReservations } from '../state/reservationStore';
+import { addAuditLog } from '../../audit/state/auditStore';
 import { getRooms, updateRoom } from '../../../features/rooms/state/roomStore';
 
 export default function AddReservation() {
@@ -95,8 +96,9 @@ export default function AddReservation() {
    : 1;
  const selectedRoom = availableRooms.find((room) => room.id === formData.room);
 
- saveReservations([{
-   id: nextId,
+ try { addAuditLog({ module: 'Reservation', action: 'Created Reservation', recordId: nextId, description: `Reservation ${nextId} created.`, importance: 'Important' }); } catch(e) {}
+  saveReservations([{
+    id: nextId,
    name: `${formData.firstName} ${formData.lastName}`.trim() || 'New Guest',
    avatar: 'https://i.pravatar.cc/150?img=1',
    package: formData.purposeOfStay || 'Standard',

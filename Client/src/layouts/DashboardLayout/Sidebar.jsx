@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import {
   Dashboard as DashboardIcon,
@@ -19,136 +19,39 @@ import {
   RestaurantMenu as RestaurantIcon,
   Celebration as EventsIcon,
   AutoAwesome as AssistantIcon,
+  HistoryToggleOff as AuditIcon,
+  LocalParking as CarParkingIcon,
 } from '@mui/icons-material';
 
-// Reusable submenu renderer
-const renderSubItems = (items, pathname) => {
-  return (
-    <div className="bg-[#f0f4fa] rounded-xl p-1 space-y-0.5">
-      {items.map((subItem) => {
-        const isSelected = pathname === subItem.path;
+import {
+  frontOfficeSubItems,
+  reservationSubItems,
+  roomsSubItems,
+  housekeepingSubItems,
+  inventorySubItems,
+  ratesPricingSubItems,
+  paymentBillingSubItems,
+  hrSubItems,
+  restaurantSubItems,
+  reportsSubItems,
+  eventsSubItems,
+  settingsSubItems,
+} from './sidebarConfig';
+import { DropdownSection } from './components/DropdownSection';
+import { NavGroupHeader } from './components/NavGroupHeader';
 
-        return (
-          <Link
-            key={subItem.id}
-            to={subItem.path}
-            className={`flex items-center px-3 py-1.5 rounded-lg transition-all duration-200 cursor-pointer no-underline ${
-              isSelected
-                ? 'bg-[#dcefe5] text-[#1b7f43]'
-                : 'hover:bg-[#dcefe5] text-slate-600 hover:text-[#1b7f43]'
-            }`}
-          >
-            {isSelected ? (
-              <div className="w-2.5 h-2.5 rounded-full bg-[#1b7f43] ring-3 ring-[#1b7f43]/20 mr-3 shrink-0" />
-            ) : (
-              <div className="w-2 h-2 rounded-full bg-[#86efac] mr-3 shrink-0 ml-0.5" />
-            )}
+export default function Sidebar({ mobileOpen = false, onMobileClose }) {
+  const [hotelNameState, setHotelNameState] = useState(localStorage.getItem('hotelName') || null);
+  const [hotelLogoState, setHotelLogoState] = useState(localStorage.getItem('hotelLogo') || null);
 
-            <span className={`text-[12px] font-semibold transition-colors ${
-              isSelected ? 'text-[#1b7f43]' : 'text-slate-600 group-hover:text-[#1b7f43]'
-            }`}>
-              {subItem.label}
-            </span>
-          </Link>
-        );
-      })}
-    </div>
-  );
-};
-
-// Reusable dropdown component
-const DropdownSection = ({
-  isOpen,
-  pathname,
-  active,
-  open,
-  toggle,
-  icon: Icon,
-  label,
-  items,
-}) => {
-  return (
-    <li>
-      <button
-        type="button"
-        onClick={toggle}
-        title={!isOpen ? label : undefined}
-        className={`w-full flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 cursor-pointer border-none text-left ${
-          active
-            ? 'bg-[#f0f9f4] text-[#1b7f43]'
-            : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
-        } ${isOpen ? 'justify-between' : 'justify-center'}`}
-      >
-        <div className="flex items-center min-w-0">
-          <div
-            className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-colors ${
-              active
-                ? 'bg-[#e5f4eb] text-[#1b7f43]'
-                : 'bg-gray-50 text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
-            }`}
-          >
-            <Icon sx={{ fontSize: 20 }} />
-          </div>
-
-          <span
-            className={`ml-3 text-[13px] whitespace-nowrap transition-opacity duration-200 ${
-              isOpen
-                ? 'opacity-100 block truncate'
-                : 'opacity-0 hidden'
-            } ${
-              active
-                ? 'font-bold text-gray-900'
-                : 'text-gray-600 font-medium'
-            }`}
-          >
-            {label}
-          </span>
-        </div>
-
-        {isOpen && (
-          <div className="pr-1 shrink-0">
-            <ChevronRightIcon
-              fontSize="small"
-              className={`transition-transform duration-300 ease-in-out ${
-                active
-                  ? 'text-[#1b7f43]'
-                  : 'text-gray-400'
-              } ${open ? 'rotate-90' : 'rotate-0'}`}
-            />
-          </div>
-        )}
-      </button>
-
-      <div
-        className={`grid transition-all duration-300 ease-in-out ${
-          isOpen && open
-            ? 'grid-rows-[1fr] opacity-100 mt-1'
-            : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
-        }`}
-      >
-        <div className="overflow-hidden">
-          {renderSubItems(items, pathname)}
-        </div>
-      </div>
-    </li>
-  );
-};
-
-// Group Header for visual domain separation
-const NavGroupHeader = ({ title, isOpen }) => {
-  if (!isOpen) {
-    return <div className="my-2 border-t border-gray-100" />;
-  }
-  return (
-    <li className="pt-2.5 pb-0.5 px-2.5 list-none">
-      <span className="text-[9.5px] font-bold text-gray-400 uppercase tracking-wider block">
-        {title}
-      </span>
-    </li>
-  );
-};
-
-export default function Sidebar() {
+  useEffect(() => {
+    const handleStorage = () => {
+      setHotelNameState(localStorage.getItem('hotelName') || null);
+      setHotelLogoState(localStorage.getItem('hotelLogo') || null);
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
   const location = useLocation();
   const pathname = location.pathname;
 
@@ -159,6 +62,7 @@ export default function Sidebar() {
   const isReservationActive = pathname.startsWith('/reservation');
   const isRoomsActive = pathname.startsWith('/rooms');
   const isGuestsActive = pathname.startsWith('/guests');
+  const isCarParkingActive = pathname.startsWith('/car-parking');
   const isHousekeepingActive = pathname.startsWith('/housekeeping');
   const isInventoryActive = pathname.startsWith('/inventory');
   const isRatesPricingActive = pathname.startsWith('/rates-pricing');
@@ -168,6 +72,7 @@ export default function Sidebar() {
   const isSettingsActive = pathname.startsWith('/settings');
   const isRestaurantActive = pathname.startsWith('/restaurant');
   const isEventsActive = pathname.startsWith('/events');
+  const isAuditActive = pathname.startsWith('/audit-log');
   const isAssistantActive = pathname.startsWith('/ai-assistant');
 
   // Sidebar open/close
@@ -187,85 +92,6 @@ export default function Sidebar() {
   const [isRestaurantOpen, setIsRestaurantOpen] = useState(isRestaurantActive);
   const [isEventsOpen, setIsEventsOpen] = useState(isEventsActive);
 
-  // Sub menu data
-  const frontOfficeSubItems = [
-    { label: 'Operations Alerts', id: 'operations-alerts', path: '/front-office/operations-alerts' },
-    { label: 'Check-in/Check-out', id: 'check-in-out', path: '/front-office/check-in-out' },
-    { label: 'Guest Complaint', id: 'guest-complaint', path: '/front-office/guest-complaint' },
-  ];
-
-  const reservationSubItems = [
-    { label: 'All Booking', id: 'all-reservations', path: '/reservation/all' },
-    { label: 'Booking History', id: 'reservation-history', path: '/reservation/history' },
-    { label: 'Canceled Booking', id: 'cancel-booking', path: '/reservation/cancelled' },
-    { label: 'Group Booking', id: 'group-booking', path: '/reservation/group' },
-    { label: 'Add New Booking', id: 'add-new-reservation', path: '/reservation/new' },
-  ];
-
-  const roomsSubItems = [
-    { label: 'All Rooms', id: 'all-rooms', path: '/rooms' },
-    { label: 'Room Types', id: 'room-types', path: '/rooms/room-types' },
-    { label: 'Rate & Pricing', id: 'rate-pricing', path: '/rooms/rate-pricing' },
-    { label: 'Add Room', id: 'add-room', path: '/rooms/new' },
-  ];
-
-  const housekeepingSubItems = [
-    { label: 'Room Cleaning', id: 'rooms-cleaning', path: '/housekeeping/rooms-cleaning' },
-    { label: 'Cleaning Schedule', id: 'cleaning-schedule', path: '/housekeeping/cleaning-schedule' },
-    { label: 'Lost and Found', id: 'lost-and-found', path: '/housekeeping/lost-and-found' },
-    { label: 'Inspection Checklist', id: 'inspection-checklist', path: '/housekeeping/inspection-checklist' },
-  ];
-
-  const inventorySubItems = [
-    { label: 'Stock', id: 'stock', path: '/inventory' },
-    { label: 'Guest Charges', id: 'guest-charges', path: '/inventory/guest-charges' },
-    { label: 'Missing Items', id: 'missing-items', path: '/inventory/missing' },
-  ];
-
-  const ratesPricingSubItems = [
-    { label: 'Rate Plans', id: 'rate-plans', path: '/rates-pricing/rate-plans' },
-    { label: 'Discounts', id: 'discounts', path: '/rates-pricing/discounts' },
-    { label: 'Taxes & Fees', id: 'taxes-fees', path: '/rates-pricing/taxes-fees' },
-  ];
-
-  const paymentBillingSubItems = [
-    { label: 'Invoices', id: 'invoices', path: '/payment-billing/invoices' },
-    { label: 'Payment History', id: 'payment-history', path: '/payment-billing/payment-history' },
-    { label: 'Pending Payments', id: 'pending-payments', path: '/payment-billing/pending-payments' },
-    { label: 'Refunds', id: 'refunds', path: '/payment-billing/refunds' },
-  ];
-
-  const hrSubItems = [
-    { label: 'All Staff', id: 'all-staff', path: '/hr/staff' },
-    { label: 'Add Staff', id: 'add-staff', path: '/hr/staff/add' },
-    { label: 'Leave Requests', id: 'leave-requests', path: '/hr/leave-requests' },
-    { label: 'Attendance Sheet', id: 'attendance-sheet', path: '/hr/attendance' },
-    { label: "Today's Attendance", id: 'todays-attendance', path: '/hr/attendance/today' },
-    { label: 'Employee Salary', id: 'employee-salary', path: '/hr/employee-salary' },
-  ];
-
-  const restaurantSubItems = [
-    { label: 'Menu', id: 'menu', path: '/restaurant/menu' },
-    { label: 'Orders', id: 'orders', path: '/restaurant/orders' },
-  ];
-
-  const reportsSubItems = [
-    { label: 'Expense', id: 'expense', path: '/reports/expense' },
-    { label: 'Revenue Report', id: 'revenue', path: '/reports/revenue' },
-    { label: 'Occupancy Report', id: 'occupancy', path: '/reports/occupancy' },
-    { label: 'Expense Vs Revenue', id: 'expense-vs-revenue', path: '/reports/expense-vs-revenue' },
-  ];
-
-  const eventsSubItems = [
-    { label: 'All Events', id: 'all-events', path: '/events/all-events' },
-    { label: 'Add Event', id: 'add-event', path: '/events/add-event' },
-    { label: 'Banquet Manager', id: 'banquet-manager', path: '/events/banquet-manager' },
-  ];
-
-  const settingsSubItems = [
-    { label: 'Hotel Profile', id: 'hotel-profile', path: '/settings/hotel-profile' },
-    { label: 'Policies', id: 'policies', path: '/settings/policies' },
-  ];
 
   // Generic dropdown toggle
   const toggleDropdown = (setter) => {
@@ -281,7 +107,9 @@ export default function Sidebar() {
     <aside
       className={`${
         isOpen ? 'w-60' : 'w-20'
-      } h-screen border-r border-gray-100 flex flex-col sticky top-0 bg-white shadow-sm transition-all duration-300 relative z-40 shrink-0 select-none`}
+      } h-screen border-r border-gray-100 flex flex-col bg-white shadow-sm transition-all duration-300 relative z-40 shrink-0 select-none ${
+        mobileOpen ? 'fixed top-0 left-0 z-50 shadow-2xl flex' : 'hidden md:flex md:sticky md:top-0'
+      }`}
     >
       {/* Toggle Button */}
       <button
@@ -297,29 +125,35 @@ export default function Sidebar() {
       </button>
 
       {/* Logo */}
-      <div className="h-13 flex items-center justify-center border-b border-transparent overflow-hidden mt-1">
-        <h1 className="font-bold tracking-wide text-gray-800 whitespace-nowrap transition-all duration-300">
+      <div className="min-h-[4rem] py-2 flex flex-col items-center justify-center border-b border-transparent pt-0.5 px-2 text-center w-full overflow-hidden">
+        {hotelLogoState && (
+          <img src={hotelLogoState} alt="Logo" className={`object-contain transition-all duration-300 ${isOpen ? 'w-10 h-10' : 'w-7 h-7'}`} />
+        )}
+        <h1 className="font-bold tracking-wide text-gray-800 transition-all duration-300 flex items-center justify-center break-words w-full">
           {isOpen ? (
-            <span className="text-2xl">
-              {localStorage.getItem('hotelName') ? (
+            <span className="text-lg sm:text-xl flex flex-wrap items-center justify-center leading-tight">
+              {hotelNameState ? (
                 <>
-                  {localStorage.getItem('hotelName').split(' ')[0]}<span className="text-[#1b7f43]">{localStorage.getItem('hotelName').split(' ').slice(1).join(' ')}</span>
+                  <span className="mr-1">{hotelNameState.split(' ')[0]}</span>
+                  <span className="text-[#1b7f43]">{hotelNameState.split(' ').slice(1).join(' ')}</span>
                 </>
               ) : (
                 <>Hotel<span className="text-[#1b7f43]">Admin</span></>
               )}
             </span>
           ) : (
-            <span className="text-xl text-[#1b7f43]">
-              HA
-            </span>
+            !hotelLogoState && (
+              <span className="text-xl text-[#1b7f43]">
+                HA
+              </span>
+            )
           )}
         </h1>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-2.5 pt-1 pb-4 overflow-y-auto overflow-x-hidden hide-scrollbar">
-        <ul className="space-y-0.5">
+      <nav className="flex-1 px-3 -pt-0.5 pb-6 overflow-y-auto overflow-x-hidden hide-scrollbar">
+        <ul className="space-y-1.5">
 
           {/* GROUP 1: OPERATIONS & FRONT DESK */}
           <NavGroupHeader title="Operations" isOpen={isOpen} />
@@ -329,7 +163,7 @@ export default function Sidebar() {
             <Link
               to="/"
               title={!isOpen ? 'Dashboard' : undefined}
-              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
+              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isDashboardActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -337,7 +171,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 transition-colors ${
+                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-colors ${
                     isDashboardActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
@@ -347,7 +181,7 @@ export default function Sidebar() {
                 </div>
 
                 <span
-                  className={`ml-3 text-[13px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isDashboardActive
@@ -366,7 +200,7 @@ export default function Sidebar() {
             <Link
               to="/occupancy"
               title={!isOpen ? 'Occupancy' : undefined}
-              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
+              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isOccupancyActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -374,7 +208,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
                     isOccupancyActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
@@ -384,7 +218,7 @@ export default function Sidebar() {
                 </div>
 
                 <span
-                  className={`ml-3 text-[13px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isOccupancyActive
@@ -413,7 +247,7 @@ export default function Sidebar() {
           {/* GROUP 2: BOOKINGS & ROOMS */}
           <NavGroupHeader title="Bookings & Rooms" isOpen={isOpen} />
 
-          {/* Booking */}
+          {/* Reservation */}
           <DropdownSection
             isOpen={isOpen}
             pathname={pathname}
@@ -442,7 +276,7 @@ export default function Sidebar() {
             <Link
               to="/guests"
               title={!isOpen ? 'Guests' : undefined}
-              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
+              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isGuestsActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -450,7 +284,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
                     isGuestsActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
@@ -460,7 +294,7 @@ export default function Sidebar() {
                 </div>
 
                 <span
-                  className={`ml-3 text-[13px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isGuestsActive
@@ -469,6 +303,43 @@ export default function Sidebar() {
                   }`}
                 >
                   Guests
+                </span>
+              </div>
+            </Link>
+          </li>
+
+          {/* Car Parking */}
+          <li>
+            <Link
+              to="/car-parking"
+              title={!isOpen ? 'Car Parking' : undefined}
+              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+                isCarParkingActive
+                  ? 'bg-[#f4f9f6] text-[#1b7f43]'
+                  : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
+              } ${isOpen ? 'justify-between' : 'justify-center'}`}
+            >
+              <div className="flex items-center min-w-0">
+                <div
+                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                    isCarParkingActive
+                      ? 'bg-[#e5f4eb] text-[#1b7f43]'
+                      : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
+                  }`}
+                >
+                  <CarParkingIcon sx={{ fontSize: 19 }} />
+                </div>
+
+                <span
+                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                    isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
+                  } ${
+                    isCarParkingActive
+                      ? 'text-gray-900 font-bold'
+                      : 'text-gray-600 group-hover:text-gray-900 font-medium'
+                  }`}
+                >
+                  Car Parking
                 </span>
               </div>
             </Link>
@@ -579,12 +450,49 @@ export default function Sidebar() {
             items={reportsSubItems}
           />
 
+          {/* Audit Log */}
+          <li>
+            <Link
+              to="/audit-log"
+              title={!isOpen ? 'Audit Log' : undefined}
+              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+                isAuditActive
+                  ? 'bg-[#dcefe5] text-[var(--primary-main)]'
+                  : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
+              } ${isOpen ? 'justify-between' : 'justify-center'}`}
+            >
+              <div className="flex items-center min-w-0">
+                <div
+                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                    isAuditActive
+                      ? 'bg-[#cce7d6] text-[var(--primary-main)]'
+                      : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
+                  }`}
+                >
+                  <AuditIcon sx={{ fontSize: 19 }} />
+                </div>
+
+                <span
+                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                    isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
+                  } ${
+                    isAuditActive
+                      ? 'text-gray-900 font-bold'
+                      : 'text-gray-600 group-hover:text-gray-900 font-medium'
+                  }`}
+                >
+                  Audit Log
+                </span>
+              </div>
+            </Link>
+          </li>
+
           {/* AI Assistant */}
           <li>
             <Link
               to="/ai-assistant"
               title={!isOpen ? 'AI Assistant' : undefined}
-              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
+              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isAssistantActive
                   ? 'bg-[#dcefe5] text-[var(--primary-main)]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -592,7 +500,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
                     isAssistantActive
                       ? 'bg-[#cce7d6] text-[var(--primary-main)]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
@@ -602,7 +510,7 @@ export default function Sidebar() {
                 </div>
 
                 <span
-                  className={`ml-3 text-[13px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isAssistantActive

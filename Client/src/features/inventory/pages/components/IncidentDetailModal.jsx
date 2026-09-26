@@ -18,25 +18,25 @@ const muiSelectSx = {'& .MuiOutlinedInput-root': {
 };
 
 export default function IncidentDetailModal({ 
- open, 
- onClose, 
- incident, 
- onIncidentUpdated,
- onCreateGuestCharge
+  open, 
+  onClose, 
+  incident, 
+  onIncidentUpdated,
+  onCreateGuestCharge
 }) {
- if (!incident) return null;
+  const [selectedStatus, setSelectedStatus] = useState(incident?.status || '');
+  const [resolutionNotes, setResolutionNotes] = useState(incident?.resolutionNotes || '');
+  const [assignedTo, setAssignedTo] = useState(incident?.assignedTo || 'Housekeeping Supervisor');
 
- const [selectedStatus, setSelectedStatus] = useState(incident.status);
- const [resolutionNotes, setResolutionNotes] = useState(incident.resolutionNotes ||'');
- const [assignedTo, setAssignedTo] = useState(incident.assignedTo ||'Housekeeping Supervisor');
+  React.useEffect(() => {
+    if (incident) {
+      setSelectedStatus(incident.status);
+      setResolutionNotes(incident.resolutionNotes || '');
+      setAssignedTo(incident.assignedTo || 'Housekeeping Supervisor');
+    }
+  }, [incident]);
 
- React.useEffect(() => {
- if (incident) {
- setSelectedStatus(incident.status);
- setResolutionNotes(incident.resolutionNotes ||'');
- setAssignedTo(incident.assignedTo ||'Housekeeping Supervisor');
- }
- }, [incident]);
+  if (!open || !incident) return null;
 
  const handleUpdateStatus = (newStatus) => {
  updateIncidentStatus(incident.id, newStatus, {

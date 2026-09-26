@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../audit/state/auditStore.js';
 import React, { useState } from'react';
 import { 
  Search, PersonAdd, Delete, Edit, AssignmentInd, MoreVert, CheckCircle, Cancel, FileDownload
@@ -103,7 +104,8 @@ export default function StaffAssignment() {
  
  setRooms(newRooms);
  saveRooms(newRooms);
- window.dispatchEvent(new Event('hk_update'));
+  try { addAuditLog({ module: 'Housekeeping', action: 'Assigned Staff', description: `Staff assignment updated.`, importance: 'Normal' }); } catch(e) {}
+  window.dispatchEvent(new Event('hk_update'));
  setAssignDialogOpen(false);
  setSelectedStaffId(null);
  };

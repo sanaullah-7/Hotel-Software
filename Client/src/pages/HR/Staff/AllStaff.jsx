@@ -363,7 +363,7 @@ export default function AllStaff() {
  {/* Main Table Card */}
  <div className="bg-white rounded-xl shadow-sm p-0 w-full overflow-hidden">
  {/* Top Bar */}
- <div className="flex justify-between items-center mb-1 pb-1 border-b border-gray-100 px-2 sm:px-2.5">
+ <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1 pb-1 border-b border-gray-100 px-2 sm:px-2.5">
  <div className="flex items-center gap-2 pt-1">
  <TextField
  size="small"
@@ -422,7 +422,7 @@ export default function AllStaff() {
  </div>
 
  {/* Table */}
- <div className="w-full overflow-hidden">
+ <div className="w-full overflow-x-auto min-w-0">
  <StaffTable
  columns={activeColumns}
  data={filteredStaff}

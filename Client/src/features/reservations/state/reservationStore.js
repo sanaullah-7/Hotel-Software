@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../audit/state/auditStore.js';
 const STORAGE_KEY = 'hotel_reservations';
 const UPDATE_EVENT = 'reservations_update';
 

@@ -1,31 +1,13 @@
 import React, { useState } from 'react';
-import { FormControl, InputLabel, Select, MenuItem, TextField, Box, Typography, Popover } from '@mui/material';
+import { Popover } from '@mui/material';
 import {
   Search, AddCircleOutlined, Refresh,
-  TableChart, PictureAsPdf, Close,
-  EditOutlined, DeleteOutlined,
-  CalendarTodayOutlined, PhoneOutlined, EmailOutlined,
-  BusinessOutlined, PersonOutlined, MeetingRoomOutlined,
-  GroupsOutlined, LocalOfferOutlined, AttachMoneyOutlined
+  TableChart, PictureAsPdf
 } from '@mui/icons-material';
 
-const initialGroups = [
-  { id: 1, groupName: 'Corporate Conference', contactPerson: 'John Smith', email: 'john.smith@company.com', phone: '1234567890', checkIn: '02/15/2024', checkOut: '02/20/2024', rooms: 15, guests: 30, status: 'Confirmed', totalPrice: '15000', roomTypes: '', specialRequests: 'Meeting room required, early check-in' },
-  { id: 2, groupName: 'Wedding Party', contactPerson: 'Sarah Johnson', email: 'sarah.johnson@email.com', phone: '9987654321', checkIn: '03/10/2024', checkOut: '03/12/2024', rooms: 8, guests: 20, status: 'Pending', totalPrice: '8000', roomTypes: '', specialRequests: '' },
-  { id: 3, groupName: 'Family Reunion', contactPerson: 'Robert Davis', email: 'robert.davis@email.com', phone: '1122334455', checkIn: '04/05/2024', checkOut: '04/08/2024', rooms: 5, guests: 12, status: 'Confirmed', totalPrice: '4500', roomTypes: '', specialRequests: '' },
-  { id: 4, groupName: 'Business Trip', contactPerson: 'Emily Chen', email: 'emily.chen@email.com', phone: '2233445566', checkIn: '02/25/2024', checkOut: '03/02/2024', rooms: 3, guests: 3, status: 'Confirmed', totalPrice: '2100', roomTypes: '', specialRequests: '' },
-  { id: 5, groupName: 'Graduation Celebration', contactPerson: 'Michael Wilson', email: 'michael.wilson@email.com', phone: '3344556677', checkIn: '05/15/2024', checkOut: '05/18/2024', rooms: 6, guests: 15, status: 'Pending', totalPrice: '3600', roomTypes: '', specialRequests: '' },
-  { id: 6, groupName: 'Anniversary Trip', contactPerson: 'Jennifer Brown', email: 'jennifer.brown@email.com', phone: '4455667788', checkIn: '06/10/2024', checkOut: '06/15/2024', rooms: 2, guests: 2, status: 'Confirmed', totalPrice: '3200', roomTypes: '', specialRequests: '' },
-  { id: 7, groupName: 'Team Building', contactPerson: 'David Taylor', email: 'david.taylor@email.com', phone: '5566778899', checkIn: '03/20/2024', checkOut: '03/24/2024', rooms: 10, guests: 20, status: 'Confirmed', totalPrice: '6800', roomTypes: '', specialRequests: '' },
-  { id: 8, groupName: 'Music Festival', contactPerson: 'Lisa Anderson', email: 'lisa.anderson@email.com', phone: '6677889900', checkIn: '07/01/2024', checkOut: '07/05/2024', rooms: 12, guests: 24, status: 'Pending', totalPrice: '7200', roomTypes: '', specialRequests: '' },
-  { id: 9, groupName: 'Educational Tour', contactPerson: 'Thomas Moore', email: 'thomas.moore@email.com', phone: '7788990011', checkIn: '04/22/2024', checkOut: '04/28/2024', rooms: 20, guests: 40, status: 'Confirmed', totalPrice: '12000', roomTypes: '', specialRequests: '' },
-  { id: 10, groupName: 'Retreat Workshop', contactPerson: 'Amanda White', email: 'amanda.white@email.com', phone: '8899001122', checkIn: '05/01/2024', checkOut: '05/05/2024', rooms: 7, guests: 14, status: 'Pending', totalPrice: '5600', roomTypes: '', specialRequests: '' },
-];
-
-const statusStyles = {
-  Confirmed: 'bg-[#e5f4eb] text-[#1b7f43]',
-  Pending: 'bg-orange-100 text-orange-500'
-};
+import { initialGroups } from '../data/groupReservationsDemoData';
+import GroupReservationsTable from '../components/GroupReservationsTable';
+import GroupReservationModal from '../components/GroupReservationModal';
 
 export default function GroupReservations() {
   const [groups, setGroups] = useState(initialGroups);
@@ -280,26 +262,8 @@ export default function GroupReservations() {
     setGroupToDelete(null);
   };
 
-  const muiInputSx = {
-    '& .MuiOutlinedInput-root': {
-      borderRadius: '8px',
-      backgroundColor: '#ffffff',
-      fontSize: '13px',
-      color: '#1f2937',
-      '& fieldset': { borderColor: '#e2e8f0', borderWidth: '1px' },
-      '&:hover fieldset': { borderColor: '#cbd5e1' },
-      '&.Mui-focused fieldset': { borderColor: 'var(--primary-main)', borderWidth: '1.5px' },
-    },
-    '& .MuiInputLabel-root': {
-      fontSize: '13px',
-      color: '#64748b',
-      '&.Mui-focused': { color: 'var(--primary-main)' }
-    }
-  };
-
   return (
     <div className="w-full flex flex-col pt-1">
-      
       {/* Top Header */}
       <div className="bg-white rounded-[6px] p-2 flex flex-col xl:flex-row xl:items-center justify-between border-b border-gray-100 gap-3">
         <div className="flex flex-wrap items-center gap-3">
@@ -390,377 +354,30 @@ export default function GroupReservations() {
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-b-xl shadow-sm border border-gray-100">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-gray-100 bg-white">
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap">Group Name</th>
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap">Contact Person</th>
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap">Email</th>
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap">Phone</th>
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap">Check In</th>
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap">Check Out</th>
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap text-center">Rooms</th>
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap text-center">Guests</th>
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap">Status</th>
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap">Total Price</th>
-              <th className="py-2.5 px-2 text-[11.5px] font-bold text-[#1e293b] whitespace-nowrap text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredGroups.map((group) => (
-              <tr key={group.id} onClick={() => openViewModal(group)} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer">
-                <td className="py-2 px-2 text-[12px] font-semibold text-gray-800 whitespace-nowrap">
-                  {group.groupName}
-                </td>
-                <td className="py-2 px-2 text-[12px] text-gray-700 whitespace-nowrap">
-                  {group.contactPerson}
-                </td>
-                <td className="py-2 px-2 text-[11.5px] text-gray-600 whitespace-nowrap">
-                  <div className="flex items-center gap-1.5">
-                    <EmailOutlined sx={{ fontSize: 13 }} className="text-[#ef4444] shrink-0" />
-                    <span>{group.email}</span>
-                  </div>
-                </td>
-                <td className="py-2 px-2 text-[11.5px] text-gray-600 whitespace-nowrap">
-                  <div className="flex items-center gap-1.5">
-                    <PhoneOutlined sx={{ fontSize: 13 }} className="text-[var(--primary-main)] shrink-0" />
-                    <span>{group.phone}</span>
-                  </div>
-                </td>
-                <td className="py-2 px-2 text-[11.5px] text-gray-600 whitespace-nowrap">
-                  {group.checkIn}
-                </td>
-                <td className="py-2 px-2 text-[11.5px] text-gray-600 whitespace-nowrap">
-                  {group.checkOut}
-                </td>
-                <td className="py-2 px-2 text-[12px] text-gray-700 whitespace-nowrap text-center">
-                  {group.rooms}
-                </td>
-                <td className="py-2 px-2 text-[12px] text-gray-700 whitespace-nowrap text-center">
-                  {group.guests}
-                </td>
-                <td className="py-2 px-2 whitespace-nowrap">
-                  <span className={`px-2 py-0.5 rounded-[4px] text-[10.5px] font-bold inline-block ${statusStyles[group.status]}`}>
-                    {group.status}
-                  </span>
-                </td>
-                <td className="py-2 px-2 text-[12px] font-semibold text-gray-800 whitespace-nowrap">
-                  ${Number(group.totalPrice).toLocaleString()}
-                </td>
-                <td className="py-2 px-2 relative whitespace-nowrap text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <button onClick={(e) => { e.stopPropagation(); openEditModal(group); }} className="text-[var(--primary-main)] hover:text-green-700 transition-colors cursor-pointer" title="Edit">
-                      <EditOutlined sx={{ fontSize: 16 }} />
-                    </button>
-                    <button onClick={(e) => { e.stopPropagation(); confirmDelete(group); }} className="text-orange-500 hover:text-orange-600 transition-colors cursor-pointer" title="Delete">
-                      <DeleteOutlined sx={{ fontSize: 16 }} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filteredGroups.length === 0 && (
-              <tr>
-                <td colSpan="11" className="py-8 text-center text-gray-500 text-sm">
-                  No group reservations found.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        
-        {/* Pagination */}
-        <div className="flex items-center justify-end px-2 py-4 border-t border-gray-100 bg-white gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-[12px] text-gray-500">Items per page:</span>
-            <select className="border border-gray-200 rounded px-2 py-1 text-[12px] text-gray-700 outline-none cursor-pointer">
-              <option>10</option>
-              <option>20</option>
-              <option>50</option>
-            </select>
-          </div>
-          <span className="text-[12px] text-gray-500">1 - {filteredGroups.length} of {filteredGroups.length}</span>
-          <div className="flex items-center gap-1">
-            <button className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer">&lt;</button>
-            <button className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer">&gt;</button>
-          </div>
-        </div>
-      </div>
+      <GroupReservationsTable
+        filteredGroups={filteredGroups}
+        openViewModal={openViewModal}
+        openEditModal={openEditModal}
+        confirmDelete={confirmDelete}
+      />
 
-      {/* Edit/New Booking Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[800px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="bg-[var(--primary-main)] px-5 py-3.5 flex items-center justify-between">
-              <h2 className="text-white text-[17px] font-bold">
-                {editingId ? `Edit Group Reservation ${form.groupName}` : 'New Group Reservation'}
-              </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
-                <Close sx={{ fontSize: 18 }} />
-              </button>
-            </div>
-            
-            <form onSubmit={handleSaveModal} className="p-6 overflow-y-auto max-h-[80vh]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                
-                <TextField required label="Group Name" name="groupName" value={form.groupName} onChange={(e)=>setForm({...form, groupName: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                <TextField required label="Contact Person" name="contactPerson" value={form.contactPerson} onChange={(e)=>setForm({...form, contactPerson: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                
-                <TextField required label="Email" type="email" name="email" value={form.email} onChange={(e)=>setForm({...form, email: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                <TextField required label="Phone" name="phone" value={form.phone} onChange={(e)=>setForm({...form, phone: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-
-                <Box>
-                  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
-                    Check In Date
-                  </Typography>
-                  <TextField
-                    required
-                    type="date"
-                    label=""
-                    name="checkIn"
-                    value={form.checkIn}
-                    onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
-                    sx={muiInputSx}
-                    size="small"
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Box>
-
-                <Box>
-                  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
-                    Check Out Date
-                  </Typography>
-                  <TextField
-                    required
-                    type="date"
-                    label=""
-                    name="checkOut"
-                    value={form.checkOut}
-                    onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
-                    sx={muiInputSx}
-                    size="small"
-                    fullWidth
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Box>
-                <TextField required type="number" label="Number of Rooms" name="rooms" value={form.rooms} onChange={(e)=>setForm({...form, rooms: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                <TextField required type="number" label="Number of Guests" name="guests" value={form.guests} onChange={(e)=>setForm({...form, guests: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Room Types</InputLabel>
-                  <Select name="roomTypes" value={form.roomTypes} label="Room Types" onChange={(e)=>setForm({...form, roomTypes: e.target.value})}>
-                    <MenuItem value=""><em>None</em></MenuItem>
-                    <MenuItem value="Standard">Standard</MenuItem>
-                    <MenuItem value="Delux">Delux</MenuItem>
-                    <MenuItem value="Suite">Suite</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Status*</InputLabel>
-                  <Select name="status" value={form.status} label="Status*" onChange={(e)=>setForm({...form, status: e.target.value})}>
-                    <MenuItem value="Pending">Pending</MenuItem>
-                    <MenuItem value="Confirmed">Confirmed</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <TextField label="Total Price" type="number" name="totalPrice" value={form.totalPrice} onChange={(e)=>setForm({...form, totalPrice: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                
-                <TextField label="Special Requests" name="specialRequests" value={form.specialRequests} onChange={(e)=>setForm({...form, specialRequests: e.target.value})} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
-              </div>
-              
-              <div className="flex items-center gap-3 mt-8">
-                <button type="submit" disabled={!form.groupName || !form.contactPerson} className="px-5 py-2 rounded-full bg-green-50 text-[var(--primary-main)] border border-green-200 font-bold text-[13.5px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
-                  Save
-                </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13.5px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && groupToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[360px] p-6 text-center" onClick={e => e.stopPropagation()}>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-6 text-left">Are you sure?</h3>
-            <div className="text-left space-y-3 mb-8">
-              <p className="text-sm text-gray-600 font-medium grid grid-cols-[100px_1fr]"><span className="text-gray-500">Group Name:</span> <span className="text-gray-800">{groupToDelete.groupName}</span></p>
-              <p className="text-sm text-gray-600 font-medium grid grid-cols-[100px_1fr]"><span className="text-gray-500">Contact Person:</span> <span className="text-gray-800">{groupToDelete.contactPerson}</span></p>
-            </div>
-            
-            <div className="flex justify-center gap-3">
-              <button onClick={handleDelete} className="px-5 py-2.5 rounded-full bg-[#c0392b] text-white font-bold text-sm hover:bg-[#a93226] transition-colors cursor-pointer">
-                Delete
-              </button>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-5 py-2.5 rounded-full bg-[#1b7f43] text-white font-bold text-sm hover:bg-[#156736] transition-colors cursor-pointer">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* View Modal */}
-      {isViewModalOpen && viewingGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsViewModalOpen(false)}>
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[800px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            {/* Header */}
-            <div className="bg-[var(--primary-main)] px-5 py-5 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full border-2 border-white bg-transparent flex items-center justify-center text-white text-xl font-bold">
-                  {viewingGroup.groupName.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex flex-col">
-                  <h2 className="text-white text-[20px] font-bold leading-tight">Group Reservations</h2>
-                  <span className="text-white/80 text-[13px]">{viewingGroup.email}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={() => { setIsViewModalOpen(false); openEditModal(viewingGroup); }} 
-                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
-                  title="Edit"
-                >
-                  <EditOutlined sx={{ fontSize: 16 }} />
-                </button>
-                <button 
-                  onClick={() => setIsViewModalOpen(false)} 
-                  className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
-                  title="Close"
-                >
-                  <Close sx={{ fontSize: 18 }} />
-                </button>
-              </div>
-            </div>
-            
-            {/* Body Cards */}
-            <div className="p-6 bg-white max-h-[75vh] overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                {/* Group Name */}
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
-                    <BusinessOutlined sx={{ fontSize: 20 }} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Group Name</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingGroup.groupName}</span>
-                  </div>
-                </div>
-
-                {/* Contact Person */}
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
-                    <PersonOutlined sx={{ fontSize: 20 }} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Contact Person</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingGroup.contactPerson}</span>
-                  </div>
-                </div>
-
-                {/* Email */}
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
-                    <EmailOutlined sx={{ fontSize: 20 }} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Email</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingGroup.email}</span>
-                  </div>
-                </div>
-
-                {/* Phone */}
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
-                    <PhoneOutlined sx={{ fontSize: 20 }} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Phone</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingGroup.phone}</span>
-                  </div>
-                </div>
-
-                {/* Check In */}
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
-                    <CalendarTodayOutlined sx={{ fontSize: 20 }} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Check In</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingGroup.checkIn}</span>
-                  </div>
-                </div>
-
-                {/* Check Out */}
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
-                    <CalendarTodayOutlined sx={{ fontSize: 20 }} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Check Out</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingGroup.checkOut}</span>
-                  </div>
-                </div>
-
-                {/* Rooms */}
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
-                    <MeetingRoomOutlined sx={{ fontSize: 20 }} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Rooms</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingGroup.rooms}</span>
-                  </div>
-                </div>
-
-                {/* Guests */}
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
-                    <GroupsOutlined sx={{ fontSize: 20 }} />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Guests</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingGroup.guests}</span>
-                  </div>
-                </div>
-
-                {/* Status */}
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
-                    <LocalOfferOutlined sx={{ fontSize: 20 }} />
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Status</span>
-                    <span className={`px-2 py-0.5 rounded-[4px] text-[12px] font-bold mt-0.5 ${statusStyles[viewingGroup.status]}`}>
-                      {viewingGroup.status}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Total Price */}
-                <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-100 bg-[#f8f9fa]">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0">
-                    <AttachMoneyOutlined sx={{ fontSize: 20 }} />
-                  </div>
-                  <div className="flex flex-col items-start">
-                    <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Total Price</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingGroup.totalPrice}</span>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
+      {/* Modals */}
+      <GroupReservationModal
+        isModalOpen={isModalOpen}
+        editingId={editingId}
+        form={form}
+        setForm={setForm}
+        setIsModalOpen={setIsModalOpen}
+        handleSaveModal={handleSaveModal}
+        isDeleteModalOpen={isDeleteModalOpen}
+        groupToDelete={groupToDelete}
+        setIsDeleteModalOpen={setIsDeleteModalOpen}
+        handleDelete={handleDelete}
+        isViewModalOpen={isViewModalOpen}
+        viewingGroup={viewingGroup}
+        setIsViewModalOpen={setIsViewModalOpen}
+        openEditModal={openEditModal}
+      />
     </div>
   );
 }

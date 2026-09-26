@@ -517,6 +517,7 @@ export function useEmployeeSalary() {
     handleSort,
     paginatedSalaries,
     sortedSalaries,
+    filteredSalaries,
     handleSelectAll,
     handleSelectRow,
     isAllSelected,

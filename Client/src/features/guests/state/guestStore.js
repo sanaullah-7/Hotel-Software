@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../audit/state/auditStore.js';
 import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../../reservations/state/reservationStore';
 
 const STORAGE_KEY = 'hotel_guests_v1';
@@ -87,6 +88,9 @@ export function saveGuests(guests) {
 export function addGuest(guest) {
   const nextGuest = { ...guest, id: guest.id || `GST-${Date.now()}`, status: guest.status || 'Active', totalStays: Number(guest.totalStays) || 0 };
   saveGuests([nextGuest, ...readGuests()]);
+  try {
+    addAuditLog({ module: 'Guests', action: 'Added Guest', recordId: nextGuest.id, description: `Guest ${nextGuest.name} was added.`, importance: 'Important' });
+  } catch(e) {}
   return nextGuest;
 }
 
@@ -113,12 +117,23 @@ export function updateGuest(id, updates) {
   }
 
   saveGuests(updatedList);
+  if (updatedGuest) {
+    try {
+      addAuditLog({ module: 'Guests', action: 'Updated Guest', recordId: id, description: `Guest ${updatedGuest.name} was updated.`, importance: 'Normal' });
+    } catch(e) {}
+  }
   return updatedGuest;
 }
 
 export function deleteGuest(id) {
   const normalizedId = String(id).toLowerCase();
+  const guestToDelete = readGuests().find((guest) => String(guest.id).toLowerCase() === normalizedId);
   saveGuests(readGuests().filter((guest) => String(guest.id).toLowerCase() !== normalizedId));
+  if (guestToDelete) {
+    try {
+      addAuditLog({ module: 'Guests', action: 'Deleted Guest', recordId: id, description: `Guest ${guestToDelete.name} was deleted.`, importance: 'Critical' });
+    } catch(e) {}
+  }
 }
 
 export function getGuestById(id) {

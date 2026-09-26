@@ -63,9 +63,9 @@ export default function AppBreadcrumbs() {
   };
 
   if (pathnames.length === 0) {
-    // We are on the root/dashboard, breadcrumb could be just "Dashboard"
+    // We are on the root/dashboard
     return (
-      <div>
+      <div className="truncate max-w-[120px] sm:max-w-none">
         <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
           <Typography sx={{ color: 'text.primary', fontSize: '13px', fontWeight: 600 }}>
             Dashboard
@@ -76,7 +76,7 @@ export default function AppBreadcrumbs() {
   }
 
   return (
-    <div>
+    <div className="truncate max-w-[120px] sm:max-w-none">
       <Breadcrumbs separator={<NavigateNextIcon fontSize="small" />} aria-label="breadcrumb">
         {pathnames.map((value, index) => {
           const isLast = index === pathnames.length - 1;

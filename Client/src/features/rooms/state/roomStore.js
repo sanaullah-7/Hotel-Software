@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../audit/state/auditStore.js';
 const STORAGE_KEY = 'hotel_room_inventory_v1';
 export const ROOM_UPDATED_EVENT = 'room_inventory_update';
 
@@ -39,6 +40,7 @@ export function addRoom(room) {
     rent: Number(room.rent) || 0,
   };
   saveRooms([nextRoom, ...rooms]);
+  try { addAuditLog({ module: 'Rooms', action: 'Added Room', recordId: String(nextRoom.roomNo), description: `Room ${nextRoom.roomNo} added.`, importance: 'Important' }); } catch(e) {}
   return nextRoom;
 }
 
@@ -49,9 +51,11 @@ export function updateRoom(id, updates) {
       : room
   ));
   saveRooms(rooms);
-  return rooms.find((room) => room.id === id);
+  try { addAuditLog({ module: 'Rooms', action: 'Updated Room', recordId: String(id), description: `Room ${id} updated.`, importance: 'Normal' }); } catch(e) {}
+  return rooms.find((room) => room.id === id || room.roomNo === id);
 }
 
 export function deleteRoom(id) {
-  saveRooms(getRooms().filter((room) => room.id !== id));
+  saveRooms(getRooms().filter((room) => room.id !== id && room.roomNo !== id));
+  try { addAuditLog({ module: 'Rooms', action: 'Deleted Room', recordId: String(id), description: `Room ${id} deleted.`, importance: 'Critical' }); } catch(e) {}
 }

@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../audit/state/auditStore.js';
 // Central Local Store & Mock Data for Rates & Pricing Module
 
 export const INITIAL_RATE_PLANS = [

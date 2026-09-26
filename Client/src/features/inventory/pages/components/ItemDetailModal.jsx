@@ -18,37 +18,36 @@ const muiSelectSx = {'& .MuiOutlinedInput-root': {
 };
 
 export default function ItemDetailModal({ 
- open, 
- onClose, 
- item, 
- onReportMissing, 
- onItemUpdated 
+  open, 
+  onClose, 
+  item, 
+  onReportMissing, 
+  onItemUpdated 
 }) {
- if (!item) return null;
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    quantity: item?.quantity || 0,
+    condition: item?.condition || '',
+    status: item?.status || '',
+    notes: item?.notes || '',
+    unitPrice: item?.unitPrice || 0,
+    location: item?.location || ''
+  });
 
- const [isEditing, setIsEditing] = useState(false);
- const [formData, setFormData] = useState({
- quantity: item.quantity,
- condition: item.condition,
- status: item.status,
- notes: item.notes ||'',
- unitPrice: item.unitPrice,
- location: item.location
- });
+  React.useEffect(() => {
+    if (item) {
+      setFormData({
+        quantity: item.quantity,
+        condition: item.condition,
+        status: item.status,
+        notes: item.notes || '',
+        unitPrice: item.unitPrice,
+        location: item.location
+      });
+    }
+  }, [item]);
 
- React.useEffect(() => {
- if (item) {
- setFormData({
- quantity: item.quantity,
- condition: item.condition,
- status: item.status,
- notes: item.notes ||'',
- unitPrice: item.unitPrice,
- location: item.location
- });
- setIsEditing(false);
- }
- }, [item]);
+  if (!open || !item) return null;
 
  const handleSave = () => {
  updateInventoryItem(item.id, formData);

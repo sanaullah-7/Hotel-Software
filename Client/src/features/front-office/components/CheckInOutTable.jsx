@@ -92,8 +92,8 @@ export default function CheckInOutTable({
       </div>
 
       {/* Table */}
-      <div className="w-full">
-        <table className="w-full text-left border-collapse min-w-full">
+      <div className="w-full overflow-x-auto min-w-0">
+        <table className="w-full text-left border-collapse min-w-[750px]">
           <thead>
             <tr className="border-b border-gray-100 bg-gray-50/50">
               <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
@@ -151,12 +151,24 @@ export default function CheckInOutTable({
                       </p>
                       <p className="text-[10.5px] text-gray-400 capitalize">{guest.roomType}</p>
                     </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-1 text-[11.5px] text-[var(--primary-dark)] font-semibold">
-                        <LoginIcon sx={{ fontSize: 13 }} /> {guest.checkIn}
-                      </div>
-                      <div className="flex items-center gap-1 text-[11.5px] text-blue-600 font-semibold mt-0.5">
-                        <LogoutIcon sx={{ fontSize: 13 }} /> {guest.checkOut}
+                    <td className="py-2.5 px-3">
+                      <div className="flex flex-col gap-1">
+                        <div>
+                          <div className="flex items-center gap-1 text-[11.5px] text-[var(--primary-dark)] font-semibold">
+                            <LoginIcon sx={{ fontSize: 13 }} /> {guest.checkIn}
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-normal pl-4 block">
+                            {guest.checkInTime || '02:00 PM'}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1 text-[11.5px] text-blue-600 font-semibold">
+                            <LogoutIcon sx={{ fontSize: 13 }} /> {guest.checkOut}
+                          </div>
+                          <span className="text-[10px] text-gray-400 font-normal pl-4 block">
+                            {guest.checkOutTime || '11:00 AM'}
+                          </span>
+                        </div>
                       </div>
                     </td>
                     <td className="py-3 px-3">

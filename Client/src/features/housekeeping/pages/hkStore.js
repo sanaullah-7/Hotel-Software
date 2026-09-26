@@ -1,3 +1,4 @@
+import { addAuditLog } from '../../audit/state/auditStore.js';
 export const INITIAL_ROOMS = [
   { id: '101', type: 'Standard', guest: '-', stayStatus: 'Vacant', cleaningType: 'Daily', status: 'Dirty', priority: 'Normal', assignee: '-', started: '-', completed: '-' },
   { id: '102', type: 'Deluxe', guest: 'John Doe', stayStatus: 'Stayover', cleaningType: 'Stayover Cleaning', status: 'Assigned', priority: 'High', assignee: 'Jane Smith', started: '-', completed: '-' },
@@ -34,6 +35,7 @@ export const getRooms = () => {
 export const saveRooms = (rooms) => {
   localStorage.setItem('hk_rooms', JSON.stringify(rooms));
   window.dispatchEvent(new Event('hk_update'));
+    try { addAuditLog({ module: 'Housekeeping', action: 'Updated Record', description: 'INITIAL_ROOMS was called.', importance: 'Normal' }); } catch(e){}
 };
 
 export const getStaff = () => {
