@@ -5,9 +5,6 @@ import {
   TextField,
   InputAdornment,
   MenuItem,
-  FormControl,
-  Select,
-  InputLabel,
   Button,
   Grid,
   Card,
@@ -44,6 +41,7 @@ import {
 import AddEditCarModal from '../components/AddEditCarModal';
 import CheckoutCarModal from '../components/CheckoutCarModal';
 import ManageSpacesModal from '../components/ManageSpacesModal';
+import Dropdown from '../../../components/ui/Dropdown';
 
 const muiSelectSx = {
   '& .MuiOutlinedInput-root': {
@@ -301,33 +299,45 @@ export default function CarParking() {
               sx={{ minWidth: 140, flexGrow: 1, maxWidth: { xs: '100%', sm: 180 }, '& .MuiInputBase-root': { height: '32px', backgroundColor: 'white', fontSize: '12px', borderRadius: '8px' }, '& .MuiOutlinedInput-input': { padding: '0 8px' }, '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' }, '&:hover fieldset': { borderColor: '#9ca3af' }, '& .Mui-focused fieldset': { borderColor: '#1b7f43 !important', borderWidth: '1.5px !important' } }}
             />
             
-            <FormControl size="small" sx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
-              <InputLabel>Status</InputLabel>
-              <Select value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
-                {STATUS_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: '13px' }}>{opt}</MenuItem>)}
-              </Select>
-            </FormControl>
+            <Dropdown
+              label="Status"
+              options={STATUS_OPTIONS}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              fullWidth={false}
+              formControlSx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}
+              optionSx={{ fontSize: '13px' }}
+            />
             
-            <FormControl size="small" sx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
-              <InputLabel>Payment</InputLabel>
-              <Select value={paymentFilter} label="Payment" onChange={(e) => setPaymentFilter(e.target.value)}>
-                {PAYMENT_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: '13px' }}>{opt}</MenuItem>)}
-              </Select>
-            </FormControl>
+            <Dropdown
+              label="Payment"
+              options={PAYMENT_OPTIONS}
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+              fullWidth={false}
+              formControlSx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}
+              optionSx={{ fontSize: '13px' }}
+            />
             
-            <FormControl size="small" sx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
-              <InputLabel>Car Type</InputLabel>
-              <Select value={typeFilter} label="Car Type" onChange={(e) => setTypeFilter(e.target.value)}>
-                {TYPE_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: '13px' }}>{opt}</MenuItem>)}
-              </Select>
-            </FormControl>
+            <Dropdown
+              label="Car Type"
+              options={TYPE_OPTIONS}
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              fullWidth={false}
+              formControlSx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}
+              optionSx={{ fontSize: '13px' }}
+            />
 
-            <FormControl size="small" sx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
-              <InputLabel>Date</InputLabel>
-              <Select value={datePeriod} label="Date" onChange={(e) => setDatePeriod(e.target.value)}>
-                {DATE_PERIODS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: '13px' }}>{opt}</MenuItem>)}
-              </Select>
-            </FormControl>
+            <Dropdown
+              label="Date"
+              options={DATE_PERIODS}
+              value={datePeriod}
+              onChange={(e) => setDatePeriod(e.target.value)}
+              fullWidth={false}
+              formControlSx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}
+              optionSx={{ fontSize: '13px' }}
+            />
 
             <Button 
               variant="outlined"

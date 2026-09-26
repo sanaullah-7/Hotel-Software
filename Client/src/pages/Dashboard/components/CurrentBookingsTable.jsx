@@ -9,11 +9,13 @@ import {
 
 import {
   getReservations,
-  resetReservations,
   saveReservations,
   RESERVATIONS_UPDATED_EVENT
 } from '../../../features/reservations/state/reservationStore';
-import { getGuests } from '../../../features/guests/state/guestStore';
+import { addGuest, findGuestByExactIdentity, resolveGuestForBooking } from '../../../features/guests/state/guestStore';
+import { getRoomByRoomNo } from '../../../features/rooms/state/roomStore';
+import { normalizeBookingStatus, isRoomBlockingBooking, validateStayDates } from '../../../features/reservations/state/bookingRules';
+import { cancelBooking, checkOutBooking, saveBookingsWithRoomState, validateBookingRequest } from '../../../features/reservations/state/reservationLifecycle';
 import { getBookingDues } from '../../../features/payment-billing/pages/paymentBillingStore';
 import SearchInput from '../../../components/common/SearchInput';
 import RefreshButton from '../../../components/common/RefreshButton';
@@ -31,33 +33,17 @@ export default function CurrentBookingsTable({
   showDateFilter = true
 }) {
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState(() => {
-    const existing = getReservations();
-    if (existing && existing.length > 0) return existing;
-    saveReservations(initialBookings);
-    return initialBookings;
-  });
+  const [bookings, setBookings] = useState(() => getReservations(initialBookings));
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('All');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [customAnchorEl, setCustomAnchorEl] = useState(null);
 
-  const getGuestIdForBooking = (booking) => {
-    if (booking.guestId) return booking.guestId;
-    const allGuests = getGuests();
-    const found = allGuests.find((g) =>
-      (booking.email && g.email && g.email.toLowerCase() === booking.email.toLowerCase()) ||
-      (booking.name && g.name && g.name.toLowerCase() === booking.name.toLowerCase()) ||
-      String(g.id).toLowerCase() === `gst-${booking.id}`.toLowerCase() ||
-      String(g.id).toLowerCase() === String(booking.id).toLowerCase()
-    );
-    return found?.id || `GST-${booking.id}`;
-  };
-
   const handleRowClick = (booking) => {
-    const guestId = getGuestIdForBooking(booking);
-    navigate(`/guests/${guestId}`);
+    const guest = resolveGuestForBooking(booking);
+    if (guest) navigate(`/guests/${guest.id}`);
+    else openViewModal(booking);
   };
 
   // Pagination state
@@ -118,10 +104,6 @@ export default function CurrentBookingsTable({
   };
 
   useEffect(() => {
-    const existing = getReservations();
-    if (!existing || existing.length === 0) {
-      saveReservations(initialBookings);
-    }
     const syncReservations = () => setBookings(getReservations(initialBookings));
     window.addEventListener('storage', syncReservations);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
@@ -141,8 +123,7 @@ export default function CurrentBookingsTable({
     setDateFilter('All');
     setCustomStartDate('');
     setCustomEndDate('');
-    resetReservations(initialBookings);
-    setBookings(initialBookings);
+    setBookings(getReservations(initialBookings));
   };
 
   const handleCustomClick = (event) => {
@@ -277,8 +258,17 @@ export default function CurrentBookingsTable({
   const handleSaveBooking = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!isFormValid) return;
+    try {
+    const editingBooking = editingId ? bookings.find((booking) => booking.id === editingId) : null;
+    validateStayDates(form.checkIn, form.checkOut);
+    const room = form.roomNo ? getRoomByRoomNo(form.roomNo) : null;
+    if (form.roomNo && !room) throw new Error(`Room ${form.roomNo} does not identify exactly one canonical room.`);
+    if (!editingBooking || isRoomBlockingBooking(editingBooking)) {
+      if (room) validateBookingRequest({ roomId: room.id, checkIn: form.checkIn, checkOut: form.checkOut, bookings, excludeBookingId: editingId });
+    }
 
     if (editingId) {
+      const previousRoomId = editingBooking?.roomId;
       const updated = bookings.map((b) =>
         b.id === editingId
           ? {
@@ -294,6 +284,7 @@ export default function CurrentBookingsTable({
               package: form.package,
               roomType: form.roomType,
               roomNo: form.roomNo || b.roomNo || '101',
+              roomId: room?.id,
               checkIn: form.checkIn,
               checkOut: form.checkOut,
               payment: form.paymentMethod,
@@ -309,18 +300,25 @@ export default function CurrentBookingsTable({
             }
           : b
       );
-      persistBookings(updated);
+      setBookings(updated);
+      saveBookingsWithRoomState(updated, [previousRoomId, room?.id].filter((id) => id !== undefined && id !== null));
     } else {
+      const fullName = `${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Guest';
+      const guest = findGuestByExactIdentity(fullName, form.email) || addGuest({ name: fullName, email: form.email || '', phone: form.mobile || '', city: form.city || '' });
+      let newId = Date.now();
+      while (bookings.some((booking) => String(booking.id) === String(newId))) newId += 1;
       const newBooking = {
-        id: Date.now(),
-        name: `${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Guest',
+        id: newId,
+        guestId: guest.id,
+        roomId: room?.id,
+        name: fullName,
         avatar: form.avatar || ('https://i.pravatar.cc/150?img=' + Math.floor(Math.random() * 50 + 1)),
         roomNo: form.roomNo || '101',
         package: form.package || 'All inclusive',
         roomType: form.roomType || 'Delux',
         status: 'Booked',
-        checkIn: form.checkIn || new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
-        checkOut: form.checkOut || new Date(Date.now() + 86400000 * 2).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
+        checkIn: form.checkIn,
+        checkOut: form.checkOut,
         payment: form.paymentMethod || 'Paid',
         email: form.email || '',
         mobile: form.mobile || '',
@@ -337,9 +335,12 @@ export default function CurrentBookingsTable({
         specialRequests: form.specialRequests || '',
         note: form.note || ''
       };
-      persistBookings([newBooking, ...bookings]);
+      const updated = [newBooking, ...bookings];
+      setBookings(updated);
+      saveBookingsWithRoomState(updated, room ? [room.id] : []);
     }
     setIsBookingModalOpen(false);
+    } catch (error) { window.alert(error.message); }
   };
 
   const confirmDelete = (booking) => {
@@ -349,6 +350,10 @@ export default function CurrentBookingsTable({
 
   const handleDelete = () => {
     if (bookingToDelete) {
+      if (normalizeBookingStatus(bookingToDelete.status) === 'Checked In') {
+        window.alert('Check out this booking before deleting it.');
+        return;
+      }
       persistBookings(bookings.filter((b) => b.id !== bookingToDelete.id));
       setIsDeleteModalOpen(false);
       setBookingToDelete(null);
@@ -362,18 +367,20 @@ export default function CurrentBookingsTable({
 
   const handleCancelBooking = () => {
     if (bookingToCancel) {
-      const updated = bookings.map((b) =>
-        b.id === bookingToCancel.id ? { ...b, status: 'Cancelled' } : b
-      );
-      persistBookings(updated);
-      setIsCancelModalOpen(false);
-      setBookingToCancel(null);
+      try {
+        const updatedBooking = cancelBooking(bookingToCancel.id, bookings);
+        setBookings((current) => current.map((booking) => String(booking.id) === String(updatedBooking.id) ? updatedBooking : booking));
+        setIsCancelModalOpen(false);
+        setBookingToCancel(null);
+      } catch (error) { window.alert(error.message); }
     }
   };
 
   const handleCheckout = (id) => {
-    const updated = bookings.map((b) => (b.id === id ? { ...b, status: 'CheckOut' } : b));
-    persistBookings(updated);
+    try {
+      const updated = checkOutBooking(id);
+      setBookings((current) => current.map((booking) => String(booking.id) === String(updated.id) ? updated : booking));
+    } catch (error) { window.alert(error.message); }
   };
 
   const handleExportCSV = () => {
@@ -468,7 +475,7 @@ export default function CurrentBookingsTable({
           <SearchInput
             placeholder="Search..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={setSearch}
             width="w-[140px] sm:w-[170px]"
             size="sm"
             inputClassName="border-gray-300"

@@ -18,17 +18,41 @@ export const INITIAL_ROOMS = [
 export function getRooms() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored !== null) {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_ROOMS));
   } catch {
-    return INITIAL_ROOMS;
+    return [];
   }
   return INITIAL_ROOMS;
 }
 
+export function getRoomById(id) {
+  if (id === undefined || id === null || id === '') return null;
+  return getRooms().find((room) => String(room.id) === String(id)) || null;
+}
+
+export function getRoomByRoomNo(roomNo) {
+  if (roomNo === undefined || roomNo === null || String(roomNo).trim() === '') return null;
+  const matches = getRooms().filter((room) => String(room.roomNo).trim() === String(roomNo).trim());
+  return matches.length === 1 ? matches[0] : null;
+}
+
 export function saveRooms(rooms) {
+  assertValidStoredArray();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(rooms));
   window.dispatchEvent(new Event(ROOM_UPDATED_EVENT));
+}
+
+function assertValidStoredArray() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored === null) return;
+  try {
+    if (Array.isArray(JSON.parse(stored))) return;
+  } catch { /* Preserve malformed raw data by refusing this write. */ }
+  throw new Error('Room storage is malformed and was preserved; reload or recover it before saving.');
 }
 
 export function addRoom(room) {

@@ -20,6 +20,7 @@ export default function PaginationControls({
   onRowsPerPageChange,
   indexOfFirstRow,
   indexOfLastRow,
+  recordLabel = 'records',
   variant = 'standard', // 'standard' | 'compact'
   className = ''
 }) {
@@ -41,6 +42,53 @@ export default function PaginationControls({
     totalPages > 0
       ? totalPages
       : Math.max(1, Math.ceil(totalRecords / (rowsPerPage || 10)));
+
+  if (variant === 'numbered') {
+    return (
+      <div className={`p-3.5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 ${className}`}>
+        <span className="text-[12px] text-gray-500">
+          Showing <span className="font-bold text-gray-800">{startRecord}</span> to{' '}
+          <span className="font-bold text-gray-800">{endRecord}</span> of{' '}
+          <span className="font-bold text-gray-800">{totalRecords}</span> {recordLabel}
+        </span>
+
+        <div className="flex items-center space-x-1.5">
+          <button
+            type="button"
+            onClick={() => onPageChange && onPageChange(Math.max(currentPage - 1, 1))}
+            disabled={currentPage === 1}
+            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition"
+          >
+            <ChevronLeftIcon sx={{ fontSize: 18 }} />
+          </button>
+
+          {[...Array(totalPages)].map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              onClick={() => onPageChange && onPageChange(index + 1)}
+              className={`w-7 h-7 rounded-lg text-[12px] font-bold flex items-center justify-center transition cursor-pointer ${
+                currentPage === index + 1
+                  ? 'bg-[#1b7f43] text-white shadow-xs'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => onPageChange && onPageChange(Math.min(currentPage + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition"
+          >
+            <ChevronRightIcon sx={{ fontSize: 18 }} />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (variant === 'compact') {
     return (

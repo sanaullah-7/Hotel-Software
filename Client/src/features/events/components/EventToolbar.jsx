@@ -41,7 +41,7 @@ export default function EventToolbar({
           <SearchInput
             placeholder="Search..."
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
+            onChange={onSearchChange}
             variant="slate"
             size="sm"
             width="w-full sm:w-72"

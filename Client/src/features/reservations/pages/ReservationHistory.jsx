@@ -515,7 +515,7 @@ export default function ReservationHistory() {
                     </td>
                     <td className="py-2 px-2 text-[11.5px] font-bold text-gray-900 whitespace-nowrap">${res.totalPrice}</td>
                     <td className="py-2 px-2 text-[11.5px] font-semibold whitespace-nowrap">
-                      {dues > 0 ? (
+                      {dues === null ? <span className="text-amber-600">Unverified</span> : dues > 0 ? (
                         <span className="text-red-500 font-bold">${dues}</span>
                       ) : (
                         <span className="text-gray-400 font-normal">$0</span>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from'react';
 import { useNavigate } from'react-router-dom';
+import PaginationControls from '../../../components/common/PaginationControls';
 import { 
  Search, Add, Download, Refresh, FilterList, 
  Receipt, AttachMoney, RoomService, Warning, 
  CheckCircle, MoreVert, Visibility, Delete, Clear, 
- ChevronLeft, ChevronRight, MeetingRoom, Person,
+ MeetingRoom, Person,
  LocalShipping
 } from'@mui/icons-material';
 import { 
@@ -549,43 +550,15 @@ export default function GuestCharges() {
 
  {/* PAGINATION CONTROLS */}
  {totalPages > 0 && (
- <div className="p-3.5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
- <span className="text-[12px] text-gray-500">
- Showing <span className="font-bold text-gray-800">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-gray-800">{Math.min(currentPage * itemsPerPage, filteredCharges.length)}</span> of <span className="font-bold text-gray-800">{filteredCharges.length}</span> charges
- </span>
-
- <div className="flex items-center space-x-1.5">
- <button 
- onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
- disabled={currentPage === 1}
- className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition"
- >
- <ChevronLeft sx={{ fontSize: 18 }} />
- </button>
- 
- {[...Array(totalPages)].map((_, i) => (
- <button
- key={i}
- onClick={() => setCurrentPage(i + 1)}
- className={`w-7 h-7 rounded-lg text-[12px] font-bold flex items-center justify-center transition cursor-pointer ${
- currentPage === i + 1 
- ?'bg-[#1b7f43] text-white shadow-xs' 
- :'text-gray-600 hover:bg-gray-100'
- }`}
- >
- {i + 1}
- </button>
- ))}
-
- <button 
- onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
- disabled={currentPage === totalPages}
- className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition"
- >
- <ChevronRight sx={{ fontSize: 18 }} />
- </button>
- </div>
- </div>
+ <PaginationControls
+ currentPage={currentPage}
+ totalPages={totalPages}
+ totalRecords={filteredCharges.length}
+ rowsPerPage={itemsPerPage}
+ onPageChange={setCurrentPage}
+ recordLabel="charges"
+ variant="numbered"
+ />
  )}
 
  </div>

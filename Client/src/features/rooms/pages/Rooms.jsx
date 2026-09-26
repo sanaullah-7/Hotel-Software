@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { 
-  Add, Refresh, PictureAsPdf, EditOutlined, DeleteOutlined, Close, Search, 
+  Add, Refresh, PictureAsPdf, EditOutlined, DeleteOutlined, Close,
   KeyboardArrowLeft, KeyboardArrowRight, TableChart, 
   AddCircleOutlined, PhoneOutlined, Inventory2, FormatListBulleted, GridView 
 } from '@mui/icons-material';
@@ -12,6 +12,7 @@ import { useEffect, useState } from 'react';
 import { getRooms, addRoom, updateRoom, deleteRoom, INITIAL_ROOMS, ROOM_UPDATED_EVENT } from '../state/roomStore';
 import RoomInventoryModal from '../../inventory/pages/components/RoomInventoryModal';
 import { getInventoryItems } from '../../inventory/pages/inventoryStore';
+import SearchInput from '../../../components/common/SearchInput';
 
 export default function Rooms() {
   const [rooms, setRooms] = useState(getRooms());
@@ -145,16 +146,14 @@ export default function Rooms() {
         <div className="p-2 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-2">
           <div className="flex flex-wrap items-center gap-4">
             <h2 className="text-[16px] font-bold text-gray-700">Rooms</h2>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" sx={{ fontSize: 20 }} />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                value={searchTerm} 
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-1.5 w-48 lg:w-64 border border-gray-200 rounded-md text-[13.5px] outline-none focus:border-[var(--primary-main)]"
-              />
-            </div>
+            <SearchInput
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={setSearchTerm}
+              iconPosition="left"
+              width="w-48 lg:w-64"
+              inputClassName="border-gray-200 text-[13.5px]"
+            />
 
             {/* Status Filter */}
             <div className="flex items-center bg-white border border-gray-200 rounded-lg shadow-xs overflow-hidden">

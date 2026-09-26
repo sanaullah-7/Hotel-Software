@@ -43,7 +43,7 @@ export default function ReservationToolbar({
         <SearchInput
           placeholder="Search..."
           value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={onSearchChange}
           width="w-[140px] lg:w-[180px]"
           inputClassName="border-gray-400"
         />

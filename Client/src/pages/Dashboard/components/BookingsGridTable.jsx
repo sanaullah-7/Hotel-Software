@@ -141,7 +141,7 @@ export default function BookingsGridTable({
               <td className="py-2.5 px-2 text-[11.5px] font-semibold">
                 {(() => {
                   const duesAmt = getBookingDues(booking);
-                  return duesAmt > 0 ? (
+                  return duesAmt === null ? <span className="text-amber-600">Unverified</span> : duesAmt > 0 ? (
                     <span className="text-red-600 font-bold">${duesAmt.toLocaleString()}</span>
                   ) : (
                     <span className="text-gray-400 font-normal">$0</span>

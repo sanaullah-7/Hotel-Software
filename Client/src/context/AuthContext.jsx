@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 const AuthContext = createContext();
 
@@ -20,6 +20,27 @@ export const AuthProvider = ({ children }) => {
       return null;
     }
   });
+
+  useEffect(() => {
+    const syncAuth = (event) => {
+      if (event.key !== null && !['user', 'isAuthenticated'].includes(event.key)) return;
+      try {
+        const stored = localStorage.getItem('user');
+        if (stored) setUser(JSON.parse(stored));
+        else if (localStorage.getItem('isAuthenticated') === 'true') {
+          setUser({
+            email: localStorage.getItem('email') || 'admin@hotel.com',
+            role: 'Admin',
+            name: localStorage.getItem('fullName') || 'Admin',
+          });
+        } else setUser(null);
+      } catch {
+        setUser(null);
+      }
+    };
+    window.addEventListener('storage', syncAuth);
+    return () => window.removeEventListener('storage', syncAuth);
+  }, []);
 
   const login = (userData) => {
     setUser(userData);

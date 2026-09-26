@@ -186,10 +186,10 @@ export default function InvoicesTab({
                     ${Number(inv.totalAmount).toFixed(2)}
                   </td>
                   <td className="py-3 px-4 text-right font-bold text-emerald-600">
-                    ${Number(inv.paidAmount).toFixed(2)}
+                    {inv.financialIntegrity === 'verified' ? `$${Number(inv.paidAmount).toFixed(2)}` : 'Unresolved'}
                   </td>
                   <td className="py-3 px-4 text-right font-extrabold">
-                    {inv.balanceDue > 0 ? (
+                    {inv.financialIntegrity !== 'verified' ? <span className="text-amber-600">Unresolved</span> : inv.balanceDue > 0 ? (
                       <span className="text-rose-600">${Number(inv.balanceDue).toFixed(2)}</span>
                     ) : (
                       <span className="text-gray-400 font-normal">$0.00</span>

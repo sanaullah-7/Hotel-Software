@@ -176,7 +176,7 @@ export default function ReservationsTab({ reservations = [], guest }) {
                       </span>
                     </td>
                     <td className="py-3 px-4 text-right font-bold">
-                      {dues > 0 ? (
+                      {dues === null ? <span className="text-amber-600">Unverified</span> : dues > 0 ? (
                         <span className="text-rose-600">${Number(dues).toFixed(2)}</span>
                       ) : (
                         <span className="text-gray-400 font-normal">$0.00</span>

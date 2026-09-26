@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { FormControl, InputLabel, Select, MenuItem, TextField, Box, Typography } from '@mui/material';
+import RefreshButton from '../../../components/common/RefreshButton';
 import {
-  Search, AddCircleOutlined, Refresh,
+  Search, AddCircleOutlined,
   TableChart, PictureAsPdf, Close, EditOutlined, DeleteOutlined,
   MeetingRoomOutlined, CleaningServicesOutlined, 
   EventOutlined, AccessTimeOutlined, PersonOutlined, FlagOutlined
@@ -254,9 +255,7 @@ export default function RoomsAndCleaning() {
           <button onClick={openNewModal} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="New Record">
             <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
           </button>
-          <button onClick={handleRefresh} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
-            <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
-          </button>
+          <RefreshButton onClick={handleRefresh} />
           <button onClick={handleExportCSV} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Export CSV">
             <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
           </button>

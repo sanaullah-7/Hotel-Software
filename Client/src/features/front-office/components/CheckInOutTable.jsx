@@ -76,7 +76,7 @@ export default function CheckInOutTable({
       <div className="p-2 border-b border-gray-100 flex items-center gap-3">
         <SearchInput
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={onSearchChange}
           placeholder="Search by guest name, room, or booking ID..."
           iconPosition="left"
           variant="pill"
@@ -120,6 +120,8 @@ export default function CheckInOutTable({
             {currentRows.length > 0 ? (
               currentRows.map((guest) => {
                 const StatusIcon = STATUS_ICONS[guest.status];
+                const canCheckIn = !guest.isLegacyUnmapped && ['Booked', 'Reserved'].includes(guest.status);
+                const canCheckOut = !guest.isLegacyUnmapped && guest.status === 'Checked In';
                 return (
                   <tr
                     key={guest.id}
@@ -129,6 +131,7 @@ export default function CheckInOutTable({
                       <span className="font-mono text-[11.5px] font-semibold text-gray-500">
                         {guest.bookingId || guest.id}
                       </span>
+                      {guest.isLegacyUnmapped && <span className="block text-[10px] text-amber-700">Legacy / unlinked</span>}
                     </td>
                     <td className="py-3 px-3">
                       <div className="flex items-center gap-2.5">
@@ -182,7 +185,7 @@ export default function CheckInOutTable({
                     </td>
                     <td className="py-3 px-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        {guest.status === 'Checked In' ? (
+                        {canCheckOut ? (
                           <button
                             onClick={() => onCheckOutAction(guest)}
                             title="Check Out"
@@ -192,9 +195,10 @@ export default function CheckInOutTable({
                           </button>
                         ) : (
                           <button
+                            disabled={!canCheckIn}
                             onClick={() => onCheckInAction(guest)}
-                            title="Check In"
-                            className="text-gray-400 hover:text-[var(--primary-dark)] p-1.5 rounded-lg hover:bg-emerald-50 cursor-pointer"
+                            title={canCheckIn ? 'Check In' : 'Only a linked Booked reservation can be checked in'}
+                            className="text-gray-400 hover:text-[var(--primary-dark)] p-1.5 rounded-lg hover:bg-emerald-50 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             <LoginIcon sx={{ fontSize: 16 }} />
                           </button>
@@ -207,16 +211,18 @@ export default function CheckInOutTable({
                           <VisibilityIcon sx={{ fontSize: 16 }} />
                         </button>
                         <button
+                          disabled
                           onClick={() => onEditGuest(guest)}
-                          title="Edit"
-                          className="text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer"
+                          title="Edit canonical booking details in Reservations"
+                          className="text-gray-400 p-1.5 rounded-lg cursor-not-allowed opacity-40"
                         >
                           <EditIcon sx={{ fontSize: 16 }} />
                         </button>
                         <button
+                          disabled
                           onClick={() => onDeleteGuest(guest)}
-                          title="Delete"
-                          className="text-gray-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
+                          title="Bookings cannot be deleted from Front Office"
+                          className="text-gray-400 p-1.5 rounded-lg cursor-not-allowed opacity-40"
                         >
                           <DeleteIcon sx={{ fontSize: 16 }} />
                         </button>

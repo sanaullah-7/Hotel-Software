@@ -1,4 +1,5 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
+import { getRoomByRoomNo } from '../../rooms/state/roomStore.js';
 export const INITIAL_ROOMS = [
   { id: '101', type: 'Standard', guest: '-', stayStatus: 'Vacant', cleaningType: 'Daily', status: 'Dirty', priority: 'Normal', assignee: '-', started: '-', completed: '-' },
   { id: '102', type: 'Deluxe', guest: 'John Doe', stayStatus: 'Stayover', cleaningType: 'Stayover Cleaning', status: 'Assigned', priority: 'High', assignee: 'Jane Smith', started: '-', completed: '-' },
@@ -20,16 +21,24 @@ export const INITIAL_STAFF = [
 ];
 
 export const getRooms = () => {
-  const isReset = localStorage.getItem('hk_test_reset_v3');
-  let data = localStorage.getItem('hk_rooms');
-  
-  if (!isReset) {
-    localStorage.setItem('hk_test_reset_v3', 'true');
-    localStorage.setItem('hk_rooms', JSON.stringify(INITIAL_ROOMS));
-    data = JSON.stringify(INITIAL_ROOMS);
+  let rooms;
+  try {
+    const data = localStorage.getItem('hk_rooms');
+    rooms = data === null ? INITIAL_ROOMS : JSON.parse(data);
+    if (!Array.isArray(rooms)) return INITIAL_ROOMS;
+  } catch {
+    return INITIAL_ROOMS;
   }
-  
-  return data ? JSON.parse(data) : INITIAL_ROOMS;
+  let changed = false;
+  const linked = rooms.map((room) => {
+    if (room.roomId || room.id === undefined || room.id === null) return room;
+    const canonicalRoom = getRoomByRoomNo(room.id);
+    if (!canonicalRoom) return room;
+    changed = true;
+    return { ...room, roomId: canonicalRoom.id };
+  });
+  if (changed) localStorage.setItem('hk_rooms', JSON.stringify(linked));
+  return linked;
 };
 
 export const saveRooms = (rooms) => {

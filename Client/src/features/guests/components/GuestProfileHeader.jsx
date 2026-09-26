@@ -157,8 +157,8 @@ export default function GuestProfileHeader({
                 Total Balance Due
               </span>
               <div className="flex items-center gap-1.5">
-                <span className={`text-base font-extrabold ${totalDues > 0 ? 'text-rose-600' : 'text-[#1b7f43]'}`}>
-                  ${Number(totalDues).toFixed(2)}
+                <span className={`text-base font-extrabold ${totalDues === null || totalDues > 0 ? 'text-rose-600' : 'text-[#1b7f43]'}`}>
+                  {totalDues === null ? 'Unresolved' : `$${Number(totalDues).toFixed(2)}`}
                 </span>
                 {totalDues === 0 && (
                   <span className="text-[10px] font-bold px-1.5 py-0.2 bg-[#e5f4eb] text-[#1b7f43] rounded">

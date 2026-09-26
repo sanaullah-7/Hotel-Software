@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Home as HomeIcon,
-  Search,
   EmailOutlined,
   PhoneOutlined,
   EditOutlined,
@@ -13,8 +12,9 @@ import {
   Close
 } from '@mui/icons-material';
 import { TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { getGuests, updateGuest, GUESTS_UPDATED_EVENT, RESERVATIONS_UPDATED_EVENT } from '../state/guestStore';
+import { getGuests, resolveGuestForBooking, updateGuest, GUESTS_UPDATED_EVENT, RESERVATIONS_UPDATED_EVENT } from '../state/guestStore';
 import { getReservations } from '../../reservations/state/reservationStore';
+import SearchInput from '../../../components/common/SearchInput';
 
 export default function Guests() {
   const navigate = useNavigate();
@@ -73,12 +73,7 @@ export default function Guests() {
     if (guest.checkIn) return parseDate(guest.checkIn);
     if (guest.createdAt) return parseDate(guest.createdAt);
     const reservations = getReservations();
-    const res = reservations.find(r => 
-      (guest.email && r.email && r.email.toLowerCase() === guest.email.toLowerCase()) ||
-      (guest.name && r.name && r.name.toLowerCase() === guest.name.toLowerCase()) ||
-      `GST-${r.id}`.toLowerCase() === String(guest.id).toLowerCase() ||
-      String(r.id) === String(guest.id)
-    );
+    const res = reservations.find((reservation) => String(resolveGuestForBooking(reservation)?.id || '') === String(guest.id));
     if (res?.checkIn) return parseDate(res.checkIn);
     return null;
   };
@@ -241,19 +236,14 @@ export default function Guests() {
             </h2>
             
             {/* Search Bar */}
-            <div className="relative w-40 xl:w-56">
-              <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" sx={{ fontSize: 18 }} />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded-md text-[13px] focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-shadow bg-gray-50/50"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPage(1);
-                }}
-              />
-            </div>
+            <SearchInput
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(value) => { setSearchQuery(value); setPage(1); }}
+              iconPosition="left"
+              width="w-40 xl:w-56"
+              inputClassName="border-gray-200 bg-gray-50/50"
+            />
           </div>
           
           <div className="flex flex-wrap items-center gap-3">

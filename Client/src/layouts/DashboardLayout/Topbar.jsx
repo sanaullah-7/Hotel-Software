@@ -198,7 +198,7 @@ const Topbar = ({ onMobileNavToggle }) => {
       <span className="text-[13px] font-semibold font-sans leading-tight">Profile</span>
     </MenuItem>
     <MenuItem
-      onClick={() => { logout(); localStorage.clear(); handleProfileClose(); navigate('/login'); }}
+      onClick={() => { logout(); handleProfileClose(); navigate('/login'); }}
       sx={{
         py: 0.25,
         px: 1,

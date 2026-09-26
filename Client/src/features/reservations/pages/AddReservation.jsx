@@ -8,8 +8,9 @@ import {
  TextField, MenuItem, FormControl, InputLabel, Select
 } from'@mui/material';
 import { getReservations, saveReservations } from '../state/reservationStore';
+import { addGuest, findGuestByExactIdentity, getGuestById, getGuests } from '../../guests/state/guestStore';
 import { addAuditLog } from '../../audit/state/auditStore';
-import { getRooms, updateRoom } from '../../../features/rooms/state/roomStore';
+import { validateBookingRequest, getAvailableRooms, saveBookingsWithRoomState } from '../state/reservationLifecycle';
 
 export default function AddReservation() {
  const navigate = useNavigate();
@@ -43,6 +44,7 @@ export default function AddReservation() {
  });
 
  const [selectedFile, setSelectedFile] = useState(null);
+ const [selectedGuestId, setSelectedGuestId] = useState('');
  const fileInputRef = React.useRef(null);
 
  const handleFileChange = (e) => {
@@ -51,28 +53,23 @@ export default function AddReservation() {
  }
  };
 
- // Dummy list of already registered guests for the dropdown
- const registeredGuests = [
- { id: 1, firstName:'Kamran', lastName:'Akmal', email:'kamran@example.com', gender:'Male', mobile:'0311 1122334', city:'Lahore', idNumber:'42101-1122334-1', nationality:'Pakistani' },
- { id: 2, firstName:'Mahira', lastName:'Khan', email:'mahira@example.com', gender:'Female', mobile:'0321 6655443', city:'Karachi', idNumber:'42201-6655443-2', nationality:'Pakistani' },
- { id: 3, firstName:'Cara', lastName:'Stevens', email:'cara.s2@example.com', gender:'Female', mobile:'0321 8887654', city:'London', idNumber:'USA-9988221', nationality:'British' }
- ];
+ const registeredGuests = getGuests();
 
- const availableRooms = getRooms()
-  .filter(room => room.status === 'Open')
+ const availableRooms = getAvailableRooms(formData.checkInDate, formData.checkOutDate)
   .map(room => ({ id: String(room.id), sourceId: room.id, number: room.roomNo, type: room.roomType }));
 
  const handleGuestSelect = (e) => {
  const selectedId = e.target.value;
- const guest = registeredGuests.find(g => g.id === selectedId);
+ const guest = registeredGuests.find(g => String(g.id) === String(selectedId));
  if (guest) {
+ setSelectedGuestId(guest.id);
  setFormData(prev => ({
  ...prev,
- firstName: guest.firstName,
- lastName: guest.lastName,
+ firstName: String(guest.name || '').split(' ')[0] || '',
+ lastName: String(guest.name || '').split(' ').slice(1).join(' '),
  email: guest.email,
- gender: guest.gender,
- mobile: guest.mobile,
+ gender: guest.gender || '',
+ mobile: guest.phone || guest.mobile || '',
  city: guest.city,
  idNumber: guest.idNumber,
  nationality: guest.nationality
@@ -90,16 +87,30 @@ export default function AddReservation() {
 
  const handleSave = (e) => {
  e.preventDefault();
+ let selectedRoom;
+ try {
+   selectedRoom = validateBookingRequest({ roomId: formData.room, checkIn: formData.checkInDate, checkOut: formData.checkOutDate });
+ } catch (error) {
+   window.alert(error.message);
+   return;
+ }
  const reservations = getReservations();
  const nextId = reservations.length
    ? Math.max(...reservations.map((reservation) => Number(reservation.id) || 0)) + 1
    : 1;
- const selectedRoom = availableRooms.find((room) => room.id === formData.room);
+ const guestName = `${formData.firstName} ${formData.lastName}`.trim();
+ const selectedGuest = getGuestById(selectedGuestId);
+ const guest = selectedGuest || findGuestByExactIdentity(guestName, formData.email) || addGuest({
+   name: guestName, email: formData.email, phone: formData.mobile, city: formData.city,
+   gender: formData.gender, idNumber: formData.idNumber, nationality: formData.nationality,
+ });
 
  try { addAuditLog({ module: 'Reservation', action: 'Created Reservation', recordId: nextId, description: `Reservation ${nextId} created.`, importance: 'Important' }); } catch(e) {}
-  saveReservations([{
+  saveBookingsWithRoomState([{
     id: nextId,
-   name: `${formData.firstName} ${formData.lastName}`.trim() || 'New Guest',
+   guestId: guest.id,
+   roomId: selectedRoom?.sourceId,
+   name: guestName || 'New Guest',
    avatar: 'https://i.pravatar.cc/150?img=1',
    package: formData.purposeOfStay || 'Standard',
    room: selectedRoom?.number || '—',
@@ -110,8 +121,7 @@ export default function AddReservation() {
    payment: formData.paymentMethod ? 'Pending' : 'Unpaid',
    email: formData.email,
    mobile: formData.mobile,
- }, ...reservations]);
- if (selectedRoom) updateRoom(selectedRoom.sourceId, { status: 'Booked', mobile: formData.mobile });
+ }, ...reservations], selectedRoom ? [selectedRoom.id] : []);
  navigate('/reservation/all');
  };
 
@@ -146,15 +156,15 @@ export default function AddReservation() {
  {/* Auto-fill Dropdown */}
  <FormControl size="small" sx={{ ...muiInputSx, minWidth: 220 }}>
  <InputLabel>Select / Insert Guest</InputLabel>
- <Select 
+   <Select
  label="Select / Insert Guest" 
  onChange={handleGuestSelect}
- defaultValue=""
+ value={selectedGuestId}
  >
  <MenuItem value="" disabled><em>Select existing guest...</em></MenuItem>
  {registeredGuests.map(guest => (
  <MenuItem key={guest.id} value={guest.id}>
- {guest.firstName} {guest.lastName} ({guest.idNumber})
+ {guest.name} ({guest.email})
  </MenuItem>
  ))}
  </Select>

@@ -11,8 +11,10 @@ import {
   CancelOutlined
 } from '@mui/icons-material';
 import { getBookingDues } from '../../payment-billing/pages/paymentBillingStore';
+import { resolveGuestForBooking } from '../../guests/state/guestStore';
 import StatusBadge from '../../../components/common/StatusBadge';
 import PaginationControls from '../../../components/common/PaginationControls';
+import { normalizeBookingStatus } from '../state/bookingRules';
 
 export const statusStyles = {
   Cancelled: 'bg-orange-100 text-orange-500',
@@ -91,14 +93,18 @@ export default function ReservationTable({
                 <td className="py-2 px-2 whitespace-nowrap">
                   <div className="flex items-center gap-2 min-w-0">
                     <img src={booking.avatar} alt="Avatar" className="w-7 h-7 rounded-full object-cover shadow-sm shrink-0" />
-                    <Link
-                      to={`/guests/${booking.guestId || `GST-${booking.id}`}`}
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-[12px] text-gray-800 font-bold hover:text-[#1b7f43] transition-colors truncate block max-w-full"
-                      title="View Guest Profile"
-                    >
-                      {booking.name}
-                    </Link>
+                    {resolveGuestForBooking(booking) ? (
+                      <Link
+                        to={`/guests/${resolveGuestForBooking(booking).id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[12px] text-gray-800 font-bold hover:text-[#1b7f43] transition-colors truncate block max-w-full"
+                        title="View Guest Profile"
+                      >
+                        {booking.name}
+                      </Link>
+                    ) : (
+                      <span className="text-[12px] text-gray-800 font-bold truncate block max-w-full">{booking.name}</span>
+                    )}
                   </div>
                 </td>
                 <td className="py-2 px-2 text-[11.5px] text-gray-600 whitespace-nowrap truncate">{booking.package}</td>
@@ -142,7 +148,7 @@ export default function ReservationTable({
                 <td className="py-2 px-2 text-[11.5px] font-semibold whitespace-nowrap">
                   {(() => {
                     const duesAmt = getBookingDues(booking);
-                    return duesAmt > 0 ? (
+                    return duesAmt === null ? <span className="text-amber-600 text-[10px]">Unverified</span> : duesAmt > 0 ? (
                       <span className="text-red-600 font-bold">${duesAmt.toLocaleString()}</span>
                     ) : (
                       <span className="text-gray-400 font-normal">$0</span>
@@ -167,6 +173,12 @@ export default function ReservationTable({
                       ref={menuRef}
                       className="absolute right-2 top-8 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-md border border-gray-100 z-50 py-2 w-44 animate-fade-in text-left"
                     >
+                      {(() => {
+                        const status = normalizeBookingStatus(booking.status);
+                        const canCancel = ['Booked', 'Pending'].includes(status);
+                        const canCheckout = status === 'Checked In';
+                        const isCheckedIn = status === 'Checked In';
+                        return <>
                       <button
                         onClick={() => onOpenViewModal(booking)}
                         className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
@@ -181,22 +193,27 @@ export default function ReservationTable({
                       </button>
                       <button
                         onClick={() => onConfirmDelete(booking)}
+                        disabled={isCheckedIn}
                         className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
                       >
                         <DeleteOutlined className="text-[#ef4444]" sx={{ fontSize: 18 }} /> Delete Booking
                       </button>
                       <button
                         onClick={() => onCheckout(booking.id)}
+                        disabled={!canCheckout}
                         className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
                       >
                         <LogoutOutlined className="text-[#64748b]" sx={{ fontSize: 18 }} /> Check Out
                       </button>
                       <button
                         onClick={() => onConfirmCancel(booking)}
+                        disabled={!canCancel}
                         className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
                       >
                         <CancelOutlined className="text-[#64748b]" sx={{ fontSize: 18 }} /> Cancel Booking
                       </button>
+                        </>;
+                      })()}
                     </div>
                   )}
                 </td>

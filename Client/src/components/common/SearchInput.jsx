@@ -2,7 +2,7 @@ import React from 'react';
 import { Search as SearchIcon, Close as ClearIcon } from '@mui/icons-material';
 
 /**
- * Standard Search Input component with consistent icon placement, styling, and sizing across modules.
+ * Controlled search input. onChange receives the current string value.
  */
 export default function SearchInput({
   value = '',
@@ -18,7 +18,7 @@ export default function SearchInput({
 }) {
   const handleChange = (e) => {
     if (typeof onChange === 'function') {
-      onChange(e);
+      onChange(e.target.value);
     }
   };
 
@@ -26,7 +26,7 @@ export default function SearchInput({
     if (typeof onClear === 'function') {
       onClear();
     } else if (typeof onChange === 'function') {
-      onChange({ target: { value: '' } });
+      onChange('');
     }
   };
 
