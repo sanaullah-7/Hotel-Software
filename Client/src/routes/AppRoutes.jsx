@@ -137,13 +137,6 @@ export default function AppRoutes() {
         <Route path="/housekeeping/cleaning-schedule" element={<DashboardLayout><CleaningSchedule /></DashboardLayout>} />
         <Route path="/housekeeping/lost-and-found" element={<DashboardLayout><LostAndFound /></DashboardLayout>} />
         <Route path="/housekeeping/inspection-checklist" element={<DashboardLayout><InspectionChecklist /></DashboardLayout>} />
-
-        <Route path="/guests" element={<DashboardLayout><Guests /></DashboardLayout>} />
-        <Route path="/guests/profile" element={<DashboardLayout><GuestProfile /></DashboardLayout>} />
-        
-        {/* Occupancy Module */}
-        <Route path="/occupancy" element={<DashboardLayout><Occupancy /></DashboardLayout>} />
-        
         {/* Car Parking Route */}
         <Route path="/car-parking" element={<DashboardLayout><CarParking /></DashboardLayout>} />
 
