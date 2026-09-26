@@ -1,20 +1,41 @@
 import authBg from '../../assets/images/auth-bg.jpg';
 import authCardBg from '../../assets/images/authcard.jpg';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock, Hotel } from '@mui/icons-material';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = (e) => {
     e.preventDefault();
-    // Dummy login logic: always redirect to dashboard
-    navigate('/');
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    if (cleanEmail === 'admin@hotel.com' && cleanPassword === 'admin123') {
+      setError('');
+      login({
+        email: 'admin@hotel.com',
+        role: 'Admin',
+        name: localStorage.getItem('fullName') || 'Admin',
+      });
+      navigate('/dashboard');
+    } else {
+      setError('Invalid email or password');
+    }
   };
 
   return (

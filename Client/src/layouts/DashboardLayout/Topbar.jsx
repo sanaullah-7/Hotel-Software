@@ -18,10 +18,12 @@ import {
   FullscreenExit as FullscreenExitIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import CommandPalette from './CommandPalette';
 
 const Topbar = ({ onMobileNavToggle }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   // State for profile menu
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const isProfileMenuOpen = Boolean(profileAnchorEl);
@@ -196,7 +198,7 @@ const Topbar = ({ onMobileNavToggle }) => {
       <span className="text-[13px] font-semibold font-sans leading-tight">Profile</span>
     </MenuItem>
     <MenuItem
-      onClick={() => { localStorage.clear(); handleProfileClose(); navigate('/login'); }}
+      onClick={() => { logout(); localStorage.clear(); handleProfileClose(); navigate('/login'); }}
       sx={{
         py: 0.25,
         px: 1,
