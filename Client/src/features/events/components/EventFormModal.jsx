@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Close as CloseIcon } from '@mui/icons-material';
+import useModalFocus from '../../../components/common/useModalFocus';
 
 export function generateEventId() {
   const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -20,6 +21,7 @@ export default function EventFormModal({
   statusOptions = [],
   cateringOptions = []
 }) {
+  const { dialogRef, titleId } = useModalFocus({ open: isOpen, onClose });
   const isEdit = Boolean(initialData);
 
   const [formData, setFormData] = useState({
@@ -135,15 +137,27 @@ export default function EventFormModal({
   const focusBorder = isEdit ? 'focus:border-[#1b7f43]' : 'focus:border-[#5c67f2]';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden animate-scaleUp">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fadeIn"
+      onClick={onClose}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden animate-scaleUp"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className={`${headerBg} px-6 py-4 flex items-center justify-between text-white`}>
-          <h3 className="text-lg font-bold tracking-tight">
+          <h3 id={titleId} className="text-lg font-bold tracking-tight">
             {isEdit ? `Edit Event: ${initialData.name}` : 'New Event'}
           </h3>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
           >
             <CloseIcon sx={{ fontSize: 18 }} />

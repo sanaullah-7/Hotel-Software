@@ -188,6 +188,7 @@ export default function ReservationsTab({ reservations = [], guest }) {
                           to={`/reservation/edit/${res.id}`}
                           className="p-1 text-gray-400 hover:text-[#1b7f43] hover:bg-emerald-50 rounded transition cursor-pointer"
                           title="Edit reservation"
+                          aria-label="Edit reservation"
                         >
                           <EditOutlined sx={{ fontSize: 16 }} />
                         </Link>
@@ -224,6 +225,7 @@ export default function ReservationsTab({ reservations = [], guest }) {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
+                aria-label="Previous page"
                 className="p-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 <ChevronLeft sx={{ fontSize: 16 }} />
@@ -234,6 +236,7 @@ export default function ReservationsTab({ reservations = [], guest }) {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
+                aria-label="Next page"
                 className="p-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 <ChevronRight sx={{ fontSize: 16 }} />

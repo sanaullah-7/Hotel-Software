@@ -64,6 +64,7 @@ export default function EventToolbar({
           <button
             onClick={onToggleFilter}
             title="Filter Events"
+            aria-label="Filter events"
             className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
               filterType !== 'All' || filterVenue !== 'All' || filterStatus !== 'All'
                 ? 'bg-blue-50 border-blue-200 text-blue-600'
@@ -77,6 +78,7 @@ export default function EventToolbar({
           <button
             onClick={() => onViewModeChange('table')}
             title="Table View"
+            aria-label="Table view"
             className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
               viewMode === 'table'
                 ? 'bg-[#1b7f43] border-[#1b7f43] text-white shadow-xs'
@@ -90,6 +92,7 @@ export default function EventToolbar({
           <button
             onClick={() => onViewModeChange('grid')}
             title="Grid View"
+            aria-label="Grid view"
             className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
               viewMode === 'grid'
                 ? 'bg-[#1b7f43] border-[#1b7f43] text-white shadow-xs'
@@ -110,6 +113,7 @@ export default function EventToolbar({
           <button
             onClick={onExportPDF}
             title="Export PDF"
+            aria-label="Export PDF"
             className="toolbar-export-icon p-1.5 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 rounded-xl transition-all cursor-pointer"
           >
             <PdfIcon sx={{ fontSize: 18 }} />
@@ -119,6 +123,7 @@ export default function EventToolbar({
           <button
             onClick={onExportExcel}
             title="Export Excel"
+            aria-label="Export Excel"
             className="toolbar-export-icon p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all cursor-pointer"
           >
             <DownloadIcon sx={{ fontSize: 18 }} />

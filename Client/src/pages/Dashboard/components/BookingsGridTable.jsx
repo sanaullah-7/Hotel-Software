@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   CalendarTodayOutlined,
   PhoneOutlined,
@@ -25,6 +25,105 @@ export default function BookingsGridTable({
   handleCheckout,
   confirmCancel
 }) {
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    if (activeMenuId && menuRef.current) {
+      const items = Array.from(
+        menuRef.current.querySelectorAll('[role="menuitem"]:not([disabled])')
+      );
+      if (items.length > 0) {
+        items[0].focus({ preventScroll: true });
+      }
+    }
+  }, [activeMenuId]);
+
+  useEffect(() => {
+    if (!activeMenuId) return;
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        if (event.target.closest && event.target.closest('[id^="booking-actions-trigger-"]')) {
+          return;
+        }
+        setActiveMenuId(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeMenuId, setActiveMenuId]);
+
+  const handleMenuKeyDown = (e, bookingId) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      setActiveMenuId(null);
+      const trigger = document.getElementById(`booking-actions-trigger-${bookingId}`);
+      if (trigger) {
+        trigger.focus();
+      }
+      return;
+    }
+
+    if (e.key === 'Tab') {
+      setActiveMenuId(null);
+      return;
+    }
+
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (!menuRef.current) return;
+      const items = Array.from(
+        menuRef.current.querySelectorAll('[role="menuitem"]:not([disabled])')
+      );
+      if (items.length === 0) return;
+      const currentIndex = items.indexOf(document.activeElement);
+      if (currentIndex === -1) {
+        items[0].focus({ preventScroll: true });
+      } else if (e.key === 'ArrowDown') {
+        const nextIndex = (currentIndex + 1) % items.length;
+        items[nextIndex].focus({ preventScroll: true });
+      } else if (e.key === 'ArrowUp') {
+        const prevIndex = (currentIndex - 1 + items.length) % items.length;
+        items[prevIndex].focus({ preventScroll: true });
+      }
+      return;
+    }
+
+    if (e.key === 'Home') {
+      e.preventDefault();
+      if (!menuRef.current) return;
+      const items = Array.from(
+        menuRef.current.querySelectorAll('[role="menuitem"]:not([disabled])')
+      );
+      if (items.length > 0) items[0].focus({ preventScroll: true });
+      return;
+    }
+
+    if (e.key === 'End') {
+      e.preventDefault();
+      if (!menuRef.current) return;
+      const items = Array.from(
+        menuRef.current.querySelectorAll('[role="menuitem"]:not([disabled])')
+      );
+      if (items.length > 0) items[items.length - 1].focus({ preventScroll: true });
+      return;
+    }
+  };
+
+  const handleTriggerKeyDown = (e, bookingId) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (activeMenuId !== bookingId) {
+        toggleMenu(e, bookingId);
+      }
+    } else if (e.key === 'Escape' && activeMenuId === bookingId) {
+      e.preventDefault();
+      e.stopPropagation();
+      setActiveMenuId(null);
+    }
+  };
+
   return (
     <div className="w-full max-lg:overflow-x-auto lg:overflow-x-hidden min-w-0">
       <table className="w-full text-left border-collapse table-fixed max-lg:min-w-[850px]">
@@ -160,7 +259,13 @@ export default function BookingsGridTable({
               {/* Actions */}
               <td className="py-2.5 px-2 text-center relative" onClick={(e) => e.stopPropagation()}>
                 <button
+                  id={`booking-actions-trigger-${booking.id}`}
                   onClick={(e) => toggleMenu(e, booking.id)}
+                  onKeyDown={(e) => handleTriggerKeyDown(e, booking.id)}
+                  aria-label="More actions"
+                  aria-haspopup="menu"
+                  aria-expanded={activeMenuId === booking.id}
+                  aria-controls={activeMenuId === booking.id ? `booking-actions-menu-${booking.id}` : undefined}
                   className="text-gray-600 hover:bg-gray-100 rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors cursor-pointer"
                 >
                   <MoreHoriz sx={{ fontSize: 18 }} />
@@ -168,34 +273,49 @@ export default function BookingsGridTable({
 
                 {activeMenuId === booking.id && (
                   <div
+                    ref={menuRef}
+                    id={`booking-actions-menu-${booking.id}`}
+                    role="menu"
+                    aria-labelledby={`booking-actions-trigger-${booking.id}`}
+                    onKeyDown={(e) => handleMenuKeyDown(e, booking.id)}
                     className="absolute right-3 top-9 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-lg border border-gray-100 z-50 py-1.5 w-40 animate-fade-in text-left"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
+                      role="menuitem"
+                      tabIndex={-1}
                       onClick={() => { setActiveMenuId(null); openViewModal(booking); }}
                       className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
                     >
                       <SubjectOutlined className="text-[#10b981]" sx={{ fontSize: 16 }} /> View Details
                     </button>
                     <button
+                      role="menuitem"
+                      tabIndex={-1}
                       onClick={() => { setActiveMenuId(null); openEditModal(booking); }}
                       className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
                     >
                       <EditOutlined className="text-[#6366f1]" sx={{ fontSize: 16 }} /> Edit Booking
                     </button>
                     <button
+                      role="menuitem"
+                      tabIndex={-1}
                       onClick={() => { setActiveMenuId(null); confirmDelete(booking); }}
                       className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
                     >
                       <DeleteOutlined className="text-[#ef4444]" sx={{ fontSize: 16 }} /> Delete
                     </button>
                     <button
+                      role="menuitem"
+                      tabIndex={-1}
                       onClick={() => { setActiveMenuId(null); handleCheckout(booking.id); }}
                       className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
                     >
                       <LogoutOutlined className="text-[#64748b]" sx={{ fontSize: 16 }} /> Check Out
                     </button>
                     <button
+                      role="menuitem"
+                      tabIndex={-1}
                       onClick={() => { setActiveMenuId(null); confirmCancel(booking); }}
                       className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
                     >

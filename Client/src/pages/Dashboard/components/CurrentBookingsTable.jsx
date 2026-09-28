@@ -124,6 +124,7 @@ export default function CurrentBookingsTable({
     setCustomStartDate('');
     setCustomEndDate('');
     setBookings(getReservations(initialBookings));
+    setCurrentPage(1);
   };
 
   const handleCustomClick = (event) => {
@@ -175,6 +176,33 @@ export default function CurrentBookingsTable({
 
     return true;
   });
+
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / (rowsPerPage || 10)));
+  const effectivePage = Math.min(Math.max(1, currentPage), totalPages);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const handlePageChange = (newPage) => {
+    if (activeMenuId) {
+      setActiveMenuId(null);
+    }
+    setCurrentPage(Math.min(Math.max(1, newPage), totalPages));
+  };
+
+  const handleRowsPerPageChange = (newRowsPerPage) => {
+    if (activeMenuId) {
+      setActiveMenuId(null);
+    }
+    setRowsPerPage(newRowsPerPage);
+    setCurrentPage(1);
+  };
+
+  const startIndex = (effectivePage - 1) * rowsPerPage;
+  const paginatedBookings = filteredBookings.slice(startIndex, startIndex + rowsPerPage);
 
   const toggleMenu = (e, id) => {
     e.stopPropagation();
@@ -538,6 +566,7 @@ export default function CurrentBookingsTable({
             onClick={openNewModal}
             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
             title="Add Booking"
+            aria-label="Add booking"
           >
             <AddCircleOutlined sx={{ fontSize: 18 }} className="text-[#1b7f43]" />
           </button>
@@ -551,6 +580,7 @@ export default function CurrentBookingsTable({
             onClick={handleExportCSV}
             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
             title="Export CSV"
+            aria-label="Export CSV"
           >
             <TableChart sx={{ fontSize: 16 }} className="text-[#0ea5e9]" />
           </button>
@@ -558,6 +588,7 @@ export default function CurrentBookingsTable({
             onClick={handleExportPDF}
             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer"
             title="Export PDF"
+            aria-label="Export PDF"
           >
             <PictureAsPdf sx={{ fontSize: 16 }} className="text-[#ef4444]" />
           </button>
@@ -566,7 +597,7 @@ export default function CurrentBookingsTable({
 
       {/* Grid Table */}
       <BookingsGridTable
-        filteredBookings={filteredBookings}
+        filteredBookings={paginatedBookings}
         handleRowClick={handleRowClick}
         activeMenuId={activeMenuId}
         toggleMenu={toggleMenu}
@@ -581,10 +612,13 @@ export default function CurrentBookingsTable({
       {/* Compact Pagination */}
       <PaginationControls
         variant="compact"
+        currentPage={effectivePage}
+        totalPages={totalPages}
         totalRecords={filteredBookings.length}
         rowsPerPage={rowsPerPage}
         rowsPerPageOptions={[5, 10, 20]}
-        onRowsPerPageChange={setRowsPerPage}
+        onPageChange={handlePageChange}
+        onRowsPerPageChange={handleRowsPerPageChange}
       />
 
       {/* Modals */}

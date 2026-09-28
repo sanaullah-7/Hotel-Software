@@ -1,11 +1,14 @@
 import React from 'react';
 import { Close } from '@mui/icons-material';
+import useModalFocus from '../../../components/common/useModalFocus';
 
 export default function ReservationCancelModal({
   open,
   onClose,
   onSubmit
 }) {
+  const { dialogRef, titleId } = useModalFocus({ open, onClose });
+
   if (!open) return null;
 
   return (
@@ -14,13 +17,19 @@ export default function ReservationCancelModal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className="bg-[#fcf8fa] rounded-lg shadow-2xl w-full max-w-[400px] overflow-hidden flex flex-col animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-[var(--primary-main)] px-5 py-3.5 flex items-center justify-between">
-          <h2 className="text-white text-[16px] font-bold">Cancel Booking</h2>
+          <h2 id={titleId} className="text-white text-[16px] font-bold">Cancel Booking</h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center"
           >
             <Close sx={{ fontSize: 16 }} />

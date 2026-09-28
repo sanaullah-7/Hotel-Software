@@ -320,6 +320,7 @@ export default function Guests() {
               onClick={handleRefresh} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
               title="Refresh"
+              aria-label="Refresh guests"
             >
               <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
             </button>
@@ -329,6 +330,7 @@ export default function Guests() {
               onClick={handleExportCSV} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
               title="Export CSV"
+              aria-label="Export CSV"
             >
               <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
             </button>
@@ -396,6 +398,7 @@ export default function Guests() {
                       onClick={() => openEditModal(guest)} 
                       className="text-[var(--primary-main)] hover:text-green-700 transition-colors p-1.5 rounded-lg hover:bg-[#e5f4eb] cursor-pointer"
                       title="Edit Guest"
+                      aria-label="Edit guest"
                     >
                       <EditOutlined fontSize="small" sx={{ fontSize: 18 }} />
                     </button>
@@ -436,6 +439,7 @@ export default function Guests() {
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
+              aria-label="Previous page"
               className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
             >
               <ChevronLeft fontSize="small" />
@@ -443,6 +447,7 @@ export default function Guests() {
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages || totalPages === 0}
+              aria-label="Next page"
               className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
             >
               <ChevronRight fontSize="small" />
@@ -459,7 +464,7 @@ export default function Guests() {
               <h2 className="text-[16px] font-bold text-white">
                 Edit Guest: {editingGuest?.name}
               </h2>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
+              <button onClick={() => setIsEditModalOpen(false)} aria-label="Close" className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
                 <Close sx={{ fontSize: 18 }} />
               </button>
             </div>

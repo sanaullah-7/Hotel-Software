@@ -162,6 +162,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/"
+              aria-label="Dashboard"
+              aria-current={isDashboardActive ? 'page' : undefined}
               title={!isOpen ? 'Dashboard' : undefined}
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isDashboardActive
@@ -199,6 +201,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/occupancy"
+              aria-label="Occupancy"
+              aria-current={isOccupancyActive ? 'page' : undefined}
               title={!isOpen ? 'Occupancy' : undefined}
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isOccupancyActive
@@ -275,6 +279,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/guests"
+              aria-label="Guests"
+              aria-current={isGuestsActive ? 'page' : undefined}
               title={!isOpen ? 'Guests' : undefined}
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isGuestsActive
@@ -312,6 +318,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/car-parking"
+              aria-label="Car Parking"
+              aria-current={isCarParkingActive ? 'page' : undefined}
               title={!isOpen ? 'Car Parking' : undefined}
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isCarParkingActive
@@ -454,6 +462,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/audit-log"
+              aria-label="Audit Log"
+              aria-current={isAuditActive ? 'page' : undefined}
               title={!isOpen ? 'Audit Log' : undefined}
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isAuditActive
@@ -491,6 +501,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/ai-assistant"
+              aria-label="AI Assistant"
+              aria-current={isAssistantActive ? 'page' : undefined}
               title={!isOpen ? 'AI Assistant' : undefined}
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isAssistantActive

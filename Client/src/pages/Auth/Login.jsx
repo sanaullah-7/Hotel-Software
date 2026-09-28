@@ -42,7 +42,7 @@ export default function Login() {
     <div className="h-screen w-full flex items-center justify-center relative overflow-hidden bg-gray-900">
       {/* Outer Background */}
       <div className="absolute inset-0 z-0">
-        <img src={authBg} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
       </div>
 
@@ -63,11 +63,12 @@ export default function Login() {
         <div className="max-w-md w-full mx-auto mt-10">
           <h2 className="text-3xl font-serif font-bold text-gray-900 mb-1">Welcome back</h2>
           <p className="text-gray-500 text-sm mb-5">Sign in to manage reservations, rooms and guests.</p>
+          {error && <p id="login-error" role="alert" className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
-              <TextField fullWidth size="small" sx={{ 
+              <label htmlFor="login-email" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
+              <TextField id="login-email" fullWidth size="small" sx={{ 
                   backgroundColor: "white", 
                   borderRadius: 1,
                   "& .MuiOutlinedInput-root": {
@@ -96,8 +97,8 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Password</label>
-              <TextField fullWidth size="small" sx={{ 
+              <label htmlFor="login-password" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Password</label>
+              <TextField id="login-password" fullWidth size="small" sx={{ 
                   backgroundColor: "white", 
                   borderRadius: 1,
                   "& .MuiOutlinedInput-root": {
@@ -122,7 +123,7 @@ export default function Login() {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">
+                      <IconButton onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} edge="end" size="small">
                         {showPassword ? <VisibilityOff className="text-gray-400" fontSize="small" /> : <Visibility className="text-gray-400" fontSize="small" />}
                       </IconButton>
                     </InputAdornment>

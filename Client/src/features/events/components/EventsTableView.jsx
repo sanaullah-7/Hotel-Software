@@ -147,6 +147,7 @@ export default function EventsTableView({
                       <button
                         onClick={() => onView(evt)}
                         title="View Details"
+                        aria-label="View event details"
                         className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                       >
                         <ViewIcon sx={{ fontSize: 16 }} />
@@ -154,6 +155,7 @@ export default function EventsTableView({
                       <button
                         onClick={() => onEdit(evt)}
                         title="Edit Event"
+                        aria-label="Edit event"
                         className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
                       >
                         <EditIcon sx={{ fontSize: 16 }} />
@@ -161,6 +163,7 @@ export default function EventsTableView({
                       <button
                         onClick={() => onDelete(evt)}
                         title="Delete Event"
+                        aria-label="Delete event"
                         className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                       >
                         <DeleteIcon sx={{ fontSize: 16 }} />

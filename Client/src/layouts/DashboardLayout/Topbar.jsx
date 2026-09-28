@@ -139,6 +139,8 @@ const Topbar = ({ onMobileNavToggle }) => {
           {/* Fullscreen Toggle */}
           <IconButton 
             onClick={toggleFullScreen}
+            aria-label={isFullscreen ? 'Exit full screen' : 'Enter full screen'}
+            aria-pressed={isFullscreen}
             sx={{ color: 'text.secondary', '&:hover': { color: '#16a34a', bgcolor: '#dcfce7' } }}
           >
             {isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
@@ -146,13 +148,24 @@ const Topbar = ({ onMobileNavToggle }) => {
 
           {/* Profile Menu Trigger */}
           <Box
+            component="button"
+            type="button"
             onClick={handleProfileClick}
+            aria-label={`Profile menu for ${profileName}`}
+            aria-haspopup="menu"
+            aria-expanded={isProfileMenuOpen}
+            aria-controls={isProfileMenuOpen ? 'profile-menu' : undefined}
             sx={{
               display: 'flex',
               alignItems: 'center',
               gap: 1,
               cursor: 'pointer',
               ml: 1,
+              border: 0,
+              background: 'transparent',
+              p: 0,
+              font: 'inherit',
+              textAlign: 'left',
             }}
           >
             <Avatar
@@ -177,6 +190,7 @@ const Topbar = ({ onMobileNavToggle }) => {
       sx: { mt: 0, minWidth: 0, width: 'auto', borderRadius: 2, overflow: 'hidden' },
     }}
     MenuListProps={{
+      id: 'profile-menu',
       sx: { py: 0, px: 0, display: 'flex', flexDirection: 'column' },
       disablePadding: true
     }}

@@ -179,6 +179,7 @@ export default function DocumentsTab({
                         onClick={() => setViewingDoc(doc)}
                         className="p-1 text-gray-400 hover:text-[#1b7f43] hover:bg-emerald-50 rounded transition cursor-pointer"
                         title="View document details"
+                        aria-label="View document details"
                       >
                         <VisibilityOutlined sx={{ fontSize: 16 }} />
                       </button>
@@ -189,6 +190,7 @@ export default function DocumentsTab({
                         }}
                         className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition cursor-pointer"
                         title="Print document"
+                        aria-label="Print document"
                       >
                         <PrintOutlined sx={{ fontSize: 16 }} />
                       </button>
@@ -200,6 +202,7 @@ export default function DocumentsTab({
                           }}
                           className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer"
                           title="Remove document"
+                          aria-label="Remove document"
                         >
                           <DeleteOutlined sx={{ fontSize: 16 }} />
                         </button>
@@ -236,6 +239,7 @@ export default function DocumentsTab({
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
+                aria-label="Previous page"
                 className="p-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 <ChevronLeft sx={{ fontSize: 16 }} />
@@ -246,6 +250,7 @@ export default function DocumentsTab({
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
+                aria-label="Next page"
                 className="p-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 <ChevronRight sx={{ fontSize: 16 }} />
@@ -282,6 +287,7 @@ export default function DocumentsTab({
               <h3 className="font-bold text-base">Document Details</h3>
               <button
                 onClick={() => setViewingDoc(null)}
+                aria-label="Close"
                 className="text-white/80 hover:text-white p-1 rounded-full"
               >
                 ✕

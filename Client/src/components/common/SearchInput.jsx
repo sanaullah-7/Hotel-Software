@@ -9,6 +9,7 @@ export default function SearchInput({
   onChange,
   onClear,
   placeholder = 'Search...',
+  ariaLabel,
   iconPosition = 'right',
   variant = 'default', // 'default' | 'slate' | 'pill'
   size = 'md', // 'sm' | 'md' | 'lg'
@@ -58,6 +59,7 @@ export default function SearchInput({
 
       <input
         type="text"
+        aria-label={ariaLabel || placeholder}
         placeholder={placeholder}
         value={value}
         onChange={handleChange}
@@ -68,6 +70,7 @@ export default function SearchInput({
         <button
           type="button"
           onClick={handleClear}
+          aria-label="Clear search"
           className={`absolute ${
             iconPosition === 'right' ? 'right-7' : 'right-2.5'
           } top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-0.5 rounded-full`}

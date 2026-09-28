@@ -11,6 +11,7 @@ export const SidebarSubItems = ({ items, pathname }) => {
           <Link
             key={subItem.id}
             to={subItem.path}
+            aria-current={isSelected ? 'page' : undefined}
             className={`flex items-center px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer no-underline ${
               isSelected
                 ? 'bg-[#dcefe5] text-[#1b7f43]'

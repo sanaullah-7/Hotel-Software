@@ -372,7 +372,13 @@ export default function GuestProfile() {
       />
 
       {/* 3. Focused Tab Content Area */}
-      <div className="pt-1">
+      <div
+        id={`guest-profile-panel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`guest-profile-tab-${activeTab}`}
+        tabIndex={0}
+        className="pt-1"
+      >
         {activeTab === 'overview' && (
           <OverviewTab
             guest={guest}

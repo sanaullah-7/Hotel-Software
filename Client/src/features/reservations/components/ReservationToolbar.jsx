@@ -102,6 +102,7 @@ export default function ReservationToolbar({
           onClick={onOpenNewModal}
           className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
           title="Add New Booking"
+          aria-label="Add new booking"
         >
           <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#1b7f43]" />
         </button>
@@ -114,6 +115,7 @@ export default function ReservationToolbar({
           onClick={onExportCSV}
           className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
           title="Export CSV"
+          aria-label="Export CSV"
         >
           <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
         </button>
@@ -121,6 +123,7 @@ export default function ReservationToolbar({
           onClick={onExportPDF}
           className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer"
           title="Export PDF"
+          aria-label="Export PDF"
         >
           <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
         </button>

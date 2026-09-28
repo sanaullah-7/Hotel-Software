@@ -1,4 +1,4 @@
-﻿import React, { useState } from'react';
+import React, { useState } from'react';
 import {
  HomeOutlined as HomeIcon,
  Celebration as CelebrationIcon,
@@ -308,6 +308,7 @@ export default function BanquetManager() {
  <button
  onClick={handleResetFilters}
  title="Reset Filters"
+ aria-label="Reset filters"
  className="p-1.5 bg-white border border-slate-200 text-slate-500 hover:text-[var(--primary-main)] hover:border-[var(--primary-main)]/40 rounded-lg transition cursor-pointer"
  >
  <RefreshIcon sx={{ fontSize: 16 }} />
@@ -457,6 +458,7 @@ export default function BanquetManager() {
  </div>
  <button
  onClick={() => setActiveBeoSheet(null)}
+ aria-label="Close"
  className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer"
  >
  <CloseIcon sx={{ fontSize: 18 }} />
@@ -555,6 +557,7 @@ export default function BanquetManager() {
  </div>
  <button
  onClick={() => setIsGenerateModalOpen(false)}
+ aria-label="Close"
  className="assigned-modal-close p-1.5 rounded-full transition cursor-pointer"
  >
  <CloseIcon sx={{ fontSize: 18 }} />
