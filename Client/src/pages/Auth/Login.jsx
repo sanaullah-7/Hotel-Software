@@ -1,69 +1,40 @@
 import authBg from '../../assets/images/auth-bg.jpg';
 import authCardBg from '../../assets/images/authcard.jpg';
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton, Alert, Snackbar } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
+import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock, Hotel } from '@mui/icons-material';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { login, isAuthenticated } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
 
   useEffect(() => {
-    if (location.state?.message) {
-      setError('');
-      setSuccessMessage(location.state.message);
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true });
     }
-    if (location.state?.email) {
-      setEmail(location.state.email);
-    } else {
-      const savedEmail = localStorage.getItem('userEmail');
-      if (savedEmail) setEmail(savedEmail);
-    }
-  }, [location]);
+  }, [isAuthenticated, navigate]);
 
   const handleLogin = (e) => {
     e.preventDefault();
-    setSuccessMessage('');
-    setError('');
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
 
-    if (!email || !password) {
-      setError('Please enter both email and password.');
-      return;
-    }
-
-    const registeredUserRaw = localStorage.getItem('registeredUser');
-    let registeredUser = null;
-    if (registeredUserRaw) {
-      try {
-        registeredUser = JSON.parse(registeredUserRaw);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    const savedPassword = localStorage.getItem('userPassword');
-    const isRegisteredAccount = registeredUser 
-      ? (registeredUser.email.toLowerCase() === email.toLowerCase() && registeredUser.password === password)
-      : (localStorage.getItem('userEmail')?.toLowerCase() === email.toLowerCase() && savedPassword === password);
-
-    const isDemoAccount = (email.toLowerCase() === 'admin@hotel.com' && password === 'admin123');
-
-    if (isDemoAccount || isRegisteredAccount || (email && password)) {
-      if (registeredUser && registeredUser.email.toLowerCase() === email.toLowerCase()) {
-        if (registeredUser.fullName) localStorage.setItem('fullName', registeredUser.fullName);
-        if (registeredUser.hotelName) localStorage.setItem('hotelName', registeredUser.hotelName);
-      }
-      localStorage.setItem('userEmail', email);
-      localStorage.setItem('isAuthenticated', 'true');
+    if (cleanEmail === 'admin@hotel.com' && cleanPassword === 'admin123') {
+      setError('');
+      login({
+        email: 'admin@hotel.com',
+        role: 'Admin',
+        name: localStorage.getItem('fullName') || 'Admin',
+      });
       navigate('/dashboard');
     } else {
-      setError('Invalid email or password. Please try again.');
+      setError('Invalid email or password');
     }
   };
 
@@ -104,7 +75,7 @@ export default function Login() {
 
       {/* Outer Background */}
       <div className="absolute inset-0 z-0">
-        <img src={authBg} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
       </div>
 
@@ -123,12 +94,14 @@ export default function Login() {
         </div>
 
         <div className="max-w-md w-full mx-auto mt-10">
-          <h2 className="text-3xl font-serif font-bold text-gray-900 mb-4">Sign In</h2>
+          <h2 className="text-3xl font-serif font-bold text-gray-900 mb-1">Welcome back</h2>
+          <p className="text-gray-500 text-sm mb-5">Sign in to manage reservations, rooms and guests.</p>
+          {error && <p id="login-error" role="alert" className="mb-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
-              <TextField fullWidth size="small" sx={{ 
+              <label htmlFor="login-email" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
+              <TextField id="login-email" fullWidth size="small" sx={{ 
                   backgroundColor: "white", 
                   borderRadius: 1,
                   "& .MuiOutlinedInput-root": {
@@ -157,8 +130,8 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Password</label>
-              <TextField fullWidth size="small" sx={{ 
+              <label htmlFor="login-password" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Password</label>
+              <TextField id="login-password" fullWidth size="small" sx={{ 
                   backgroundColor: "white", 
                   borderRadius: 1,
                   "& .MuiOutlinedInput-root": {
@@ -183,7 +156,7 @@ export default function Login() {
                   ),
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">
+                      <IconButton onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} edge="end" size="small">
                         {showPassword ? <VisibilityOff className="text-gray-400" fontSize="small" /> : <Visibility className="text-gray-400" fontSize="small" />}
                       </IconButton>
                     </InputAdornment>

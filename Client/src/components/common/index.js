@@ -8,3 +8,4 @@ export { default as RefreshButton } from './RefreshButton';
 export { default as StatusBadge } from './StatusBadge';
 export { default as ModalShell } from './ModalShell';
 export { default as PaginationControls } from './PaginationControls';
+export { default as useModalFocus } from './useModalFocus';

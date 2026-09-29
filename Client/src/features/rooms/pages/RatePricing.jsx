@@ -166,6 +166,7 @@ export default function RatePricing() {
               onClick={handleOpenAdd}
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
               title="Add"
+              aria-label="Add rate plan"
             >
               <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#1b7f43]" />
             </button>
@@ -173,6 +174,7 @@ export default function RatePricing() {
               onClick={() => setRates(initialRates)}
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
               title="Refresh"
+              aria-label="Refresh rate plans"
             >
               <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
             </button>
@@ -180,6 +182,7 @@ export default function RatePricing() {
               onClick={handleExportCSV} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
               title="Export CSV"
+              aria-label="Export CSV"
             >
               <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
             </button>
@@ -187,6 +190,7 @@ export default function RatePricing() {
               onClick={handleExportPDF} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" 
               title="Export PDF"
+              aria-label="Export PDF"
             >
               <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
             </button>
@@ -230,10 +234,10 @@ export default function RatePricing() {
                   </td>
                   <td className="px-5 py-3 text-center">
                     <div className="flex items-center justify-center gap-3">
-                      <button onClick={() => handleOpenEdit(rate)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded transition-colors cursor-pointer" title="Edit">
+                      <button onClick={() => handleOpenEdit(rate)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded transition-colors cursor-pointer" title="Edit" aria-label="Edit rate plan">
                         <EditOutlined sx={{ fontSize: 18 }} />
                       </button>
-                      <button onClick={() => handleOpenDelete(rate)} className="text-[#ef4444] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer" title="Delete">
+                      <button onClick={() => handleOpenDelete(rate)} className="text-[#ef4444] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer" title="Delete" aria-label="Delete rate plan">
                         <DeleteOutlined sx={{ fontSize: 18 }} />
                       </button>
                     </div>
@@ -270,6 +274,7 @@ export default function RatePricing() {
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))} 
               disabled={page === 1}
+              aria-label="Previous page"
               className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <KeyboardArrowLeft sx={{ fontSize: 20 }} />
@@ -277,6 +282,7 @@ export default function RatePricing() {
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
               disabled={page === totalPages || totalPages === 0}
+              aria-label="Next page"
               className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <KeyboardArrowRight sx={{ fontSize: 20 }} />
@@ -293,7 +299,7 @@ export default function RatePricing() {
               <h2 className="text-[16px] font-bold text-white">
                 {editingId ? form.roomType : 'New Record'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
+              <button onClick={() => setIsModalOpen(false)} aria-label="Close" className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
                 <Close sx={{ fontSize: 18 }} />
               </button>
             </div>

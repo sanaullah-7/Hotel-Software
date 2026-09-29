@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from'react';
 import { TextField, InputAdornment, FormControl, InputLabel, Select, MenuItem } from'@mui/material';
+import Dropdown from '../../../components/ui/Dropdown';
 import {
  Notifications as NotificationsIcon,
  WarningAmber as WarningIcon,
@@ -400,18 +401,24 @@ export default function OperationsAlerts() {
  </div>
 
  <div className="flex items-center gap-2">
- <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
- <InputLabel>Priority</InputLabel>
- <Select value={priorityFilter} onChange={(e) => setPriorityFilter(e.target.value)} label="Priority">
- {PRIORITY_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
- </Select>
- </FormControl>
- <FormControl size="small" sx={{ minWidth: 100, ...muiSelectSx }}>
- <InputLabel>Status</InputLabel>
- <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} label="Status">
- {STATUS_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: 12 }}>{opt}</MenuItem>)}
- </Select>
- </FormControl>
+ <Dropdown
+ label="Priority"
+ options={PRIORITY_OPTIONS}
+ value={priorityFilter}
+ onChange={(e) => setPriorityFilter(e.target.value)}
+ fullWidth={false}
+ formControlSx={{ minWidth: 100, ...muiSelectSx }}
+ optionSx={{ fontSize: 12 }}
+ />
+ <Dropdown
+ label="Status"
+ options={STATUS_OPTIONS}
+ value={statusFilter}
+ onChange={(e) => setStatusFilter(e.target.value)}
+ fullWidth={false}
+ formControlSx={{ minWidth: 100, ...muiSelectSx }}
+ optionSx={{ fontSize: 12 }}
+ />
  <button
  onClick={handleReset}
  className="flex items-center gap-1 px-3 h-[32px] border border-gray-200 rounded-lg text-[12px] font-semibold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer shrink-0"

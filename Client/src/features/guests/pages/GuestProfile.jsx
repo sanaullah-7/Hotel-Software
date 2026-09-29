@@ -3,9 +3,9 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Person } from '@mui/icons-material';
 
 // Store & Data imports
-import { getGuestById, updateGuest, GUESTS_UPDATED_EVENT } from '../state/guestStore';
+import { getGuestById, resolveGuestForBooking, updateGuest, GUESTS_UPDATED_EVENT } from '../state/guestStore';
 import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../../reservations/state/reservationStore';
-import { getInvoices, getPayments, getRefunds } from '../../payment-billing/pages/paymentBillingStore';
+import { getInvoices, getInvoiceWithFinancialState, getPayments, getRefunds } from '../../payment-billing/pages/paymentBillingStore';
 import { getGuestCharges } from '../../inventory/pages/inventoryStore';
 
 // Components
@@ -79,28 +79,17 @@ export default function GuestProfile() {
 
     // 1. Reservations
     const allRes = getReservations();
-    const guestRes = allRes.filter((r) =>
-      (g.email && r.email && r.email.toLowerCase() === g.email.toLowerCase()) ||
-      (g.name && r.name && r.name.toLowerCase() === g.name.toLowerCase()) ||
-      `GST-${r.id}`.toLowerCase() === String(g.id).toLowerCase() ||
-      String(r.id) === String(g.id)
-    );
+    const guestRes = allRes.filter((r) => String(r.guestId || '') === String(g.id) || (!r.guestId && String(resolveGuestForBooking(r)?.id || '') === String(g.id)));
     setReservations(guestRes);
 
     const guestBookingIds = new Set(
-      guestRes.map((r) => String(r.id)).concat(guestRes.map((r) => String(r.bookingId || '')))
+      guestRes.map((r) => String(r.id))
     );
-    const guestRooms = new Set(
-      guestRes.map((r) => String(r.roomNumber || r.room || ''))
-    );
+    const guestRooms = new Set(guestRes.map((r) => String(r.roomNo || r.roomNumber || r.room || '')));
 
     // 2. Invoices
-    const allInv = getInvoices();
-    const guestInv = allInv.filter((inv) =>
-      (g.name && inv.guestName && inv.guestName.toLowerCase() === g.name.toLowerCase()) ||
-      (g.email && inv.guestEmail && inv.guestEmail.toLowerCase() === g.email.toLowerCase()) ||
-      (inv.bookingId && guestBookingIds.has(String(inv.bookingId).replace('BK-', '')))
-    );
+    const allInv = getInvoices().map(getInvoiceWithFinancialState);
+    const guestInv = allInv.filter((inv) => guestBookingIds.has(String(inv.bookingId)));
     setInvoices(guestInv);
 
     // 3. Folio Charges
@@ -113,19 +102,16 @@ export default function GuestProfile() {
 
     // 4. Payments
     const allPayments = getPayments();
+    const guestInvoiceIds = new Set(guestInv.map((inv) => String(inv.id)));
     const guestPaymentsList = allPayments.filter((p) =>
-      (g.name && p.guestName && p.guestName.toLowerCase() === g.name.toLowerCase()) ||
-      (g.email && p.guestEmail && p.guestEmail.toLowerCase() === g.email.toLowerCase()) ||
-      (p.bookingId && guestBookingIds.has(String(p.bookingId).replace('BK-', '')))
+      guestInvoiceIds.has(String(p.invoiceId || p.invoiceNumber || '')) || guestBookingIds.has(String(p.bookingId))
     );
     setPayments(guestPaymentsList);
 
     // 5. Refunds
     const allRefunds = getRefunds();
-    const guestRefundsList = allRefunds.filter((r) =>
-      (g.name && r.guestName && r.guestName.toLowerCase() === g.name.toLowerCase()) ||
-      (r.bookingId && guestBookingIds.has(String(r.bookingId).replace('BK-', '')))
-    );
+    const guestPaymentIds = new Set(guestPaymentsList.map((payment) => String(payment.id || payment.paymentId)));
+    const guestRefundsList = allRefunds.filter((refund) => guestPaymentIds.has(String(refund.paymentId)));
     setRefunds(guestRefundsList);
 
     // 6. Complaints
@@ -240,15 +226,15 @@ export default function GuestProfile() {
 
   // Financial totals
   const totalInvoiced = useMemo(
-    () => invoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0),
+    () => invoices.filter((inv) => inv.financialIntegrity === 'verified').reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0),
     [invoices]
   );
   const totalPaid = useMemo(
-    () => invoices.reduce((sum, inv) => sum + (Number(inv.paidAmount) || 0), 0),
+    () => invoices.filter((inv) => inv.financialIntegrity === 'verified').reduce((sum, inv) => sum + (Number(inv.effectivePaid) || 0), 0),
     [invoices]
   );
   const totalDues = useMemo(
-    () => invoices.reduce((sum, inv) => sum + (Number(inv.balanceDue) || 0), 0),
+    () => invoices.some((inv) => inv.financialIntegrity !== 'verified') ? null : invoices.reduce((sum, inv) => sum + (Number(inv.effectiveDue) || 0), 0),
     [invoices]
   );
 
@@ -386,7 +372,13 @@ export default function GuestProfile() {
       />
 
       {/* 3. Focused Tab Content Area */}
-      <div className="pt-1">
+      <div
+        id={`guest-profile-panel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`guest-profile-tab-${activeTab}`}
+        tabIndex={0}
+        className="pt-1"
+      >
         {activeTab === 'overview' && (
           <OverviewTab
             guest={guest}

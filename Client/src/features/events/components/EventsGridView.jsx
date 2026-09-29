@@ -89,6 +89,7 @@ export default function EventsGridView({
                 onClick={() => onView(evt)}
                 className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                 title="View Details"
+                aria-label="View event details"
               >
                 <ViewIcon sx={{ fontSize: 16 }} />
               </button>
@@ -96,6 +97,7 @@ export default function EventsGridView({
                 onClick={() => onEdit(evt)}
                 className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
                 title="Edit Event"
+                aria-label="Edit event"
               >
                 <EditIcon sx={{ fontSize: 16 }} />
               </button>
@@ -103,6 +105,7 @@ export default function EventsGridView({
                 onClick={() => onDelete(evt)}
                 className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                 title="Delete Event"
+                aria-label="Delete event"
               >
                 <DeleteIcon sx={{ fontSize: 16 }} />
               </button>

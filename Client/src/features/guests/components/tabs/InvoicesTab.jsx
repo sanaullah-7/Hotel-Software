@@ -185,11 +185,11 @@ export default function InvoicesTab({
                   <td className="py-2 px-3 text-right font-bold text-gray-900">
                     ${Number(inv.totalAmount).toFixed(2)}
                   </td>
-                  <td className="py-2 px-3 text-right font-bold text-emerald-600">
-                    ${Number(inv.paidAmount).toFixed(2)}
+                  <td className="py-3 px-4 text-right font-bold text-emerald-600">
+                    {inv.financialIntegrity === 'verified' ? `$${Number(inv.paidAmount).toFixed(2)}` : 'Unresolved'}
                   </td>
-                  <td className="py-2 px-3 text-right font-extrabold">
-                    {inv.balanceDue > 0 ? (
+                  <td className="py-3 px-4 text-right font-extrabold">
+                    {inv.financialIntegrity !== 'verified' ? <span className="text-amber-600">Unresolved</span> : inv.balanceDue > 0 ? (
                       <span className="text-rose-600">${Number(inv.balanceDue).toFixed(2)}</span>
                     ) : (
                       <span className="text-gray-400 font-normal">$0.00</span>
@@ -204,6 +204,7 @@ export default function InvoicesTab({
                         onClick={() => setSelectedInvoiceForDetail(inv)}
                         className="p-1 text-gray-400 hover:text-[#1b7f43] hover:bg-emerald-50 rounded transition cursor-pointer"
                         title="View invoice details"
+                        aria-label="View invoice details"
                       >
                         <VisibilityOutlined sx={{ fontSize: 16 }} />
                       </button>
@@ -213,6 +214,7 @@ export default function InvoicesTab({
                           onClick={() => setSelectedInvoiceForPayment(inv)}
                           className="p-1 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded transition cursor-pointer"
                           title="Record payment"
+                          aria-label="Record payment"
                         >
                           <PaymentOutlined sx={{ fontSize: 16 }} />
                         </button>
@@ -224,6 +226,7 @@ export default function InvoicesTab({
                         }}
                         className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition cursor-pointer"
                         title="Print invoice"
+                        aria-label="Print invoice"
                       >
                         <PrintOutlined sx={{ fontSize: 16 }} />
                       </button>
@@ -259,6 +262,7 @@ export default function InvoicesTab({
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
+                aria-label="Previous page"
                 className="p-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 <ChevronLeft sx={{ fontSize: 16 }} />
@@ -269,6 +273,7 @@ export default function InvoicesTab({
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
+                aria-label="Next page"
                 className="p-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 <ChevronRight sx={{ fontSize: 16 }} />

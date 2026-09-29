@@ -52,7 +52,7 @@ export default function CurrentBookingsHeader({
         />
 
         <Tooltip title="Refresh">
-          <IconButton onClick={onRefresh} size="small" className="border border-gray-200">
+          <IconButton onClick={onRefresh} size="small" aria-label="Refresh bookings" className="border border-gray-200">
             <RefreshIcon fontSize="small" />
           </IconButton>
         </Tooltip>

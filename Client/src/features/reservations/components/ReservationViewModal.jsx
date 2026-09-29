@@ -41,6 +41,7 @@ export default function ReservationViewModal({
           }}
           className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
           title="Edit Booking"
+          aria-label="Edit booking"
         >
           <EditOutlined sx={{ fontSize: 16 }} />
         </button>
@@ -53,6 +54,7 @@ export default function ReservationViewModal({
       open={open}
       onClose={onClose}
       maxWidth="max-w-[800px]"
+      ariaLabel={`Reservation details for ${booking.name}`}
       headerContent={headerContent}
       showCloseButton={true}
     >

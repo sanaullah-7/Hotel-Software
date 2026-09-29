@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { Close } from '@mui/icons-material';
+import useModalFocus from '../../../components/common/useModalFocus';
 
 const muiInputSx = {
   '& .MuiOutlinedInput-root': {
@@ -20,6 +21,7 @@ const muiInputSx = {
 };
 
 export default function EditGuestModal({ isOpen, onClose, guest, onSave }) {
+  const { dialogRef, titleId } = useModalFocus({ open: isOpen, onClose });
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -59,12 +61,17 @@ export default function EditGuestModal({ isOpen, onClose, guest, onSave }) {
       onClick={onClose}
     >
       <div 
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-[580px] overflow-hidden flex flex-col border border-gray-100" 
         onClick={(e) => e.stopPropagation()}
       >
         <div className="bg-[#1b7f43] px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-[16px] font-bold text-white">
+            <h2 id={titleId} className="text-[16px] font-bold text-white">
               Edit Guest Profile
             </h2>
             <p className="text-[11px] text-emerald-100 mt-0.5 font-mono">{guest.id} • {guest.name}</p>
@@ -72,6 +79,7 @@ export default function EditGuestModal({ isOpen, onClose, guest, onSave }) {
           <button 
             type="button"
             onClick={onClose} 
+            aria-label="Close"
             className="text-white/80 hover:text-white p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center"
           >
             <Close sx={{ fontSize: 18 }} />

@@ -30,6 +30,10 @@ import {
 } from'@mui/material';
 import CreateGuestModal from '../components/CreateGuestModal';
 import GuestDetailsModal from '../components/GuestDetailsModal';
+import { getRoomByRoomNo } from '../../rooms/state/roomStore';
+import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../../reservations/state/reservationStore';
+import { checkInBooking, checkOutBooking, OCCUPANCY_UPDATED_EVENT } from '../../reservations/state/reservationLifecycle';
+import { resolveBookingReference } from '../../reservations/state/bookingRules';
 
 const initialRooms = [
  { number: 101, type:'Super Deluxe', floor: 1, status:'OCCUPIED', statusColor:'#ef4444', bed:'King Bed', adults: 2, children: 2, maxOccupancy: 4, price: 320, housekeeping:'Clean', housekeepingColor:'#1b7f43', amenities: ['wifi','ac','bar'], guest: { name:'John Doe', vip: true, id:'AB123CD456', checkIn:'Aug 1', checkOut:'Aug 7' }, note:'VIP guest, prefers sea view rooms' },
@@ -39,6 +43,12 @@ const initialRooms = [
  { number: 105, type:'Suite', floor: 1, status:'MAINTENANCE', statusColor:'#8b5cf6', bed:'King Bed', adults: 2, children: 1, maxOccupancy: 4, price: 450, housekeeping:'Out of Order', housekeepingColor:'#6b7280', amenities: ['wifi','ac','bar','safe','gym','elevator'], guest: null },
  { number: 106, type:'Suite', floor: 1, status:'BOOKED', statusColor:'#f59e0b', bed:'Queen Bed', adults: 2, children: 2, maxOccupancy: 4, price: 420, housekeeping:'Clean', housekeepingColor:'#1b7f43', amenities: ['wifi','ac','bar'], guest: { name:'Emily Brown', vip: false, id:'EM456BR789', checkIn: null, checkOut: null } },
 ];
+
+const attachCanonicalRoomIds = (rooms) => rooms.map((room) => {
+  if (room.roomId !== undefined && room.roomId !== null && room.roomId !== '') return room;
+  const canonicalRoom = getRoomByRoomNo(room.number ?? room.roomNo ?? room.id);
+  return canonicalRoom ? { ...room, roomId: canonicalRoom.id } : room;
+});
 
 
 const statusIcon = { 
@@ -101,12 +111,13 @@ export default function Occupancy() {
     const savedRooms = localStorage.getItem('hotel_rooms');
     if (savedRooms) {
       try {
-        return JSON.parse(savedRooms);
+        const parsedRooms = JSON.parse(savedRooms);
+        return Array.isArray(parsedRooms) ? attachCanonicalRoomIds(parsedRooms) : attachCanonicalRoomIds(initialRooms);
       } catch (e) {
         console.error('Error parsing rooms from local storage', e);
       }
     }
-    return initialRooms;
+    return attachCanonicalRoomIds(initialRooms);
   });
 
   useEffect(() => {
@@ -114,6 +125,24 @@ export default function Occupancy() {
   }, [rooms]);
  const [modalOpen, setModalOpen] = useState(false);
  const [selectedRoom, setSelectedRoom] = useState(null);
+ const [lifecycleError, setLifecycleError] = useState('');
+
+ useEffect(() => {
+   const sync = () => {
+     try {
+       const stored = JSON.parse(localStorage.getItem('hotel_rooms') || '[]');
+       if (Array.isArray(stored)) setRooms(attachCanonicalRoomIds(stored));
+     } catch { /* Keep the last readable occupancy view. */ }
+   };
+   window.addEventListener(OCCUPANCY_UPDATED_EVENT, sync);
+   window.addEventListener(RESERVATIONS_UPDATED_EVENT, sync);
+   window.addEventListener('storage', sync);
+   return () => {
+     window.removeEventListener(OCCUPANCY_UPDATED_EVENT, sync);
+     window.removeEventListener(RESERVATIONS_UPDATED_EVENT, sync);
+     window.removeEventListener('storage', sync);
+   };
+ }, []);
 
  // Filter States
  const [searchQuery, setSearchQuery] = useState('');
@@ -132,47 +161,36 @@ export default function Occupancy() {
  const openDetailsModal = (room) => { setSelectedRoom(room); setDetailsModalOpen(true); };
  const closeDetailsModal = () => { setDetailsModalOpen(false); setSelectedRoom(null); };
 
- const handleEditGuest = () => {
- setDetailsModalOpen(false);
- setModalOpen(true);
- };
+ const handleEditGuest = () => setLifecycleError('Guest and stay details must be changed on the canonical reservation.');
 
  const handleSaveGuest = (updatedGuestData) => {
     if (!selectedRoom) return;
-    setRooms(prev => prev.map(r => {
-      if (r.number === selectedRoom.number) {
-        return {
-          ...r,
-          status: 'OCCUPIED',
-          statusColor: '#ef4444',
-          guest: {
-            ...(r.guest || {}),
-            ...updatedGuestData
-          }
-        };
-      }
-      return r;
-    }));
-    setModalOpen(false);
-    setTimeout(() => setSelectedRoom(null), 150);
+    const booking = resolveBookingReference(updatedGuestData.bookingRef, getReservations());
+    if (!booking || String(booking.roomId) !== String(selectedRoom.roomId)) {
+      setLifecycleError('Enter the exact reference for a canonical booking assigned to this room.');
+      return;
+    }
+    try {
+      checkInBooking(booking.id);
+      setLifecycleError('');
+      setModalOpen(false);
+      setSelectedRoom(null);
+    } catch (error) { setLifecycleError(error.message); }
   };
 
  
   const handleCheckoutGuest = () => {
     if (!selectedRoom) return;
-    setRooms(prev => prev.map(r => {
-      if (r.number === selectedRoom.number) {
-        return {
-          ...r,
-          status: 'AVAILABLE',
-          statusColor: '#1b7f43',
-          guest: null
-        };
-      }
-      return r;
-    }));
-    setDetailsModalOpen(false);
-    setTimeout(() => setSelectedRoom(null), 150);
+    if (!selectedRoom.bookingId) {
+      setLifecycleError('This occupancy has no safe canonical booking link and was preserved. Check out from Front Office only after linking it safely.');
+      return;
+    }
+    try {
+      checkOutBooking(selectedRoom.bookingId);
+      setLifecycleError('');
+      setDetailsModalOpen(false);
+      setSelectedRoom(null);
+    } catch (error) { setLifecycleError(error.message); }
   };
 
   const handleClear = () => {
@@ -220,6 +238,7 @@ export default function Occupancy() {
  // section, stacking on top of each section's own margin and making gaps inconsistent.
  // Each section below now controls its own top margin explicitly.
  <div className="animate-fade-in">
+ {lifecycleError && <div role="alert" className="mb-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{lifecycleError}</div>}
  {/* SUMMARY CARDS */}
    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
      <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">

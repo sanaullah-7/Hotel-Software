@@ -20,6 +20,7 @@ export default function PaginationControls({
   onRowsPerPageChange,
   indexOfFirstRow,
   indexOfLastRow,
+  recordLabel = 'records',
   variant = 'standard', // 'standard' | 'compact'
   className = ''
 }) {
@@ -42,13 +43,65 @@ export default function PaginationControls({
       ? totalPages
       : Math.max(1, Math.ceil(totalRecords / (rowsPerPage || 10)));
 
+  if (variant === 'numbered') {
+    return (
+      <nav aria-label="Pagination" className={`p-3.5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 ${className}`}>
+        <span className="text-[12px] text-gray-500">
+          Showing <span className="font-bold text-gray-800">{startRecord}</span> to{' '}
+          <span className="font-bold text-gray-800">{endRecord}</span> of{' '}
+          <span className="font-bold text-gray-800">{totalRecords}</span> {recordLabel}
+        </span>
+
+        <div className="flex items-center space-x-1.5">
+          <button
+            type="button"
+            aria-label="Previous page"
+            onClick={() => onPageChange && onPageChange(Math.max(currentPage - 1, 1))}
+            disabled={currentPage === 1}
+            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition"
+          >
+            <ChevronLeftIcon sx={{ fontSize: 18 }} />
+          </button>
+
+          {[...Array(totalPages)].map((_, index) => (
+            <button
+              key={index}
+              type="button"
+              aria-label={`Page ${index + 1}`}
+              aria-current={currentPage === index + 1 ? 'page' : undefined}
+              onClick={() => onPageChange && onPageChange(index + 1)}
+              className={`w-7 h-7 rounded-lg text-[12px] font-bold flex items-center justify-center transition cursor-pointer ${
+                currentPage === index + 1
+                  ? 'bg-[#1b7f43] text-white shadow-xs'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
+
+          <button
+            type="button"
+            aria-label="Next page"
+            onClick={() => onPageChange && onPageChange(Math.min(currentPage + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition"
+          >
+            <ChevronRightIcon sx={{ fontSize: 18 }} />
+          </button>
+        </div>
+      </nav>
+    );
+  }
+
   if (variant === 'compact') {
     return (
-      <div className={`p-4 flex items-center justify-end gap-6 text-[12px] text-gray-600 border-t border-gray-100 ${className}`}>
+      <nav aria-label="Pagination" className={`p-4 flex items-center justify-end gap-6 text-[12px] text-gray-600 border-t border-gray-100 ${className}`}>
         {rowsPerPageOptions && onRowsPerPageChange && (
           <div className="flex items-center gap-2">
             <span>Items per page:</span>
             <select
+              aria-label="Items per page"
               value={rowsPerPage}
               onChange={(e) => onRowsPerPageChange(Number(e.target.value))}
               className="border border-gray-300 rounded px-2 py-1 outline-none text-[12px] bg-white cursor-pointer"
@@ -69,6 +122,7 @@ export default function PaginationControls({
         <div className="flex items-center gap-4">
           <button
             type="button"
+            aria-label="Previous page"
             onClick={() => onPageChange && onPageChange(Math.max(currentPage - 1, 1))}
             disabled={currentPage <= 1}
             className="text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed cursor-pointer"
@@ -77,6 +131,7 @@ export default function PaginationControls({
           </button>
           <button
             type="button"
+            aria-label="Next page"
             onClick={() => onPageChange && onPageChange(Math.min(currentPage + 1, calculatedTotalPages))}
             disabled={currentPage >= calculatedTotalPages}
             className="text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed cursor-pointer"
@@ -84,13 +139,13 @@ export default function PaginationControls({
             {'>'}
           </button>
         </div>
-      </div>
+      </nav>
     );
   }
 
   // Default: 'standard'
   return (
-    <div className={`p-3.5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 ${className}`}>
+      <div className={`p-3.5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3 ${className}`}>
       <span className="text-[12px] text-gray-500">
         Showing <span className="font-semibold text-gray-700">{startRecord}</span> -{' '}
         <span className="font-semibold text-gray-700">{endRecord}</span> of{' '}
@@ -102,7 +157,8 @@ export default function PaginationControls({
           <div className="flex items-center gap-1.5">
             <span className="text-[11.5px] text-gray-500 font-medium">Items per page:</span>
             <div className="relative">
-              <select
+            <select
+              aria-label="Items per page"
                 value={rowsPerPage}
                 onChange={(e) => onRowsPerPageChange(Number(e.target.value))}
                 className="appearance-none pl-2.5 pr-6 py-1 border border-gray-200 rounded-lg text-[11.5px] font-semibold text-gray-700 bg-white focus:outline-none focus:border-emerald-400 cursor-pointer"
@@ -126,9 +182,10 @@ export default function PaginationControls({
         </span>
 
         {onPageChange && (
-          <div className="flex items-center gap-0.5">
+          <nav aria-label="Pagination" className="flex items-center gap-0.5">
             <button
               type="button"
+              aria-label="First page"
               onClick={() => onPageChange(1)}
               disabled={currentPage <= 1}
               className="p-1 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
@@ -138,6 +195,7 @@ export default function PaginationControls({
             </button>
             <button
               type="button"
+              aria-label="Previous page"
               onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
               disabled={currentPage <= 1}
               className="p-1 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
@@ -147,6 +205,7 @@ export default function PaginationControls({
             </button>
             <button
               type="button"
+              aria-label="Next page"
               onClick={() => onPageChange(Math.min(currentPage + 1, calculatedTotalPages))}
               disabled={currentPage >= calculatedTotalPages}
               className="p-1 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
@@ -156,6 +215,7 @@ export default function PaginationControls({
             </button>
             <button
               type="button"
+              aria-label="Last page"
               onClick={() => onPageChange(calculatedTotalPages)}
               disabled={currentPage >= calculatedTotalPages}
               className="p-1 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-700 disabled:opacity-40 disabled:hover:bg-transparent cursor-pointer"
@@ -163,7 +223,7 @@ export default function PaginationControls({
             >
               <LastPageIcon fontSize="small" />
             </button>
-          </div>
+          </nav>
         )}
       </div>
     </div>

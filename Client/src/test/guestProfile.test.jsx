@@ -225,4 +225,97 @@ describe('Guest Profile 360 Workspace & 7-Tab Redesign', () => {
     expect(screen.getAllByText('London').length).toBeGreaterThan(0);
     unmountB();
   });
+
+  it('fulfills the accessibility contract for tablist, tab, tabpanel, and keyboard navigation', () => {
+    renderProfile();
+
+    // 1. Tab container has role="tablist"
+    const tablist = screen.getByRole('tablist', { name: 'Guest profile tabs' });
+    expect(tablist).toBeTruthy();
+
+    // 2. All 7 tabs have role="tab"
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs).toHaveLength(7);
+
+    // 3. Exactly one active tab has aria-selected="true" initially
+    const activeTabs = tabs.filter((t) => t.getAttribute('aria-selected') === 'true');
+    expect(activeTabs).toHaveLength(1);
+    expect(activeTabs[0]).toHaveProperty('id', 'guest-profile-tab-overview');
+    expect(activeTabs[0].getAttribute('tabindex')).toBe('0');
+
+    // 4. Inactive tabs expose aria-selected="false" and tabindex="-1"
+    const inactiveTabs = tabs.filter((t) => t.getAttribute('aria-selected') === 'false');
+    expect(inactiveTabs).toHaveLength(6);
+    inactiveTabs.forEach((tab) => {
+      expect(tab.getAttribute('tabindex')).toBe('-1');
+    });
+
+    // 5. Every tab has a unique ID and valid aria-controls
+    const tabIds = tabs.map((t) => t.id);
+    expect(new Set(tabIds).size).toBe(7);
+    tabs.forEach((tab) => {
+      const controlsId = tab.getAttribute('aria-controls');
+      expect(controlsId).toBeTruthy();
+      expect(controlsId).toBe(`guest-profile-panel-${tab.id.replace('guest-profile-tab-', '')}`);
+    });
+
+    // 6. Rendered active panel has role="tabpanel" and aria-labelledby pointing to its tab
+    const initialPanel = screen.getByRole('tabpanel');
+    expect(initialPanel).toBeTruthy();
+    expect(initialPanel.id).toBe('guest-profile-panel-overview');
+    expect(initialPanel.getAttribute('aria-labelledby')).toBe('guest-profile-tab-overview');
+
+    // 7. Clicking a tab changes the active panel and selection
+    const resTab = screen.getByRole('tab', { name: /Reservations & Stays/i });
+    fireEvent.click(resTab);
+
+    expect(resTab.getAttribute('aria-selected')).toBe('true');
+    expect(resTab.getAttribute('tabindex')).toBe('0');
+    expect(screen.getByRole('tab', { name: /Overview/i }).getAttribute('aria-selected')).toBe('false');
+
+    const updatedPanel = screen.getByRole('tabpanel');
+    expect(updatedPanel.id).toBe('guest-profile-panel-reservations');
+    expect(updatedPanel.getAttribute('aria-labelledby')).toBe('guest-profile-tab-reservations');
+
+    // 8. Keyboard navigation: ArrowRight moves to next tab
+    resTab.focus();
+    fireEvent.keyDown(resTab, { key: 'ArrowRight' });
+    const chargesTab = screen.getByRole('tab', { name: /Charges & Payments/i });
+    expect(chargesTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(chargesTab);
+
+    // 9. Keyboard navigation: ArrowLeft moves to previous tab
+    fireEvent.keyDown(chargesTab, { key: 'ArrowLeft' });
+    expect(resTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(resTab);
+
+    // 10. Keyboard navigation: Home moves to first tab
+    fireEvent.keyDown(resTab, { key: 'Home' });
+    const overviewTab = screen.getByRole('tab', { name: /Overview/i });
+    expect(overviewTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(overviewTab);
+
+    // 11. Keyboard navigation: End moves to last tab
+    fireEvent.keyDown(overviewTab, { key: 'End' });
+    const activityTab = screen.getByRole('tab', { name: /Activity Log/i });
+    expect(activityTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(activityTab);
+
+    // 12. Keyboard navigation: Wrap-around from last to first on ArrowRight
+    fireEvent.keyDown(activityTab, { key: 'ArrowRight' });
+    expect(overviewTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(overviewTab);
+
+    // 13. Keyboard navigation: Wrap-around from first to last on ArrowLeft
+    fireEvent.keyDown(overviewTab, { key: 'ArrowLeft' });
+    expect(activityTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(activityTab);
+
+    // 14. No duplicate IDs across tabs and panels
+    const allIds = [
+      ...Array.from(document.querySelectorAll('[role="tab"]')).map((el) => el.id),
+      ...Array.from(document.querySelectorAll('[role="tabpanel"]')).map((el) => el.id)
+    ];
+    expect(new Set(allIds).size).toBe(allIds.length);
+  });
 });

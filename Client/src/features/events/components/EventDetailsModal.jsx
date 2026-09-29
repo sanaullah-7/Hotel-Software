@@ -1,24 +1,39 @@
 import React from 'react';
 import { Close as CloseIcon } from '@mui/icons-material';
 import { getTypeBadgeStyle, getStatusBadgeStyle } from './EventsTableView';
+import useModalFocus from '../../../components/common/useModalFocus';
 
 export default function EventDetailsModal({
   event,
   onClose
 }) {
+  const { dialogRef, titleId } = useModalFocus({ open: Boolean(event), onClose });
+
   if (!event) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fadeIn">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-scaleUp">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-fadeIn"
+      onClick={onClose}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-scaleUp"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="bg-slate-900 px-6 py-4 flex items-center justify-between text-white">
           <div>
             <span className="text-xs font-mono text-slate-400 block">{event.id}</span>
-            <h3 className="text-lg font-bold tracking-tight">{event.name}</h3>
+            <h3 id={titleId} className="text-lg font-bold tracking-tight">{event.name}</h3>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors cursor-pointer"
           >
             <CloseIcon sx={{ fontSize: 18 }} />

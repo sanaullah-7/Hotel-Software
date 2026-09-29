@@ -1,12 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from'react';
+import { useNavigate } from'react-router-dom';
+import PaginationControls from '../../../components/common/PaginationControls';
 import { 
-  Search, Add, Download, Refresh, FilterList, 
-  ReportProblem, CheckCircle, Warning, SwapHoriz, 
-  DeleteForever, Visibility, Clear, ChevronLeft, ChevronRight,
-  MeetingRoom, Person, CalendarToday, MoreVert, Timeline,
-  Receipt, AddCircleOutlined, TableChart
-} from '@mui/icons-material';
+ Search, Add, Download, Refresh, FilterList, 
+ ReportProblem, CheckCircle, Warning, SwapHoriz, 
+ DeleteForever, Visibility, Clear,
+ MeetingRoom, Person, CalendarToday, MoreVert, Timeline,
+ Receipt
+} from'@mui/icons-material';
 import { 
  Menu, MenuItem, IconButton, FormControl, InputLabel, Select, Snackbar, Alert 
 } from'@mui/material';
@@ -574,43 +575,15 @@ export default function MissingInventory() {
 
  {/* PAGINATION CONTROLS */}
  {totalPages > 0 && (
- <div className="p-3.5 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
- <span className="text-[12px] text-gray-500">
- Showing <span className="font-bold text-gray-800">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-bold text-gray-800">{Math.min(currentPage * itemsPerPage, filteredIncidents.length)}</span> of <span className="font-bold text-gray-800">{filteredIncidents.length}</span> items
- </span>
-
- <div className="flex items-center space-x-1.5">
- <button 
- onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
- disabled={currentPage === 1}
- className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition"
- >
- <ChevronLeft sx={{ fontSize: 18 }} />
- </button>
- 
- {[...Array(totalPages)].map((_, i) => (
- <button
- key={i}
- onClick={() => setCurrentPage(i + 1)}
- className={`w-7 h-7 rounded-lg text-[12px] font-bold flex items-center justify-center transition cursor-pointer ${
- currentPage === i + 1 
- ?'bg-[#1b7f43] text-white shadow-xs' 
- :'text-gray-600 hover:bg-gray-100'
- }`}
- >
- {i + 1}
- </button>
- ))}
-
- <button 
- onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
- disabled={currentPage === totalPages}
- className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent cursor-pointer transition"
- >
- <ChevronRight sx={{ fontSize: 18 }} />
- </button>
- </div>
- </div>
+ <PaginationControls
+ currentPage={currentPage}
+ totalPages={totalPages}
+ totalRecords={filteredIncidents.length}
+ rowsPerPage={itemsPerPage}
+ onPageChange={setCurrentPage}
+ recordLabel="items"
+ variant="numbered"
+ />
  )}
 
  </div>

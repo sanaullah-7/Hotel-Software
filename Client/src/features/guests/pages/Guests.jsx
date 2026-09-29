@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   Home as HomeIcon,
-  Search,
   EmailOutlined,
   PhoneOutlined,
   EditOutlined,
@@ -13,8 +12,9 @@ import {
   Close
 } from '@mui/icons-material';
 import { TextField, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
-import { getGuests, updateGuest, GUESTS_UPDATED_EVENT, RESERVATIONS_UPDATED_EVENT } from '../state/guestStore';
+import { getGuests, resolveGuestForBooking, updateGuest, GUESTS_UPDATED_EVENT, RESERVATIONS_UPDATED_EVENT } from '../state/guestStore';
 import { getReservations } from '../../reservations/state/reservationStore';
+import SearchInput from '../../../components/common/SearchInput';
 
 export default function Guests() {
   const navigate = useNavigate();
@@ -73,12 +73,7 @@ export default function Guests() {
     if (guest.checkIn) return parseDate(guest.checkIn);
     if (guest.createdAt) return parseDate(guest.createdAt);
     const reservations = getReservations();
-    const res = reservations.find(r => 
-      (guest.email && r.email && r.email.toLowerCase() === guest.email.toLowerCase()) ||
-      (guest.name && r.name && r.name.toLowerCase() === guest.name.toLowerCase()) ||
-      `GST-${r.id}`.toLowerCase() === String(guest.id).toLowerCase() ||
-      String(r.id) === String(guest.id)
-    );
+    const res = reservations.find((reservation) => String(resolveGuestForBooking(reservation)?.id || '') === String(guest.id));
     if (res?.checkIn) return parseDate(res.checkIn);
     return null;
   };
@@ -241,19 +236,14 @@ export default function Guests() {
             </h2>
             
             {/* Search Bar */}
-            <div className="relative w-40 xl:w-56">
-              <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" sx={{ fontSize: 18 }} />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                className="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded-md text-[13px] focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-shadow bg-gray-50/50"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPage(1);
-                }}
-              />
-            </div>
+            <SearchInput
+              placeholder="Search..."
+              value={searchQuery}
+              onChange={(value) => { setSearchQuery(value); setPage(1); }}
+              iconPosition="left"
+              width="w-40 xl:w-56"
+              inputClassName="border-gray-200 bg-gray-50/50"
+            />
           </div>
           
           <div className="flex flex-wrap items-center gap-3">
@@ -330,6 +320,7 @@ export default function Guests() {
               onClick={handleRefresh} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
               title="Refresh"
+              aria-label="Refresh guests"
             >
               <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
             </button>
@@ -339,6 +330,7 @@ export default function Guests() {
               onClick={handleExportCSV} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
               title="Export CSV"
+              aria-label="Export CSV"
             >
               <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
             </button>
@@ -406,6 +398,7 @@ export default function Guests() {
                       onClick={() => openEditModal(guest)} 
                       className="text-[var(--primary-main)] hover:text-green-700 transition-colors p-1.5 rounded-lg hover:bg-[#e5f4eb] cursor-pointer"
                       title="Edit Guest"
+                      aria-label="Edit guest"
                     >
                       <EditOutlined fontSize="small" sx={{ fontSize: 18 }} />
                     </button>
@@ -446,6 +439,7 @@ export default function Guests() {
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
+              aria-label="Previous page"
               className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
             >
               <ChevronLeft fontSize="small" />
@@ -453,6 +447,7 @@ export default function Guests() {
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages || totalPages === 0}
+              aria-label="Next page"
               className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
             >
               <ChevronRight fontSize="small" />
@@ -469,7 +464,7 @@ export default function Guests() {
               <h2 className="text-[16px] font-bold text-white">
                 Edit Guest: {editingGuest?.name}
               </h2>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
+              <button onClick={() => setIsEditModalOpen(false)} aria-label="Close" className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
                 <Close sx={{ fontSize: 18 }} />
               </button>
             </div>

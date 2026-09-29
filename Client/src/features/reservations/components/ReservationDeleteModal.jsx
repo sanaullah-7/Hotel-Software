@@ -1,4 +1,5 @@
 import React from 'react';
+import useModalFocus from '../../../components/common/useModalFocus';
 
 export default function ReservationDeleteModal({
   open,
@@ -6,12 +7,25 @@ export default function ReservationDeleteModal({
   onClose,
   onDelete
 }) {
+  const { dialogRef, titleId } = useModalFocus({ open, onClose });
+
   if (!open || !booking) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in">
-      <div className="bg-[#fcf8fa] rounded-xl shadow-2xl w-[320px] p-6 text-center animate-scale-in border border-gray-100">
-        <h2 className="text-[22px] font-medium text-gray-800 mb-6 text-left">Are you sure?</h2>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        className="bg-[#fcf8fa] rounded-xl shadow-2xl w-[320px] p-6 text-center animate-scale-in border border-gray-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id={titleId} className="text-[22px] font-medium text-gray-800 mb-6 text-left">Are you sure?</h2>
 
         <div className="text-left space-y-3 mb-8 text-[14px] text-gray-700">
           <p>

@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { 
-  Add, Refresh, PictureAsPdf, EditOutlined, DeleteOutlined, Close, Search, 
+  Add, Refresh, PictureAsPdf, EditOutlined, DeleteOutlined, Close,
   KeyboardArrowLeft, KeyboardArrowRight, TableChart, 
   AddCircleOutlined, PhoneOutlined, Inventory2, FormatListBulleted, GridView 
 } from '@mui/icons-material';
@@ -9,9 +9,10 @@ import {
   TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment 
 } from '@mui/material';
 import { useEffect, useState } from 'react';
-import { getRooms, addRoom, updateRoom, deleteRoom, INITIAL_ROOMS, ROOM_UPDATED_EVENT } from '../state/roomStore';
+import { getRooms, addRoom, updateRoom, deleteRoom, ROOM_UPDATED_EVENT } from '../state/roomStore';
 import RoomInventoryModal from '../../inventory/pages/components/RoomInventoryModal';
 import { getInventoryItems } from '../../inventory/pages/inventoryStore';
+import SearchInput from '../../../components/common/SearchInput';
 
 export default function Rooms() {
   const [rooms, setRooms] = useState(getRooms());
@@ -145,16 +146,14 @@ export default function Rooms() {
         <div className="p-2 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-2">
           <div className="flex flex-wrap items-center gap-4">
             <h2 className="text-[16px] font-bold text-gray-700">Rooms</h2>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" sx={{ fontSize: 20 }} />
-              <input 
-                type="text" 
-                placeholder="Search..." 
-                value={searchTerm} 
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-1.5 w-48 lg:w-64 border border-gray-200 rounded-md text-[13.5px] outline-none focus:border-[var(--primary-main)]"
-              />
-            </div>
+            <SearchInput
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={setSearchTerm}
+              iconPosition="left"
+              width="w-48 lg:w-64"
+              inputClassName="border-gray-200 text-[13.5px]"
+            />
 
             {/* Status Filter */}
             <div className="flex items-center bg-white border border-gray-200 rounded-lg shadow-xs overflow-hidden">
@@ -185,13 +184,15 @@ export default function Rooms() {
               onClick={handleOpenNew} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
               title="Add"
+              aria-label="Add room"
             >
               <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#1b7f43]" />
             </button>
             <button 
-              onClick={() => { setRooms(INITIAL_ROOMS); setSearchTerm(''); setStatusFilter('All'); }} 
+              onClick={() => { setRooms(getRooms()); setSearchTerm(''); setStatusFilter('All'); }}
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
               title="Refresh"
+              aria-label="Refresh rooms"
             >
               <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
             </button>
@@ -200,6 +201,7 @@ export default function Rooms() {
                 type="button"
                 onClick={() => setViewMode('table')}
                 title="Table view"
+                aria-label="Table view"
                 className={`p-1.5 rounded-md transition-colors cursor-pointer ${viewMode === 'table' ? 'bg-[#e5f4eb] text-[#1b7f43]' : 'text-gray-400 hover:text-gray-700'}`}
               >
                 <FormatListBulleted sx={{ fontSize: 18 }} />
@@ -208,6 +210,7 @@ export default function Rooms() {
                 type="button"
                 onClick={() => setViewMode('cards')}
                 title="Card view"
+                aria-label="Card view"
                 className={`p-1.5 rounded-md transition-colors cursor-pointer ${viewMode === 'cards' ? 'bg-[#e5f4eb] text-[#1b7f43]' : 'text-gray-400 hover:text-gray-700'}`}
               >
                 <GridView sx={{ fontSize: 18 }} />
@@ -217,6 +220,7 @@ export default function Rooms() {
               onClick={handleExportCSV} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
               title="Export CSV"
+              aria-label="Export CSV"
             >
               <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
             </button>
@@ -224,6 +228,7 @@ export default function Rooms() {
               onClick={handleExportPDF} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" 
               title="Export PDF"
+              aria-label="Export PDF"
             >
               <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
             </button>
@@ -250,9 +255,9 @@ export default function Rooms() {
                   <div className="flex items-center justify-between border-t border-gray-100 pt-3">
                     <span className="flex items-center gap-1 text-[12px] text-gray-500"><PhoneOutlined sx={{ fontSize: 14 }} />{room.mobile}</span>
                     <div className="flex gap-1">
-                      <button onClick={() => setSelectedRoomForStock(room.roomNo)} className="text-[#1b7f43] hover:bg-[#e5f4eb] p-1.5 rounded cursor-pointer" title="View room stock"><Inventory2 sx={{ fontSize: 18 }} /></button>
-                      <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-1.5 rounded cursor-pointer" title="Edit room"><EditOutlined sx={{ fontSize: 18 }} /></button>
-                      <button onClick={() => handleOpenDelete(room)} className="text-[#ef4444] hover:bg-red-50 p-1.5 rounded cursor-pointer" title="Delete room"><DeleteOutlined sx={{ fontSize: 18 }} /></button>
+                      <button onClick={() => setSelectedRoomForStock(room.roomNo)} className="text-[#1b7f43] hover:bg-[#e5f4eb] p-1.5 rounded cursor-pointer" title="View room stock" aria-label="View room stock"><Inventory2 sx={{ fontSize: 18 }} /></button>
+                      <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-1.5 rounded cursor-pointer" title="Edit room" aria-label="Edit room"><EditOutlined sx={{ fontSize: 18 }} /></button>
+                      <button onClick={() => handleOpenDelete(room)} className="text-[#ef4444] hover:bg-red-50 p-1.5 rounded cursor-pointer" title="Delete room" aria-label="Delete room"><DeleteOutlined sx={{ fontSize: 18 }} /></button>
                     </div>
                   </div>
                 </div>
@@ -305,13 +310,13 @@ export default function Rooms() {
                     </td>
                     <td className="px-5 py-3 text-center">
                       <div className="flex items-center justify-center gap-2">
-                        <button onClick={() => setSelectedRoomForStock(room.roomNo)} className="text-[#1b7f43] hover:bg-[#e5f4eb] p-1 rounded transition-colors cursor-pointer" title="View room stock">
+                        <button onClick={() => setSelectedRoomForStock(room.roomNo)} className="text-[#1b7f43] hover:bg-[#e5f4eb] p-1 rounded transition-colors cursor-pointer" title="View room stock" aria-label="View room stock">
                           <Inventory2 sx={{ fontSize: 18 }} />
                         </button>
-                        <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded transition-colors cursor-pointer" title="Edit room">
+                        <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded transition-colors cursor-pointer" title="Edit room" aria-label="Edit room">
                           <EditOutlined sx={{ fontSize: 18 }} />
                         </button>
-                        <button onClick={() => handleOpenDelete(room)} className="text-[#ef4444] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer" title="Delete room">
+                        <button onClick={() => handleOpenDelete(room)} className="text-[#ef4444] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer" title="Delete room" aria-label="Delete room">
                           <DeleteOutlined sx={{ fontSize: 18 }} />
                         </button>
                       </div>
@@ -349,6 +354,7 @@ export default function Rooms() {
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))} 
               disabled={page === 1}
+              aria-label="Previous page"
               className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <KeyboardArrowLeft sx={{ fontSize: 20 }} />
@@ -356,6 +362,7 @@ export default function Rooms() {
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
               disabled={page === totalPages || totalPages === 0}
+              aria-label="Next page"
               className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <KeyboardArrowRight sx={{ fontSize: 20 }} />
@@ -377,7 +384,7 @@ export default function Rooms() {
                   {editingId ? `Room #${form.roomNo}` : 'New Record'}
                 </h2>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
+              <button onClick={() => setIsModalOpen(false)} aria-label="Close" className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
                 <Close sx={{ fontSize: 18 }} />
               </button>
             </div>
@@ -385,6 +392,7 @@ export default function Rooms() {
             <form onSubmit={handleSave} className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
                 <TextField 
+                  id="room-form-room-no"
                   required 
                   label="Room No*" 
                   value={form.roomNo} 
@@ -395,8 +403,14 @@ export default function Rooms() {
                 />
 
                 <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Select Room Type*</InputLabel>
-                  <Select value={form.roomType} label="Select Room Type*" onChange={e => setForm({...form, roomType: e.target.value})}>
+                  <InputLabel id="room-form-room-type-label">Select Room Type*</InputLabel>
+                  <Select
+                    labelId="room-form-room-type-label"
+                    id="room-form-room-type-select"
+                    value={form.roomType}
+                    label="Select Room Type*"
+                    onChange={e => setForm({...form, roomType: e.target.value})}
+                  >
                     <MenuItem value="Single">Single</MenuItem>
                     <MenuItem value="Double">Double</MenuItem>
                     <MenuItem value="Delux">Delux</MenuItem>
@@ -406,16 +420,28 @@ export default function Rooms() {
                 </FormControl>
 
                 <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>AC/Non AC*</InputLabel>
-                  <Select value={form.acNonAc} label="AC/Non AC*" onChange={e => setForm({...form, acNonAc: e.target.value})}>
+                  <InputLabel id="room-form-ac-label">AC/Non AC*</InputLabel>
+                  <Select
+                    labelId="room-form-ac-label"
+                    id="room-form-ac-select"
+                    value={form.acNonAc}
+                    label="AC/Non AC*"
+                    onChange={e => setForm({...form, acNonAc: e.target.value})}
+                  >
                     <MenuItem value="AC">AC</MenuItem>
                     <MenuItem value="Non AC">Non AC</MenuItem>
                   </Select>
                 </FormControl>
 
                 <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Select Meal*</InputLabel>
-                  <Select value={form.meal} label="Select Meal*" onChange={e => setForm({...form, meal: e.target.value})}>
+                  <InputLabel id="room-form-meal-label">Select Meal*</InputLabel>
+                  <Select
+                    labelId="room-form-meal-label"
+                    id="room-form-meal-select"
+                    value={form.meal}
+                    label="Select Meal*"
+                    onChange={e => setForm({...form, meal: e.target.value})}
+                  >
                     <MenuItem value="None">None</MenuItem>
                     <MenuItem value="Breakfast">Breakfast</MenuItem>
                     <MenuItem value="Lunch">Lunch</MenuItem>
@@ -425,6 +451,7 @@ export default function Rooms() {
                 </FormControl>
 
                 <TextField 
+                  id="room-form-capacity"
                   type="number"
                   label="Capacity" 
                   value={form.capacity} 
@@ -435,8 +462,14 @@ export default function Rooms() {
                 />
 
                 <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Status*</InputLabel>
-                  <Select value={form.status} label="Status*" onChange={e => setForm({...form, status: e.target.value})}>
+                  <InputLabel id="room-form-status-label">Status*</InputLabel>
+                  <Select
+                    labelId="room-form-status-label"
+                    id="room-form-status-select"
+                    value={form.status}
+                    label="Status*"
+                    onChange={e => setForm({...form, status: e.target.value})}
+                  >
                     <MenuItem value="Open">Open</MenuItem>
                     <MenuItem value="Booked">Booked</MenuItem>
                     <MenuItem value="Inactive">Inactive</MenuItem>
@@ -444,6 +477,7 @@ export default function Rooms() {
                 </FormControl>
 
                 <TextField 
+                  id="room-form-rent"
                   required
                   type="number"
                   label="Rent" 
@@ -458,6 +492,7 @@ export default function Rooms() {
                 />
 
                 <TextField 
+                  id="room-form-mobile"
                   required
                   label="Mobile*" 
                   value={form.mobile} 

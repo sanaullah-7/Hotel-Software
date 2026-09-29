@@ -1,13 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import CheckInOutSummary from '../components/CheckInOutSummary';
 import CheckInOutTable from '../components/CheckInOutTable';
 import CheckInOutViewModal from '../components/CheckInOutViewModal';
 import {
-  GuestFormModal,
   CheckInActionModal,
   CheckOutActionModal
 } from '../components/CheckInOutEditModal';
-import CheckInOutDeleteModal from '../components/CheckInOutDeleteModal';
+import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../../reservations/state/reservationStore';
+import { buildFrontOfficeRows, checkInBooking, checkOutBooking, OCCUPANCY_UPDATED_EVENT } from '../../reservations/state/reservationLifecycle';
 
 export const initialGuests = [
   { id: 'BK-1001', bookingId: 'BK-1001', name: 'John Doe', email: 'john.doe@example.com', room: '101', roomType: 'Deluxe', checkIn: '5/20/24', checkOut: '5/22/24', status: 'Pending' },
@@ -25,15 +25,26 @@ export const initialGuests = [
 ];
 
 export default function CheckInOut() {
-  const [guests, setGuests] = useState(initialGuests);
+  const [guests, setGuests] = useState(() => buildFrontOfficeRows(getReservations(), initialGuests));
+  const [lifecycleError, setLifecycleError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [viewGuest, setViewGuest] = useState(null);
   const [checkInActionModal, setCheckInActionModal] = useState(null);
   const [checkOutActionModal, setCheckOutActionModal] = useState(null);
-  const [editGuest, setEditGuest] = useState(null);
-  const [deleteGuest, setDeleteGuest] = useState(null);
+
+  useEffect(() => {
+    const sync = () => setGuests(buildFrontOfficeRows(getReservations(), initialGuests));
+    window.addEventListener(RESERVATIONS_UPDATED_EVENT, sync);
+    window.addEventListener(OCCUPANCY_UPDATED_EVENT, sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, sync);
+      window.removeEventListener(OCCUPANCY_UPDATED_EVENT, sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
 
   const totalGuests = guests.length;
   const checkedInCount = guests.filter((g) => g.status === 'Checked In').length;
@@ -45,9 +56,9 @@ export default function CheckInOut() {
     if (!q) return guests;
     return guests.filter(
       (g) =>
-        g.name.toLowerCase().includes(q) ||
-        g.room.toLowerCase().includes(q) ||
-        g.id.toLowerCase().includes(q)
+        String(g.name || '').toLowerCase().includes(q) ||
+        String(g.room || '').toLowerCase().includes(q) ||
+        String(g.id || '').toLowerCase().includes(q)
     );
   }, [guests, searchQuery]);
 
@@ -57,30 +68,13 @@ export default function CheckInOut() {
   const currentRows = filteredGuests.slice(indexOfFirstRow, indexOfLastRow);
 
   const handleCheckIn = (id) => {
-    setGuests((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, status: 'Checked In' } : g))
-    );
+    try { checkInBooking(id); setLifecycleError(''); }
+    catch (error) { setLifecycleError(error.message); }
   };
 
   const handleCheckOut = (id) => {
-    setGuests((prev) =>
-      prev.map((g) => (g.id === id ? { ...g, status: 'Checked Out' } : g))
-    );
-  };
-
-  const handleDelete = (id) => {
-    setGuests((prev) => prev.filter((g) => g.id !== id));
-  };
-
-  const handleEdit = (guest) => {
-    setEditGuest(guest);
-  };
-
-  const handleSaveEdit = (form) => {
-    setGuests((prev) =>
-      prev.map((g) => (g.id === editGuest.id ? { ...g, ...form } : g))
-    );
-    setEditGuest(null);
+    try { checkOutBooking(id); setLifecycleError(''); }
+    catch (error) { setLifecycleError(error.message); }
   };
 
   return (
@@ -94,6 +88,7 @@ export default function CheckInOut() {
       />
 
       {/* MAIN TABLE */}
+      {lifecycleError && <div role="alert" className="mt-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{lifecycleError}</div>}
       <CheckInOutTable
         guests={guests}
         filteredGuests={filteredGuests}
@@ -117,8 +112,8 @@ export default function CheckInOut() {
         onCheckInAction={(guest) => setCheckInActionModal(guest)}
         onCheckOutAction={(guest) => setCheckOutActionModal(guest)}
         onViewGuest={(guest) => setViewGuest(guest)}
-        onEditGuest={(guest) => handleEdit(guest)}
-        onDeleteGuest={(guest) => setDeleteGuest(guest)}
+        onEditGuest={() => setLifecycleError('Edit booking details from Reservations.')}
+        onDeleteGuest={() => setLifecycleError('Bookings cannot be deleted from Front Office.')}
       />
 
       {/* VIEW MODAL */}
@@ -126,20 +121,7 @@ export default function CheckInOut() {
         <CheckInOutViewModal
           guest={viewGuest}
           onClose={() => setViewGuest(null)}
-          onEdit={() => {
-            const current = viewGuest;
-            setViewGuest(null);
-            handleEdit(current);
-          }}
-        />
-      )}
-
-      {/* EDIT RECORD MODAL */}
-      {editGuest && (
-        <GuestFormModal
-          initialData={editGuest}
-          onClose={() => setEditGuest(null)}
-          onSave={handleSaveEdit}
+          onEdit={() => setLifecycleError('Edit booking details from Reservations.')}
         />
       )}
 
@@ -167,17 +149,6 @@ export default function CheckInOut() {
         />
       )}
 
-      {/* DELETE CONFIRMATION MODAL */}
-      {deleteGuest && (
-        <CheckInOutDeleteModal
-          guest={deleteGuest}
-          onClose={() => setDeleteGuest(null)}
-          onConfirm={() => {
-            handleDelete(deleteGuest.id);
-            setDeleteGuest(null);
-          }}
-        />
-      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import {
   Delete as DeleteIcon,
   EventOutlined as EventIcon
 } from '@mui/icons-material';
+import useModalFocus from '../../../components/common/useModalFocus';
 
 export default function EventDeleteModal({
   isOpen,
@@ -12,6 +13,8 @@ export default function EventDeleteModal({
   onClose,
   onConfirm
 }) {
+  const { dialogRef, titleId } = useModalFocus({ open: isOpen, onClose });
+
   if (!isOpen) return null;
 
   const isBulk = bulkCount > 0;
@@ -22,6 +25,11 @@ export default function EventDeleteModal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-[450px] overflow-hidden flex flex-col animate-scaleUp"
         onClick={(e) => e.stopPropagation()}
       >
@@ -31,7 +39,7 @@ export default function EventDeleteModal({
             <DeleteIcon className="text-white" sx={{ fontSize: 22 }} />
           </div>
           <div className="flex-1 mt-0.5">
-            <h2 className="text-white text-[17px] font-bold leading-tight">
+            <h2 id={titleId} className="text-white text-[17px] font-bold leading-tight">
               {isBulk ? 'Delete Selected Events' : 'Delete Event'}
             </h2>
             <p className="text-white/80 text-[13px] mt-0.5 font-medium">
@@ -40,6 +48,7 @@ export default function EventDeleteModal({
           </div>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="w-7 h-7 rounded-full bg-black/10 flex items-center justify-center text-white hover:bg-black/20 transition-colors cursor-pointer"
           >
             <CloseIcon sx={{ fontSize: 16 }} />

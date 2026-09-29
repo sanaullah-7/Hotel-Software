@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   getReservations,
-  resetReservations,
   saveReservations,
   RESERVATIONS_UPDATED_EVENT
 } from '../state/reservationStore';
 import { getBookingDues } from '../../payment-billing/pages/paymentBillingStore';
+import { addGuest, findGuestByExactIdentity, resolveGuestForBooking } from '../../guests/state/guestStore';
+import { getRoomByRoomNo } from '../../rooms/state/roomStore';
+import { isRoomBlockingBooking, normalizeBookingStatus, validateStayDates } from '../state/bookingRules';
+import { cancelBooking, saveBookingsWithRoomState, validateBookingRequest, checkOutBooking } from '../state/reservationLifecycle';
 
 import ReservationToolbar from '../components/ReservationToolbar';
 import ReservationTable from '../components/ReservationTable';
@@ -94,15 +97,15 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
     };
   }, []);
 
-  const persistBookings = (nextBookings) => {
+  const persistBookings = (nextBookings, roomIds = []) => {
     setBookings(nextBookings);
-    saveReservations(nextBookings);
+    if (roomIds.length) saveBookingsWithRoomState(nextBookings, roomIds);
+    else saveReservations(nextBookings);
   };
 
   const handleRefresh = () => {
     setSearch('');
-    resetReservations(initialBookings);
-    setBookings(initialBookings);
+    setBookings(getReservations(initialBookings));
   };
 
   // Filter Bookings
@@ -130,7 +133,7 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
         else if (col === 'Payment') val = b.payment;
         else if (col === 'Dues') {
           const duesAmt = getBookingDues(b);
-          val = duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
+          val = duesAmt === null ? 'Unverified' : duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
         } else if (col === 'Mobile') val = b.mobile;
         return `"${(val || '').toString().replace(/"/g, '""')}"`;
       });
@@ -180,7 +183,7 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
         else if (col === 'Payment') val = b.payment;
         else if (col === 'Dues') {
           const duesAmt = getBookingDues(b);
-          val = duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
+          val = duesAmt === null ? 'Unverified' : duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
         } else if (col === 'Mobile') val = b.mobile;
         html += `<td>${val}</td>`;
       });
@@ -286,6 +289,17 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
         return;
       }
 
+      const requestedCheckIn = form.checkIn;
+      const requestedCheckOut = form.checkOut;
+      const editingBooking = editingId ? bookings.find((booking) => booking.id === editingId) : null;
+      const room = form.roomNo ? getRoomByRoomNo(form.roomNo) : null;
+      if (form.roomNo && !room) throw new Error(`Room ${form.roomNo} does not identify exactly one canonical room.`);
+      if (!editingBooking || isRoomBlockingBooking(editingBooking)) {
+        validateBookingRequest({ roomId: room?.id, checkIn: requestedCheckIn, checkOut: requestedCheckOut, bookings, excludeBookingId: editingId });
+      } else {
+        validateStayDates(requestedCheckIn, requestedCheckOut);
+      }
+
       let checkInDate = form.checkIn || new Date().toLocaleDateString();
       let checkOutDate = form.checkOut || new Date().toLocaleDateString();
       try {
@@ -300,14 +314,16 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
       const fullName = `${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Guest';
 
       if (editingId) {
-        persistBookings(
-          bookings.map((b) =>
+        const oldBooking = bookings.find((booking) => booking.id === editingId);
+        const updatedBookings = bookings.map((b) =>
             b.id === editingId
               ? {
                   ...b,
                   name: fullName,
                   package: form.package || 'All inclusive',
                   roomType: form.roomType || 'Delux',
+                  roomNo: form.roomNo || b.roomNo || b.room,
+                  roomId: room?.id,
                   payment: form.paymentMethod || 'Paid',
                   status: b.status || 'Booked',
                   checkIn: checkInDate,
@@ -331,13 +347,16 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
                   note: form.note
                 }
               : b
-          )
-        );
+          );
+        persistBookings(updatedBookings, [oldBooking?.roomId, room?.id].filter((roomId) => roomId !== undefined && roomId !== null));
       } else {
         const newId = bookings.length ? Math.max(...bookings.map((b) => b.id)) + 1 : 1;
+        const fullName = `${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Guest';
+        const guest = findGuestByExactIdentity(fullName, form.email) || addGuest({ name: fullName, email: form.email || '', phone: form.mobile || '', city: form.city || '' });
         const newBooking = {
           id: newId,
-          guestId: `GST-${newId}`,
+          guestId: guest.id,
+          roomId: room?.id,
           name: fullName,
           avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70) + 1}`,
           package: form.package || 'All inclusive',
@@ -364,7 +383,7 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
           specialRequests: form.specialRequests,
           note: form.note
         };
-        persistBookings([newBooking, ...bookings]);
+        persistBookings([newBooking, ...bookings], room ? [room.id] : []);
       }
       setIsBookingModalOpen(false);
     } catch (err) {
@@ -380,7 +399,11 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
 
   const handleDelete = () => {
     if (bookingToDelete) {
-      persistBookings(bookings.filter((b) => b.id !== bookingToDelete.id));
+      if (normalizeBookingStatus(bookingToDelete.status) === 'Checked In') {
+        alert('Check out this booking before deleting it.');
+        return;
+      }
+      persistBookings(bookings.filter((b) => b.id !== bookingToDelete.id), bookingToDelete.roomId ? [bookingToDelete.roomId] : []);
       setIsDeleteModalOpen(false);
       setBookingToDelete(null);
     }
@@ -394,19 +417,27 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
 
   const handleCancelBooking = () => {
     if (bookingToCancel) {
-      persistBookings(bookings.map((b) => (b.id === bookingToCancel.id ? { ...b, status: 'Cancelled' } : b)));
-      setIsCancelModalOpen(false);
-      setBookingToCancel(null);
+      try {
+        const updated = cancelBooking(bookingToCancel.id, bookings);
+        setBookings((current) => current.map((booking) => String(booking.id) === String(updated.id) ? updated : booking));
+        setIsCancelModalOpen(false);
+        setBookingToCancel(null);
+      } catch (error) { alert(error.message); }
     }
   };
 
   const handleCheckout = (id) => {
-    persistBookings(bookings.map((b) => (b.id === id ? { ...b, status: 'CheckOut' } : b)));
-    setActiveMenuId(null);
+    try {
+      const updated = checkOutBooking(id);
+      setBookings((current) => current.map((booking) => String(booking.id) === String(updated.id) ? updated : booking));
+      setActiveMenuId(null);
+    } catch (error) { alert(error.message); }
   };
 
   const handleRowClick = (booking) => {
-    navigate(`/guests/${booking.guestId || `GST-${booking.id}`}`);
+    const guest = resolveGuestForBooking(booking);
+    if (guest) navigate(`/guests/${guest.id}`);
+    else { setViewingBooking(booking); setIsViewModalOpen(true); }
   };
 
   return (

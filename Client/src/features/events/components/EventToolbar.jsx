@@ -79,8 +79,8 @@ export default function EventToolbar({
           <SearchInput
             placeholder="Search..."
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            width="w-[140px] sm:w-[170px]"
+            onChange={onSearchChange}
+            variant="slate"
             size="sm"
             inputClassName="border-gray-300"
           />
@@ -96,21 +96,21 @@ export default function EventToolbar({
           )}
         </div>
 
-        {/* Middle Side: Filters */}
-        <div className="flex flex-wrap items-center gap-3 flex-1 xl:justify-center">
-          <FormControl size="small" sx={{ minWidth: 120, ...muiSelectSx }}>
-            <InputLabel>Event Type</InputLabel>
-            <Select
-              value={filterType}
-              onChange={(e) => onFilterTypeChange(e.target.value)}
-              label="Event Type"
-            >
-              <MenuItem value="All" sx={{ fontSize: 12 }}>All Types</MenuItem>
-              {typeOptions.map((t) => (
-                <MenuItem key={t} value={t} sx={{ fontSize: 12 }}>{t}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        {/* Right Side: Action Icons */}
+        <div className="flex items-center flex-wrap gap-1.5">
+          {/* Filter Toggle Button */}
+          <button
+            onClick={onToggleFilter}
+            title="Filter Events"
+            aria-label="Filter events"
+            className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
+              filterType !== 'All' || filterVenue !== 'All' || filterStatus !== 'All'
+                ? 'bg-blue-50 border-blue-200 text-blue-600'
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <FilterIcon sx={{ fontSize: 18 }} />
+          </button>
 
           <FormControl size="small" sx={{ minWidth: 120, ...muiSelectSx }}>
             <InputLabel>Venue</InputLabel>
@@ -147,7 +147,8 @@ export default function EventToolbar({
           <button
             onClick={() => onViewModeChange('table')}
             title="Table View"
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+            aria-label="Table view"
+            className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
               viewMode === 'table'
                 ? 'bg-[#1b7f43] text-white shadow-xs'
                 : 'text-gray-600 hover:bg-[#e5f4eb]'
@@ -160,7 +161,8 @@ export default function EventToolbar({
           <button
             onClick={() => onViewModeChange('grid')}
             title="Grid View"
-            className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors cursor-pointer ${
+            aria-label="Grid view"
+            className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
               viewMode === 'grid'
                 ? 'bg-[#1b7f43] text-white shadow-xs'
                 : 'text-gray-600 hover:bg-[#e5f4eb]'
@@ -177,11 +179,22 @@ export default function EventToolbar({
             variant="circle"
           />
 
+          {/* PDF Export Button */}
+          <button
+            onClick={onExportPDF}
+            title="Export PDF"
+            aria-label="Export PDF"
+            className="toolbar-export-icon p-1.5 bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 rounded-xl transition-all cursor-pointer"
+          >
+            <PdfIcon sx={{ fontSize: 18 }} />
+          </button>
+
           {/* Excel Export Button */}
           <button
             onClick={onExportExcel}
             title="Export Excel"
-            className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
+            aria-label="Export Excel"
+            className="toolbar-export-icon p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all cursor-pointer"
           >
             <DownloadIcon sx={{ fontSize: 16 }} className="text-[#0ea5e9]" />
           </button>
