@@ -51,9 +51,9 @@ export default function ReservationTable({
   }, [onCloseMenu]);
 
   return (
-    <div className="bg-white rounded-b-xl shadow-sm flex-1 flex flex-col">
-      <div className="w-full max-lg:overflow-x-auto lg:overflow-x-hidden min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-        <table className="w-full text-left table-fixed max-lg:min-w-[850px]">
+    <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm flex-1 overflow-hidden">
+      <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <table className="w-full text-left">
           <colgroup>
             <col style={{ width: '14%' }} />
             <col style={{ width: '9%' }} />
@@ -66,18 +66,18 @@ export default function ReservationTable({
             <col style={{ width: '14%' }} />
             <col style={{ width: '8%' }} />
           </colgroup>
-          <thead>
-            <tr className="border-b border-gray-100 bg-white">
-              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Name</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Package</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Room Type</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Status</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Check In</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Check Out</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Payment</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Dues</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap">Mobile</th>
-              <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide text-center whitespace-nowrap">Actions</th>
+          <thead className="bg-gray-50/50">
+            <tr>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Name</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Package</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room Type</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Check In</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Check Out</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Payment</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Dues</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Mobile</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -85,10 +85,10 @@ export default function ReservationTable({
               <tr
                 key={booking.id}
                 onClick={() => onRowClick(booking)}
-                className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                className="hover:bg-gray-50/30 transition-colors cursor-pointer"
                 title="Click anywhere to view Guest Profile"
               >
-                <td className="py-2 px-2 whitespace-nowrap">
+                <td className="py-2 px-3 whitespace-nowrap">
                   <div className="flex items-center gap-2 min-w-0">
                     <img src={booking.avatar} alt="Avatar" className="w-7 h-7 rounded-full object-cover shadow-sm shrink-0" />
                     <Link
@@ -101,16 +101,16 @@ export default function ReservationTable({
                     </Link>
                   </div>
                 </td>
-                <td className="py-2 px-2 text-[11.5px] text-gray-600 whitespace-nowrap truncate">{booking.package}</td>
-                <td className="py-2 px-2 text-[11.5px] text-gray-600 whitespace-nowrap truncate">{booking.roomType}</td>
-                <td className="py-2 px-2 whitespace-nowrap">
+                <td className="py-2 px-3 text-[11.5px] text-gray-600 whitespace-nowrap truncate">{booking.package}</td>
+                <td className="py-2 px-3 text-[11.5px] text-gray-600 whitespace-nowrap truncate">{booking.roomType}</td>
+                <td className="py-2 px-3 whitespace-nowrap">
                   <StatusBadge
                     status={booking.status}
                     stylesMap={statusStyles}
                     size="xs"
                   />
                 </td>
-                <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">
+                <td className="py-2 px-3 text-[11px] text-gray-600 whitespace-nowrap">
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1.5 whitespace-nowrap font-medium text-gray-800">
                       <CalendarTodayOutlined sx={{ fontSize: 12 }} className="text-gray-400" />
@@ -121,7 +121,7 @@ export default function ReservationTable({
                     </span>
                   </div>
                 </td>
-                <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">
+                <td className="py-2 px-3 text-[11px] text-gray-600 whitespace-nowrap">
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1.5 whitespace-nowrap font-medium text-gray-800">
                       <CalendarTodayOutlined sx={{ fontSize: 12 }} className="text-gray-400" />
@@ -132,14 +132,14 @@ export default function ReservationTable({
                     </span>
                   </div>
                 </td>
-                <td className="py-2 px-2 whitespace-nowrap">
+                <td className="py-2 px-3 whitespace-nowrap">
                   <StatusBadge
                     status={booking.payment}
                     stylesMap={paymentStyles}
                     size="xs"
                   />
                 </td>
-                <td className="py-2 px-2 text-[11.5px] font-semibold whitespace-nowrap">
+                <td className="py-2 px-3 text-[11.5px] font-semibold whitespace-nowrap">
                   {(() => {
                     const duesAmt = getBookingDues(booking);
                     return duesAmt > 0 ? (
@@ -149,13 +149,13 @@ export default function ReservationTable({
                     );
                   })()}
                 </td>
-                <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">
+                <td className="py-2 px-3 text-[11px] text-gray-600 whitespace-nowrap">
                   <div className="flex items-center gap-1.5 whitespace-nowrap">
                     <PhoneOutlined sx={{ fontSize: 12 }} className="text-green-500" />
                     {booking.mobile}
                   </div>
                 </td>
-                <td className="py-2 px-2 relative text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                <td className="py-2 px-3 relative text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                   <button
                     onClick={(e) => onToggleMenu(e, booking.id)}
                     className="text-gray-700 hover:bg-gray-200 rounded-full w-8 h-8 flex items-center justify-center mx-auto transition-colors"

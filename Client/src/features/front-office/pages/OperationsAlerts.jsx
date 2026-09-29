@@ -263,50 +263,41 @@ export default function OperationsAlerts() {
  return (
  <div className="pt-1 min-h-screen">
  {/* TOP SUMMARY CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-2">
-          <div className="bg-white rounded-[12px] shadow-sm border border-gray-100 p-3 flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mt-0.5">Active Alerts</span>
-                <span className="bg-[#edf7ed] text-[#2e7d32] text-[9px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#2e7d32] animate-pulse"></span>Live
-                </span>
-              </div>
-              <span className="text-[24px] font-black text-[#0f172a] leading-none tracking-tight">{activeCount}</span>
-              <span className="text-[10px] text-[#94a3b8] font-medium leading-tight mt-0.5">Requires operational staff attention</span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
+          <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{activeCount}</div>
+              <div className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Active Alerts</div>
             </div>
             <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
               <NotificationsIcon sx={{ fontSize: 18 }} />
             </div>
           </div>
   
-          <div className="bg-white rounded-[12px] shadow-sm border border-gray-100 p-3 flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">Critical & Urgent</span>
-              <span className="text-[24px] font-black text-[#0f172a] leading-none tracking-tight">{criticalCount}</span>
-              <span className="text-[10px] text-[#94a3b8] font-medium leading-tight mt-0.5">High escalation threshold</span>
+          <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{criticalCount}</div>
+              <div className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Critical & Urgent</div>
             </div>
             <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600 shrink-0">
               <ReportProblemIcon sx={{ fontSize: 18 }} />
             </div>
           </div>
   
-          <div className="bg-white rounded-[12px] shadow-sm border border-gray-100 p-3 flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">In Progress</span>
-              <span className="text-[24px] font-black text-[#0f172a] leading-none tracking-tight">{inProgressCount}</span>
-              <span className="text-[10px] text-[#94a3b8] font-medium leading-tight mt-0.5">Staff actively attending</span>
+          <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{inProgressCount}</div>
+              <div className="text-[13px] text-gray-500 font-medium whitespace-nowrap">In Progress</div>
             </div>
             <div className="w-8 h-8 rounded-full flex items-center justify-center bg-orange-50 text-orange-600 shrink-0">
               <PendingActionsIcon sx={{ fontSize: 18 }} />
             </div>
           </div>
   
-          <div className="bg-white rounded-[12px] shadow-sm border border-gray-100 p-3 flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <span className="text-[#64748b] font-bold text-[10px] uppercase leading-tight mb-0.5 mt-0.5">Resolved Today</span>
-              <span className="text-[24px] font-black text-[#0f172a] leading-none tracking-tight">{resolvedCount}</span>
-              <span className="text-[10px] text-[#94a3b8] font-medium leading-tight mt-0.5">Avg. time: 32 mins</span>
+          <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{resolvedCount}</div>
+              <div className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Resolved Today</div>
             </div>
             <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600 shrink-0">
               <TaskAltIcon sx={{ fontSize: 18 }} />

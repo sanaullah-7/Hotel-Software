@@ -128,64 +128,64 @@ export default function RatePlans() {
  <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in pt-1">
 
  {/* 5 Stats Cards */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
- {/* Total Plans */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Total Plans</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-lg font-bold text-gray-900">{totalPlansCount}</span>
- <span className="text-[10px] text-gray-400 font-medium">Configured</span>
- </div>
- </div>
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mt-1">
+  {/* Total Plans */}
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{totalPlansCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Total Plans</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
+      <Hotel sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- {/* Active Plans */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Active Plans</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-lg font-bold text-emerald-700">{activePlansCount}</span>
- <span className="text-[10px] text-emerald-600 font-semibold">Live in Engine</span>
- </div>
- </div>
+  {/* Active Plans */}
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-emerald-700 leading-none mb-1">{activePlansCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Active Plans</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600 shrink-0">
+      <CheckCircle sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- {/* Flexible Policy */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Flexible Policy</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-lg font-bold text-gray-900">{flexiblePoliciesCount}</span>
- <span className="text-[10px] text-blue-600 font-medium">Free Cancel</span>
- </div>
- </div>
+  {/* Flexible Policies */}
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{flexiblePoliciesCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Flexible</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-indigo-50 text-indigo-600 shrink-0">
+      <Refresh sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- {/* Non-Refundable */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Non-Refundable</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-lg font-bold text-gray-900">{nonRefundableCount}</span>
- <span className="text-[10px] text-amber-600 font-medium">Advance Saver</span>
- </div>
- </div>
+  {/* Non-Refundable */}
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{nonRefundableCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Non-Refundable</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600 shrink-0">
+      <Cancel sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- {/* Avg Base Rate */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Avg Base Rate</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-gray-900">PKR {avgBaseRate.toLocaleString()}</span>
- <span className="text-[10px] text-gray-400 font-medium">/ night</span>
- </div>
- </div>
- </div>
+  {/* Avg Base Rate */}
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">${avgBaseRate}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Avg Base Rate</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 shrink-0">
+      <CurrencyExchange sx={{ fontSize: 18 }} />
+    </div>
+  </div>
+</div>
 
- {/* Main Table Container */}
+{/* Main Table Container */}
  <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
  
  {/* Table Controls Header */}

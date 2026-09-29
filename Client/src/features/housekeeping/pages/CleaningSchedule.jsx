@@ -473,18 +473,18 @@ export default function CleaningSchedule() {
  </div>
  
  {/* Table */}
- <div className="flex-1 w-full overflow-x-auto min-w-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar]:h-2">
- <table className="w-full text-left min-w-[700px]">
- <thead>
- <tr className="bg-gray-50/50 border-b border-gray-100">
- {visibleColumns['Room No'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Room No</th>}
- {visibleColumns['Task Type'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Task Type</th>}
- {visibleColumns['Assigned Staff'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Assigned Staff</th>}
- {visibleColumns['Time Slot'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Time Slot</th>}
- {visibleColumns['Priority'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Priority</th>}
- {visibleColumns['Status'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Status</th>}
- {visibleColumns['Notes'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Notes</th>}
- {visibleColumns['Actions'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700 text-center">Actions</th>}
+ <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+ <table className="w-full text-left">
+ <thead className="bg-gray-50/50">
+ <tr>
+ {visibleColumns['Room No'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room No</th>}
+ {visibleColumns['Task Type'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Task Type</th>}
+ {visibleColumns['Assigned Staff'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Assigned Staff</th>}
+ {visibleColumns['Time Slot'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Time Slot</th>}
+ {visibleColumns['Priority'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Priority</th>}
+ {visibleColumns['Status'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>}
+ {visibleColumns['Notes'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Notes</th>}
+ {visibleColumns['Actions'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>}
  </tr>
  </thead>
  <tbody>
@@ -496,19 +496,19 @@ export default function CleaningSchedule() {
  </tr>
  ) : (
  paginatedTasks.map(task => (
- <tr key={task.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
- {visibleColumns['Room No'] && <td className="py-3 px-3 text-[13px] font-bold text-gray-800">Room {task.roomNo}</td>}
- {visibleColumns['Task Type'] && <td className="py-3 px-3 text-[12px] font-medium text-gray-600">{task.taskType}</td>}
- {visibleColumns['Assigned Staff'] && <td className="py-3 px-3 text-[13px] font-bold text-gray-700">{task.assignedStaff ||'Unassigned'}</td>}
- {visibleColumns['Time Slot'] && <td className="py-3 px-3 text-[13px] font-bold text-gray-700">{formatTime(task.startTime)} - {formatTime(task.endTime)}</td>}
- {visibleColumns['Priority'] && <td className={`py-3 px-3 text-[13px] font-bold ${getPriorityColor(task.priority)}`}>{task.priority}</td>}
- {visibleColumns['Status'] && <td className="py-3 px-3">
+ <tr key={task.id} className="hover:bg-gray-50/30 transition-colors">
+ {visibleColumns['Room No'] && <td className="py-2 px-3 text-[13px] font-bold text-gray-900">Room {task.roomNo}</td>}
+ {visibleColumns['Task Type'] && <td className="py-2 px-3 text-[12px] font-bold text-gray-800">{task.taskType}</td>}
+ {visibleColumns['Assigned Staff'] && <td className="py-2 px-3 text-[12px] text-gray-600">{task.assignedStaff ||'Unassigned'}</td>}
+ {visibleColumns['Time Slot'] && <td className="py-2 px-3 text-[12px] text-gray-600">{formatTime(task.startTime)} - {formatTime(task.endTime)}</td>}
+ {visibleColumns['Priority'] && <td className={`py-2 px-3 text-[12px] font-bold ${getPriorityColor(task.priority)}`}>{task.priority}</td>}
+ {visibleColumns['Status'] && <td className="py-2 px-3">
  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide inline-flex items-center gap-1 ${getStatusStyles(task.status)}`}>
  {task.status}
  </span>
  </td>}
- {visibleColumns['Notes'] && <td className="py-3 px-3 text-[13px] font-medium text-gray-500 italic max-w-[200px] truncate" title={task.notes}>{task.notes ||'No notes available'}</td>}
- {visibleColumns['Actions'] && <td className="py-3 px-3">
+ {visibleColumns['Notes'] && <td className="py-2 px-3 text-[12px] text-gray-500 italic max-w-[200px] truncate" title={task.notes}>{task.notes ||'No notes available'}</td>}
+ {visibleColumns['Actions'] && <td className="py-2 px-3">
  <div className="flex items-center justify-center gap-3">
  <button onClick={() => handleOpenEdit(task)} className="text-[11px] font-bold text-blue-500 hover:text-blue-700 transition-colors cursor-pointer">
  Edit

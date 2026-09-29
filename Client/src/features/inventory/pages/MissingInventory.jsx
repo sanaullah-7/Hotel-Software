@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from'react';
-import { useNavigate } from'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
- Search, Add, Download, Refresh, FilterList, 
- ReportProblem, CheckCircle, Warning, SwapHoriz, 
- DeleteForever, Visibility, Clear, ChevronLeft, ChevronRight,
- MeetingRoom, Person, CalendarToday, MoreVert, Timeline,
- Receipt
-} from'@mui/icons-material';
+  Search, Add, Download, Refresh, FilterList, 
+  ReportProblem, CheckCircle, Warning, SwapHoriz, 
+  DeleteForever, Visibility, Clear, ChevronLeft, ChevronRight,
+  MeetingRoom, Person, CalendarToday, MoreVert, Timeline,
+  Receipt, AddCircleOutlined, TableChart
+} from '@mui/icons-material';
 import { 
  Menu, MenuItem, IconButton, FormControl, InputLabel, Select, Snackbar, Alert 
 } from'@mui/material';
@@ -193,52 +193,64 @@ export default function MissingInventory() {
  <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in">
  
  {/* KPI SUMMARY CARDS */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
- {/* Open Incidents */}
- <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
- <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Missing Items</span>
- <div className="flex items-baseline justify-between mt-0.5">
- <span className="text-lg font-bold text-red-600 leading-none">{metrics.openIncidents}</span>
- <span className="text-[10px] text-amber-600 font-medium">Active Loss</span>
- </div>
- </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-1">
+    {/* Open Incidents */}
+    <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.openIncidents}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Missing Items</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+        <ReportProblem sx={{ fontSize: 18 }} />
+      </div>
+    </div>
 
- {/* Under Investigation */}
- <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
- <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Investigating</span>
- <div className="flex items-baseline justify-between mt-0.5">
- <span className="text-lg font-bold text-blue-600 leading-none">{metrics.underInvestigation}</span>
- <span className="text-[10px] text-blue-600 font-medium">Room Audits</span>
- </div>
- </div>
+    {/* Under Investigation */}
+    <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.underInvestigation}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Investigating</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+        <Warning sx={{ fontSize: 18 }} />
+      </div>
+    </div>
 
- {/* Recovered */}
- <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
- <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Recovered</span>
- <div className="flex items-baseline justify-between mt-0.5">
- <span className="text-lg font-bold text-emerald-700 leading-none">{metrics.recovered}</span>
- <span className="text-[10px] text-emerald-600 font-semibold">Restocked</span>
- </div>
- </div>
+    {/* Recovered */}
+    <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.recovered}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Recovered</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+        <CheckCircle sx={{ fontSize: 18 }} />
+      </div>
+    </div>
 
- {/* Replaced */}
- <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
- <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Replaced</span>
- <div className="flex items-baseline justify-between mt-0.5">
- <span className="text-lg font-bold text-gray-900 leading-none">{metrics.replaced}</span>
- <span className="text-[10px] text-purple-600 font-medium">From Reserve</span>
- </div>
- </div>
+    {/* Replaced */}
+    <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.replaced}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Replaced</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
+        <SwapHoriz sx={{ fontSize: 18 }} />
+      </div>
+    </div>
 
- {/* Written Off / Total Loss */}
- <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
- <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Written Off</span>
- <div className="flex items-baseline justify-between mt-0.5">
- <span className="text-base font-bold text-rose-600 leading-none">${metrics.totalLoss.toFixed(2)}</span>
- <span className="text-[10px] text-rose-500 font-medium">{metrics.writtenOff} Items</span>
- </div>
- </div>
- </div>
+    {/* Written Off / Total Loss */}
+    <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">
+          ${metrics.totalLoss.toFixed(2)}
+        </div>
+        <div className="text-[13px] text-gray-500 font-medium">Written Off ({metrics.writtenOff})</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-rose-50 text-rose-600">
+        <DeleteForever sx={{ fontSize: 18 }} />
+      </div>
+    </div>
+  </div>
 
  {/* FILTER & SEARCH TOOLBAR */}
  <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 space-y-2">
@@ -357,28 +369,30 @@ export default function MissingInventory() {
  </div>
 
  {/* Filter Actions */}
- <div className="col-span-2 sm:col-span-4 lg:col-span-1 flex items-center justify-end gap-1.5 flex-wrap lg:flex-nowrap">
+ <div className="col-span-2 sm:col-span-4 lg:col-span-1 flex items-center justify-end gap-2 flex-wrap lg:flex-nowrap">
+ <button 
+ onClick={() => setCreateModalOpen(true)}
+ className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" 
+ title="Report Missing Item"
+ >
+ <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#ef4444]" />
+ </button>
+
  <button 
  onClick={handleRefresh} 
  disabled={isRefreshing}
  title="Refresh Data & Reset Filters"
- className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
+ className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer disabled:opacity-50"
  >
- {isRefreshing ?'Refreshing...' :'Refresh'}
+ <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
  </button>
 
  <button 
  onClick={handleExportCSV}
- className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition shadow-xs cursor-pointer"
+ className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+ title="Export CSV"
  >
- Export CSV
- </button>
-
- <button 
- onClick={() => setCreateModalOpen(true)}
- className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
- >
- + Report Missing Item
+ <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
  </button>
  </div>
 
@@ -414,8 +428,8 @@ export default function MissingInventory() {
  </div>
 
  {/* Table Container - Strictly 100% width with NO horizontal scroll */}
- <div className="w-full">
- <table className="w-full table-fixed text-left border-collapse">
+ <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+ <table className="w-full text-left">
  <colgroup>
  <col style={{ width:'18%' }} />
  <col style={{ width:'10%' }} />
@@ -428,88 +442,88 @@ export default function MissingInventory() {
  <col style={{ width:'8%' }} />
  </colgroup>
  <thead>
- <tr className="bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
- <th className="py-2.5 px-2.5">
+ <tr className="bg-gray-50/50">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
  Item
  </th>
- <th className="py-2.5 px-1.5">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
  Category
  </th>
- <th className="py-2.5 px-1.5">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
  Room / Location
  </th>
- <th className="py-2.5 px-1 text-center">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">
  Expected Qty
  </th>
- <th className="py-2.5 px-1 text-center">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">
  Missing Qty
  </th>
- <th className="py-2.5 px-1 text-center">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">
  Condition / Status
  </th>
- <th className="py-2.5 px-1.5">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
  Guest
  </th>
- <th className="py-2.5 px-1.5">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
  Date
  </th>
- <th className="py-2.5 px-1 text-center">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">
  Action
  </th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-100 text-xs">
+ <tbody>
  {paginatedIncidents.map((inc) => (
  <tr 
  key={inc.id} 
- className="hover:bg-gray-50/70 transition-colors group cursor-pointer"
+ className="hover:bg-gray-50/30 transition-colors group cursor-pointer"
  onClick={() => setSelectedIncidentForDetail(inc)}
  >
  {/* Item */}
- <td className="py-2 px-2.5">
+ <td className="py-2 px-3">
  <div className="flex flex-col min-w-0">
- <span className="text-xs font-bold text-gray-900 group-hover:text-[#1b7f43] transition-colors leading-tight break-words">
+ <span className="text-[13px] font-bold text-gray-900 group-hover:text-[#1b7f43] transition-colors leading-tight break-words">
  {inc.itemName}
  </span>
- <span className="text-[10px] text-gray-400 font-mono truncate mt-0.5">
+ <span className="text-[12px] text-gray-600 font-mono truncate mt-0.5">
  {inc.incidentNumber || inc.id}
  </span>
  </div>
  </td>
 
  {/* Category */}
- <td className="py-2 px-1.5">
- <span className="text-[10.5px] font-semibold text-gray-700 bg-gray-100/80 px-1.5 py-0.5 rounded inline-block truncate max-w-full">
+ <td className="py-2 px-3">
+ <span className="text-[12px] font-bold text-gray-800 bg-gray-100/80 px-1.5 py-0.5 rounded inline-block truncate max-w-full">
  {inc.category}
  </span>
  </td>
 
  {/* Room / Location */}
- <td className="py-2 px-1.5">
- <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-[#1b7f43] text-[10.5px] font-bold inline-block truncate max-w-full border border-emerald-100">
+ <td className="py-2 px-3">
+ <span className="px-1.5 py-0.5 rounded bg-emerald-50 text-[#1b7f43] text-[12px] font-bold inline-block truncate max-w-full border border-emerald-100">
  Room {inc.roomNumber}
  </span>
  </td>
 
  {/* Expected Qty */}
- <td className="py-2 px-1 text-center font-bold text-gray-700">
+ <td className="py-2 px-3 text-center text-[12px] font-bold text-gray-700">
  {inc.expectedQty || (Number(inc.quantity) + 1)}
  </td>
 
  {/* Missing Qty */}
- <td className="py-2 px-1 text-center">
+ <td className="py-2 px-3 text-center">
  <span className="text-xs font-extrabold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
  {inc.missingQty || inc.quantity}
  </span>
  </td>
 
  {/* Condition / Status */}
- <td className="py-2 px-1 text-center">
+ <td className="py-2 px-3 text-center">
  {getConditionStatusBadge(inc.status)}
  </td>
 
  {/* Guest */}
- <td className="py-2 px-1.5">
+ <td className="py-2 px-3">
  <div className="flex items-center gap-1.5 min-w-0">
  <div className="w-5 h-5 rounded-full bg-emerald-50 text-[#1b7f43] flex items-center justify-center font-bold text-[9.5px] shrink-0 border border-emerald-100">
  {inc.guestName ? inc.guestName.charAt(0) :'G'}
@@ -528,12 +542,12 @@ export default function MissingInventory() {
  </td>
 
  {/* Date */}
- <td className="py-2 px-1.5 text-[10px] font-medium text-gray-500 font-mono truncate">
+ <td className="py-2 px-3 text-[10px] font-medium text-gray-500 font-mono truncate">
  {inc.reportedDate}
  </td>
 
  {/* Action */}
- <td className="py-2 px-1 text-center" onClick={(e) => e.stopPropagation()}>
+ <td className="py-2 px-3 text-center" onClick={(e) => e.stopPropagation()}>
  <IconButton 
  size="small" 
  onClick={(e) => handleMenuClick(e, inc.id)}

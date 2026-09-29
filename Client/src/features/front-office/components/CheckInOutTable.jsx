@@ -54,7 +54,7 @@ export default function CheckInOutTable({
   onDeleteGuest
 }) {
   return (
-    <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden mt-2">
+    <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5">
       {/* Header */}
       <div className="p-3 border-b border-gray-100 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -92,26 +92,26 @@ export default function CheckInOutTable({
       </div>
 
       {/* Table */}
-      <div className="w-full overflow-x-auto min-w-0">
-        <table className="w-full text-left border-collapse min-w-[750px]">
-          <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/50">
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
+      <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <table className="w-full text-left">
+          <thead className="bg-gray-50/50">
+            <tr>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
                 Booking ID
               </th>
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
                 Guest Name/Email
               </th>
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
                 Room
               </th>
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
                 Stay Period
               </th>
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
                 Status
               </th>
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide text-center">
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">
                 Actions
               </th>
             </tr>
@@ -123,14 +123,14 @@ export default function CheckInOutTable({
                 return (
                   <tr
                     key={guest.id}
-                    className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                    className="hover:bg-gray-50/30 transition-colors"
                   >
-                    <td className="py-3 px-3">
+                    <td className="py-2 px-3">
                       <span className="font-mono text-[11.5px] font-semibold text-gray-500">
                         {guest.bookingId || guest.id}
                       </span>
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="py-2 px-3">
                       <div className="flex items-center gap-2.5">
                         <img
                           src={guest.avatar || avatarUrl(guest.name)}
@@ -145,13 +145,13 @@ export default function CheckInOutTable({
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="py-2 px-3">
                       <p className="font-bold text-[12px] text-gray-800 leading-tight">
                         {guest.room}
                       </p>
                       <p className="text-[10.5px] text-gray-400 capitalize">{guest.roomType}</p>
                     </td>
-                    <td className="py-2.5 px-3">
+                    <td className="py-2 px-3">
                       <div className="flex flex-col gap-1">
                         <div>
                           <div className="flex items-center gap-1 text-[11.5px] text-[var(--primary-dark)] font-semibold">
@@ -171,7 +171,7 @@ export default function CheckInOutTable({
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="py-2 px-3">
                       <StatusBadge
                         status={guest.status}
                         stylesMap={STATUS_STYLES}
@@ -180,7 +180,7 @@ export default function CheckInOutTable({
                         className="rounded-full px-2.5 py-1"
                       />
                     </td>
-                    <td className="py-3 px-3 text-center">
+                    <td className="py-2 px-3 text-center">
                       <div className="flex items-center justify-center gap-1">
                         {guest.status === 'Checked In' ? (
                           <button
@@ -247,7 +247,7 @@ export default function CheckInOutTable({
         onRowsPerPageChange={onRowsPerPageChange}
         indexOfFirstRow={indexOfFirstRow}
         indexOfLastRow={indexOfLastRow}
-        variant="standard"
+        variant="compact"
       />
     </div>
   );

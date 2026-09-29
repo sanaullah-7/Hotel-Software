@@ -1,4 +1,4 @@
-import React, { useState } from'react';
+﻿import React, { useState } from'react';
 import {
  HomeOutlined as HomeIcon,
  AttachMoney as DollarIcon,
@@ -165,121 +165,48 @@ export default function RevenueReport() {
  <div className="w-full space-y-2 pb-1 font-sans">
  
 
- {/* 2. Top Metric Cards (2x2 Grid) */}
- <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1 mb-2">
  {/* Card 1: TOTAL REVENUE */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <div className="flex items-center gap-2.5">
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase">
- TOTAL REVENUE
- </span>
- <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-semibold inline-flex items-center gap-0.5">
- ↑ 12.5%
- </span>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$1,245,870</div>
+ <div className="text-[13px] text-gray-500 font-medium">Total Revenue</div>
  </div>
- <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
- $1,245,870
- </div>
- <div className="text-xs sm:text-sm text-gray-500 font-normal">
- This Period
- </div>
- </div>
- <div className="w-10 h-10 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
- <DollarIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
- <div className="my-2 border-t border-gray-100"></div>
- <div className="text-xs text-gray-500 font-normal">
- vs last period: $1,107,440
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+ <DollarIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Card 2: AVG. DAILY RATE */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <div className="flex items-center gap-2.5">
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase">
- AVG. DAILY RATE
- </span>
- <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-semibold inline-flex items-center gap-0.5">
- ↑ 8.2%
- </span>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$187.50</div>
+ <div className="text-[13px] text-gray-500 font-medium">Avg. Daily Rate</div>
  </div>
- <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
- $187.50
- </div>
- <div className="text-xs sm:text-sm text-gray-500 font-normal">
- Per occupied room
- </div>
- </div>
- <div className="w-10 h-10 rounded-2xl bg-[#e0f2fe] flex items-center justify-center text-[#0284c7] shrink-0">
- <TrendingUpIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
- <div className="my-2 border-t border-gray-100"></div>
- <div className="text-xs text-gray-500 font-normal">
- vs last period: $173.25
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+ <TrendingUpIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Card 3: TOTAL BOOKINGS */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <div className="flex items-center gap-2.5">
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase">
- TOTAL BOOKINGS
- </span>
- <span className="rounded-full px-2.5 py-0.5 bg-[#fee2e2] text-[#ef4444] text-xs font-semibold inline-flex items-center gap-0.5">
- ↓ 3.1%
- </span>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">2,847</div>
+ <div className="text-[13px] text-gray-500 font-medium">Total Bookings</div>
  </div>
- <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
- 2,847
- </div>
- <div className="text-xs sm:text-sm text-gray-500 font-normal">
- Confirmed reservations
- </div>
- </div>
- <div className="w-10 h-10 rounded-2xl bg-[#ffedd5] flex items-center justify-center text-[#ea580c] shrink-0">
- <BedIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
- <div className="my-2 border-t border-gray-100"></div>
- <div className="text-xs text-gray-500 font-normal">
- vs last period: 2,938
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+ <BedIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Card 4: REVENUE PER AVAILABLE ROOM */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <div className="flex items-center gap-2.5">
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase">
- REVENUE PER AVAILABLE ROOM
- </span>
- <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-semibold inline-flex items-center gap-0.5">
- ↑ 15.7%
- </span>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$124.80</div>
+ <div className="text-[13px] text-gray-500 font-medium">RevPAR</div>
  </div>
- <div className="text-3xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1">
- $124.80
- </div>
- <div className="text-sm text-gray-500 font-normal">
- RevPAR metric
- </div>
- </div>
- <div className="w-12 h-12 rounded-2xl bg-[#ede9fe] flex items-center justify-center text-[#7c3aed] shrink-0">
- <WalletIcon sx={{ fontSize: 24 }} />
- </div>
- </div>
- <div className="my-4 border-t border-gray-100"></div>
- <div className="text-sm text-gray-500 font-normal">
- vs last period: $107.85
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
+ <WalletIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
  </div>
@@ -506,7 +433,7 @@ export default function RevenueReport() {
  :'bg-[#fee2e2] text-[#ef4444]'
  }`}
  >
- {row.isPositive ?'↗' :'↘'} {row.trend}
+ {row.isPositive ?'â†—' :'â†˜'} {row.trend}
  </span>
  </td>
  </tr>
@@ -517,10 +444,6 @@ export default function RevenueReport() {
  </div>
  </div>
 
- {/* 6. Footer */}
- <div className="pt-4 text-left text-sm text-gray-500 font-normal">
- Copyright © 2026 Design By <span className="text-gray-700 font-semibold">Luxuria</span>
- </div>
 
  {/* AI Explain Modal */}
  {showAiModal && (
@@ -588,3 +511,4 @@ export default function RevenueReport() {
  </div>
  );
 }
+

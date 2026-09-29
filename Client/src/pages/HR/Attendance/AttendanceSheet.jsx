@@ -309,56 +309,48 @@ export default function AttendanceSheet() {
  <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden">
 
  {/* 2. Top 4 Metric Summary Cards */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 mb-2">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1 mb-2">
  {/* Present Card */}
- <div className="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <h3 className="text-xl sm:text-lg font-bold text-slate-800 leading-none">
- {stats.present}
- </h3>
- <p className="text-xs text-slate-500 font-medium mt-1">Present</p>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.present}</div>
+ <div className="text-[13px] text-gray-500 font-medium">Present</div>
  </div>
- <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center">
- <CheckCircleOutlinedIcon sx={{ fontSize: 22 }} />
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+ <CheckCircleOutlinedIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Leave Card */}
- <div className="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <h3 className="text-xl sm:text-lg font-bold text-slate-800 leading-none">
- {stats.leave}
- </h3>
- <p className="text-xs text-slate-500 font-medium mt-1">Leave</p>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.leave}</div>
+ <div className="text-[13px] text-gray-500 font-medium">Leave</div>
  </div>
- <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center">
- <EventBusyOutlinedIcon sx={{ fontSize: 22 }} />
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+ <EventBusyOutlinedIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Holiday Card */}
- <div className="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <h3 className="text-xl sm:text-lg font-bold text-slate-800 leading-none">
- {stats.holiday}
- </h3>
- <p className="text-xs text-slate-500 font-medium mt-1">Holiday</p>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.holiday}</div>
+ <div className="text-[13px] text-gray-500 font-medium">Holiday</div>
  </div>
- <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center">
- <CelebrationOutlinedIcon sx={{ fontSize: 22 }} />
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-yellow-50 text-yellow-600">
+ <CelebrationOutlinedIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Weekend Days Card */}
- <div className="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <h3 className="text-xl sm:text-lg font-bold text-slate-800 leading-none">
- {stats.weekend}
- </h3>
- <p className="text-xs text-slate-500 font-medium mt-1">Weekend Days</p>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.weekend}</div>
+ <div className="text-[13px] text-gray-500 font-medium">Weekend Days</div>
  </div>
- <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
- <WeekendOutlinedIcon sx={{ fontSize: 22 }} />
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+ <WeekendOutlinedIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
  </div>

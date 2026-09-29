@@ -383,7 +383,7 @@ export default function ReservationHistory() {
   return (
     <div className="max-w-[1600px] mx-auto pb-4 animate-fade-in">
       {/* Data Table Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mt-1 overflow-hidden">
+      <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 overflow-hidden">
         {/* Table Top Controls */}
         <div className="p-3 sm:p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h3 className="text-gray-800 font-bold text-[14px] lg:text-[15px] whitespace-nowrap">
@@ -479,50 +479,50 @@ export default function ReservationHistory() {
         </div>
 
         {/* Table Content */}
-        <div className="w-full overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Res ID</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Guest Name</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Mobile No</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Room / Type</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Reservation Date</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Check-In</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Check-Out</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Inventory</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Total Price</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Dues</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Payment</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider text-center whitespace-nowrap">Action</th>
+        <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50/50">
+              <tr>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Res ID</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Guest Name</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Mobile No</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room / Type</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Reservation Date</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Check-In</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Check-Out</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Inventory</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Total Price</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Dues</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Payment</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="">
               {paginatedReservations.map((res) => {
                 const dues = getBookingDues({ ...res, name: res.guestName, payment: res.paymentStatus, dues: res.dues ?? res.remainingPrice });
 
                 return (
-                  <tr key={res.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-2 px-2 text-[11.5px] font-bold text-gray-800 whitespace-nowrap">{res.id}</td>
-                    <td className="py-2 px-2 text-[11.5px] font-semibold text-gray-700 whitespace-nowrap">{res.guestName}</td>
-                    <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">{res.mobile}</td>
-                    <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">{res.room}</td>
-                    <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">{res.reservationDate}</td>
-                    <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">{res.checkIn}</td>
-                    <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">{res.checkOut}</td>
-                    <td className="py-2 px-2 whitespace-nowrap">
+                  <tr key={res.id} className="hover:bg-gray-50/30 transition-colors cursor-pointer">
+                    <td className="py-2 px-3 text-[11.5px] font-bold text-gray-800 whitespace-nowrap">{res.id}</td>
+                    <td className="py-2 px-3 text-[11.5px] font-semibold text-gray-700 whitespace-nowrap">{res.guestName}</td>
+                    <td className="py-2 px-3 text-[11px] text-gray-600 whitespace-nowrap">{res.mobile}</td>
+                    <td className="py-2 px-3 text-[11px] text-gray-600 whitespace-nowrap">{res.room}</td>
+                    <td className="py-2 px-3 text-[11px] text-gray-600 whitespace-nowrap">{res.reservationDate}</td>
+                    <td className="py-2 px-3 text-[11px] text-gray-600 whitespace-nowrap">{res.checkIn}</td>
+                    <td className="py-2 px-3 text-[11px] text-gray-600 whitespace-nowrap">{res.checkOut}</td>
+                    <td className="py-2 px-3 whitespace-nowrap">
                       <InventoryCell items={res.inventory} />
                     </td>
-                    <td className="py-2 px-2 text-[11.5px] font-bold text-gray-900 whitespace-nowrap">${res.totalPrice}</td>
-                    <td className="py-2 px-2 text-[11.5px] font-semibold whitespace-nowrap">
+                    <td className="py-2 px-3 text-[11.5px] font-bold text-gray-900 whitespace-nowrap">${res.totalPrice}</td>
+                    <td className="py-2 px-3 text-[11.5px] font-semibold whitespace-nowrap">
                       {dues > 0 ? (
                         <span className="text-red-500 font-bold">${dues}</span>
                       ) : (
                         <span className="text-gray-400 font-normal">$0</span>
                       )}
                     </td>
-                    <td className="py-2 px-2 whitespace-nowrap">{getPaymentStatusBadge(res.paymentStatus)}</td>
-                    <td className="py-2 px-2 text-center relative whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-2 px-3 whitespace-nowrap">{getPaymentStatusBadge(res.paymentStatus)}</td>
+                    <td className="py-2 px-3 text-center relative whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={(e) => handleActionClick(e, res)}
                         className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full w-7 h-7 inline-flex items-center justify-center transition-colors cursor-pointer"

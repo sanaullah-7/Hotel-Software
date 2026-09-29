@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   Checkbox,
   FormControlLabel,
@@ -7,7 +7,7 @@ import {
   Tooltip
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -19,8 +19,9 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import MailOutlineOutlinedIcon from '@mui/icons-material/MailOutlineOutlined';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
+import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 
+import CustomPagination from '../../../../components/CustomPagination';
 import { departmentsList } from './constants';
 
 export const SalaryTable = ({
@@ -32,7 +33,8 @@ export const SalaryTable = ({
   handleRefresh,
   isRefreshing,
   setColumnAnchorEl,
-  handleExportPDF,
+  handleExportCSV,
+    handleExportPDF,
   isAllSelected,
   isSomeSelected,
   handleSelectAll,
@@ -93,19 +95,7 @@ export const SalaryTable = ({
         {/* Right: Action Buttons */}
         <div className="flex items-center gap-1.5 sm:gap-2 self-end md:self-auto">
           <Tooltip title="Filter by Department">
-            <IconButton
-              onClick={(e) => setFilterAnchorEl(e.currentTarget)}
-              size="small"
-              sx={{
-                color: '#5d5fef',
-                backgroundColor: '#f5f5ff',
-                '&:hover': { backgroundColor: '#eceeff' },
-                borderRadius: '8px',
-                padding: '7px'
-              }}
-            >
-              <FilterListIcon sx={{ fontSize: 20 }} />
-            </IconButton>
+           
           </Tooltip>
 
           <Tooltip title="Add Employee Salary">
@@ -113,14 +103,13 @@ export const SalaryTable = ({
               onClick={handleOpenAddModal}
               size="small"
               sx={{
-                color: '#10b981',
-                backgroundColor: '#ecfdf5',
-                '&:hover': { backgroundColor: '#d1fae5' },
-                borderRadius: '8px',
-                padding: '7px'
+                color: "#1b7f43",
+                backgroundColor: "transparent",
+                "&:hover": { backgroundColor: "#f0fdf4" },
+                padding: "6px",
               }}
             >
-              <AddCircleOutlineOutlinedIcon sx={{ fontSize: 20 }} />
+              <AddCircleIcon sx={{ fontSize: 24 }} />
             </IconButton>
           </Tooltip>
 
@@ -129,36 +118,34 @@ export const SalaryTable = ({
               onClick={handleRefresh}
               size="small"
               sx={{
-                color: '#475569',
-                backgroundColor: '#f8fafc',
-                '&:hover': { backgroundColor: '#f1f5f9' },
-                borderRadius: '8px',
-                padding: '7px'
+                color: "#1b7f43",
+                backgroundColor: "transparent",
+                "&:hover": { backgroundColor: "#f0fdf4" },
+                padding: "6px",
               }}
             >
               <RefreshIcon
                 sx={{
-                  fontSize: 20,
-                  transition: 'transform 0.4s ease',
-                  transform: isRefreshing ? 'rotate(360deg)' : 'none'
+                  fontSize: 26,
+                  transition: "transform 0.4s ease",
+                  transform: isRefreshing ? "rotate(360deg)" : "none",
                 }}
               />
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Show / Hide Columns">
+          <Tooltip title="Export to CSV">
             <IconButton
-              onClick={(e) => setColumnAnchorEl(e.currentTarget)}
+              onClick={handleExportCSV}
               size="small"
               sx={{
-                color: '#3b82f6',
-                backgroundColor: '#eff6ff',
-                '&:hover': { backgroundColor: '#dbeafe' },
-                borderRadius: '8px',
-                padding: '7px'
+                color: "#0ea5e9",
+                backgroundColor: "transparent",
+                "&:hover": { backgroundColor: "#f0f9ff" },
+                padding: "6px",
               }}
             >
-              <TableChartOutlinedIcon sx={{ fontSize: 20 }} />
+              <ViewColumnIcon sx={{ fontSize: 26 }} />
             </IconButton>
           </Tooltip>
 
@@ -167,14 +154,13 @@ export const SalaryTable = ({
               onClick={handleExportPDF}
               size="small"
               sx={{
-                color: '#ef4444',
-                backgroundColor: '#fef2f2',
-                '&:hover': { backgroundColor: '#fee2e2' },
-                borderRadius: '8px',
-                padding: '7px'
+                color: "#ef4444",
+                backgroundColor: "transparent",
+                "&:hover": { backgroundColor: "#fef2f2" },
+                padding: "6px",
               }}
             >
-              <PictureAsPdfIcon sx={{ fontSize: 20 }} />
+              <PictureAsPdfIcon sx={{ fontSize: 26 }} />
             </IconButton>
           </Tooltip>
         </div>
@@ -203,147 +189,63 @@ export const SalaryTable = ({
               {visibleColumns.name && (
                 <th
                   scope="col"
-                  onClick={() => handleSort('name')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                  className="py-3.5 px-3"
                 >
-                  <div className="flex items-center gap-1">
-                    <span>Employee Name</span>
-                    {sortField === 'name' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                  <span>Employee Name</span>
                 </th>
               )}
 
               {visibleColumns.email && (
                 <th
                   scope="col"
-                  onClick={() => handleSort('email')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                  className="py-3.5 px-3"
                 >
-                  <div className="flex items-center gap-1">
-                    <span>Email</span>
-                    {sortField === 'email' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                  <span>Email</span>
                 </th>
               )}
 
               {visibleColumns.department && (
                 <th
                   scope="col"
-                  onClick={() => handleSort('department')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                  className="py-3.5 px-3"
                 >
-                  <div className="flex items-center gap-1">
-                    <span>Department</span>
-                    {sortField === 'department' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                  <span>Department</span>
                 </th>
               )}
 
               {visibleColumns.salary && (
                 <th
                   scope="col"
-                  onClick={() => handleSort('salary')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                  className="py-3.5 px-3"
                 >
-                  <div className="flex items-center gap-1">
-                    <span>Salary</span>
-                    {sortField === 'salary' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                  <span>Salary</span>
                 </th>
               )}
 
               {visibleColumns.bonus && (
                 <th
                   scope="col"
-                  onClick={() => handleSort('bonus')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                  className="py-3.5 px-3"
                 >
-                  <div className="flex items-center gap-1">
-                    <span>Bonus</span>
-                    {sortField === 'bonus' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                  <span>Bonus</span>
                 </th>
               )}
 
               {visibleColumns.deductions && (
                 <th
                   scope="col"
-                  onClick={() => handleSort('deductions')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                  className="py-3.5 px-3"
                 >
-                  <div className="flex items-center gap-1">
-                    <span>Deductions</span>
-                    {sortField === 'deductions' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                  <span>Deductions</span>
                 </th>
               )}
 
               {visibleColumns.netSalary && (
                 <th
                   scope="col"
-                  onClick={() => handleSort('netSalary')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                  className="py-3.5 px-3"
                 >
-                  <div className="flex items-center gap-1">
-                    <span>Net Salary</span>
-                    {sortField === 'netSalary' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                  <span>Net Salary</span>
                 </th>
               )}
 
@@ -511,113 +413,11 @@ export const SalaryTable = ({
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 text-xs sm:text-sm text-slate-600 mt-2">
-        <div className="flex items-center gap-2">
-          <span className="text-slate-500">Items per page:</span>
-          <select
-            value={rowsPerPage}
-            onChange={(e) => {
-              setRowsPerPage(Number(e.target.value));
-              setPage(0);
-            }}
-            className="px-2 py-1 border border-slate-200 rounded-md focus:outline-none focus:border-[#5d5fef] bg-white text-slate-700 cursor-pointer font-medium"
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <span className="text-slate-600 font-medium">
-            {filteredSalaries.length === 0
-              ? '0 – 0 of 0'
-              : `${page * rowsPerPage + 1} – ${Math.min(
-                  (page + 1) * rowsPerPage,
-                  filteredSalaries.length
-                )} of ${filteredSalaries.length}`}
-          </span>
-
-          <div className="flex items-center gap-1">
-            <IconButton
-              size="small"
-              disabled={page === 0}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              sx={{
-                color: '#64748b',
-                '&.Mui-disabled': { color: '#cbd5e1' },
-                padding: '4px'
-              }}
-            >
-              <ChevronLeftIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-
-            <IconButton
-              size="small"
-              disabled={(page + 1) * rowsPerPage >= filteredSalaries.length}
-              onClick={() => setPage((p) => p + 1)}
-              sx={{
-                color: '#64748b',
-                '&.Mui-disabled': { color: '#cbd5e1' },
-                padding: '4px'
-              }}
-            >
-              <ChevronRightIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          </div>
-        </div>
-      </div>
-
-      {/* Popover: Filter by Department */}
-      <Popover
-        open={Boolean(filterAnchorEl)}
-        anchorEl={filterAnchorEl}
-        onClose={() => setFilterAnchorEl(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{
-          sx: {
-            p: 2.5,
-            width: 250,
-            borderRadius: '12px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
-          }
-        }}
-      >
-        <h4 className="text-sm font-bold text-slate-800 mb-3">Filter Salary</h4>
-        <div className="space-y-3 text-xs">
-          <div>
-            <label className="block text-slate-500 font-medium mb-1">Department</label>
-            <select
-              value={departmentFilter}
-              onChange={(e) => {
-                setDepartmentFilter(e.target.value);
-                setPage(0);
-              }}
-              className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-[#5d5fef] text-slate-700 bg-white"
-            >
-              {departmentsList.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept === 'All' ? 'All Departments' : dept}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="pt-2 flex justify-end">
-            <button
-              onClick={() => {
-                setDepartmentFilter('All');
-                setFilterAnchorEl(null);
-              }}
-              className="text-xs text-[#5d5fef] hover:underline font-semibold"
-            >
-              Reset Filters
-            </button>
-          </div>
-        </div>
-      </Popover>
+        <CustomPagination
+            count={Math.ceil(filteredSalaries.length / 10) || 1}
+            page={page + 1}
+            onChange={(e, p) => setPage(p - 1)}
+        />
 
       {/* Popover: Show / Hide Columns */}
       <Popover
@@ -669,3 +469,5 @@ export const SalaryTable = ({
     </div>
   );
 };
+
+

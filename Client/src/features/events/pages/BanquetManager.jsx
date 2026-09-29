@@ -1,4 +1,4 @@
-﻿import React, { useState } from'react';
+import React, { useState } from'react';
 import {
  HomeOutlined as HomeIcon,
  Celebration as CelebrationIcon,
@@ -129,7 +129,7 @@ export default function BanquetManager() {
  });
 
  return (
- <div className="assigned-form-surface w-full space-y-2 pb-1" style={{ fontFamily:'Inter, sans-serif' }}>
+ <div className="flex flex-col gap-1 pb-6 animate-fade-in w-full" style={{ fontFamily:'Inter, sans-serif' }}>
 
  {/* â”€â”€ Toast Notification â”€â”€ */}
  {toastMessage && (
@@ -140,83 +140,41 @@ export default function BanquetManager() {
  )}
 
  {/* â”€â”€ 1. KPI Cards â”€â”€ */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
  {/* Card 1: Monthly Banquet Revenue */}
- <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 hover:border-[var(--primary-main)]/30 transition-colors">
- <div className="flex items-start justify-between">
- <div>
- <span className="text-[11px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block">
- Monthly Revenue
- </span>
- <div className="text-lg font-bold text-[var(--text-primary)] tracking-tight mt-0.5 mb-1">
- $184,500
- </div>
- <div className="flex items-center gap-1.5 flex-wrap">
- <span className="rounded-full px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[11px] font-semibold">
- +18.4% vs Last Month
- </span>
- <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
- F&B + AV Included
- </span>
- </div>
- </div>
- <div className="w-8 h-8 rounded-lg bg-[var(--primary-main)]/10 text-[var(--primary-main)] flex items-center justify-center shrink-0">
- <CelebrationIcon sx={{ fontSize: 17 }} />
- </div>
- </div>
- </div>
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$184,500</div>
+      <div className="text-[13px] text-gray-500 font-medium">Monthly Revenue</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600 shrink-0">
+      <CelebrationIcon sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- {/* Card 2: Active Functions & BEOs */}
- <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 hover:border-[var(--primary-main)]/30 transition-colors">
- <div className="flex items-start justify-between">
- <div>
- <span className="text-[11px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block">
- Active Functions
- </span>
- <div className="text-lg font-bold text-[var(--text-primary)] tracking-tight mt-0.5 mb-1">
- 14 Events
- </div>
- <div className="flex items-center gap-1.5 flex-wrap">
- <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
- Weddings & Galas
- </span>
- <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
- Corporate Summits
- </span>
- </div>
- </div>
- <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
- <SeatIcon sx={{ fontSize: 17 }} />
- </div>
- </div>
- </div>
+  {/* Card 2: Active Functions */}
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">14</div>
+      <div className="text-[13px] text-gray-500 font-medium">Active Functions</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
+      <SeatIcon sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- {/* Card 3: Venue Utilization */}
- <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 hover:border-[var(--primary-main)]/30 transition-colors">
- <div className="flex items-start justify-between">
- <div>
- <span className="text-[11px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block">
- Venue Utilization
- </span>
- <div className="text-lg font-bold text-[var(--text-primary)] tracking-tight mt-0.5 mb-1">
- 88%
- </div>
- <div className="flex items-center gap-1.5 flex-wrap">
- <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
- 4 Luxury Venues
- </span>
- <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
- Peak Weekend Par
- </span>
- </div>
- </div>
- <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
- <VenueIcon sx={{ fontSize: 17 }} />
- </div>
- </div>
- </div>
+  {/* Card 3: Venue Utilization */}
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">88%</div>
+      <div className="text-[13px] text-gray-500 font-medium">Venue Utilization</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600 shrink-0">
+      <VenueIcon sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- {/* Card 4: Avg Spend Per Guest */}
+  {/* Card 4: Avg Spend Per Guest */}
  <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 hover:border-[var(--primary-main)]/30 transition-colors">
  <div className="flex items-start justify-between">
  <div>
@@ -340,7 +298,7 @@ export default function BanquetManager() {
  return (
  <div
  key={event.id}
- className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2.5 sm:p-3 hover:border-[var(--primary-main)]/20 hover:shadow-sm transition-all flex flex-col justify-between"
+ className="bg-white rounded-[6px] border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2.5 sm:p-3 hover:border-[var(--primary-main)]/20 hover:shadow-sm transition-all flex flex-col justify-between"
  >
  <div>
  {/* Card Header */}
@@ -433,10 +391,6 @@ export default function BanquetManager() {
  })}
  </div>
 
- {/* â”€â”€ 6. Footer â”€â”€ */}
- <div className="pt-1 text-left text-xs text-slate-400 font-normal">
- Copyright Â© 2026 Design By <span className="text-slate-600 font-semibold">Luxuria</span>
- </div>
 
  {/* â”€â”€ Modal: View BEO Sheet â”€â”€ */}
  {activeBeoSheet && (

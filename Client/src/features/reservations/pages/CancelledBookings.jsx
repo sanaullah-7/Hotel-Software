@@ -252,59 +252,59 @@ export default function CancelledBookings() {
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-b-xl shadow-sm border border-gray-100 flex-1 overflow-hidden flex flex-col">
+      <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm flex-1 overflow-hidden">
         <div className="flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
           <table className="w-full text-left">
-            <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">First Name</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Package</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Room Type</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Status</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Check In</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Payment</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Cancellation Date</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Refund Status</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Cancellation Fee</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Actions</th>
+            <thead className="bg-gray-50/50">
+              <tr>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">First Name</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Package</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room Type</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Check In</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Payment</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Cancellation Date</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Refund Status</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Cancellation Fee</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredBookings.map((booking) => (
-                <tr key={booking.id} onClick={() => openViewModal(booking)} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer">
-                  <td className="py-3 px-2 flex items-center gap-3">
+                <tr key={booking.id} onClick={() => openViewModal(booking)} className="hover:bg-gray-50/30 transition-colors cursor-pointer">
+                  <td className="py-2 px-3 flex items-center gap-3">
                     <img src={booking.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover shadow-sm" />
                     <span className="text-[13px] text-gray-700 font-medium">{booking.firstName} {booking.lastName}</span>
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">{booking.package}</td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">{booking.roomType}</td>
-                  <td className="py-3 px-2">
+                  <td className="py-2 px-3 text-[13px] text-gray-600">{booking.package}</td>
+                  <td className="py-2 px-3 text-[13px] text-gray-600">{booking.roomType}</td>
+                  <td className="py-2 px-3">
                     <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${statusStyles[booking.status]}`}>
                       {booking.status}
                     </span>
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">
+                  <td className="py-2 px-3 text-[13px] text-gray-600">
                     <div className="flex items-center gap-1.5">
                       <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
                       {booking.checkIn}
                     </div>
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600 font-medium">
+                  <td className="py-2 px-3 text-[13px] text-gray-600 font-medium">
                     {booking.payment}
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">
+                  <td className="py-2 px-3 text-[13px] text-gray-600">
                     <div className="flex items-center gap-1.5">
                       <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
                       {booking.cancellationDate}
                     </div>
                   </td>
-                  <td className="py-3 px-2">
+                  <td className="py-2 px-3">
                     <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${refundStyles[booking.refundStatus]}`}>
                       {booking.refundStatus}
                     </span>
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">{booking.cancellationFee}</td>
-                  <td className="py-3 px-2 relative">
+                  <td className="py-2 px-3 text-[13px] text-gray-600">{booking.cancellationFee}</td>
+                  <td className="py-2 px-3 relative">
                     <div className="flex items-center gap-3">
                       <button onClick={(e) => { e.stopPropagation(); openEditModal(booking); }} className="text-[var(--primary-main)] hover:text-green-700 transition-colors cursor-pointer" title="Edit">
                         <EditOutlined sx={{ fontSize: 18 }} />

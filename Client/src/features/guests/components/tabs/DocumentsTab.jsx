@@ -129,51 +129,51 @@ export default function DocumentsTab({
         </div>
 
         {/* Documents Table */}
-        <div className="overflow-x-auto hide-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[700px]">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                <th className="py-3 px-4">Document Ref</th>
-                <th className="py-3 px-4">Document Type</th>
-                <th className="py-3 px-4">Identification Number</th>
-                <th className="py-3 px-4">Allocated Room</th>
-                <th className="py-3 px-4">Registration Date</th>
-                <th className="py-3 px-4 text-center">Status</th>
-                <th className="py-3 px-4 text-center">Actions</th>
+        <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50/50">
+              <tr>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Document Ref</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Document Type</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Identification Number</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Allocated Room</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Registration Date</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Status</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50 text-xs text-gray-700">
+            <tbody className="text-xs text-gray-700">
               {currentItems.map((doc, idx) => (
-                <tr key={doc.id || doc.formNo || idx} className="hover:bg-gray-50/60 transition">
-                  <td className="py-3 px-4 font-mono font-bold text-gray-900">
+                <tr key={doc.id || doc.formNo || idx} className="hover:bg-gray-50/30 transition">
+                  <td className="py-2 px-3 font-mono font-bold text-gray-900">
                     {doc.formNo || doc.id}
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="py-2 px-3">
                     <div className="font-semibold text-gray-800 flex items-center gap-1">
                       <BadgeOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
                       {doc.idType || 'Identity Document'}
                     </div>
                     {doc.name && <span className="text-[10.5px] text-gray-400 block">{doc.name}</span>}
                   </td>
-                  <td className="py-3 px-4 font-mono font-semibold text-gray-800">
+                  <td className="py-2 px-3 font-mono font-semibold text-gray-800">
                     {doc.idNumber}
                   </td>
-                  <td className="py-3 px-4 font-medium text-gray-600">
+                  <td className="py-2 px-3 font-medium text-gray-600">
                     <div className="flex items-center gap-1">
                       <MeetingRoomOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
                       Room {doc.room || '101'}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-gray-600">
+                  <td className="py-2 px-3 text-gray-600">
                     <div className="flex items-center gap-1">
                       <CalendarTodayOutlined sx={{ fontSize: 13 }} className="text-gray-400" />
                       {doc.date || 'Today'}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2 px-3 text-center">
                     {getStatusBadge(doc.status)}
                   </td>
-                  <td className="py-3 px-4 text-center">
+                  <td className="py-2 px-3 text-center">
                     <div className="flex items-center justify-center gap-1">
                       <button
                         onClick={() => setViewingDoc(doc)}

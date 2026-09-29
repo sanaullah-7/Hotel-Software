@@ -222,19 +222,19 @@ export default function StaffAssignment() {
  </div>
  </div>
 
- <div className="">
- <table className="w-full text-left border-collapse">
+ <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+ <table className="w-full text-left">
  <thead>
- <tr className="bg-gray-50/50 border-b border-gray-100">
- <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Housekeeper ID</th>
- <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Housekeeper Name</th>
- <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Assigned Rooms</th>
- <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Pending</th>
- <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Cleaning</th>
- <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Inspection Pending</th>
- <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Completed</th>
- <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Status</th>
- <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Action</th>
+ <tr>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Housekeeper ID</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Housekeeper Name</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Assigned Rooms</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Pending</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Cleaning</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Inspection Pending</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Completed</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Action</th>
  </tr>
  </thead>
  <tbody className="divide-y divide-gray-50">
@@ -243,10 +243,10 @@ export default function StaffAssignment() {
  const isEditing = editingStaffId === row.id;
 
  return (
- <tr key={row.id} className="hover:bg-gray-50/50 transition-colors">
- <td className="py-2 px-2 text-[13px] font-bold text-gray-500 pl-4">{row.id}</td>
+ <tr key={row.id} className="hover:bg-gray-50/30 transition-colors">
+ <td className="py-2 px-3 text-[13px] font-bold text-gray-500">{row.id}</td>
  
- <td className="py-2 px-2 text-[13px] font-bold text-gray-900">
+ <td className="py-2 px-3 text-[13px] font-bold text-gray-900">
  {isEditing ? (
  <FormControl size="small" sx={{ ...muiSelectSx, minWidth: 110,'& .MuiSelect-select': { padding:'4px 8px', fontSize:'11px' } }}>
  <Select 

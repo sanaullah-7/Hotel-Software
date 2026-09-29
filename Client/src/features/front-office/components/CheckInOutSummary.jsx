@@ -21,7 +21,6 @@ export default function CheckInOutSummary({
         icon={GroupsIcon}
         iconBg="bg-blue-50"
         iconColor="text-blue-600"
-        variant="horizontal"
       />
       <KPICard
         title="Checked In"
@@ -29,7 +28,6 @@ export default function CheckInOutSummary({
         icon={LoginIcon}
         iconBg="bg-green-50"
         iconColor="text-green-600"
-        variant="horizontal"
       />
       <KPICard
         title="Checked Out"
@@ -37,7 +35,6 @@ export default function CheckInOutSummary({
         icon={LogoutIcon}
         iconBg="bg-red-50"
         iconColor="text-red-600"
-        variant="horizontal"
       />
       <KPICard
         title="Pending"
@@ -45,7 +42,6 @@ export default function CheckInOutSummary({
         icon={PendingActionsIcon}
         iconBg="bg-orange-50"
         iconColor="text-orange-600"
-        variant="horizontal"
       />
     </div>
   );
