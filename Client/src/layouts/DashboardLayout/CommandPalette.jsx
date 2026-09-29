@@ -117,7 +117,7 @@ const STATIC_ACTIONS = [
 const STATIC_NAVIGATION = [
   {
     id: 'n1', category: 'NAVIGATION', title: 'Dashboard', description: 'Main ERP overview and key metrics',
-    tag: 'Home', tagColor: 'bg-gray-100 text-gray-700', icon: DashboardIcon, iconColor: 'text-gray-500', iconBg: 'bg-gray-50', path: '/'
+    tag: 'Home', tagColor: 'bg-gray-100 text-gray-700', icon: DashboardIcon, iconColor: 'text-gray-500', iconBg: 'bg-gray-50', path: '/dashboard'
   },
   {
     id: 'n2', category: 'NAVIGATION', title: 'Visual Floor Plan & Room Grid (Occupancy)', description: 'Multi-floor building visualizer, live occupancy, room statuses',

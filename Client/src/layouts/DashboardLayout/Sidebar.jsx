@@ -160,7 +160,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           {/* Dashboard */}
           <li>
             <Link
-              to="/"
+              to="/dashboard"
               title={!isOpen ? 'Dashboard' : undefined}
               className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
                 isDashboardActive
