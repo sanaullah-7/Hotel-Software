@@ -14,6 +14,11 @@ import PlayCircle from'@mui/icons-material/PlayCircle';
 import CheckCircle from'@mui/icons-material/CheckCircle';
 import Cancel from'@mui/icons-material/Cancel';
 import Delete from'@mui/icons-material/Delete';
+import ReceiptLong from '@mui/icons-material/ReceiptLong';
+import CheckCircleOutlined from '@mui/icons-material/CheckCircleOutlined';
+import CancelOutlined from '@mui/icons-material/CancelOutlined';
+import AccountBalanceWalletOutlined from '@mui/icons-material/AccountBalanceWalletOutlined';
+import TrendingUp from '@mui/icons-material/TrendingUp';
 import React, { useState, useEffect, useMemo } from'react';
 
 import { Popover, Checkbox, FormControlLabel, FormGroup, Menu, MenuItem, ListItemIcon, ListItemText } from'@mui/material';
@@ -152,30 +157,33 @@ export default function OrdersTab() {
  };
 
  const STAT_CARDS = [
- { label:'Total Orders', value: counts.All, suffix:'', sub:'All time', iconBg:'bg-gray-100', iconColor:'text-gray-500' },
- { label:'In Progress', value: counts['In Progress'], suffix:'', sub:'Currently cooking', iconBg:'bg-amber-50', iconColor:'text-amber-500' },
- { label:'Completed', value: counts.Completed, suffix:'', sub:'Served', iconBg:'bg-[#edf7f2]', iconColor:'text-[var(--primary-main)]' },
- { label:'Cancelled', value: counts.Cancelled, suffix:'', sub:'Cancelled', iconBg:'bg-red-50', iconColor:'text-red-500' },
- { label:"Today's Revenue", value:`PKR ${todayRevenue.toLocaleString()}`, suffix:'', sub:'From completed', iconBg:'bg-[#edf7f2]', iconColor:'text-[var(--primary-main)]' },
- { label:'Avg Order Value', value:`PKR ${avgOrder.toLocaleString()}`, suffix:'', sub:'Per order', iconBg:'bg-gray-100', iconColor:'text-gray-500' },
+ { label:'Total Orders', value: counts.All, suffix:'', sub:'All time', iconBg:'bg-gray-100', iconColor:'text-gray-600', icon: ReceiptLong },
+ { label:'In Progress', value: counts['In Progress'], suffix:'', sub:'Currently cooking', iconBg:'bg-amber-50', iconColor:'text-amber-600', icon: AccessTime },
+ { label:'Completed', value: counts.Completed, suffix:'', sub:'Served', iconBg:'bg-[#edf7f2]', iconColor:'text-[var(--primary-main)]', icon: CheckCircleOutlined },
+ { label:'Cancelled', value: counts.Cancelled, suffix:'', sub:'Cancelled', iconBg:'bg-red-50', iconColor:'text-red-600', icon: CancelOutlined },
+ { label:"Today's Revenue", value:`PKR ${todayRevenue.toLocaleString()}`, suffix:'', sub:'From completed', iconBg:'bg-[#edf7f2]', iconColor:'text-[var(--primary-main)]', icon: AccountBalanceWalletOutlined },
+ { label:'Avg Order Value', value:`PKR ${avgOrder.toLocaleString()}`, suffix:'', sub:'Per order', iconBg:'bg-gray-100', iconColor:'text-gray-600', icon: TrendingUp },
  ];
 
  return (
- <div className="flex flex-col gap-4 pb-6 animate-fade-in">
+ <div className="flex flex-col gap-1 pb-6 animate-fade-in">
 
  {/* ── Stat Cards ───────────────────────────────────────── */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+ <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 mt-1">
  {STAT_CARDS.map((card, i) => (
- <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3.5 flex flex-col gap-1">
- <span className="text-[10.5px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider leading-tight">{card.label}</span>
- <span className="text-[22px] font-bold text-[var(--text-primary)] leading-tight">{card.value}</span>
- <span className="text-[10px] text-gray-400">{card.sub}</span>
+ <div key={i} className="bg-white rounded-[6px] border border-gray-100 p-4 flex flex-col relative shadow-sm">
+ <div className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center ${card.iconBg} ${card.iconColor}`}>
+ <card.icon sx={{ fontSize: 16 }} />
+ </div>
+ <span className="text-[12px] font-semibold text-[var(--text-secondary)]">{card.label}</span>
+ <span className="text-[20px] font-bold text-[var(--text-primary)] mt-1">{card.value}</span>
+ <span className="text-[11px] text-gray-400 mt-1">{card.sub}</span>
  </div>
  ))}
  </div>
 
  {/* ── Main Table Card ──────────────────────────────────── */}
- <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+ <div className="bg-white rounded-[6px] border border-gray-100 shadow-sm overflow-hidden">
 
  {/* ── Toolbar ─────────────────────────────────────── */}
  <div className="px-5 py-3.5 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -219,56 +227,54 @@ export default function OrdersTab() {
  <button
  onClick={(e) => setColumnAnchorEl(e.currentTarget)}
  title="Show/Hide Column"
- className="w-10 h-10 flex items-center justify-center rounded-full text-indigo-600 hover:bg-gray-100 transition-colors"
+ className="w-8 h-8 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
  >
- <FilterList sx={{ fontSize: 24 }} />
+ <FilterList sx={{ fontSize: 18 }} />
  </button>
  
  <button
  onClick={() => setCreateOpen(true)}
  title="New Order"
- className="w-10 h-10 flex items-center justify-center rounded-full text-green-600 hover:bg-gray-100 transition-colors"
+ className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--primary-main)] hover:bg-gray-100 transition-colors"
  >
- <AddCircleOutlined sx={{ fontSize: 24 }} />
+ <AddCircleOutlined sx={{ fontSize: 18 }} />
  </button>
-
-
 
  <button
  onClick={handleExport}
- title="Xlsx Download"
- className="w-10 h-10 flex items-center justify-center rounded-full text-blue-500 hover:bg-gray-100 transition-colors"
+ title="CSV Download"
+ className="w-8 h-8 flex items-center justify-center rounded-full text-blue-500 hover:bg-gray-100 transition-colors"
  >
- <ContentCopy sx={{ fontSize: 22 }} />
+ <ContentCopy sx={{ fontSize: 16 }} />
  </button>
 
  <button
  onClick={() => alert("PDF Download coming soon")}
  title="PDF Download"
- className="w-10 h-10 flex items-center justify-center rounded-full text-red-500 hover:bg-gray-100 transition-colors"
+ className="w-8 h-8 flex items-center justify-center rounded-full text-red-500 hover:bg-gray-100 transition-colors"
  >
- <PictureAsPdf sx={{ fontSize: 24 }} />
+ <PictureAsPdf sx={{ fontSize: 18 }} />
  </button>
  </div>
  </div>
 
  {/* ── Orders Table ─────────────────────────────────── */}
- <div className="hide-scrollbar">
- <table className="w-full text-left border-collapse min-w-[760px]">
- <thead>
- <tr className="bg-gray-50/80 border-b border-gray-100">
- {cols.orderId && <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Order ID</th>}
- {cols.customer && <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Customer</th>}
- {cols.room && <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Room</th>}
- {cols.items && <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Items</th>}
- {cols.amount && <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Amount</th>}
- {cols.payment && <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Payment</th>}
- {cols.time && <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Time</th>}
- {cols.status && <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Status</th>}
- {cols.actions && <th className="py-3 px-4 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Actions</th>}
+ <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+ <table className="w-full text-left min-w-[760px]">
+ <thead className="bg-gray-50/50">
+ <tr>
+ {cols.orderId && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Order ID</th>}
+ {cols.customer && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Customer</th>}
+ {cols.room && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room</th>}
+ {cols.items && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Items</th>}
+ {cols.amount && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Amount</th>}
+ {cols.payment && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Payment</th>}
+ {cols.time && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Time</th>}
+ {cols.status && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>}
+ {cols.actions && <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>}
  </tr>
  </thead>
- <tbody>
+ <tbody className="divide-y divide-gray-100">
  {paginatedOrders.length === 0 ? (
  <tr>
  <td colSpan={8} className="py-16 text-center">
@@ -286,24 +292,22 @@ export default function OrdersTab() {
  const timeStr = placedAt.toLocaleTimeString('en-IN', { hour:'2-digit', minute:'2-digit' });
  const dateStr = placedAt.toLocaleDateString('en-IN', { day:'2-digit', month:'short' });
  const totalQty = order.items.reduce((s, i) => s + i.qty, 0);
- const isEven = idx % 2 === 0;
 
  return (
  <tr
  key={order.id}
- className="border-b border-gray-100 transition-colors hover:bg-[#f6fbf8]"
- style={{ backgroundColor: isEven ?'#ffffff' :'var(--bg-default)' }}
+ className="hover:bg-gray-50/30 transition-colors cursor-pointer"
  >
  {/* Order ID */}
  {cols.orderId && (
- <td className="py-3.5 px-4">
+ <td className="py-2 px-3">
  <span className="text-[12px] font-bold text-[var(--primary-main)] font-mono">{order.id}</span>
  </td>
  )}
 
  {/* Customer */}
  {cols.customer && (
- <td className="py-3.5 px-4">
+ <td className="py-2 px-3">
  <div className="flex items-center gap-2">
  <div className="w-7 h-7 rounded-lg bg-[var(--primary-main)] flex items-center justify-center text-white text-[10px] font-bold shrink-0">
  {initials}
@@ -315,7 +319,7 @@ export default function OrdersTab() {
 
  {/* Room */}
  {cols.room && (
- <td className="py-3.5 px-4">
+ <td className="py-2 px-3">
  <div className="flex items-center gap-1 text-[12px] text-[var(--text-secondary)]">
  <Bed sx={{ fontSize: 13 }} />
  <span className="font-semibold">{order.roomNo ||'N/A'}</span>
@@ -325,7 +329,7 @@ export default function OrdersTab() {
 
  {/* Items */}
  {cols.items && (
- <td className="py-3.5 px-4">
+ <td className="py-2 px-3">
  <div>
  <p className="text-[12px] text-[var(--text-primary)] font-medium truncate max-w-[160px]" title={order.items.map(i => i.name).join(',')}>
  {order.items[0]?.name}{order.items.length > 1 ?` +${order.items.length - 1}` :''}
@@ -337,7 +341,7 @@ export default function OrdersTab() {
 
  {/* Amount */}
  {cols.amount && (
- <td className="py-3.5 px-4">
+ <td className="py-2 px-3">
  <p className="text-[13.5px] font-bold text-[var(--text-primary)]">PKR {order.total.toLocaleString()}</p>
  <p className="text-[10px] text-[var(--text-secondary)]">incl. tax</p>
  </td>
@@ -345,7 +349,7 @@ export default function OrdersTab() {
 
  {/* Payment */}
  {cols.payment && (
- <td className="py-3.5 px-4">
+ <td className="py-2 px-3">
  <div className="flex items-center gap-1 text-[11.5px] text-[var(--text-secondary)]">
  {order.paymentMode ==='Cash'
  ? <AttachMoney sx={{ fontSize: 14 }} className="text-[var(--primary-main)]" />
@@ -357,7 +361,7 @@ export default function OrdersTab() {
 
  {/* Time */}
  {cols.time && (
- <td className="py-3.5 px-4">
+ <td className="py-2 px-3">
  <div className="flex items-center gap-1 text-[11px] text-[var(--text-secondary)]">
  <AccessTime sx={{ fontSize: 12 }} />
  <div>
@@ -370,14 +374,14 @@ export default function OrdersTab() {
 
  {/* Status */}
  {cols.status && (
- <td className="py-3.5 px-4">
+ <td className="py-2 px-3">
  <StatusChip status={order.status} />
  </td>
  )}
 
  {/* Actions */}
  {cols.actions && (
- <td className="py-3.5 px-4 text-center">
+ <td className="py-2 px-3 text-center">
  <button
  onClick={(e) => handleActionMenuOpen(e, order)}
  className="w-8 h-8 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-800 hover:bg-gray-100 transition-colors"
@@ -395,7 +399,7 @@ export default function OrdersTab() {
  </div>
 
  {/* ── Pagination Footer ────────────────────────────── */}
- <div className="px-5 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3" style={{ background:'var(--bg-default)' }}>
+ <div className="p-3 mt-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px] text-gray-600 border-t border-gray-100 bg-gray-50/30 rounded-b-[6px]">
  {/* Items per page */}
  <div className="flex items-center gap-2">
  <span className="text-[12px] text-[var(--text-secondary)]">Rows per page:</span>

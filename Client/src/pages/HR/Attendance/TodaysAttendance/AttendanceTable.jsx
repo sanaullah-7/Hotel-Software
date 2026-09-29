@@ -1,4 +1,5 @@
-import React from "react";
+﻿import React from "react";
+import CustomPagination from '../../../../components/CustomPagination';
 import {
     IconButton,
     Tooltip,
@@ -8,9 +9,9 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import FilterListIcon from "@mui/icons-material/FilterList";
-import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import TableChartOutlinedIcon from "@mui/icons-material/TableChartOutlined";
+import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import ScheduleIcon from "@mui/icons-material/Schedule";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
@@ -29,6 +30,7 @@ export const AttendanceTable = ({
     handleRefresh,
     isRefreshing,
     setColumnAnchorEl,
+    handleExportCSV,
     handleExportPDF,
     isAllSelected,
     isSomeSelected,
@@ -90,35 +92,19 @@ export const AttendanceTable = ({
 
                 {/* Right: Action Buttons */}
                 <div className="flex items-center gap-1.5 sm:gap-2 self-end md:self-auto">
-                    <Tooltip title="Filter by Shift / Status">
-                        <IconButton
-                            onClick={(e) => setFilterAnchorEl(e.currentTarget)}
-                            size="small"
-                            sx={{
-                                color: "#5d5fef",
-                                backgroundColor: "#f5f5ff",
-                                "&:hover": { backgroundColor: "#eceeff" },
-                                borderRadius: "8px",
-                                padding: "7px",
-                            }}
-                        >
-                            <FilterListIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-                    </Tooltip>
-
+                    
                     <Tooltip title="Add Attendance">
                         <IconButton
                             onClick={handleOpenAddModal}
                             size="small"
                             sx={{
-                                color: "#10b981",
-                                backgroundColor: "#ecfdf5",
-                                "&:hover": { backgroundColor: "#d1fae5" },
-                                borderRadius: "8px",
-                                padding: "7px",
+                                color: "#1b7f43",
+                                backgroundColor: "transparent",
+                                "&:hover": { backgroundColor: "#f0fdf4" },
+                                padding: "6px",
                             }}
                         >
-                            <AddCircleOutlineOutlinedIcon sx={{ fontSize: 20 }} />
+                            <AddCircleIcon sx={{ fontSize: 24 }} />
                         </IconButton>
                     </Tooltip>
 
@@ -127,16 +113,15 @@ export const AttendanceTable = ({
                             onClick={handleRefresh}
                             size="small"
                             sx={{
-                                color: "#475569",
-                                backgroundColor: "#f8fafc",
-                                "&:hover": { backgroundColor: "#f1f5f9" },
-                                borderRadius: "8px",
-                                padding: "7px",
+                                color: "#1b7f43",
+                                backgroundColor: "transparent",
+                                "&:hover": { backgroundColor: "#f0fdf4" },
+                                padding: "6px",
                             }}
                         >
                             <RefreshIcon
                                 sx={{
-                                    fontSize: 20,
+                                    fontSize: 26,
                                     transition: "transform 0.4s ease",
                                     transform: isRefreshing ? "rotate(360deg)" : "none",
                                 }}
@@ -144,19 +129,18 @@ export const AttendanceTable = ({
                         </IconButton>
                     </Tooltip>
 
-                    <Tooltip title="Show / Hide Columns">
+                    <Tooltip title="Export to CSV">
                         <IconButton
-                            onClick={(e) => setColumnAnchorEl(e.currentTarget)}
+                            onClick={handleExportCSV}
                             size="small"
                             sx={{
-                                color: "#3b82f6",
-                                backgroundColor: "#eff6ff",
-                                "&:hover": { backgroundColor: "#dbeafe" },
-                                borderRadius: "8px",
-                                padding: "7px",
+                                color: "#0ea5e9",
+                                backgroundColor: "transparent",
+                                "&:hover": { backgroundColor: "#f0f9ff" },
+                                padding: "6px",
                             }}
                         >
-                            <TableChartOutlinedIcon sx={{ fontSize: 20 }} />
+                            <ViewColumnIcon sx={{ fontSize: 26 }} />
                         </IconButton>
                     </Tooltip>
 
@@ -166,13 +150,12 @@ export const AttendanceTable = ({
                             size="small"
                             sx={{
                                 color: "#ef4444",
-                                backgroundColor: "#fef2f2",
-                                "&:hover": { backgroundColor: "#fee2e2" },
-                                borderRadius: "8px",
-                                padding: "7px",
+                                backgroundColor: "transparent",
+                                "&:hover": { backgroundColor: "#fef2f2" },
+                                padding: "6px",
                             }}
                         >
-                            <PictureAsPdfIcon sx={{ fontSize: 20 }} />
+                            <PictureAsPdfIcon sx={{ fontSize: 26 }} />
                         </IconButton>
                     </Tooltip>
                 </div>
@@ -201,147 +184,71 @@ export const AttendanceTable = ({
                             {visibleColumns.name && (
                                 <th
                                     scope="col"
-                                    onClick={() => handleSort("name")}
-                                    className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                                    className="py-3.5 px-3"
                                 >
-                                    <div className="flex items-center gap-1">
-                                        <span>Employee Name</span>
-                                        {sortField === "name" ? (
-                                            sortOrder === "asc" ? (
-                                                <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                                            ) : (
-                                                <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                                            )
-                                        ) : (
-                                            <span className="text-slate-300 text-xs">↕</span>
-                                        )}
-                                    </div>
+                                    <span>Employee Name</span>
                                 </th>
                             )}
 
                             {visibleColumns.firstIn && (
                                 <th
                                     scope="col"
-                                    onClick={() => handleSort("firstIn")}
-                                    className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                                    className="py-3.5 px-3"
                                 >
-                                    <div className="flex items-center gap-1">
-                                        <span>First In</span>
-                                        {sortField === "firstIn" ? (
-                                            sortOrder === "asc" ? (
-                                                <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                                            ) : (
-                                                <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                                            )
-                                        ) : (
-                                            <span className="text-slate-300 text-xs">↕</span>
-                                        )}
-                                    </div>
+                                    <span>First In</span>
                                 </th>
                             )}
 
-                            {visibleColumns.breakTime && (
-                                <th
-                                    scope="col"
-                                    onClick={() => handleSort("breakTime")}
-                                    className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
-                                >
-                                    <div className="flex items-center gap-1">
-                                        <span>Break</span>
-                                        {sortField === "breakTime" ? (
-                                            sortOrder === "asc" ? (
-                                                <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                                            ) : (
-                                                <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                                            )
-                                        ) : (
-                                            <span className="text-slate-300 text-xs">↕</span>
-                                        )}
-                                    </div>
-                                </th>
-                            )}
+                                                        {visibleColumns.breakFrom && (
+                                  <th
+                                      scope="col"
+                                      className="py-3.5 px-3"
+                                  >
+                                      <span>Break From</span>
+                                  </th>
+                              )}
+                              {visibleColumns.breakTo && (
+                                  <th
+                                      scope="col"
+                                      className="py-3.5 px-3"
+                                  >
+                                      <span>Break To</span>
+                                  </th>
+                              )}
 
                             {visibleColumns.lastOut && (
                                 <th
                                     scope="col"
-                                    onClick={() => handleSort("lastOut")}
-                                    className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                                    className="py-3.5 px-3"
                                 >
-                                    <div className="flex items-center gap-1">
-                                        <span>Last Out</span>
-                                        {sortField === "lastOut" ? (
-                                            sortOrder === "asc" ? (
-                                                <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                                            ) : (
-                                                <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                                            )
-                                        ) : (
-                                            <span className="text-slate-300 text-xs">↕</span>
-                                        )}
-                                    </div>
+                                    <span>Last Out</span>
                                 </th>
                             )}
 
                             {visibleColumns.totalHours && (
                                 <th
                                     scope="col"
-                                    onClick={() => handleSort("totalHours")}
-                                    className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                                    className="py-3.5 px-3"
                                 >
-                                    <div className="flex items-center gap-1">
-                                        <span>Total Hours</span>
-                                        {sortField === "totalHours" ? (
-                                            sortOrder === "asc" ? (
-                                                <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                                            ) : (
-                                                <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                                            )
-                                        ) : (
-                                            <span className="text-slate-300 text-xs">↕</span>
-                                        )}
-                                    </div>
+                                    <span>Total Hours</span>
                                 </th>
                             )}
 
                             {visibleColumns.status && (
                                 <th
                                     scope="col"
-                                    onClick={() => handleSort("status")}
-                                    className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                                    className="py-3.5 px-3"
                                 >
-                                    <div className="flex items-center gap-1">
-                                        <span>Status</span>
-                                        {sortField === "status" ? (
-                                            sortOrder === "asc" ? (
-                                                <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                                            ) : (
-                                                <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                                            )
-                                        ) : (
-                                            <span className="text-slate-300 text-xs">↕</span>
-                                        )}
-                                    </div>
+                                    <span>Status</span>
                                 </th>
                             )}
 
                             {visibleColumns.shift && (
                                 <th
                                     scope="col"
-                                    onClick={() => handleSort("shift")}
-                                    className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
+                                    className="py-3.5 px-3"
                                 >
-                                    <div className="flex items-center gap-1">
-                                        <span>Shift</span>
-                                        {sortField === "shift" ? (
-                                            sortOrder === "asc" ? (
-                                                <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                                            ) : (
-                                                <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                                            )
-                                        ) : (
-                                            <span className="text-slate-300 text-xs">↕</span>
-                                        )}
-                                    </div>
+                                    <span>Shift</span>
                                 </th>
                             )}
 
@@ -418,11 +325,22 @@ export const AttendanceTable = ({
                                             </td>
                                         )}
 
-                                        {visibleColumns.breakTime && (
-                                            <td className="py-2.5 px-3 text-slate-600">
-                                                {row.breakTime}
-                                            </td>
-                                        )}
+                                        {visibleColumns.breakFrom && (
+                                              <td className="py-2.5 px-3 text-slate-600">
+                                                  <div className="flex items-center gap-1.5 font-medium">
+                                                      <ScheduleIcon sx={{ fontSize: 16, color: "#94a3b8" }} />
+                                                      <span>{row.breakFrom || '-'}</span>
+                                                  </div>
+                                              </td>
+                                          )}
+                                          {visibleColumns.breakTo && (
+                                              <td className="py-2.5 px-3 text-slate-600">
+                                                  <div className="flex items-center gap-1.5 font-medium">
+                                                      <ScheduleIcon sx={{ fontSize: 16, color: "#94a3b8" }} />
+                                                      <span>{row.breakTo || '-'}</span>
+                                                  </div>
+                                              </td>
+                                          )}
 
                                         {visibleColumns.lastOut && (
                                             <td className="py-2.5 px-3 text-slate-700">
@@ -503,135 +421,11 @@ export const AttendanceTable = ({
             </div>
 
             {/* Pagination Footer */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 text-xs sm:text-sm text-slate-600 mt-2">
-                <div className="flex items-center gap-2">
-                    <span className="text-slate-500">Items per page:</span>
-                    <select
-                        value={rowsPerPage}
-                        onChange={(e) => {
-                            setRowsPerPage(Number(e.target.value));
-                            setPage(0);
-                        }}
-                        className="px-2 py-1 border border-slate-200 rounded-md focus:outline-none focus:border-[#5d5fef] bg-white text-slate-700 cursor-pointer font-medium"
-                    >
-                        <option value={5}>5</option>
-                        <option value={10}>10</option>
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                    </select>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <span className="text-slate-600 font-medium">
-                        {filteredRecords.length === 0
-                            ? "0 – 0 of 0"
-                            : `${page * rowsPerPage + 1} – ${Math.min(
-                                (page + 1) * rowsPerPage,
-                                filteredRecords.length,
-                            )} of ${filteredRecords.length}`}
-                    </span>
-
-                    <div className="flex items-center gap-1">
-                        <IconButton
-                            size="small"
-                            disabled={page === 0}
-                            onClick={() => setPage((p) => Math.max(0, p - 1))}
-                            sx={{
-                                color: "#64748b",
-                                "&.Mui-disabled": { color: "#cbd5e1" },
-                                padding: "4px",
-                            }}
-                        >
-                            <ChevronLeftIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-
-                        <IconButton
-                            size="small"
-                            disabled={(page + 1) * rowsPerPage >= filteredRecords.length}
-                            onClick={() => setPage((p) => p + 1)}
-                            sx={{
-                                color: "#64748b",
-                                "&.Mui-disabled": { color: "#cbd5e1" },
-                                padding: "4px",
-                            }}
-                        >
-                            <ChevronRightIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-                    </div>
-                </div>
-            </div>
-
-            {/* Popover: Filter by Shift / Status */}
-            <Popover
-                open={Boolean(filterAnchorEl)}
-                anchorEl={filterAnchorEl}
-                onClose={() => setFilterAnchorEl(null)}
-                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                transformOrigin={{ vertical: "top", horizontal: "right" }}
-                PaperProps={{
-                    sx: {
-                        p: 2.5,
-                        width: 250,
-                        borderRadius: "12px",
-                        boxShadow:
-                            "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-                    },
-                }}
-            >
-                <h4 className="text-sm font-bold text-slate-800 mb-3">
-                    Filter Attendance
-                </h4>
-                <div className="space-y-3 text-xs">
-                    <div>
-                        <label className="block text-slate-500 font-medium mb-1">
-                            Status
-                        </label>
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => {
-                                setStatusFilter(e.target.value);
-                                setPage(0);
-                            }}
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-[#5d5fef] text-slate-700 bg-white"
-                        >
-                            <option value="All">All Statuses</option>
-                            <option value="present">Present</option>
-                            <option value="absent">Absent</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label className="block text-slate-500 font-medium mb-1">
-                            Shift
-                        </label>
-                        <select
-                            value={shiftFilter}
-                            onChange={(e) => {
-                                setShiftFilter(e.target.value);
-                                setPage(0);
-                            }}
-                            className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-[#5d5fef] text-slate-700 bg-white"
-                        >
-                            <option value="All">All Shifts</option>
-                            <option value="Day Shift">Day Shift</option>
-                            <option value="Night Shift">Night Shift</option>
-                        </select>
-                    </div>
-
-                    <div className="pt-2 flex justify-end">
-                        <button
-                            onClick={() => {
-                                setStatusFilter("All");
-                                setShiftFilter("All");
-                                setFilterAnchorEl(null);
-                            }}
-                            className="text-xs text-[#5d5fef] hover:underline font-semibold"
-                        >
-                            Reset Filters
-                        </button>
-                    </div>
-                </div>
-            </Popover>
+            <CustomPagination
+                count={Math.ceil(filteredRecords.length / 10) || 1}
+                page={page + 1}
+                onChange={(e, p) => setPage(p - 1)}
+            />
 
             {/* Popover: Show / Hide Columns */}
             <Popover
@@ -676,9 +470,7 @@ export const AttendanceTable = ({
                             }
                             label={
                                 <span className="text-xs text-slate-700 font-medium capitalize">
-                                    {colKey === "breakTime"
-                                        ? "Break"
-                                        : colKey.replace(/([A-Z])/g, " $1").trim()}
+                                    {colKey === "breakFrom" ? "Break From" : colKey === "breakTo" ? "Break To" : colKey.replace(/([A-Z])/g, " $1").trim()}
                                 </span>
                             }
                         />
@@ -688,3 +480,6 @@ export const AttendanceTable = ({
         </div>
     );
 };
+
+
+

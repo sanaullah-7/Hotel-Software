@@ -11,6 +11,11 @@ import Edit from'@mui/icons-material/Edit';
 import React, { useState, useEffect, useMemo } from'react';
 // Humne Outline ko Outlined (d ke sath) kar diya hai
 import AddCircleOutlined from"@mui/icons-material/AddCircleOutlined"; 
+import RestaurantMenu from"@mui/icons-material/RestaurantMenu";
+import Spa from"@mui/icons-material/Spa";
+import Restaurant from"@mui/icons-material/Restaurant";
+import TableChart from"@mui/icons-material/TableChart";
+import CheckCircle from"@mui/icons-material/CheckCircle";
 import { Popover, Checkbox, FormControlLabel, FormGroup } from'@mui/material';
 import {
  CATEGORIES,
@@ -225,25 +230,53 @@ export default function MenuTab() {
  };
 
  return (
- <div className="flex flex-col gap-4 pb-6 animate-fade-in">
+ <div className="flex flex-col gap-1 pb-6 animate-fade-in">
 
  {/* ── Stats Strip ─────────────────────────────────────── */}
- <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
- {[
- { label:'Total Items', value: stats.total, color:'text-gray-800' },
- { label:'Available', value: stats.available, color:'text-gray-800' },
- { label:'Veg Items', value: stats.veg, color:'text-gray-800' },
- { label:'Non-Veg Items', value: stats.nonVeg, color:'text-gray-800' },
- ].map(s => (
- <div key={s.label} className="bg-white rounded-xl border border-gray-100 shadow-sm p-3 flex flex-col gap-0.5">
- <span className="text-[10.5px] font-semibold text-gray-400 uppercase tracking-wider">{s.label}</span>
- <span className={`text-[22px] font-bold ${s.color}`}>{s.value}</span>
- </div>
- ))}
- </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
+    <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.total}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Total Items</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+        <RestaurantMenu sx={{ fontSize: 18 }} />
+      </div>
+    </div>
+    
+    <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.available}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Available</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+        <CheckCircle sx={{ fontSize: 18 }} />
+      </div>
+    </div>
+    
+    <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.veg}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Veg Items</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600">
+        <Spa sx={{ fontSize: 18 }} />
+      </div>
+    </div>
+    
+    <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.nonVeg}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Non-Veg Items</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+        <Restaurant sx={{ fontSize: 18 }} />
+      </div>
+    </div>
+  </div>
 
  {/* ── Main Card ───────────────────────────────────────── */}
- <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+ <div className="bg-white rounded-[6px] border border-gray-100 shadow-sm overflow-hidden">
 
  {/* ── Toolbar ─────────────────────────────────────── */}
  <div className="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -290,39 +323,37 @@ export default function MenuTab() {
  </div>
 
  {/* ── Quick Action Icons (Right Side) ───────────── */}
- <div className="flex items-center gap-1">
- <button
- onClick={(e) => setColumnAnchorEl(e.currentTarget)}
- title="Show/Hide Column"
- className="w-10 h-10 flex items-center justify-center rounded-full text-indigo-600 hover:bg-gray-100 transition-colors"
- >
- <FilterList sx={{ fontSize: 24 }} />
- </button>
- 
+ <div className="flex items-center gap-2">
  <button
  onClick={() => { setEditingItem(null); setModalOpen(true); }}
  title="Add Item"
- className="w-10 h-10 flex items-center justify-center rounded-full text-green-600 hover:bg-gray-100 transition-colors"
+ className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
  >
- <AddCircleOutlined sx={{ fontSize: 24 }} />
+ <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
  </button>
 
-
+ <button
+ onClick={(e) => setColumnAnchorEl(e.currentTarget)}
+ title="Show/Hide Column"
+ className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
+ >
+ <FilterList sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+ </button>
 
  <button
  onClick={handleExportCSV}
- title="Xlsx Download"
- className="w-10 h-10 flex items-center justify-center rounded-full text-blue-500 hover:bg-gray-100 transition-colors"
+ title="Export CSV"
+ className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
  >
- <ContentCopy sx={{ fontSize: 22 }} />
+ <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
  </button>
 
  <button
  onClick={() => alert("PDF Download coming soon")}
- title="PDF Download"
- className="w-10 h-10 flex items-center justify-center rounded-full text-red-500 hover:bg-gray-100 transition-colors"
+ title="Export PDF"
+ className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer"
  >
- <PictureAsPdf sx={{ fontSize: 24 }} />
+ <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
  </button>
  </div>
  </div>
@@ -348,12 +379,12 @@ export default function MenuTab() {
  </div>
 
  {/* ── Table ───────────────────────────────────────── */}
- <div className="hide-scrollbar">
- <table className="w-full text-left border-collapse min-w-[700px]">
- <thead>
- <tr className="bg-gray-50/80 border-b border-gray-100">
+ <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+ <table className="w-full text-left min-w-[700px]">
+ <thead className="bg-gray-50/50">
+ <tr>
  {cols.checkbox && (
- <th className="py-3 px-4 w-10">
+ <th className="py-3 px-3 w-10">
  <button onClick={toggleAll} className="text-gray-400 hover:text-[var(--primary-main)] transition-colors">
  {allSelected
  ? <CheckBox sx={{ fontSize: 18 }} className="text-[var(--primary-main)]" />
@@ -364,17 +395,17 @@ export default function MenuTab() {
  </button>
  </th>
  )}
- {cols.rowNum && <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">#</th>}
- {cols.itemName && <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Item Name</th>}
- {cols.category && <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Category</th>}
- {cols.price && <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Price</th>}
- {cols.dietary && <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Dietary</th>}
- {cols.lastUpdated && <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Last Updated</th>}
- {cols.availability && <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Availability</th>}
- {cols.actions && <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Actions</th>}
+ {cols.rowNum && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">#</th>}
+ {cols.itemName && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Item Name</th>}
+ {cols.category && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Category</th>}
+ {cols.price && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Price</th>}
+ {cols.dietary && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Dietary</th>}
+ {cols.lastUpdated && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Last Updated</th>}
+ {cols.availability && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Availability</th>}
+ {cols.actions && <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>}
  </tr>
  </thead>
- <tbody>
+ <tbody className="divide-y divide-gray-100">
  {filtered.length === 0 ? (
  <tr>
  <td colSpan={9} className="py-16 text-center text-gray-400">
@@ -388,15 +419,14 @@ export default function MenuTab() {
  paginatedItems.map((item, idx) => {
  const isSelected = selectedIds.has(item.id);
  const cat = CATEGORIES.find(c => c.id === item.categoryId);
- const isEven = idx % 2 === 0;
  return (
  <tr
  key={item.id}
- className="border-b border-gray-100 transition-colors hover:bg-[#f6fbf8]"
- style={{ backgroundColor: isSelected ?'#edf7f2' : isEven ?'#ffffff' :'var(--bg-default)' }}
+ className="hover:bg-gray-50/30 transition-colors cursor-pointer"
+ style={{ backgroundColor: isSelected ?'#edf7f2' :'' }}
  >
  {cols.checkbox && (
- <td className="py-3.5 px-4">
+ <td className="py-2 px-3">
  <button onClick={() => toggleOne(item.id)} className="text-gray-300 hover:text-[var(--primary-main)] transition-colors">
  {isSelected
  ? <CheckBox sx={{ fontSize: 18 }} className="text-[var(--primary-main)]" />
@@ -411,15 +441,15 @@ export default function MenuTab() {
  )}
 
  {cols.itemName && (
- <td className="py-3.5 px-3">
+ <td className="py-2 px-3">
  <button
  onClick={() => setViewItem(item)}
- className="text-[13px] font-semibold text-gray-800 hover:text-[var(--primary-main)] hover:underline leading-tight text-left transition-colors"
+ className="text-[13px] font-bold text-gray-900 hover:text-[var(--primary-main)] hover:underline leading-tight text-left transition-colors"
  >
  {item.name}
  </button>
  {item.description && (
- <p className="text-[10.5px] text-gray-400 mt-0.5 truncate max-w-[180px]" title={item.description}>
+ <p className="text-[12px] text-gray-500 italic mt-0.5 truncate max-w-[180px]" title={item.description}>
  {item.description}
  </p>
  )}
@@ -427,9 +457,9 @@ export default function MenuTab() {
  )}
 
  {cols.category && (
- <td className="py-3.5 px-3">
+ <td className="py-2 px-3">
  {cat && (
- <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-gray-100 text-[var(--text-secondary)] border border-gray-200">
+ <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[12px] font-bold bg-gray-100 text-gray-800 border border-gray-200">
  {cat.label}
  </span>
  )}
@@ -437,20 +467,20 @@ export default function MenuTab() {
  )}
 
  {cols.price && (
- <td className="py-3.5 px-3">
- <span className="text-[13.5px] font-bold text-gray-900">PKR {item.price.toLocaleString()}</span>
+ <td className="py-2 px-3">
+ <span className="text-[13px] font-bold text-gray-900 font-mono">PKR {item.price.toLocaleString()}</span>
  </td>
  )}
 
  {cols.dietary && (
- <td className="py-3.5 px-3">
+ <td className="py-2 px-3">
  <DietaryBadge dietary={item.dietary} />
  </td>
  )}
 
  {cols.lastUpdated && (
- <td className="py-3.5 px-3">
- <div className="flex items-center gap-1 text-[11px] text-gray-400">
+ <td className="py-2 px-3">
+ <div className="flex items-center gap-1 text-[12px] text-gray-600">
  <CalendarToday sx={{ fontSize: 12 }} />
  <span>{item.lastUpdated}</span>
  </div>
@@ -458,7 +488,7 @@ export default function MenuTab() {
  )}
 
  {cols.availability && (
- <td className="py-3.5 px-3">
+ <td className="py-2 px-3">
  <AvailabilityBadge
  availability={item.availability}
  itemId={item.id}
@@ -468,7 +498,7 @@ export default function MenuTab() {
  )}
 
  {cols.actions && (
- <td className="py-3.5 px-3">
+ <td className="py-2 px-3">
  <div className="flex items-center justify-center gap-1.5">
  <button
  onClick={() => handleEdit(item)}
@@ -496,7 +526,7 @@ export default function MenuTab() {
  </div>
 
  {/* ── Table Footer / Pagination ─────────────────── */}
- <div className="px-5 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3" style={{ background:'var(--bg-default)' }}>
+ <div className="p-3 mt-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px] text-gray-600 border-t border-gray-100 bg-gray-50/30 rounded-b-[6px]">
  <div className="flex items-center gap-2">
  <span className="text-[12px] text-[var(--text-secondary)]">Rows per page:</span>
  <div className="relative">

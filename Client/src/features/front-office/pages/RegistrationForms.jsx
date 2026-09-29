@@ -57,9 +57,9 @@ export default function RegistrationForms() {
  <div className="h-2"></div>
 
  {/* REGISTRATION FORMS TABLE */}
- <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col w-full overflow-visible">
+ <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 overflow-hidden">
  {/* Table Top Controls matching Dashboard table header */}
- <div className="p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 overflow-visible">
+ <div className="p-3 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4 overflow-visible">
  <h3 className="text-gray-800 font-bold text-[14px] lg:text-[15px]">
  Registration Forms List
  </h3>
@@ -112,38 +112,38 @@ export default function RegistrationForms() {
  </div>
  </div>
 
- <div className="w-full overflow-x-auto min-w-0 hide-scrollbar">
- <table className="w-full text-left min-w-[700px]">
+ <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+ <table className="w-full text-left">
  <thead>
- <tr className="border-b border-gray-100 bg-gray-50/50">
- <th className="py-2.5 px-4 text-[12px] font-bold text-gray-700">Form ID</th>
- <th className="py-2.5 px-4 text-[12px] font-bold text-gray-700">Guest Name</th>
- <th className="py-2.5 px-4 text-[12px] font-bold text-gray-700">ID Type</th>
- <th className="py-2.5 px-4 text-[12px] font-bold text-gray-700">Document No</th>
- <th className="py-2.5 px-4 text-[12px] font-bold text-gray-700">Allocated Room</th>
- <th className="py-2.5 px-4 text-[12px] font-bold text-gray-700">Registration Date</th>
- <th className="py-2.5 px-4 text-[12px] font-bold text-gray-700">Status</th>
- <th className="py-2.5 px-4 text-[12px] font-bold text-gray-700 text-center">Actions</th>
+ <tr className="bg-gray-50/50">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Form ID</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Guest Name</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">ID Type</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Document No</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Allocated Room</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Registration Date</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>
  </tr>
  </thead>
  <tbody>
  {filteredForms.length > 0 ? (
  filteredForms.map((form, idx) => (
- <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50">
- <td className="py-2.5 px-4 font-bold text-[12px] text-gray-800">{form.formNo}</td>
- <td className="py-2.5 px-4 font-semibold text-[12px] text-gray-900">{form.guest}</td>
- <td className="py-2.5 px-4 text-[12px] text-gray-600">{form.idType}</td>
- <td className="py-2.5 px-4 text-[12px] text-gray-600">{form.idNumber}</td>
- <td className="py-2.5 px-4 font-semibold text-[12px] text-gray-800">Room {form.room}</td>
- <td className="py-2.5 px-4 text-[12px] text-gray-500">{form.date}</td>
- <td className="py-2.5 px-4">
+ <tr key={idx} className="hover:bg-gray-50/30 transition-colors cursor-pointer">
+ <td className="py-2 px-3 font-bold text-[12px] text-gray-800">{form.formNo}</td>
+ <td className="py-2 px-3 font-semibold text-[12px] text-gray-900">{form.guest}</td>
+ <td className="py-2 px-3 text-[12px] text-gray-600">{form.idType}</td>
+ <td className="py-2 px-3 text-[12px] text-gray-600">{form.idNumber}</td>
+ <td className="py-2 px-3 font-semibold text-[12px] text-gray-800">Room {form.room}</td>
+ <td className="py-2 px-3 text-[12px] text-gray-500">{form.date}</td>
+ <td className="py-2 px-3">
  <span className={`px-2 py-0.5 text-[10px] font-bold rounded-md ${
  form.status.includes('Verified') ?'bg-[#e2f8e9] text-[#1b7f43]' :'bg-amber-100 text-amber-700'
  }`}>
  {form.status}
  </span>
  </td>
- <td className="py-2.5 px-4 text-center">
+ <td className="py-2 px-3 text-center">
  <button className="text-gray-400 hover:text-gray-700 p-1 cursor-pointer mr-1">
  <Print sx={{ fontSize: 16 }} />
  </button>

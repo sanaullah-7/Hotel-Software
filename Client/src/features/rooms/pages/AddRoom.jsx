@@ -109,7 +109,7 @@ export default function AddRoom() {
       <div className="h-2"></div>
 
       {/* FORM CARD */}
-      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden pt-1">
+      <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 flex-1 overflow-hidden">
         <div className="p-4 bg-white">
           <form onSubmit={handleSave} className="space-y-8">
             

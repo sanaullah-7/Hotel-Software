@@ -1,4 +1,4 @@
-import React from'react';
+﻿import React from'react';
 import {
  HomeOutlined as HomeIcon,
  Hotel as BedIcon,
@@ -162,121 +162,48 @@ export default function OccupancyReportTab() {
  <div className="w-full space-y-2 pb-0 font-sans">
  
 
- {/* 2. Top Metric KPI Cards (2x2 Grid) */}
- <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1 mb-2">
  {/* Card 1: CURRENT OCCUPANCY RATE */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <div className="flex items-center gap-2.5">
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase">
- CURRENT OCCUPANCY RATE
- </span>
- <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-semibold inline-flex items-center gap-0.5">
- ↑ 5.2%
- </span>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">78.3%</div>
+ <div className="text-[13px] text-gray-500 font-medium">Occupancy Rate</div>
  </div>
- <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
- 78.3%
- </div>
- <div className="text-xs sm:text-sm text-gray-500 font-normal">
- Overall property occupancy
- </div>
- </div>
- <div className="w-10 h-10 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
- <BedIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
- <div className="my-2 border-t border-gray-100"></div>
- <div className="text-xs text-gray-500 font-normal">
- vs yesterday: 73.1%
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+ <BedIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Card 2: AVAILABLE ROOMS */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <div className="flex items-center gap-2.5">
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase">
- AVAILABLE ROOMS
- </span>
- <span className="rounded-full px-2.5 py-0.5 bg-[#fee2e2] text-[#ef4444] text-xs font-semibold inline-flex items-center gap-0.5">
- ↓ 12%
- </span>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">32</div>
+ <div className="text-[13px] text-gray-500 font-medium">Available Rooms</div>
  </div>
- <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
- 32
- </div>
- <div className="text-xs sm:text-sm text-gray-500 font-normal">
- Currently available for booking
- </div>
- </div>
- <div className="w-10 h-10 rounded-2xl bg-[#e0f2fe] flex items-center justify-center text-[#0284c7] shrink-0">
- <BedIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
- <div className="my-2 border-t border-gray-100"></div>
- <div className="text-xs text-gray-500 font-normal">
- vs yesterday: 37
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+ <BedIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Card 3: UNDER MAINTENANCE */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <div className="flex items-center gap-2.5">
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase">
- UNDER MAINTENANCE
- </span>
- <span className="rounded-full px-2.5 py-0.5 bg-[#f1f5f9] text-[#64748b] text-xs font-semibold inline-flex items-center gap-0.5">
- — 0%
- </span>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">8</div>
+ <div className="text-[13px] text-gray-500 font-medium">Under Maintenance</div>
  </div>
- <div className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
- 8
- </div>
- <div className="text-xs sm:text-sm text-gray-500 font-normal">
- Rooms requiring maintenance
- </div>
- </div>
- <div className="w-10 h-10 rounded-2xl bg-[#ffedd5] flex items-center justify-center text-[#ea580c] shrink-0">
- <WrenchIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
- <div className="my-2 border-t border-gray-100"></div>
- <div className="text-xs text-gray-500 font-normal">
- vs yesterday: 8
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+ <WrenchIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Card 4: AVG. LENGTH OF STAY */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <div className="flex items-center gap-2.5">
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase">
- AVG. LENGTH OF STAY
- </span>
- <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-semibold inline-flex items-center gap-0.5">
- ↑ 8.7%
- </span>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">3.2</div>
+ <div className="text-[13px] text-gray-500 font-medium">Avg. Length of Stay</div>
  </div>
- <div className="text-3xl font-extrabold text-gray-900 tracking-tight mt-3 mb-1">
- 3.2
- </div>
- <div className="text-sm text-gray-500 font-normal">
- Days per guest
- </div>
- </div>
- <div className="w-12 h-12 rounded-2xl bg-[#ede9fe] flex items-center justify-center text-[#7c3aed] shrink-0">
- <CalendarIcon sx={{ fontSize: 24 }} />
- </div>
- </div>
- <div className="my-4 border-t border-gray-100"></div>
- <div className="text-sm text-gray-500 font-normal">
- vs last month: 2.9
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
+ <CalendarIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
  </div>
@@ -307,7 +234,7 @@ export default function OccupancyReportTab() {
  {/* ApexCharts-like toolbar icons */}
  <div className="flex items-center gap-1 text-gray-400">
  <button className="hover:text-gray-700 p-1 text-xs font-bold leading-none" title="Zoom in">+</button>
- <button className="hover:text-gray-700 p-1 text-xs font-bold leading-none" title="Zoom out">−</button>
+ <button className="hover:text-gray-700 p-1 text-xs font-bold leading-none" title="Zoom out">âˆ’</button>
  <button className="hover:text-gray-700 p-1" title="Selection Zoom">
  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
  <circle cx="11" cy="11" r="8" strokeWidth="2" />
@@ -530,7 +457,7 @@ export default function OccupancyReportTab() {
  row.isPositive ?'text-[#0abb75]' :'text-[#ef4444]'
  }`}
  >
- {row.isPositive ?'↗' :'↘'} {row.trend}
+ {row.isPositive ?'â†—' :'â†˜'} {row.trend}
  </span>
  </td>
  </tr>
@@ -576,10 +503,7 @@ export default function OccupancyReportTab() {
  </div>
  </div>
 
- {/* 7. Footer */}
- <div className="pt-4 text-left text-sm text-gray-500 font-normal">
- Copyright © 2026 Design By <span className="text-gray-700 font-semibold">Tech Titans</span>
- </div>
  </div>
  );
 }
+

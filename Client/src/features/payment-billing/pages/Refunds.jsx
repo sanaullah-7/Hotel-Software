@@ -3,22 +3,29 @@ import {
  TextField,
  InputAdornment,
  Button,
+ MenuItem,
  Chip,
  IconButton,
  Tooltip,
  Snackbar,
  Alert,
+ FormControl,
+ Select,
+ InputLabel,
 } from'@mui/material';
 import {
  Search as SearchIcon,
  Clear as ClearIcon,
  AssignmentReturn as RefundIcon,
  CheckCircle as ApprovedIcon,
+ CheckCircle as CheckCircleIcon,
  HourglassEmpty as PendingIcon,
  Block as RejectedIcon,
  Visibility as ViewIcon,
  Print as PrintIcon,
  Add as AddIcon,
+ MoneyOff as MoneyOffIcon,
+ Gavel as GavelIcon,
 } from'@mui/icons-material';
 import {
  getRefunds,
@@ -27,7 +34,6 @@ import {
 } from'./paymentBillingStore';
 import ProcessRefundModal from'./components/ProcessRefundModal';
 import RefundVoucherModal from'./components/RefundVoucherModal';
-import { printRefundVoucher } from'./utils/printHelpers';
 
 export default function Refunds() {
  const [refunds, setRefunds] = useState(() => getRefunds());
@@ -140,61 +146,46 @@ export default function Refunds() {
  <div className="space-y-2 pb-2 animate-fade-in pt-1">
 
  {/* Metric Cards */}
- <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
- {/* Total Refunded */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Total Refunded</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-gray-900">
- ${metrics.totalRefunded.toLocaleString('en-US', { minimumFractionDigits: 2 })}
- </span>
- <span className="text-[10px] text-gray-400 font-medium">{metrics.completedCount} Processed</span>
- </div>
- </div>
+   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
+      <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">${metrics.totalRefunded.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Total Refunded ({metrics.completedCount} Processed)</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+          <MoneyOffIcon sx={{ fontSize: 18 }} />
+        </div>
+      </div>
+      <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.completedCount}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Settled Returns</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+          <CheckCircleIcon sx={{ fontSize: 18 }} />
+        </div>
+      </div>
+      <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">${metrics.pendingAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Pending Review ({metrics.pendingCount} Pending)</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-50 text-amber-600">
+          <PendingIcon sx={{ fontSize: 18 }} />
+        </div>
+      </div>
+      <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.totalRefundsCount}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Total Claims</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
+          <GavelIcon sx={{ fontSize: 18 }} />
+        </div>
+      </div>
+   </div>
 
- {/* Settled Returns */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Settled Returns</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-xl font-bold text-emerald-700">
- {metrics.completedCount}
- </span>
- <span className="text-[10px] text-emerald-600 font-semibold">Settled</span>
- </div>
- </div>
-
- {/* Pending Review */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Pending Review</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-amber-600">
- ${metrics.pendingAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
- </span>
- <span className="text-[10px] text-amber-600 font-medium">{metrics.pendingCount} Pending</span>
- </div>
- </div>
-
- {/* Total Claims */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Total Claims</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-xl font-bold text-gray-900">
- {metrics.totalRefundsCount}
- </span>
- <span className="text-[10px] text-gray-400 font-medium">Historical</span>
- </div>
- </div>
- </div>
-
- {/* Filter and Search */}
+  {/* Filter and Search */}
  <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
  <div className="relative w-full sm:w-64 shrink-0">
  <SearchIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" sx={{ fontSize: 16 }} />
@@ -223,7 +214,7 @@ export default function Refunds() {
  onClick={() => setStatusFilter(status)}
  className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
  statusFilter === status
- ?'bg-red-600 text-white shadow-xs'
+ ?'bg-green-800 text-white shadow-xs'
  :'bg-gray-100 text-gray-600 hover:bg-gray-200'
  }`}
  >
@@ -232,7 +223,7 @@ export default function Refunds() {
  ))}
  </div>
  <button
- className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+ className="px-3 py-1 bg-green-800 hover:bg-green-700 text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
  onClick={() => {
  setSelectedPaymentForRefund(null);
  setIsProcessRefundOpen(true);
@@ -286,7 +277,7 @@ export default function Refunds() {
  filteredRefunds.map((r) => (
  <tr key={r.id} className="hover:bg-gray-50/80 transition-colors">
  <td className="py-2 px-2">
- <span className="font-mono font-bold text-red-600 block text-xs truncate">
+ <span className="font-mono font-bold text-green-800 block text-xs truncate">
  {r.id}
  </span>
  </td>
@@ -322,7 +313,7 @@ export default function Refunds() {
  <td className="py-2 px-1.5 text-[10px] font-medium text-gray-700 leading-tight">
  <span className="block truncate">{r.refundMethod}</span>
  </td>
- <td className="py-2 px-1 text-right font-extrabold text-red-600 text-xs font-mono truncate">
+ <td className="py-2 px-1 text-right font-extrabold text-green-800 text-xs font-mono truncate">
  ${r.amount?.toFixed(2)}
  </td>
  <td className="py-2 px-1 text-center">
@@ -347,7 +338,7 @@ export default function Refunds() {
  <IconButton
  size="small"
  sx={{ padding:'2px' }}
- className="!text-red-600 hover:!bg-red-50"
+ className="!text-green-800 hover:!bg-green-50"
  onClick={() => {
  printRefundVoucher(r);
  }}

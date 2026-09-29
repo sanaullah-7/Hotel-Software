@@ -427,17 +427,17 @@ export default function LostAndFound() {
  </div>
  
  {/* Table */}
- <div className="flex-1 w-full overflow-x-auto min-w-0 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar]:h-2">
- <table className="w-full text-left min-w-[700px]">
- <thead>
- <tr className="bg-gray-50/50 border-b border-gray-100">
- {visibleColumns['Item Name'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Item Name</th>}
- {visibleColumns['Location'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Location</th>}
- {visibleColumns['Found Date'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Found Date</th>}
- {visibleColumns['Finder'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Finder</th>}
- {visibleColumns['Status'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Status</th>}
- {visibleColumns['Description'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700">Description</th>}
- {visibleColumns['Actions'] && <th className="py-3 px-3 text-[11px] font-bold text-gray-700 text-center">Actions</th>}
+ <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+ <table className="w-full text-left">
+ <thead className="bg-gray-50/50">
+ <tr>
+ {visibleColumns['Item Name'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Item Name</th>}
+ {visibleColumns['Location'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Location</th>}
+ {visibleColumns['Found Date'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Found Date</th>}
+ {visibleColumns['Finder'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Finder</th>}
+ {visibleColumns['Status'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>}
+ {visibleColumns['Description'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Description</th>}
+ {visibleColumns['Actions'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>}
  </tr>
  </thead>
  <tbody>
@@ -449,18 +449,18 @@ export default function LostAndFound() {
  </tr>
  ) : (
  paginatedItems.map(item => (
- <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
- {visibleColumns['Item Name'] && <td className="py-3 px-3 text-[13px] font-bold text-gray-800">{item.itemName}</td>}
- {visibleColumns['Location'] && <td className="py-3 px-3 text-[12px] font-medium text-gray-600">{item.location}</td>}
- {visibleColumns['Found Date'] && <td className="py-3 px-3 text-[13px] font-bold text-gray-700">{item.foundDate}</td>}
- {visibleColumns['Finder'] && <td className="py-3 px-3 text-[13px] font-bold text-gray-700">{item.finderName ||'-'}</td>}
- {visibleColumns['Status'] && <td className="py-3 px-3">
+ <tr key={item.id} className="hover:bg-gray-50/30 transition-colors">
+ {visibleColumns['Item Name'] && <td className="py-2 px-3 text-[13px] font-bold text-gray-900">{item.itemName}</td>}
+ {visibleColumns['Location'] && <td className="py-2 px-3 text-[12px] font-bold text-gray-800">{item.location}</td>}
+ {visibleColumns['Found Date'] && <td className="py-2 px-3 text-[12px] text-gray-600">{item.foundDate}</td>}
+ {visibleColumns['Finder'] && <td className="py-2 px-3 text-[12px] text-gray-600">{item.finderName ||'-'}</td>}
+ {visibleColumns['Status'] && <td className="py-2 px-3">
  <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide inline-flex items-center gap-1 ${getStatusStyles(item.status)}`}>
  {item.status}
  </span>
  </td>}
- {visibleColumns['Description'] && <td className="py-3 px-3 text-[13px] font-medium text-gray-500 italic max-w-[200px] truncate" title={item.description}>{item.description ||'No description available'}</td>}
- {visibleColumns['Actions'] && <td className="py-3 px-3">
+ {visibleColumns['Description'] && <td className="py-2 px-3 text-[12px] text-gray-500 italic max-w-[200px] truncate" title={item.description}>{item.description ||'No description available'}</td>}
+ {visibleColumns['Actions'] && <td className="py-2 px-3">
  <div className="flex items-center justify-center gap-3">
  <button onClick={() => handleOpenEdit(item)} className="text-[11px] font-bold text-blue-500 hover:text-blue-700 transition-colors cursor-pointer">
  Edit

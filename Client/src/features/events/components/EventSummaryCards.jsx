@@ -2,32 +2,20 @@ import React from 'react';
 
 export default function EventSummaryCards({ cards }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full mb-2">
+    <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 mt-1">
       {cards.map((card) => {
         const IconComp = card.icon;
         return (
           <div
             key={card.id}
-            className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
+            className="bg-white rounded-[6px] border border-gray-100 p-4 flex flex-col relative shadow-sm"
           >
-            <div className="flex items-center gap-1.5 min-w-0">
-              <div className={`p-1 rounded-md ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}>
-                <IconComp sx={{ fontSize: 15 }} />
-              </div>
-              <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
-                {card.title}
-              </span>
+            <div className={`absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center ${card.iconBg} ${card.iconColor}`}>
+              <IconComp sx={{ fontSize: 16 }} />
             </div>
-            <div className="flex items-baseline justify-between mt-1">
-              <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
-                {card.value}
-              </span>
-              {card.subtext && (
-                <span className="text-[10px] text-[var(--text-secondary)] font-normal hidden xl:inline">
-                  {card.subtext}
-                </span>
-              )}
-            </div>
+            <span className="text-[12px] font-semibold text-[var(--text-secondary)]">{card.title}</span>
+            <span className="text-[20px] font-bold text-[var(--text-primary)] mt-1">{card.value}</span>
+            <span className="text-[11px] text-gray-400 mt-1">{card.subtext}</span>
           </div>
         );
       })}

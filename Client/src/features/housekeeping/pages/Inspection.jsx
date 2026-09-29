@@ -188,34 +188,34 @@ export default function Inspection() {
  </div>
  </div>
 
- <div className="">
- <table className="w-full text-left border-collapse">
+ <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+ <table className="w-full text-left">
  <thead>
- <tr className="bg-gray-50/50 border-b border-gray-100">
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Room Number</th>
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Room Type</th>
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Guest</th>
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Cleaning Type</th>
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Housekeeper</th>
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Cleaning Completed</th>
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Priority</th>
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Inspection Status</th>
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Inspector</th>
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider">Inspection Time</th>
- <th className="py-3 px-3 text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Action</th>
+ <tr>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room Number</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room Type</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Guest</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Cleaning Type</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Housekeeper</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Cleaning Completed</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Priority</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Inspection Status</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Inspector</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Inspection Time</th>
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Action</th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-50">
+ <tbody className="text-xs text-gray-700">
  {filtered.length > 0 ? (
  filtered.map((row) => {
  const isMatch = highlightStatus && row.status === highlightStatus;
  const isEditing = editingRowId === row.id;
  
  return (
- <tr key={row.id} className={`transition-colors ${blinkActive && isMatch ?'blink-quick' :'hover:bg-gray-50/50'}`}>
- <td className="py-3 px-3 text-[13px] font-bold text-gray-900">{row.id}</td>
- <td className="py-3 px-3 text-[12px] font-medium text-gray-500">{row.type}</td>
- <td className="py-3 px-3 text-[13px] font-bold text-gray-800">{row.guest}</td>
+ <tr key={row.id} className={`transition-colors ${blinkActive && isMatch ?'blink-quick' :'hover:bg-gray-50/30'}`}>
+ <td className="py-2 px-3 text-[13px] font-bold text-gray-900">{row.id}</td>
+ <td className="py-2 px-3 text-[12px] font-medium text-gray-500">{row.type}</td>
+ <td className="py-2 px-3 text-[13px] font-bold text-gray-800">{row.guest}</td>
  
  <td className="py-2 px-2 text-[13px] font-semibold text-gray-700">
  {isEditing ? (
@@ -301,9 +301,9 @@ export default function Inspection() {
  ) : row.inspector}
  </td>
 
- <td className="py-3 px-3 text-[12px] font-medium text-gray-500">{row.inspectionTime}</td>
+ <td className="py-2 px-3 text-[12px] font-medium text-gray-500">{row.inspectionTime}</td>
  
- <td className="py-3 px-3 text-center">
+ <td className="py-2 px-3 text-center">
  {isEditing ? (
  <div className="flex gap-1 justify-center">
  <IconButton size="small" onClick={handleEditSave}><CheckCircle sx={{ fontSize: 18, color:'#1b7f43' }}/></IconButton>

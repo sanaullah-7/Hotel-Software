@@ -343,7 +343,7 @@ export default function LeaveRequests() {
   }, [data]);
 
   return (
-    <div className="assigned-form-surface p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden bg-[#f8fafc] flex flex-col gap-1">
+    <div className="animate-fade-in">
       <MetricCards cards={leaveStats} compactSubtext />
 
       <LeaveRequestsTable

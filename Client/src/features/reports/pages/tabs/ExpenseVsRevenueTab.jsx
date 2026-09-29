@@ -1,4 +1,4 @@
-import React from'react';
+﻿import React from'react';
 import {
  HomeOutlined as HomeIcon,
  Payments as RevenueIcon,
@@ -72,113 +72,48 @@ export default function ExpenseVsRevenueTab() {
  <div className="w-full space-y-2 pb-0 font-sans">
  
 
- {/* 2. Top Metric KPI Cards (2x2 Grid) */}
- <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1 mb-2">
  {/* Card 1: TOTAL REVENUE (YTD) */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
- TOTAL REVENUE (YTD)
- </span>
- <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
- $1,842,500
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$1,842,500</div>
+ <div className="text-[13px] text-gray-500 font-medium">Total Revenue (YTD)</div>
  </div>
- <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-bold inline-flex items-center gap-1 mb-1">
- ↗ +15.2%
- </span>
- </div>
- <div className="w-10 h-10 rounded-2xl bg-[#e0edff] flex items-center justify-center text-[#2563eb] shrink-0">
- <RevenueIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
- {/* Progress Bar */}
- <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-2.5 mb-1.5">
- <div className="h-full bg-[#3b5998] rounded-full" style={{ width:'85%' }}></div>
- </div>
- <div className="text-xs text-gray-500 font-normal">
- 85% of annual target achieved
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+ <RevenueIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Card 2: TOTAL EXPENSES (YTD) */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
- TOTAL EXPENSES (YTD)
- </span>
- <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
- $642,800
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$642,800</div>
+ <div className="text-[13px] text-gray-500 font-medium">Total Expenses (YTD)</div>
  </div>
- <span className="rounded-full px-2.5 py-0.5 bg-[#fee2e2] text-[#ef4444] text-xs font-bold inline-flex items-center gap-1 mb-1">
- ↘ -5.4%
- </span>
- </div>
- <div className="w-10 h-10 rounded-2xl bg-[#ffe4e6] flex items-center justify-center text-[#f43f5e] shrink-0">
- <ExpenseIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
- {/* Progress Bar */}
- <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-2.5 mb-1.5">
- <div className="h-full bg-[#3b5998] rounded-full" style={{ width:'42%' }}></div>
- </div>
- <div className="text-xs text-gray-500 font-normal">
- 42% of budget utilized
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+ <ExpenseIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Card 3: NET PROFIT */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
- NET PROFIT
- </span>
- <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
- $1,199,700
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$1,199,700</div>
+ <div className="text-[13px] text-gray-500 font-medium">Net Profit</div>
  </div>
- <span className="rounded-full px-2.5 py-0.5 bg-[#e8f8f0] text-[#0abb75] text-xs font-bold inline-flex items-center gap-1 mb-1">
- ↗ +12.8%
- </span>
- </div>
- <div className="w-10 h-10 rounded-2xl bg-[#d1fae5] flex items-center justify-center text-[#10b981] shrink-0">
- <ProfitIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
- {/* Progress Bar */}
- <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-2.5 mb-1.5">
- <div className="h-full bg-[#3b5998] rounded-full" style={{ width:'65.1%' }}></div>
- </div>
- <div className="text-xs text-gray-500 font-normal">
- Margin: 65.1%
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+ <ProfitIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Card 4: OPERATING MARGIN */}
- <div className="bg-white rounded-2xl border border-gray-100/90 shadow-sm p-3 sm:p-3.5 hover:shadow-md transition-shadow">
- <div className="flex items-start justify-between">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <span className="text-xs font-bold text-gray-500 tracking-wider uppercase block">
- OPERATING MARGIN
- </span>
- <div className="text-xl font-extrabold text-gray-900 tracking-tight mt-2 mb-1">
- 24.5%
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">24.5%</div>
+ <div className="text-[13px] text-gray-500 font-medium">Operating Margin</div>
  </div>
- <span className="rounded-full px-2.5 py-0.5 bg-[#f1f5f9] text-[#64748b] text-xs font-bold inline-flex items-center gap-1 mb-1">
- → Stable
- </span>
- </div>
- <div className="w-10 h-10 rounded-2xl bg-[#ede9fe] flex items-center justify-center text-[#7c3aed] shrink-0">
- <MarginIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
- {/* Progress Bar */}
- <div className="w-full h-1 bg-gray-200/80 rounded-full overflow-hidden mt-2.5 mb-1.5">
- <div className="h-full bg-[#3b5998] rounded-full" style={{ width:'24.5%' }}></div>
- </div>
- <div className="text-xs text-gray-500 font-normal">
- Against industry avg: 22%
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
+ <MarginIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
  </div>
@@ -267,10 +202,8 @@ export default function ExpenseVsRevenueTab() {
  </div>
  </div>
 
- {/* 4. Footer */}
- <div className="pt-2 text-left text-sm text-gray-500 font-normal">
- Copyright © 2026 Design By <span className="text-gray-700 font-semibold">Tech Titans</span>
- </div>
+
  </div>
  );
 }
+

@@ -26,8 +26,8 @@ export default function BookingsGridTable({
   confirmCancel
 }) {
   return (
-    <div className="w-full max-lg:overflow-x-auto lg:overflow-x-hidden min-w-0">
-      <table className="w-full text-left border-collapse table-fixed max-lg:min-w-[850px]">
+    <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+      <table className="w-full text-left">
         <colgroup>
           <col style={{ width: '14%' }} />
           <col style={{ width: '6%' }} />
@@ -42,18 +42,18 @@ export default function BookingsGridTable({
           <col style={{ width: '6%' }} />
         </colgroup>
         <thead>
-          <tr className="border-b border-gray-100 bg-gray-50/50">
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Name</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Room</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Room Type</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Package</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Status</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Check In</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Check Out</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Payment</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Dues</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Mobile</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide text-center whitespace-nowrap">Actions</th>
+          <tr className="bg-gray-50/50">
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap">Name</th>
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap">Room</th>
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap">Room Type</th>
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap">Package</th>
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap">Status</th>
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap">Check In</th>
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap">Check Out</th>
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap">Payment</th>
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap">Dues</th>
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap">Mobile</th>
+            <th className="py-3 px-3 text-[12px] font-bold text-gray-700 whitespace-nowrap text-center">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -61,11 +61,11 @@ export default function BookingsGridTable({
             <tr
               key={booking.id}
               onClick={() => handleRowClick(booking)}
-              className="border-b border-gray-50 hover:bg-gray-50/60 transition-colors cursor-pointer"
+              className="hover:bg-gray-50/30 transition-colors cursor-pointer"
               title="Click to view Guest Profile"
             >
               {/* Name */}
-              <td className="py-2.5 px-2">
+              <td className="py-2 px-3">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <img
                     src={booking.avatar}
@@ -81,20 +81,20 @@ export default function BookingsGridTable({
               </td>
 
               {/* Room */}
-              <td className="py-2.5 px-2">
+              <td className="py-2 px-3">
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-gray-100 text-gray-800 border border-gray-200 whitespace-nowrap">
                   {booking.roomNo || booking.room || '101'}
                 </span>
               </td>
 
               {/* Room Type */}
-              <td className="py-2.5 px-2 text-[11.5px] text-gray-600">{booking.roomType}</td>
+              <td className="py-2 px-3 text-[11.5px] text-gray-600">{booking.roomType}</td>
 
               {/* Package */}
-              <td className="py-2.5 px-2 text-[11.5px] text-gray-600">{booking.package}</td>
+              <td className="py-2 px-3 text-[11.5px] text-gray-600">{booking.package}</td>
 
               {/* Status */}
-              <td className="py-2.5 px-2">
+              <td className="py-2 px-3">
                 <StatusBadge
                   status={booking.status}
                   stylesMap={statusStyles}
@@ -129,7 +129,7 @@ export default function BookingsGridTable({
               </td>
 
               {/* Payment */}
-              <td className="py-2.5 px-2">
+              <td className="py-2 px-3">
                 <StatusBadge
                   status={booking.payment}
                   stylesMap={paymentStyles}

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from'react';
 import { useNavigate } from'react-router-dom';
 import { 
- Search, Add, Download, Refresh, FilterList, 
- Receipt, AttachMoney, RoomService, Warning, 
- CheckCircle, MoreVert, Visibility, Delete, Clear, 
- ChevronLeft, ChevronRight, MeetingRoom, Person,
- LocalShipping
-} from'@mui/icons-material';
+  Search, Add, Download, Refresh, FilterList, 
+  Receipt, AttachMoney, RoomService, Warning, 
+  CheckCircle, MoreVert, Visibility, Delete, Clear, 
+  ChevronLeft, ChevronRight, MeetingRoom, Person,
+  LocalShipping, AddCircleOutlined, TableChart, HourglassEmpty, Build
+} from '@mui/icons-material';
 import { 
  Menu, MenuItem, IconButton, FormControl, InputLabel, Select, Chip, Tooltip, Snackbar, Alert 
 } from'@mui/material';
@@ -187,64 +187,64 @@ export default function GuestCharges() {
  <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in">
  
  {/* KPI SUMMARY CARDS */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
- {/* Total Charges */}
- <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
- <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Total Charges</span>
- <div className="flex items-baseline justify-between mt-0.5">
- <span className="text-lg font-bold text-gray-900 leading-none">{metrics.totalCount}</span>
- <span className="text-[10px] text-gray-500 font-medium">
- Rs. {metrics.totalAmount.toLocaleString()}
- </span>
- </div>
- </div>
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-1">
+    {/* Total Charges */}
+    <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.totalCount}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Charges (Rs. {metrics.totalAmount.toLocaleString()})</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+        <Receipt sx={{ fontSize: 18 }} />
+      </div>
+    </div>
 
- {/* Added to Folio */}
- <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
- <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Added to Folio</span>
- <div className="flex items-baseline justify-between mt-0.5">
- <span className="text-lg font-bold text-emerald-700 leading-none">{metrics.addedToFolioCount}</span>
- <span className="text-[10px] text-emerald-600 font-semibold">
- Rs. {metrics.addedToFolioAmount.toLocaleString()}
- </span>
- </div>
- </div>
+    {/* Added to Folio */}
+    <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.addedToFolioCount}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Folio (Rs. {metrics.addedToFolioAmount.toLocaleString()})</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+        <CheckCircle sx={{ fontSize: 18 }} />
+      </div>
+    </div>
 
- {/* Pending Charges */}
- <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
- <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Pending Approval</span>
- <div className="flex items-baseline justify-between mt-0.5">
- <span className="text-lg font-bold text-amber-600 leading-none">{metrics.pendingCount}</span>
- <span className="text-[10px] text-amber-600 font-medium">
- Rs. {metrics.pendingAmount.toLocaleString()}
- </span>
- </div>
- </div>
+    {/* Pending Charges */}
+    <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.pendingCount}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Pending (Rs. {metrics.pendingAmount.toLocaleString()})</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-50 text-amber-600">
+        <HourglassEmpty sx={{ fontSize: 18 }} />
+      </div>
+    </div>
 
- {/* Consumption Charges */}
- <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
- <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Consumption</span>
- <div className="flex items-baseline justify-between mt-0.5">
- <span className="text-lg font-bold text-blue-600 leading-none">{metrics.consumptionCount}</span>
- <span className="text-[10px] text-blue-600 font-medium">
- Rs. {metrics.consumptionAmount.toLocaleString()}
- </span>
- </div>
- </div>
+    {/* Consumption Charges */}
+    <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.consumptionCount}</div>
+        <div className="text-[13px] text-gray-500 font-medium">Cons. (Rs. {metrics.consumptionAmount.toLocaleString()})</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-sky-50 text-sky-600">
+        <RoomService sx={{ fontSize: 18 }} />
+      </div>
+    </div>
 
- {/* Damage & External */}
- <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
- <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Damage / External</span>
- <div className="flex items-baseline justify-between mt-0.5">
- <span className="text-base font-bold text-purple-700 leading-none">
- Rs. {(metrics.damageAmount + metrics.externalOrderAmount).toLocaleString()}
- </span>
- <span className="text-[10px] text-gray-400 font-medium">
- {metrics.damageCount + metrics.externalOrderCount} entries
- </span>
- </div>
- </div>
- </div>
+    {/* Damage & External */}
+    <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div>
+        <div className="text-2xl font-bold text-gray-900 leading-none mb-1">
+          Rs. {(metrics.damageAmount + metrics.externalOrderAmount).toLocaleString()}
+        </div>
+        <div className="text-[13px] text-gray-500 font-medium">Ext/Damage ({metrics.damageCount + metrics.externalOrderCount})</div>
+      </div>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
+        <Build sx={{ fontSize: 18 }} />
+      </div>
+    </div>
+  </div>
 
  {/* FILTER & SEARCH TOOLBAR */}
  <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 space-y-2">
@@ -345,31 +345,33 @@ export default function GuestCharges() {
  </div>
 
  {/* Filter Actions */}
- <div className="col-span-2 sm:col-span-2 flex items-center justify-end gap-1.5 flex-wrap">
- <button 
- onClick={handleRefresh} 
- disabled={isRefreshing}
- title="Refresh Data & Reset Filters"
- className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
- >
- {isRefreshing ?'Refreshing...' :'Refresh'}
- </button>
-
- <button 
- onClick={handleExportCSV}
- className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition shadow-xs cursor-pointer"
- >
- Export CSV
- </button>
-
+ <div className="col-span-2 sm:col-span-2 flex items-center justify-end gap-2 flex-wrap">
  <button 
  onClick={() => {
  setPrefilledChargeData(null);
  setIsAddModalOpen(true);
  }}
- className="px-3 py-1 bg-[#1b7f43] hover:bg-[#166b37] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer flex items-center gap-1"
+ className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+ title="Add Guest Charge"
  >
- <span>+ Add Guest Charge</span>
+ <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+ </button>
+
+ <button 
+ onClick={handleRefresh} 
+ disabled={isRefreshing}
+ title="Refresh Data & Reset Filters"
+ className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer disabled:opacity-50"
+ >
+ <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+ </button>
+
+ <button 
+ onClick={handleExportCSV}
+ className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+ title="Export CSV"
+ >
+ <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
  </button>
  </div>
 
@@ -406,8 +408,8 @@ export default function GuestCharges() {
  </div>
 
  {/* Table Container - Strictly 100% width with NO horizontal scroll */}
- <div className="w-full">
- <table className="w-full table-fixed text-left border-collapse">
+ <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+ <table className="w-full text-left">
  <colgroup>
  <col style={{ width:'16%' }} />
  <col style={{ width:'8%' }} />
@@ -420,54 +422,54 @@ export default function GuestCharges() {
  <col style={{ width:'4%' }} />
  </colgroup>
  <thead>
- <tr className="bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
- <th className="py-2.5 px-2.5">
+ <tr className="bg-gray-50/50">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
  Guest
  </th>
- <th className="py-2.5 px-1.5">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
  Room
  </th>
- <th className="py-2.5 px-2">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
  Charge / Item
  </th>
- <th className="py-2.5 px-1.5">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
  Type
  </th>
- <th className="py-2.5 px-1 text-center">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">
  Qty
  </th>
- <th className="py-2.5 px-1.5 text-right">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-right">
  Amount
  </th>
- <th className="py-2.5 px-1 text-center">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">
  Status
  </th>
- <th className="py-2.5 px-1.5">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700">
  Date
  </th>
- <th className="py-2.5 px-1 text-center">
+ <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">
  Action
  </th>
  </tr>
  </thead>
- <tbody className="divide-y divide-gray-100 text-xs">
+ <tbody>
  {paginatedCharges.map((charge) => (
  <tr 
  key={charge.id} 
- className="hover:bg-gray-50/70 transition-colors group cursor-pointer"
+ className="hover:bg-gray-50/30 transition-colors group cursor-pointer"
  onClick={() => setSelectedChargeForDetail(charge)}
  >
  {/* Guest */}
- <td className="py-2 px-2.5">
+ <td className="py-2 px-3">
  <div className="flex items-center gap-2 min-w-0">
  <div className="w-6 h-6 rounded-full bg-emerald-50 text-[#1b7f43] flex items-center justify-center font-bold text-[10px] shrink-0 border border-emerald-100">
  {charge.guestName ? charge.guestName.charAt(0) :'G'}
  </div>
  <div className="flex flex-col min-w-0">
- <span className="text-xs font-bold text-gray-900 group-hover:text-[#1b7f43] transition-colors truncate">
+ <span className="text-[13px] font-bold text-gray-900 group-hover:text-[#1b7f43] transition-colors truncate">
  {charge.guestName}
  </span>
- <span className="text-[9.5px] text-gray-400 font-mono truncate">
+ <span className="text-[12px] text-gray-600 font-mono truncate">
  {charge.folioId ||`FOL-${charge.roomNumber}`}
  </span>
  </div>
@@ -475,9 +477,9 @@ export default function GuestCharges() {
  </td>
 
  {/* Room */}
- <td className="py-2 px-1.5">
- <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-800 text-[10.5px] font-bold">
- <MeetingRoom sx={{ fontSize: 12, color:'#6b7280' }} />
+ <td className="py-2 px-3">
+ <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-100 text-gray-800 text-[12px] font-bold">
+ <MeetingRoom sx={{ fontSize: 13, color:'#6b7280' }} />
  <span>{charge.roomNumber}</span>
  </span>
  </td>
@@ -485,11 +487,11 @@ export default function GuestCharges() {
  {/* Charge / Item */}
  <td className="py-2 px-2">
  <div className="flex flex-col min-w-0">
- <span className="text-xs font-bold text-gray-900 leading-tight break-words">
+ <span className="text-[13px] font-bold text-gray-900 leading-tight break-words">
  {charge.itemName}
  </span>
  {charge.notes && (
- <span className="text-[10px] text-gray-400 truncate mt-0.5" title={charge.notes}>
+ <span className="text-[12px] text-gray-500 italic truncate mt-0.5" title={charge.notes}>
  {charge.notes}
  </span>
  )}
@@ -497,32 +499,32 @@ export default function GuestCharges() {
  </td>
 
  {/* Type */}
- <td className="py-2 px-1.5">
+ <td className="py-2 px-3">
  {getTypeBadge(charge.chargeType)}
  </td>
 
  {/* Qty */}
- <td className="py-2 px-1 text-center font-bold text-gray-800">
+ <td className="py-2 px-3 text-center font-bold text-gray-800">
  {charge.quantity}
  </td>
 
  {/* Amount */}
- <td className="py-2 px-1.5 text-right font-mono text-xs font-bold text-gray-900">
+ <td className="py-2 px-3 text-right font-mono text-xs font-bold text-gray-900">
  Rs. {Number(charge.amount || (charge.unitPrice * charge.quantity) || 0).toLocaleString()}
  </td>
 
  {/* Status */}
- <td className="py-2 px-1 text-center">
+ <td className="py-2 px-3 text-center">
  {getStatusBadge(charge.status)}
  </td>
 
  {/* Date */}
- <td className="py-2 px-1.5 text-[10px] font-medium text-gray-500 font-mono truncate">
+ <td className="py-2 px-3 text-[10px] font-medium text-gray-500 font-mono truncate">
  {charge.date}
  </td>
 
  {/* Action */}
- <td className="py-2 px-1 text-center" onClick={(e) => e.stopPropagation()}>
+ <td className="py-2 px-3 text-center" onClick={(e) => e.stopPropagation()}>
  <IconButton 
  size="small" 
  onClick={(e) => handleMenuClick(e, charge.id)}

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import {
   Search, FilterList, AddCircleOutlined, Refresh, 
   TableChart, PictureAsPdf, Close,
@@ -6,6 +6,7 @@ import {
   EditOutlined, DeleteOutlined, SubjectOutlined, LocalOfferOutlined, FlagOutlined, NotesOutlined, MeetingRoomOutlined, Person
 } from '@mui/icons-material';
 import { Tooltip } from '@mui/material';
+import CustomPagination from '../../../components/CustomPagination';
 import ReportProblem from '@mui/icons-material/ReportProblem';
 import CheckCircle from '@mui/icons-material/CheckCircle';
 import PendingActions from '@mui/icons-material/PendingActions';
@@ -46,6 +47,7 @@ const statusStyles = {
 export default function GuestComplaint() {
   const [complaints, setComplaints] = useState(initialComplaints);
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
   const [showColumnsMenu, setShowColumnsMenu] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState({
     Date: true,
@@ -263,12 +265,15 @@ export default function GuestComplaint() {
     printWindow.document.close();
   };
 
-  const filteredComplaints = complaints.filter(c => 
+    const filteredComplaints = complaints.filter(c => 
     c.guestName.toLowerCase().includes(search.toLowerCase()) || 
     c.roomNo.toLowerCase().includes(search.toLowerCase()) ||
     c.type.toLowerCase().includes(search.toLowerCase()) ||
     c.description.toLowerCase().includes(search.toLowerCase())
   );
+
+  const paginatedComplaints = filteredComplaints.slice((page - 1) * 10, page * 10);
+  const totalPages = Math.ceil(filteredComplaints.length / 10);
 
   return (
     <div className="pt-1 w-full animate-fade-in relative">
@@ -285,7 +290,7 @@ export default function GuestComplaint() {
                 type="text" 
                 placeholder="Search..." 
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
                 className="w-full pl-4 pr-10 py-2 border border-gray-400 rounded-md text-[13px] text-gray-700 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
               />
               <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 cursor-pointer" sx={{ fontSize: 20 }} />
@@ -324,7 +329,7 @@ export default function GuestComplaint() {
               </tr>
             </thead>
             <tbody>
-              {filteredComplaints.map(complaint => (
+              {paginatedComplaints.map(complaint => (
                 <tr key={complaint.id} onClick={() => openViewModal(complaint)} className="border-b border-gray-50 hover:bg-gray-50/50 cursor-pointer">
                   {visibleColumns['Date'] && (
                     <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium whitespace-nowrap">
@@ -394,7 +399,7 @@ export default function GuestComplaint() {
                   )}
                 </tr>
               ))}
-              {filteredComplaints.length === 0 && (
+              {paginatedComplaints.length === 0 && (
                 <tr>
                   <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="py-8 text-center text-gray-400 text-[14px]">
                     No complaints found.
@@ -402,8 +407,16 @@ export default function GuestComplaint() {
                 </tr>
               )}
             </tbody>
-          </table>
+                    </table>
         </div>
+
+        {totalPages > 1 && (
+          <CustomPagination
+            count={totalPages}
+            page={page}
+            onChange={(e, p) => setPage(p)}
+          />
+        )}
       </div>
       {/* View Complaint Modal */}
       {isViewModalOpen && viewingComplaint && (
@@ -683,3 +696,6 @@ export default function GuestComplaint() {
     </div>
   );
 }
+
+
+

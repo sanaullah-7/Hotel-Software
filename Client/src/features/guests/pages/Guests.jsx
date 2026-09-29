@@ -232,7 +232,7 @@ export default function Guests() {
   return (
     <div className="w-full flex flex-col pt-[2px] animate-fade-in pb-8">
       {/* MAIN CARD */}
-      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 flex flex-col w-full overflow-hidden">
+      <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 flex-1 w-full overflow-hidden">
         {/* Card Header */}
         <div className="p-2 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-4">
@@ -346,18 +346,18 @@ export default function Guests() {
         </div>
 
         {/* Table Content */}
-        <div className="w-full overflow-x-auto min-w-0">
-          <table className="w-full text-left border-collapse min-w-[800px]">
-            <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                <th className="py-4 px-4 text-[13px] font-bold text-gray-700">Guest ID</th>
-                <th className="py-4 px-4 text-[13px] font-bold text-gray-700">Full Name</th>
-                <th className="py-4 px-4 text-[13px] font-bold text-gray-700">Email</th>
-                <th className="py-4 px-4 text-[13px] font-bold text-gray-700">Phone</th>
-                <th className="py-4 px-4 text-[13px] font-bold text-gray-700">City</th>
+        <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50/50">
+              <tr>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Guest ID</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Full Name</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Email</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Phone</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">City</th>
                 <th className="py-4 px-4 text-[13px] font-bold text-gray-700 text-center">Total Stays</th>
-                <th className="py-4 px-4 text-[13px] font-bold text-gray-700">Status</th>
-                <th className="py-4 px-4 text-[13px] font-bold text-gray-700 text-center">Actions</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>
+                <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -365,43 +365,43 @@ export default function Guests() {
                 <tr 
                   key={guest.id} 
                   onClick={() => navigate(`/guests/${guest.id}`)}
-                  className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                  className="hover:bg-gray-50/30 transition-colors cursor-pointer"
                   title="Click anywhere on the row to view Guest Profile"
                 >
-                  <td className="py-3 px-4 text-[13px] text-gray-600 font-medium">{guest.id}</td>
-                  <td className="py-3 px-4">
+                  <td className="py-2 px-3 text-[13px] font-bold text-gray-900">{guest.id}</td>
+                  <td className="py-2 px-3">
                     <div className="flex items-center">
                       <img src={guest.avatar} alt={guest.name} className="w-8 h-8 rounded-full object-cover mr-3 bg-gray-200 shrink-0" />
                       <Link 
                         to={`/guests/${guest.id}`} 
                         onClick={(e) => e.stopPropagation()}
-                        className="text-[13px] font-bold text-gray-800 hover:text-[#1b7f43] hover:underline transition-colors" 
+                        className="text-[12px] font-bold text-gray-800 hover:text-[#1b7f43] hover:underline transition-colors" 
                         title="View Guest Profile"
                       >
                         {guest.name}
                       </Link>
                     </div>
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center text-[13px] text-gray-600 font-medium">
+                  <td className="py-2 px-3">
+                    <div className="flex items-center text-[12px] text-gray-600">
                       <EmailOutlined className="text-red-500 mr-2 shrink-0" sx={{ fontSize: 16 }} />
                       <span className="truncate max-w-[180px]">{guest.email}</span>
                     </div>
                   </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center text-[13px] text-gray-600 font-medium whitespace-nowrap">
+                  <td className="py-2 px-3">
+                    <div className="flex items-center text-[12px] text-gray-600 whitespace-nowrap">
                       <PhoneOutlined className="text-green-500 mr-2 shrink-0" sx={{ fontSize: 16 }} />
                       {guest.phone}
                     </div>
                   </td>
-                  <td className="py-3 px-4 text-[13px] text-gray-600 font-medium whitespace-nowrap">{guest.city}</td>
-                  <td className="py-3 px-4 text-[13px] text-gray-600 font-medium text-center">{guest.totalStays}</td>
-                  <td className="py-3 px-4 whitespace-nowrap">
+                  <td className="py-2 px-3 text-[12px] text-gray-600 whitespace-nowrap">{guest.city}</td>
+                  <td className="py-2 px-3 text-[12px] text-gray-600 text-center">{guest.totalStays}</td>
+                  <td className="py-2 px-3 whitespace-nowrap">
                     <span className="px-3 py-1 text-[11px] font-bold rounded-md bg-[#e5f4eb] text-[#1b7f43]">
                       {guest.status}
                     </span>
                   </td>
-                  <td className="py-3 px-4 text-center" onClick={(e) => e.stopPropagation()}>
+                  <td className="py-2 px-3 text-center" onClick={(e) => e.stopPropagation()}>
                     <button 
                       onClick={() => openEditModal(guest)} 
                       className="text-[var(--primary-main)] hover:text-green-700 transition-colors p-1.5 rounded-lg hover:bg-[#e5f4eb] cursor-pointer"

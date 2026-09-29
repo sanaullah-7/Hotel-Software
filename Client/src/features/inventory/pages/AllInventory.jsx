@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, Clear, Visibility, MeetingRoom, ReportProblem, Delete
+  Search, Clear, Visibility, MeetingRoom, ReportProblem, Delete,
+  AddCircleOutlined, Refresh, TableChart
 } from '@mui/icons-material';
 import { 
   Menu, MenuItem, FormControl, InputLabel, Select, Snackbar, Alert 
@@ -210,21 +211,13 @@ export default function AllInventory() {
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-1.5 flex-wrap">
+          <div className="flex items-center justify-end gap-2 flex-wrap">
             <button 
-              onClick={handleRefresh} 
-              disabled={isRefreshing}
-              title="Refresh Data & Reset Filters"
-              className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition cursor-pointer shadow-xs"
+              onClick={() => setAddStockModalOpen(true)}
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+              title="Add Stock"
             >
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
-            </button>
-
-            <button 
-              onClick={handleExportCSV}
-              className="px-2.5 py-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 rounded text-xs font-medium transition shadow-xs cursor-pointer"
-            >
-              Export CSV
+              <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
             </button>
 
             <button 
@@ -232,16 +225,27 @@ export default function AllInventory() {
                 setPrefilledItemForIncident(null);
                 setIncidentModalOpen(true);
               }}
-              className="px-2.5 py-1 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded text-xs font-medium transition cursor-pointer"
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" 
+              title="Report Missing"
             >
-              Report Missing
+              <ReportProblem sx={{ fontSize: 18 }} className="text-[#ef4444]" />
             </button>
 
             <button 
-              onClick={() => setAddStockModalOpen(true)}
-              className="px-3 py-1 bg-[#1b7f43] hover:bg-[#166b37] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
+              onClick={handleRefresh} 
+              disabled={isRefreshing}
+              title="Refresh Data & Reset Filters"
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer disabled:opacity-50"
             >
-              + Add Stock
+              <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+            </button>
+
+            <button 
+              onClick={handleExportCSV}
+              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+              title="Export CSV"
+            >
+              <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
             </button>
           </div>
 

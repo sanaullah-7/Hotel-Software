@@ -9,6 +9,9 @@ import {
  Tooltip,
  Snackbar,
  Alert,
+ FormControl,
+ Select,
+ InputLabel,
 } from'@mui/material';
 import {
  Search as SearchIcon,
@@ -21,6 +24,9 @@ import {
  AssignmentReturn as RefundIcon,
  FileDownload as ExportIcon,
  SwapHoriz as TransactionIcon,
+ Payment as PaymentIcon,
+ TrendingUp as TrendingUpIcon,
+ PendingActions as PendingIcon,
 } from'@mui/icons-material';
 import {
  getPayments,
@@ -153,54 +159,47 @@ export default function PaymentHistory() {
 
  return (
  <div className="space-y-2 pb-2 animate-fade-in pt-1">
- {/* Metric Cards (Heading Removed) */}
- <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
- {/* Gross Transactions */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Gross Collected</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-gray-900">${metrics.totalCollected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
- <span className="text-[10px] text-gray-400 font-medium">{metrics.totalTransactions} TXNs</span>
- </div>
- </div>
+ {/* Metric Cards */}
+   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
+      <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">${metrics.totalCollected.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Gross Collected ({metrics.totalTransactions} TXNs)</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+          <PaymentIcon sx={{ fontSize: 18 }} />
+        </div>
+      </div>
+      <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">${metrics.cardAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Card Payments ({metrics.cardCount} Cards)</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-indigo-50 text-indigo-600">
+          <ReceiptIcon sx={{ fontSize: 18 }} />
+        </div>
+      </div>
+      <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">${metrics.otherAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Cash & Alternative</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
+          <PendingIcon sx={{ fontSize: 18 }} />
+        </div>
+      </div>
+      <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">${metrics.netRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Net Settled Revenue</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+          <TrendingUpIcon sx={{ fontSize: 18 }} />
+        </div>
+      </div>
+   </div>
 
- {/* Card Payments */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Card Payments</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-gray-900">${metrics.cardAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
- <span className="text-[10px] text-blue-600 font-medium">{metrics.cardCount} Cards</span>
- </div>
- </div>
-
- {/* Cash & Alternative */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Cash & Alternative</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-gray-900">${metrics.otherAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
- <span className="text-[10px] text-purple-600 font-medium">Cash / Wire</span>
- </div>
- </div>
-
- {/* Net Settled Revenue */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Net Settled</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-emerald-700">${metrics.netRevenue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
- <span className="text-[10px] text-emerald-600 font-semibold">After Refunds</span>
- </div>
- </div>
- </div>
-
- {/* Filter and Search Bar */}
+  {/* Filter and Search Bar */}
  <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
  <div className="relative w-full sm:w-64 shrink-0">
  <SearchIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" sx={{ fontSize: 16 }} />

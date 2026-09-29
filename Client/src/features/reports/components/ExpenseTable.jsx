@@ -1,10 +1,10 @@
-import React from 'react';
+﻿import React from 'react';
 import {
   Search as SearchIcon,
   FilterList as FilterIcon,
-  Add as AddIcon,
+  AddCircle as AddIcon,
   Refresh as RefreshIcon,
-  GridOn as GridIcon,
+  TableChart as GridIcon,
   PictureAsPdf as PdfIcon,
   EditOutlined as EditIcon,
   DeleteOutlined as DeleteIcon,
@@ -80,20 +80,20 @@ export const ExpenseTable = ({
           )}
         </div>
 
-        {/* Right Toolbar Actions */}
+                {/* Right Toolbar Actions */}
         <div className="assigned-table-toolbar flex items-center flex-wrap gap-2.5">
           {/* Filter / Column Toggle Button */}
           <div className="relative" ref={filterMenuRef}>
             <button
               onClick={() => setShowColumnMenu((prev) => !prev)}
               title="Show/Hide Columns"
-              className={`p-1.5 rounded-full border transition flex items-center justify-center cursor-pointer ${
+              className={`p-1 transition flex items-center justify-center cursor-pointer ${
                 showColumnMenu
-                  ? 'border-indigo-500 bg-indigo-50 text-indigo-600'
-                  : 'border-gray-200 text-indigo-600 hover:bg-gray-50'
+                  ? 'text-[#1b7f43] bg-emerald-50 rounded'
+                  : 'text-[#1b7f43] hover:text-green-800'
               }`}
             >
-              <FilterIcon sx={{ fontSize: 19 }} />
+              <FilterIcon sx={{ fontSize: 24 }} />
             </button>
 
             {/* Show/Hide Column Dropdown */}
@@ -133,38 +133,38 @@ export const ExpenseTable = ({
             )}
           </div>
 
-          <button
+                    <button
             onClick={handleOpenAddModal}
             title="Add Record"
-            className="p-1.5 rounded-full border border-emerald-500 text-emerald-600 hover:bg-emerald-50 transition flex items-center justify-center cursor-pointer"
+            className="p-1 transition flex items-center justify-center cursor-pointer text-[#1b7f43] hover:text-green-800"
           >
-            <AddIcon sx={{ fontSize: 19 }} />
+            <AddIcon sx={{ fontSize: 24 }} />
           </button>
 
           <button
             onClick={handleRefresh}
             title="Refresh Data"
-            className={`p-1.5 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 transition flex items-center justify-center cursor-pointer ${
-              isRefreshing ? 'animate-spin text-indigo-600' : ''
+            className={`p-1 transition flex items-center justify-center cursor-pointer text-[#1b7f43] hover:text-green-800 ${
+              isRefreshing ? 'animate-spin' : ''
             }`}
           >
-            <RefreshIcon sx={{ fontSize: 19 }} />
+            <RefreshIcon sx={{ fontSize: 24 }} />
           </button>
 
           <button
             onClick={handleExportExcel}
             title="Export to Excel (.xlsx)"
-            className="p-1.5 rounded-full border border-sky-400 text-sky-600 hover:bg-sky-50 transition flex items-center justify-center cursor-pointer"
+            className="p-1 transition flex items-center justify-center cursor-pointer text-[#0ea5e9] hover:text-sky-600"
           >
-            <GridIcon sx={{ fontSize: 19 }} />
+            <GridIcon sx={{ fontSize: 24 }} />
           </button>
 
           <button
             onClick={handleExportPdf}
             title="Export to PDF (.pdf)"
-            className="p-1.5 rounded-full border border-rose-400 text-rose-600 hover:bg-rose-50 transition flex items-center justify-center cursor-pointer"
+            className="p-1 transition flex items-center justify-center cursor-pointer text-[#ef4444] hover:text-red-600"
           >
-            <PdfIcon sx={{ fontSize: 19 }} />
+            <PdfIcon sx={{ fontSize: 24 }} />
           </button>
         </div>
       </div>
@@ -324,7 +324,7 @@ export const ExpenseTable = ({
         </div>
 
         <div>
-          {startRecord} – {endRecord} of {totalItems}
+          {startRecord} â€“ {endRecord} of {totalItems}
         </div>
 
         <div className="flex items-center gap-1">
@@ -347,3 +347,8 @@ export const ExpenseTable = ({
     </div>
   );
 };
+
+
+
+
+

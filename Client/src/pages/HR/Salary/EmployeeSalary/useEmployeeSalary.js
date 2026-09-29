@@ -160,6 +160,35 @@ export function useEmployeeSalary() {
   };
 
   // Full Table PDF Export Action
+  const handleExportCSV = () => {
+    const headers = ["Employee Name", "Email", "Department", "Base Salary", "Bonus", "Deductions", "Net Salary"];
+    const csvRows = [headers.join(',')];
+
+    sortedSalaries.forEach(item => {
+      const netSalary = (Number(item.salary) + Number(item.bonus || 0) - Number(item.deductions || 0));
+      const row = [
+        `"${item.name}"`,
+        `"${item.email}"`,
+        `"${item.department}"`,
+        `"${item.salary}"`,
+        `"${item.bonus || 0}"`,
+        `"${item.deductions || 0}"`,
+        `"${netSalary}"`
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Salary_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleExportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);
@@ -523,6 +552,7 @@ export function useEmployeeSalary() {
     isAllSelected,
     isSomeSelected,
     handleRefresh,
+    handleExportCSV,
     handleExportPDF,
     handleDownloadPayslip,
     handleOpenAddModal,

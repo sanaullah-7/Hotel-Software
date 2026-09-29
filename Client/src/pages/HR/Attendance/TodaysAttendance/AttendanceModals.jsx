@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import {
     Dialog,
     DialogContent,
@@ -103,7 +103,7 @@ export const AttendanceModals = ({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                             <div>
                                 <label className="block text-xs font-semibold text-slate-600 mb-1">
                                     First In (HH:MM)
@@ -121,15 +121,30 @@ export const AttendanceModals = ({
 
                             <div>
                                 <label className="block text-xs font-semibold text-slate-600 mb-1">
-                                    Break (HH:MM)
+                                    Break From
                                 </label>
                                 <TextField
                                     fullWidth
                                     size="small"
                                     type="time"
-                                    value={formData.breakTime}
+                                    value={formData.breakFrom}
                                     onChange={(e) =>
-                                        setFormData({ ...formData, breakTime: e.target.value })
+                                        setFormData({ ...formData, breakFrom: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                                    Break To
+                                </label>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    type="time"
+                                    value={formData.breakTo}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, breakTo: e.target.value })
                                     }
                                 />
                             </div>
@@ -246,7 +261,7 @@ export const AttendanceModals = ({
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                             <div>
                                 <label className="block text-xs font-semibold text-slate-600 mb-1">
                                     First In (HH:MM)
@@ -264,15 +279,30 @@ export const AttendanceModals = ({
 
                             <div>
                                 <label className="block text-xs font-semibold text-slate-600 mb-1">
-                                    Break (HH:MM)
+                                    Break From
                                 </label>
                                 <TextField
                                     fullWidth
                                     size="small"
                                     type="time"
-                                    value={formData.breakTime}
+                                    value={formData.breakFrom}
                                     onChange={(e) =>
-                                        setFormData({ ...formData, breakTime: e.target.value })
+                                        setFormData({ ...formData, breakFrom: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                                    Break To
+                                </label>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    type="time"
+                                    value={formData.breakTo}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, breakTo: e.target.value })
                                     }
                                 />
                             </div>
@@ -356,3 +386,4 @@ export const AttendanceModals = ({
         </>
     );
 };
+

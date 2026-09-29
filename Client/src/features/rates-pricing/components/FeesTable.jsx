@@ -4,6 +4,7 @@ import {
   ChevronLeft, ChevronRight
 } from '@mui/icons-material';
 import { IconButton, Tooltip } from '@mui/material';
+import { AccountBalance, CheckCircle, Percent } from '@mui/icons-material';
 
 export const FeesTable = ({
   totalFeesCount,
@@ -30,49 +31,49 @@ export const FeesTable = ({
   return (
     <div className="space-y-2">
       {/* Fee Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-0.5">
-            <span className="text-gray-500 font-semibold text-[11px] truncate">Total Fees</span>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-lg font-bold text-gray-900">{totalFeesCount}</span>
-            <span className="text-[10px] text-gray-400 font-medium">Configured</span>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{totalFeesCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Total Fees</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
+      <AccountBalance sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
-        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-0.5">
-            <span className="text-gray-500 font-semibold text-[11px] truncate">Active Fees</span>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-lg font-bold text-emerald-700">{activeFeesCount}</span>
-            <span className="text-[10px] text-emerald-600 font-semibold">Live in Billing</span>
-          </div>
-        </div>
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-emerald-700 leading-none mb-1">{activeFeesCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Active Fees</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600 shrink-0">
+      <CheckCircle sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
-        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-0.5">
-            <span className="text-gray-500 font-semibold text-[11px] truncate">Fixed Surcharges</span>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-lg font-bold text-gray-900">{fixedFeesCount}</span>
-            <span className="text-[10px] text-blue-600 font-medium">PKR Flat Amount</span>
-          </div>
-        </div>
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{fixedFeesCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Fixed Amount</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 shrink-0">
+      <ReceiptLong sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
-        <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
-          <div className="flex justify-between items-center mb-0.5">
-            <span className="text-gray-500 font-semibold text-[11px] truncate">Percentage Fees</span>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <span className="text-lg font-bold text-gray-900">{percentageFeesCount}</span>
-            <span className="text-[10px] text-amber-600 font-medium">% Of Total Bill</span>
-          </div>
-        </div>
-      </div>
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{percentageFeesCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Percentage</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600 shrink-0">
+      <Percent sx={{ fontSize: 18 }} />
+    </div>
+  </div>
+</div>
 
-      {/* Fee Table Card */}
+{/* Fee Table Card */}
       <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
         {/* Controls Bar */}
         <div className="p-3 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">

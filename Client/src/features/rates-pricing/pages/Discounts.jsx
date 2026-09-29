@@ -119,59 +119,59 @@ export default function Discounts() {
  </div>
 
  {/* Stats Cards */}
- <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Total Vouchers</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-lg font-bold text-gray-900">{totalDiscountsCount}</span>
- <span className="text-[10px] text-gray-400 font-medium">Configured</span>
- </div>
- </div>
+ <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mt-1">
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{totalDiscountsCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Total Vouchers</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
+      <LocalOffer sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Active Offers</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-lg font-bold text-emerald-700">{activeDiscountsCount}</span>
- <span className="text-[10px] text-emerald-600 font-semibold">Redeemable</span>
- </div>
- </div>
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-emerald-700 leading-none mb-1">{activeDiscountsCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Active Offers</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600 shrink-0">
+      <CheckCircle sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Percentage Off</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-lg font-bold text-gray-900">{percentageDiscountsCount}</span>
- <span className="text-[10px] text-purple-600 font-medium">% Deals</span>
- </div>
- </div>
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{percentageDiscountsCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Percentage Off</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600 shrink-0">
+      <Percent sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Fixed Amount Off</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-lg font-bold text-gray-900">{fixedDiscountsCount}</span>
- <span className="text-[10px] text-amber-600 font-medium">PKR Vouchers</span>
- </div>
- </div>
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{fixedDiscountsCount}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Fixed Amount</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 shrink-0">
+      <LocalOffer sx={{ fontSize: 18 }} />
+    </div>
+  </div>
 
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Total Redemptions</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-lg font-bold text-gray-900">{totalRedemptions}</span>
- <span className="text-[10px] text-gray-400 font-medium">Used to date</span>
- </div>
- </div>
- </div>
+  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{totalRedemptions}</div>
+      <div className="text-[13px] text-gray-500 font-medium">Total Redemptions</div>
+    </div>
+    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-indigo-50 text-indigo-600 shrink-0">
+      <DateRange sx={{ fontSize: 18 }} />
+    </div>
+  </div>
+</div>
 
- {/* Main Table Container */}
+{/* Main Table Container */}
  <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
  
  {/* Table Controls Header */}

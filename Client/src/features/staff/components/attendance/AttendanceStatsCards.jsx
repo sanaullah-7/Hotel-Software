@@ -2,24 +2,24 @@ import React from 'react';
 
 export default function AttendanceStatsCards({ attendanceStats = [] }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full mb-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1 mb-2">
       {attendanceStats.map((stat) => {
         const Icon = stat.icon;
         return (
           <div
             key={stat.id}
-            className="bg-white rounded-xl border border-slate-100 p-3 flex items-center gap-3 shadow-sm hover:border-[#1b7f43]/30 transition-colors"
+            className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between"
           >
-            <div className={`p-2.5 rounded-lg ${stat.bg} ${stat.color} flex items-center justify-center shrink-0`}>
-              <Icon sx={{ fontSize: 22 }} />
-            </div>
             <div>
-              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block">
-                {stat.title}
-              </span>
-              <span className="text-xl font-bold text-gray-900 leading-none">
+              <div className="text-2xl font-bold text-gray-900 leading-none mb-1">
                 {stat.value}
-              </span>
+              </div>
+              <div className="text-[13px] text-gray-500 font-medium">
+                {stat.title}
+              </div>
+            </div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${stat.bg} ${stat.color}`}>
+              <Icon sx={{ fontSize: 18 }} />
             </div>
           </div>
         );

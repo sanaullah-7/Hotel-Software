@@ -1,52 +1,63 @@
 import React from 'react';
+import { Inventory, CheckCircle, Warning, ReportProblem, AttachMoney } from '@mui/icons-material';
 
 export default function InventoryKpiCards({ metrics }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mt-1">
       {/* Total Items */}
-      <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
-        <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Total Items</span>
-        <div className="flex items-baseline justify-between mt-0.5">
-          <span className="text-lg font-bold text-gray-900 leading-none">{metrics.totalCount}</span>
-          <span className="text-[10px] text-gray-400 font-medium">{metrics.totalQuantity} Units</span>
+      <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.totalCount}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Total Items ({metrics.totalQuantity} Units)</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+          <Inventory sx={{ fontSize: 18 }} />
         </div>
       </div>
 
       {/* Available Stock */}
-      <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
-        <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Available Stock</span>
-        <div className="flex items-baseline justify-between mt-0.5">
-          <span className="text-lg font-bold text-emerald-700 leading-none">{metrics.availableStock}</span>
-          <span className="text-[10px] text-emerald-600 font-semibold">Ready</span>
+      <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.availableStock}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Available Stock</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+          <CheckCircle sx={{ fontSize: 18 }} />
         </div>
       </div>
 
       {/* Low Stock */}
-      <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
-        <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Low Stock</span>
-        <div className="flex items-baseline justify-between mt-0.5">
-          <span className="text-lg font-bold text-amber-600 leading-none">{metrics.lowStock}</span>
-          <span className="text-[10px] text-amber-600 font-medium">Below Min</span>
+      <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.lowStock}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Low Stock</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-50 text-amber-600">
+          <Warning sx={{ fontSize: 18 }} />
         </div>
       </div>
 
       {/* Missing Items */}
-      <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
-        <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Missing Items</span>
-        <div className="flex items-baseline justify-between mt-0.5">
-          <span className="text-lg font-bold text-red-600 leading-none">{metrics.missingItems}</span>
-          <span className="text-[10px] text-red-600 font-medium">Active Loss</span>
+      <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{metrics.missingItems}</div>
+          <div className="text-[13px] text-gray-500 font-medium">Missing Items</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+          <ReportProblem sx={{ fontSize: 18 }} />
         </div>
       </div>
 
       {/* Total Valuation */}
-      <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 flex flex-col justify-between">
-        <span className="text-gray-500 font-semibold text-[10.5px] uppercase tracking-wider truncate">Valuation</span>
-        <div className="flex items-baseline justify-between mt-0.5">
-          <span className="text-base font-bold text-gray-900 leading-none">
+      <div className="bg-white p-4 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div>
+          <div className="text-2xl font-bold text-gray-900 leading-none mb-1">
             ${metrics.totalValuation.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-          </span>
-          <span className="text-[10px] text-gray-400 font-medium">Total Assets</span>
+          </div>
+          <div className="text-[13px] text-gray-500 font-medium">Valuation</div>
+        </div>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
+          <AttachMoney sx={{ fontSize: 18 }} />
         </div>
       </div>
     </div>

@@ -69,8 +69,8 @@ export default function InventoryTable({
       </div>
 
       {/* Table Container */}
-      <div className="w-full overflow-x-auto min-w-0">
-        <table className="w-full table-fixed text-left border-collapse min-w-[750px]">
+      <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <table className="w-full text-left min-w-[750px]">
           <colgroup>
             <col style={{ width: '22%' }} />
             <col style={{ width: '11%' }} />
@@ -84,36 +84,36 @@ export default function InventoryTable({
             <col style={{ width: '4%' }} />
           </colgroup>
           <thead>
-            <tr className="bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
-              <th className="py-2.5 px-2.5">Item & SKU</th>
-              <th className="py-2.5 px-1.5">Category</th>
-              <th className="py-2.5 px-1.5">Room / Location</th>
-              <th className="py-2.5 px-1 text-center">Stock / Qty</th>
-              <th className="py-2.5 px-1.5 text-right">Unit Price</th>
-              <th className="py-2.5 px-1.5 text-right">Total Value</th>
-              <th className="py-2.5 px-1 text-center">Condition</th>
-              <th className="py-2.5 px-1 text-center">Status</th>
-              <th className="py-2.5 px-1.5">Last Updated</th>
-              <th className="py-2.5 px-1 text-center">Actions</th>
+            <tr className="bg-gray-50/50">
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Item & SKU</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Category</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room / Location</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Stock / Qty</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-right">Unit Price</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-right">Total Value</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Condition</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Status</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Last Updated</th>
+              <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 text-xs">
+          <tbody>
             {paginatedItems.map((item) => {
               const isRoomItem = item.locationType === 'Room' && item.roomNumber && item.roomNumber !== '-';
 
               return (
                 <tr 
                   key={item.id} 
-                  className="hover:bg-gray-50/70 transition-colors group cursor-pointer"
+                  className="hover:bg-gray-50/30 transition-colors group cursor-pointer"
                   onClick={() => setSelectedItemForDetail(item)}
                 >
                   {/* Item & SKU */}
-                  <td className="py-2 px-2.5">
+                  <td className="py-2 px-3">
                     <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-bold text-gray-900 group-hover:text-[#1b7f43] transition-colors leading-tight break-words">
+                      <span className="text-[13px] font-bold text-gray-900 group-hover:text-[#1b7f43] transition-colors leading-tight break-words">
                         {item.itemName}
                       </span>
-                      <div className="flex items-center gap-1 mt-0.5 text-[10px] text-gray-400 font-mono">
+                      <div className="flex items-center gap-1 mt-0.5 text-[12px] text-gray-600 font-mono">
                         <span className="truncate">{item.sku}</span>
                         <span>•</span>
                         <span className="truncate">{item.id}</span>
@@ -123,7 +123,7 @@ export default function InventoryTable({
 
                   {/* Category */}
                   <td className="py-2 px-1.5">
-                    <span className="text-[10.5px] font-semibold text-gray-700 bg-gray-100/80 px-1.5 py-0.5 rounded inline-block truncate max-w-full">
+                    <span className="text-[12px] font-bold text-gray-800 bg-gray-100/80 px-1.5 py-0.5 rounded inline-block truncate max-w-full">
                       {item.category}
                     </span>
                   </td>
@@ -133,14 +133,14 @@ export default function InventoryTable({
                     {isRoomItem ? (
                       <button
                         onClick={() => setSelectedRoomForModal(item.roomNumber)}
-                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-[#1b7f43] hover:bg-emerald-100 text-[10.5px] font-bold transition border border-emerald-200/50 cursor-pointer max-w-full"
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-[#1b7f43] hover:bg-emerald-100 text-[12px] font-bold transition border border-emerald-200/50 cursor-pointer max-w-full"
                         title={`Click to view all inventory assigned to Room ${item.roomNumber}`}
                       >
                         <MeetingRoom sx={{ fontSize: 13 }} />
                         <span className="truncate">Room {item.roomNumber}</span>
                       </button>
                     ) : (
-                      <div className="flex items-center gap-1 text-[11px] text-gray-600 font-medium truncate" title={item.location}>
+                      <div className="flex items-center gap-1 text-[12px] font-bold text-gray-800 truncate" title={item.location}>
                         <Warehouse sx={{ fontSize: 13, color: '#9ca3af', flexShrink: 0 }} />
                         <span className="truncate">{item.location}</span>
                       </div>
@@ -150,22 +150,22 @@ export default function InventoryTable({
                   {/* Quantity */}
                   <td className="py-2 px-1 text-center">
                     <div className="flex flex-col items-center justify-center leading-none">
-                      <span className={`text-xs font-bold ${item.quantity === 0 ? 'text-red-500' : item.quantity <= item.minimumStock ? 'text-amber-600' : 'text-gray-900'}`}>
+                      <span className={`text-[12px] font-bold ${item.quantity === 0 ? 'text-red-500' : item.quantity <= item.minimumStock ? 'text-amber-600' : 'text-gray-900'}`}>
                         {item.quantity}
                       </span>
-                      <span className="text-[9px] text-gray-400 font-medium mt-0.5">
+                      <span className="text-[12px] text-gray-600 font-medium mt-0.5">
                         {item.locationType === 'Room' ? 'in room' : 'in store'}
                       </span>
                     </div>
                   </td>
 
                   {/* Unit Price */}
-                  <td className="py-2 px-1.5 text-right text-xs font-medium text-gray-600 font-mono">
+                  <td className="py-2 px-1.5 text-right text-[12px] text-gray-600 font-mono">
                     ${Number(item.unitPrice).toFixed(2)}
                   </td>
 
                   {/* Total Value */}
-                  <td className="py-2 px-1.5 text-right text-xs font-bold text-gray-900 font-mono">
+                  <td className="py-2 px-1.5 text-right text-[12px] font-bold text-gray-900 font-mono">
                     ${Number(item.totalValue).toFixed(2)}
                   </td>
 
@@ -180,7 +180,7 @@ export default function InventoryTable({
                   </td>
 
                   {/* Last Updated */}
-                  <td className="py-2 px-1.5 text-[10px] font-medium text-gray-500 font-mono truncate">
+                  <td className="py-2 px-1.5 text-[12px] text-gray-600 font-mono truncate">
                     {item.lastUpdated}
                   </td>
 

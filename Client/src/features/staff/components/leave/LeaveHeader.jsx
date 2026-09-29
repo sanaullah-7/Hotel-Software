@@ -1,7 +1,7 @@
-import React from 'react';
+﻿import React from 'react';
 import { IconButton, Tooltip, TextField, InputAdornment, Popover, MenuItem, Checkbox, FormControlLabel } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import AddIcon from '@mui/icons-material/Add';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -49,38 +49,36 @@ export default function LeaveHeader({
           className="w-full sm:w-64"
         />
 
-        <Tooltip title="Filter">
-          <IconButton onClick={(e) => setFilterAnchorEl(e.currentTarget)} size="small" className="border border-gray-200">
-            <FilterListIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
+                  <Tooltip title="Filter">
+            <IconButton onClick={(e) => setFilterAnchorEl(e.currentTarget)} size="small" sx={{ color: '#1b7f43' }}>
+              <FilterListIcon sx={{ fontSize: 24 }} />
+            </IconButton>
+          </Tooltip>
 
-        <Tooltip title="Columns">
-          <IconButton onClick={(e) => setColumnAnchorEl(e.currentTarget)} size="small" className="border border-gray-200">
-            <TableChartIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
+          <Tooltip title="Add Leave">
+            <IconButton onClick={onOpenAddModal} size="small" sx={{ color: '#1b7f43' }}>
+              <AddCircleIcon sx={{ fontSize: 24 }} />
+            </IconButton>
+          </Tooltip>
 
-        <Tooltip title="Export PDF">
-          <IconButton onClick={onExportPDF} size="small" className="border border-gray-200 text-red-600">
-            <PictureAsPdfIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
+          <Tooltip title="Refresh">
+            <IconButton onClick={onRefresh} size="small" sx={{ color: '#1b7f43' }}>
+              <RefreshIcon sx={{ fontSize: 24 }} />
+            </IconButton>
+          </Tooltip>
 
-        <Tooltip title="Refresh">
-          <IconButton onClick={onRefresh} size="small" className="border border-gray-200">
-            <RefreshIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
+          <Tooltip title="Columns">
+            <IconButton onClick={(e) => setColumnAnchorEl(e.currentTarget)} size="small" sx={{ color: '#0ea5e9' }}>
+              <TableChartIcon sx={{ fontSize: 24 }} />
+            </IconButton>
+          </Tooltip>
 
-        <button
-          onClick={onOpenAddModal}
-          className="flex items-center gap-1.5 px-3.5 py-2 bg-[#1b7f43] text-white text-xs font-semibold rounded-lg hover:bg-[#156334] transition-colors cursor-pointer"
-        >
-          <AddIcon fontSize="small" />
-          <span>Apply Leave</span>
-        </button>
-      </div>
+          <Tooltip title="Export PDF">
+            <IconButton onClick={onExportPDF} size="small" sx={{ color: '#ef4444' }}>
+              <PictureAsPdfIcon sx={{ fontSize: 24 }} />
+            </IconButton>
+          </Tooltip>
+        </div>
 
       {/* Filter Popover */}
       <Popover
@@ -155,3 +153,4 @@ export default function LeaveHeader({
     </div>
   );
 }
+

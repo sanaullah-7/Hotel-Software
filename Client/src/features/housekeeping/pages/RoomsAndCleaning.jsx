@@ -268,20 +268,20 @@ export default function RoomsAndCleaning() {
 
       {/* Table Section */}
       <div className="bg-white rounded-b-xl shadow-sm border border-gray-100 flex-1 flex flex-col">
-        <div className="flex-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-          <table className="w-full text-left whitespace-nowrap">
-            <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                {visibleColumns['Room'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Room</th>}
-                {visibleColumns['Guest'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Guest</th>}
-                {visibleColumns['Cleaning Type'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Cleaning Type</th>}
-                {visibleColumns['Status'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Status</th>}
-                {visibleColumns['Priority'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Priority</th>}
-                {visibleColumns['Assigned Staff'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Assigned Staff</th>}
-                {visibleColumns['Completed At'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Completed At</th>}
-                {visibleColumns['Notes'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Notes</th>}
-                {visibleColumns['Last Cleaned'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Last Cleaned</th>}
-                {visibleColumns['Actions'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Actions</th>}
+        <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50/50">
+              <tr>
+                {visibleColumns['Room'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room</th>}
+                {visibleColumns['Guest'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Guest</th>}
+                {visibleColumns['Cleaning Type'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Cleaning Type</th>}
+                {visibleColumns['Status'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>}
+                {visibleColumns['Priority'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Priority</th>}
+                {visibleColumns['Assigned Staff'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Assigned Staff</th>}
+                {visibleColumns['Completed At'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Completed At</th>}
+                {visibleColumns['Notes'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Notes</th>}
+                {visibleColumns['Last Cleaned'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Last Cleaned</th>}
+                {visibleColumns['Actions'] && <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Actions</th>}
               </tr>
             </thead>
             <tbody>
@@ -289,34 +289,34 @@ export default function RoomsAndCleaning() {
                 <tr 
                   key={record.id} 
                   onClick={() => openViewModal(record)} 
-                  className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer ${index % 2 !== 0 ? 'bg-gray-50/30' : ''}`}
+                  className="hover:bg-gray-50/30 transition-colors cursor-pointer"
                 >
-                  {visibleColumns['Room'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.roomNo}</td>}
-                  {visibleColumns['Guest'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.guestName}</td>}
-                  {visibleColumns['Cleaning Type'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.cleaningType}</td>}
+                  {visibleColumns['Room'] && <td className="py-2 px-3 text-[13px] font-bold text-gray-900">{record.roomNo}</td>}
+                  {visibleColumns['Guest'] && <td className="py-2 px-3 text-[12px] font-bold text-gray-800">{record.guestName}</td>}
+                  {visibleColumns['Cleaning Type'] && <td className="py-2 px-3 text-[12px] text-gray-600">{record.cleaningType}</td>}
                   
                   {visibleColumns['Status'] && (
-                    <td className="py-3 px-1">
-                      <span className={`px-1 py-0.5 rounded-[4px] text-[11px] font-medium ${statusStyles[record.cleaningStatus]}`}>
+                    <td className="py-2 px-3">
+                      <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${statusStyles[record.cleaningStatus]}`}>
                         {record.cleaningStatus}
                       </span>
                     </td>
                   )}
                   
                   {visibleColumns['Priority'] && (
-                    <td className="py-3 px-1">
-                      <span className={`px-1 py-0.5 rounded-[4px] text-[11px] font-medium ${priorityStyles[record.priority]}`}>
+                    <td className="py-2 px-3">
+                      <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${priorityStyles[record.priority]}`}>
                         {record.priority}
                       </span>
                     </td>
                   )}
 
-                  {visibleColumns['Assigned Staff'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.assignedStaff}</td>}
-                  {visibleColumns['Completed At'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.completionTime}</td>}
-                  {visibleColumns['Notes'] && <td className="py-3 px-1 text-[11px] text-gray-500 truncate max-w-[80px]" title={record.notes}>{record.notes}</td>}
+                  {visibleColumns['Assigned Staff'] && <td className="py-2 px-3 text-[12px] text-gray-600">{record.assignedStaff}</td>}
+                  {visibleColumns['Completed At'] && <td className="py-2 px-3 text-[12px] text-gray-600">{record.completionTime}</td>}
+                  {visibleColumns['Notes'] && <td className="py-2 px-3 text-[12px] text-gray-500 italic truncate max-w-[80px]" title={record.notes}>{record.notes}</td>}
                   
                   {visibleColumns['Last Cleaned'] && (
-                    <td className="py-3 px-1 text-[11px] text-gray-600">
+                    <td className="py-2 px-3 text-[12px] text-gray-600">
                       <div className="flex items-center gap-1.5">
                         {record.lastCleanedDate}
                       </div>
@@ -324,7 +324,7 @@ export default function RoomsAndCleaning() {
                   )}
 
                   {visibleColumns['Actions'] && (
-                    <td className="py-3 px-1 relative">
+                    <td className="py-2 px-3 relative">
                       <div className="flex items-center gap-3">
                         <button onClick={(e) => { e.stopPropagation(); openEditModal(record); }} className="text-blue-400 hover:text-blue-600 transition-colors cursor-pointer" title="Edit">
                           <EditOutlined sx={{ fontSize: 16 }} />

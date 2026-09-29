@@ -459,7 +459,7 @@ export default function CurrentBookingsTable({
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+    <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm">
       {/* Dashboard Toolbar */}
       <div className="p-3 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-3">
         <div className="flex flex-wrap items-center gap-3">

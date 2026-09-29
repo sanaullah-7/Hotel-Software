@@ -1,4 +1,4 @@
-import PhoneOutlinedIcon from'@mui/icons-material/PhoneOutlined';
+﻿import PhoneOutlinedIcon from'@mui/icons-material/PhoneOutlined';
 import MailOutlinedIcon from'@mui/icons-material/MailOutlined';
 import CalendarTodayOutlinedIcon from'@mui/icons-material/CalendarTodayOutlined';
 import LocationOnOutlinedIcon from'@mui/icons-material/LocationOnOutlined';
@@ -6,9 +6,11 @@ import EditIcon from'@mui/icons-material/Edit';
 import SearchIcon from'@mui/icons-material/Search';
 import DeleteOutlineIcon from'@mui/icons-material/DeleteOutlined';
 import FilterListIcon from'@mui/icons-material/FilterList';
-import AddCircleOutlineIcon from'@mui/icons-material/AddCircleOutlined';
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RefreshIcon from'@mui/icons-material/Refresh';
-import CalculateIcon from'@mui/icons-material/Calculate';
+import CalculateIcon from '@mui/icons-material/Calculate';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import PictureAsPdfIcon from'@mui/icons-material/PictureAsPdf';
 import PersonOutlinedIcon from'@mui/icons-material/PersonOutlined';
 import GroupOutlinedIcon from'@mui/icons-material/GroupOutlined';
@@ -357,14 +359,14 @@ export default function AllStaff() {
  }, [staffData]);
 
  return (
- <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden flex flex-col gap-2">
+ <div className="animate-fade-in">
  <StaffSummaryCards cards={summaryCards} />
 
  {/* Main Table Card */}
- <div className="bg-white rounded-xl shadow-sm p-0 w-full overflow-hidden">
+ <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 w-full">
  {/* Top Bar */}
- <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1 pb-1 border-b border-gray-100 px-2 sm:px-2.5">
- <div className="flex items-center gap-2 pt-1">
+ <div className="p-3 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 w-full">
+ <div className="flex items-center gap-2">
  <TextField
  size="small"
  placeholder="Search..."
@@ -393,31 +395,31 @@ export default function AllStaff() {
  </IconButton>
  </Tooltip>
  )}
- <Tooltip title="Filter Columns">
- <IconButton size="small" sx={{ color:'#3b82f6' }} onClick={handleFilterClick}>
- <FilterListIcon fontSize="small" />
- </IconButton>
- </Tooltip>
- <Tooltip title="Add Staff">
- <IconButton size="small" sx={{ color:'#22c55e' }} component={Link} to="/hr/staff/add">
- <AddCircleOutlineIcon fontSize="small" />
- </IconButton>
- </Tooltip>
- <Tooltip title="Refresh">
- <IconButton size="small" sx={{ color:'#64748b' }} onClick={handleRefresh}>
- <RefreshIcon fontSize="small" />
- </IconButton>
- </Tooltip>
- <Tooltip title="Download Excel">
- <IconButton className="toolbar-export-icon" size="small" sx={{ color:'#0ea5e9' }} onClick={handleExcelExport}>
- <CalculateIcon fontSize="small" />
- </IconButton>
- </Tooltip>
- <Tooltip title="Download PDF">
- <IconButton className="toolbar-export-icon" size="small" sx={{ color:'#ef4444' }} onClick={handlePdfExport}>
- <PictureAsPdfIcon fontSize="small" />
- </IconButton>
- </Tooltip>
+             <Tooltip title="Filter Columns">
+              <IconButton size="small" sx={{ color: '#1b7f43' }} onClick={handleFilterClick}>
+                <FilterListIcon sx={{ fontSize: 24 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Add Staff">
+              <IconButton size="small" sx={{ color: '#1b7f43' }} component={Link} to="/hr/staff/add">
+                <AddCircleIcon sx={{ fontSize: 24 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Refresh">
+              <IconButton size="small" sx={{ color: '#1b7f43' }} onClick={handleRefresh}>
+                <RefreshIcon sx={{ fontSize: 24 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Download Excel">
+              <IconButton size="small" sx={{ color: '#0ea5e9' }} onClick={handleExcelExport}>
+                <TableChartIcon sx={{ fontSize: 24 }} />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Download PDF">
+              <IconButton size="small" sx={{ color: '#ef4444' }} onClick={handlePdfExport}>
+                <PictureAsPdfIcon sx={{ fontSize: 24 }} />
+              </IconButton>
+            </Tooltip>
  </div>
  </div>
 
@@ -472,3 +474,5 @@ export default function AllStaff() {
  </div>
  );
 }
+
+
