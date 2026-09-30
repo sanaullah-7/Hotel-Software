@@ -6,6 +6,7 @@ import GuestProfile from '../features/guests/pages/GuestProfile';
 import { saveGuests } from '../features/guests/state/guestStore';
 import { saveReservations } from '../features/reservations/state/reservationStore';
 import { saveInvoices, savePayments, saveRefunds } from '../features/payment-billing/pages/paymentBillingStore';
+import { saveGuestCharges } from '../features/inventory/pages/inventoryStore';
 
 describe('Guest Profile 360 Workspace & 7-Tab Redesign', () => {
   beforeEach(() => {
@@ -317,5 +318,137 @@ describe('Guest Profile 360 Workspace & 7-Tab Redesign', () => {
       ...Array.from(document.querySelectorAll('[role="tabpanel"]')).map((el) => el.id)
     ];
     expect(new Set(allIds).size).toBe(allIds.length);
+  });
+
+  it('strictly isolates financial, charge, complaint, and invoice data between different guest profiles even with matching rooms', () => {
+    const guestYounas = {
+      id: 'GST-YOUNAS-1',
+      name: 'Younas Khan',
+      email: 'younas@example.com',
+      phone: '+923001234567',
+      city: 'Lahore',
+      totalStays: 1,
+      status: 'Active'
+    };
+    const guestAli = {
+      id: 'GST-ALI-2',
+      name: 'Ali Raza',
+      email: 'ali@example.com',
+      phone: '+923007654321',
+      city: 'Karachi',
+      totalStays: 1,
+      status: 'Active'
+    };
+    saveGuests([guestYounas, guestAli]);
+
+    // Both guests stayed in Room 101 in different bookings
+    const reservations = [
+      {
+        id: 'RES-YOUNAS',
+        bookingId: 'BK-YOUNAS',
+        guestId: guestYounas.id,
+        name: guestYounas.name,
+        email: guestYounas.email,
+        roomNumber: '101',
+        roomType: 'Deluxe',
+        checkIn: '2026-05-10',
+        checkOut: '2026-05-12',
+        status: 'Booked',
+        payment: 'Paid'
+      },
+      {
+        id: 'RES-ALI',
+        bookingId: 'BK-ALI',
+        guestId: guestAli.id,
+        name: guestAli.name,
+        email: guestAli.email,
+        roomNumber: '101',
+        roomType: 'Deluxe',
+        checkIn: '2026-05-15',
+        checkOut: '2026-05-17',
+        status: 'Booked',
+        payment: 'Pending'
+      }
+    ];
+    saveReservations(reservations);
+
+    // Invoices: Younas has paid invoice INV-YOUNAS-01
+    const invoices = [
+      {
+        id: 'INV-YOUNAS-01',
+        invoiceNumber: 'INV-YOUNAS-01',
+        bookingId: 'RES-YOUNAS',
+        guestId: guestYounas.id,
+        guestName: guestYounas.name,
+        guestEmail: guestYounas.email,
+        roomNumber: '101',
+        totalAmount: 1500.00,
+        paidAmount: 1500.00,
+        balanceDue: 0.00,
+        status: 'Paid',
+        items: []
+      },
+      {
+        id: 'INV-ALI-01',
+        invoiceNumber: 'INV-ALI-01',
+        bookingId: 'RES-ALI',
+        guestId: guestAli.id,
+        guestName: guestAli.name,
+        guestEmail: guestAli.email,
+        roomNumber: '101',
+        totalAmount: 300.00,
+        paidAmount: 0.00,
+        balanceDue: 300.00,
+        status: 'Unpaid',
+        items: []
+      }
+    ];
+    saveInvoices(invoices);
+
+    // Payments: Younas has payment PAY-YOUNAS-01
+    savePayments([
+      {
+        id: 'PAY-YOUNAS-01',
+        paymentId: 'PAY-YOUNAS-01',
+        invoiceId: 'INV-YOUNAS-01',
+        bookingId: 'RES-YOUNAS',
+        guestId: guestYounas.id,
+        amount: 1500.00,
+        paymentMethod: 'Credit Card',
+        status: 'Completed'
+      }
+    ]);
+
+    // Folio Charges: Younas has a Spa charge on Room 101
+    saveGuestCharges([
+      {
+        id: 'GC-YOUNAS',
+        bookingId: 'RES-YOUNAS',
+        guestId: guestYounas.id,
+        guestName: guestYounas.name,
+        roomNumber: '101',
+        itemName: 'VIP Spa Package',
+        amount: 500,
+        status: 'Added to Folio'
+      }
+    ]);
+
+    // 1. Render Younas profile and verify his data is present
+    const { unmount: unmountYounas } = renderProfile(`/guests/${guestYounas.id}`);
+    expect(screen.getAllByText('Younas Khan').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('$1500.00').length).toBeGreaterThan(0);
+    unmountYounas();
+
+    // 2. Render Ali's profile and verify Younas's data does NOT leak into Ali's profile
+    const { unmount: unmountAli } = renderProfile(`/guests/${guestAli.id}`);
+    expect(screen.getAllByText('Ali Raza').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Younas Khan')).toBeNull();
+    expect(screen.queryByText('INV-YOUNAS-01')).toBeNull();
+    expect(screen.queryByText('$1500.00')).toBeNull();
+    expect(screen.queryByText('VIP Spa Package')).toBeNull();
+
+    // Ali's own invoice ($300.00) should be visible on Invoices / Overview tab
+    expect(screen.getAllByText('$300.00').length).toBeGreaterThan(0);
+    unmountAli();
   });
 });

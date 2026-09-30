@@ -57,6 +57,7 @@ export default function AddComplaintModal({ isOpen, onClose, guest, defaultRoom,
 
     onSave({
       id: Date.now(),
+      guestId: guest.id,
       guestName: guest.name,
       roomNo: form.roomNo,
       type: form.type,
