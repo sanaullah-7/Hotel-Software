@@ -2,141 +2,39 @@ import { FilterList, AddCircleOutlined, Refresh, TableChart, PictureAsPdf,Hourgl
 import React, { useState, useRef, useEffect } from'react';
 
 import { TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment , TablePagination } from'@mui/material';
+import { getRooms, saveRooms } from './hkStore';
+import { getRoomByRoomNo } from '../../rooms/state/roomStore';
 
-const initialTasks = [
- {
- id: 1,
- roomNo:'101',
- taskType:'Full Clean',
- assignedStaff:'John Doe',
- startTime:'09:00',
- endTime:'10:00',
- priority:'High',
- status:'In Progress',
- notes:'Guest checked out late'
- },
- {
- id: 2,
- roomNo:'205',
- taskType:'Quick Clean',
- assignedStaff:'Jane Smith',
- startTime:'10:30',
- endTime:'11:00',
- priority:'Medium',
- status:'Pending',
- notes:'Stay-over cleaning'
- },
- {
- id: 3,
- roomNo:'302',
- taskType:'Turn Down',
- assignedStaff:'Robert Brown',
- startTime:'18:00',
- endTime:'18:30',
- priority:'Low',
- status:'Completed',
- notes:'No notes available'
- },
- {
- id: 4,
- roomNo:'401',
- taskType:'Deep Clean',
- assignedStaff:'Emily Davis',
- startTime:'11:00',
- endTime:'12:30',
- priority:'High',
- status:'Pending',
- notes:'VIP guest arrival'
- },
- {
- id: 5,
- roomNo:'110',
- taskType:'Quick Clean',
- assignedStaff:'Michael Lee',
- startTime:'13:00',
- endTime:'13:30',
- priority:'Low',
- status:'In Progress',
- notes:'Towel refresh'
- },
- {
- id: 6,
- roomNo:'215',
- taskType:'Full Clean',
- assignedStaff:'Sarah Wilson',
- startTime:'14:00',
- endTime:'15:00',
- priority:'Medium',
- status:'Pending',
- notes:'Regular check-out'
- },
- {
- id: 7,
- roomNo:'305',
- taskType:'Turn Down',
- assignedStaff:'John Doe',
- startTime:'19:00',
- endTime:'19:30',
- priority:'Low',
- status:'Completed',
- notes:'Evening service'
- },
- {
- id: 8,
- roomNo:'105',
- taskType:'Full Clean',
- assignedStaff:'Jane Smith',
- startTime:'15:30',
- endTime:'16:30',
- priority:'High',
- status:'Delayed',
- notes:'Guest requested later time'
- },
- {
- id: 9,
- roomNo:'501',
- taskType:'Deep Clean',
- assignedStaff:'Emily Davis',
- startTime:'08:00',
- endTime:'10:00',
- priority:'High',
- status:'In Progress',
- notes:'VIP check-in today'
- },
- {
- id: 10,
- roomNo:'312',
- taskType:'Full Clean',
- assignedStaff:'Robert Brown',
- startTime:'10:00',
- endTime:'11:00',
- priority:'Medium',
- status:'Pending',
- notes:'Standard service'
- },
- {
- id: 11,
- roomNo:'418',
- taskType:'Turn Down',
- assignedStaff:'Jane Smith',
- startTime:'18:30',
- endTime:'19:00',
- priority:'Low',
- status:'Completed',
- notes:'Refresh towels'
- },
- {
- id: 12,
- roomNo:'108',
- taskType:'Quick Clean',
- assignedStaff:'Michael Lee',
- startTime:'12:00',
- endTime:'12:30',
- priority:'Medium',
- status:'Pending',
- notes:'Guest requested early'
- }
-];
+function mapRoomToTask(r) {
+  const roomNo = String(r.roomNo || r.id || '');
+  let status = 'Pending';
+  if (r.status === 'Clean / Ready' || r.cleaningStatus === 'Completed') status = 'Completed';
+  else if (r.status === 'Cleaning' || r.cleaningStatus === 'In Progress') status = 'In Progress';
+  else if (r.status === 'Delayed') status = 'Delayed';
+  else status = 'Pending';
+
+  let priority = r.priority || 'Medium';
+  if (priority === 'Standard' || priority === 'Normal') priority = 'Medium';
+  if (priority === 'Urgent') priority = 'High';
+
+  let taskType = r.taskType || r.cleaningType || 'Full Clean';
+  if (!['Full Clean', 'Quick Clean', 'Turn Down', 'Deep Clean'].includes(taskType)) {
+    taskType = 'Full Clean';
+  }
+
+  return {
+    ...r,
+    id: r.id || roomNo,
+    roomNo,
+    taskType,
+    assignedStaff: r.assignedStaff !== undefined ? r.assignedStaff : (r.assignee && r.assignee !== '-' ? r.assignee : ''),
+    startTime: r.startTime || (r.started && r.started !== '-' ? r.started : '09:00'),
+    endTime: r.endTime || (r.completed && r.completed !== '-' ? r.completed : '10:00'),
+    priority,
+    status,
+    notes: r.notes || ''
+  };
+}
 
 const formatTime = (time24) => {
  if (!time24) return'';
@@ -148,7 +46,7 @@ const formatTime = (time24) => {
 };
 
 export default function CleaningSchedule() {
- const [tasks, setTasks] = useState(initialTasks);
+ const [tasks, setTasks] = useState(() => getRooms().map(mapRoomToTask));
  const [searchTerm, setSearchTerm] = useState('');
  const [page, setPage] = useState(0);
  const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -210,6 +108,18 @@ export default function CleaningSchedule() {
  return () => document.removeEventListener("mousedown", handleClickOutside);
  }, []);
 
+ useEffect(() => {
+ const syncData = () => {
+ setTasks(getRooms().map(mapRoomToTask));
+ };
+ window.addEventListener('storage', syncData);
+ window.addEventListener('hk_update', syncData);
+ return () => {
+ window.removeEventListener('storage', syncData);
+ window.removeEventListener('hk_update', syncData);
+ };
+ }, []);
+
  const toggleColumn = (col) => {
  setVisibleColumns(prev => ({ ...prev, [col]: !prev[col] }));
  };
@@ -217,6 +127,7 @@ export default function CleaningSchedule() {
  const handleRefresh = () => {
  setSearchTerm('');
  setPage(0);
+ setTasks(getRooms().map(mapRoomToTask));
  setVisibleColumns({'Room No': true,'Task Type': true,'Assigned Staff': true,'Time Slot': true,'Priority': true,'Status': true,'Notes': true,'Actions': true
  });
  };
@@ -315,11 +226,60 @@ export default function CleaningSchedule() {
 
  const handleSave = (e) => {
  e.preventDefault();
+ const currentCanonicalRooms = getRooms();
+ let updatedRooms;
  if (editingId) {
- setTasks(paginatedTasks.map(t => t.id === editingId ? { ...t, ...form } : t));
- } else {
- setTasks([...tasks, { ...form, id: Date.now() }]);
+ updatedRooms = currentCanonicalRooms.map(r => {
+ if (r.id === editingId || r.roomNo === editingId) {
+ const status = form.status === 'Completed' ? 'Clean / Ready' : (form.status === 'In Progress' ? 'Cleaning' : (form.status === 'Delayed' ? 'Delayed' : 'Pending'));
+ const cleaningStatus = form.status === 'Completed' ? 'Completed' : (form.status === 'In Progress' ? 'In Progress' : 'Scheduled');
+ return {
+ ...r,
+ roomNo: form.roomNo,
+ cleaningType: form.taskType,
+ taskType: form.taskType,
+ priority: form.priority,
+ assignedStaff: form.assignedStaff,
+ assignee: form.assignedStaff && form.assignedStaff.trim() ? form.assignedStaff : (r.assignee || '-'),
+ startTime: form.startTime,
+ started: form.startTime || r.started || '-',
+ endTime: form.endTime,
+ completed: form.endTime || r.completed || '-',
+ status,
+ cleaningStatus,
+ notes: form.notes
+ };
  }
+ return r;
+ });
+ } else {
+ const canonicalRoom = getRoomByRoomNo(form.roomNo);
+ const status = form.status === 'Completed' ? 'Clean / Ready' : (form.status === 'In Progress' ? 'Cleaning' : (form.status === 'Delayed' ? 'Delayed' : 'Pending'));
+ const cleaningStatus = form.status === 'Completed' ? 'Completed' : (form.status === 'In Progress' ? 'In Progress' : 'Scheduled');
+ const newRoom = {
+ id: form.roomNo,
+ roomNo: form.roomNo,
+ roomId: canonicalRoom ? canonicalRoom.id : undefined,
+ type: canonicalRoom?.roomType || 'Standard',
+ guest: '-',
+ stayStatus: 'Vacant',
+ cleaningType: form.taskType,
+ taskType: form.taskType,
+ priority: form.priority,
+ assignedStaff: form.assignedStaff,
+ assignee: form.assignedStaff && form.assignedStaff.trim() ? form.assignedStaff : '-',
+ startTime: form.startTime,
+ started: form.startTime || '-',
+ endTime: form.endTime,
+ completed: form.endTime || '-',
+ status,
+ cleaningStatus,
+ notes: form.notes
+ };
+ updatedRooms = [...currentCanonicalRooms, newRoom];
+ }
+ saveRooms(updatedRooms);
+ setTasks(getRooms().map(mapRoomToTask));
  setIsModalOpen(false);
  };
 
@@ -329,7 +289,10 @@ export default function CleaningSchedule() {
  };
 
  const handleDelete = () => {
- setTasks(tasks.filter(t => t.id !== taskToDelete.id));
+ const currentCanonicalRooms = getRooms();
+ const updatedRooms = currentCanonicalRooms.filter(r => r.id !== taskToDelete.id && r.roomNo !== taskToDelete.roomNo);
+ saveRooms(updatedRooms);
+ setTasks(getRooms().map(mapRoomToTask));
  setIsDeleteModalOpen(false);
  setTaskToDelete(null);
  };

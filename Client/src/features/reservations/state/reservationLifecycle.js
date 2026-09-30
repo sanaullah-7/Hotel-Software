@@ -11,6 +11,7 @@ import {
   resolveBookingReference,
   validateStayDates,
 } from './bookingRules.js';
+import { getInvoices, getOrCreateBookingInvoice, reconcileBookingChargesToInvoice } from '../../payment-billing/pages/paymentBillingStore.js';
 
 const OCCUPANCY_KEY = 'hotel_rooms';
 export const OCCUPANCY_UPDATED_EVENT = 'occupancy_update';
@@ -194,7 +195,59 @@ export function checkInBooking(bookingId) {
   const nextBookings = bookings.map((item) => String(item.id) === String(booking.id) ? { ...item, status: 'Checked In' } : item);
   const nextRooms = getRooms().map((item) => String(item.id) === String(room.id) ? { ...item, status: 'Booked' } : item);
   commitLifecycleState({ bookings: nextBookings, rooms: nextRooms, occupancyRooms: nextOccupancy });
-  return nextBookings.find((item) => String(item.id) === String(booking.id));
+
+  let invoiceResult;
+  try {
+    invoiceResult = getOrCreateBookingInvoice(booking.id);
+  } catch (err) {
+    invoiceResult = { success: false, reason: err?.message || 'Failed to initialize stay invoice for checked-in booking.' };
+  }
+
+  if (!invoiceResult || !invoiceResult.success) {
+    // Phase 7 Job 22 Consistency Fix:
+    // Operational check-in state was committed before invoice initialization failed.
+    // Restore pre-check-in operational state ONLY for what this check-in operation modified.
+    const currentBookings = getReservations();
+    const currentRooms = getRooms();
+    const currentOccupancy = readOccupancyRooms();
+
+    const revertedBookings = currentBookings.map((item) =>
+      String(item.id) === String(booking.id) ? { ...item, status: booking.status } : item
+    );
+
+    const revertedRooms = currentRooms.map((item) =>
+      String(item.id) === String(room.id) ? { ...item, status: room.status } : item
+    );
+
+    let revertedOccupancy;
+    if (current) {
+      revertedOccupancy = currentOccupancy.map((record) =>
+        (String(record.bookingId || '') === String(booking.id) && String(record.roomId ?? '') === String(room.id)) ||
+        record === current ||
+        slots.some((s) => s === record || (s.roomId && String(s.roomId) === String(record.roomId)))
+          ? current
+          : record
+      );
+    } else {
+      revertedOccupancy = currentOccupancy.filter((record) =>
+        !(String(record.bookingId || '') === String(booking.id) && String(record.roomId ?? '') === String(room.id))
+      );
+    }
+
+    commitLifecycleState({
+      bookings: revertedBookings,
+      rooms: revertedRooms,
+      occupancyRooms: revertedOccupancy
+    });
+
+    throw new Error(invoiceResult?.reason || 'Failed to initialize stay invoice for checked-in booking.');
+  }
+
+  const updatedBooking = nextBookings.find((item) => String(item.id) === String(booking.id));
+  return {
+    ...updatedBooking,
+    invoice: invoiceResult.invoice || invoiceResult
+  };
 }
 
 export function checkOutBooking(bookingId) {
@@ -210,6 +263,23 @@ export function checkOutBooking(bookingId) {
   if (active.length !== 1 || !isOperationalOccupancyBlock(active[0])) {
     throw new Error('The checked-in booking does not have exactly one active linked occupancy record.');
   }
+
+  // Ensure an invoice exists if somehow missing for this checked-in booking (e.g. legacy test fixture)
+  const invoices = getInvoices();
+  const linkedInvoices = invoices.filter((inv) => String(inv.bookingId) === String(booking.id));
+  if (linkedInvoices.length === 0) {
+    const invResult = getOrCreateBookingInvoice(booking.id);
+    if (!invResult || !invResult.success) {
+      throw new Error(invResult?.reason || 'Failed to initialize invoice before checkout reconciliation.');
+    }
+  }
+
+  // Phase 7 Job 22: Reconcile eligible folio charges into booking invoice before checkout processing
+  const reconResult = reconcileBookingChargesToInvoice(booking.id);
+  if (!reconResult || !reconResult.success) {
+    throw new Error(reconResult?.reason || 'Failed to reconcile folio charges for booking before checkout.');
+  }
+
   const nextOccupancy = occupancy.map((record) => active.includes(record)
     ? { ...record, status: 'AVAILABLE', statusColor: '#1b7f43', bookingId: '', guestId: '', checkIn: '', checkOut: '', guest: null }
     : record);
@@ -218,7 +288,11 @@ export function checkOutBooking(bookingId) {
     ? { ...item, status: roomOperationalStatus(item, nextBookings, nextOccupancy) }
     : item);
   commitLifecycleState({ bookings: nextBookings, rooms: nextRooms, occupancyRooms: nextOccupancy });
-  return nextBookings.find((item) => String(item.id) === String(booking.id));
+  const updatedBooking = nextBookings.find((item) => String(item.id) === String(booking.id));
+  return {
+    ...updatedBooking,
+    reconciliation: reconResult
+  };
 }
 
 export function cancelBooking(bookingId, fallbackBookings) {

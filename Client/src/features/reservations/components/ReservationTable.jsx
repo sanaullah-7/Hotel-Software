@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
   CalendarTodayOutlined,
@@ -10,7 +10,13 @@ import {
   LogoutOutlined,
   CancelOutlined
 } from '@mui/icons-material';
-import { getBookingDues } from '../../payment-billing/pages/paymentBillingStore';
+import {
+  getBookingDues,
+  getCanonicalBookingPaymentStatus,
+  INVOICES_UPDATED_EVENT,
+  PAYMENTS_UPDATED_EVENT,
+  REFUNDS_UPDATED_EVENT
+} from '../../payment-billing/pages/paymentBillingStore';
 import { resolveGuestForBooking } from '../../guests/state/guestStore';
 import StatusBadge from '../../../components/common/StatusBadge';
 import PaginationControls from '../../../components/common/PaginationControls';
@@ -25,7 +31,8 @@ export const statusStyles = {
 
 export const paymentStyles = {
   Paid: 'bg-green-100 text-green-600',
-  Unpaid: 'bg-orange-100 text-orange-500'
+  Unpaid: 'bg-orange-100 text-orange-500',
+  'Partially Paid': 'bg-yellow-100 text-yellow-700'
 };
 
 export default function ReservationTable({
@@ -57,6 +64,34 @@ export default function ReservationTable({
       setInternalPage(totalPages);
     }
   }, [isControlled, internalPage, totalPages]);
+
+  // Canonical financial status map: { [bookingId]: 'Paid' | 'Partially Paid' | 'Unpaid' | null }
+  const [financialStatusMap, setFinancialStatusMap] = useState({});
+
+  const refreshFinancialStatus = useCallback(() => {
+    const map = {};
+    bookings.forEach((b) => {
+      map[b.id] = getCanonicalBookingPaymentStatus(b.id);
+    });
+    setFinancialStatusMap(map);
+  }, [bookings]);
+
+  // Initial load and whenever the bookings list changes
+  useEffect(() => {
+    refreshFinancialStatus();
+  }, [refreshFinancialStatus]);
+
+  // Job 23: respond to canonical billing mutations so mounted table updates immediately
+  useEffect(() => {
+    window.addEventListener(INVOICES_UPDATED_EVENT, refreshFinancialStatus);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, refreshFinancialStatus);
+    window.addEventListener(REFUNDS_UPDATED_EVENT, refreshFinancialStatus);
+    return () => {
+      window.removeEventListener(INVOICES_UPDATED_EVENT, refreshFinancialStatus);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, refreshFinancialStatus);
+      window.removeEventListener(REFUNDS_UPDATED_EVENT, refreshFinancialStatus);
+    };
+  }, [refreshFinancialStatus]);
 
   const handlePageChange = (newPage) => {
     if (activeMenuId && typeof onCloseMenu === 'function') {
@@ -263,11 +298,15 @@ export default function ReservationTable({
                   </div>
                 </td>
                 <td className="py-2 px-2 whitespace-nowrap">
-                  <StatusBadge
-                    status={booking.payment}
-                    stylesMap={paymentStyles}
-                    size="xs"
-                  />
+                  {financialStatusMap[booking.id] !== null && financialStatusMap[booking.id] !== undefined ? (
+                    <StatusBadge
+                      status={financialStatusMap[booking.id]}
+                      stylesMap={paymentStyles}
+                      size="xs"
+                    />
+                  ) : (
+                    <span className="text-gray-400 text-[10px]">—</span>
+                  )}
                 </td>
                 <td className="py-2 px-2 text-[11.5px] font-semibold whitespace-nowrap">
                   {(() => {

@@ -1,7 +1,7 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
 import { getRoomByRoomNo } from '../../rooms/state/roomStore.js';
 export const INITIAL_ROOMS = [
-  { id: '101', type: 'Standard', guest: '-', stayStatus: 'Vacant', cleaningType: 'Daily', status: 'Dirty', priority: 'Normal', assignee: '-', started: '-', completed: '-' },
+  { id: '101', type: 'Deluxe', guest: '-', stayStatus: 'Vacant', cleaningType: 'Daily', status: 'Dirty', priority: 'Normal', assignee: '-', started: '-', completed: '-' },
   { id: '102', type: 'Deluxe', guest: 'John Doe', stayStatus: 'Stayover', cleaningType: 'Stayover Cleaning', status: 'Assigned', priority: 'High', assignee: 'Jane Smith', started: '-', completed: '-' },
   { id: '103', type: 'Suite', guest: '-', stayStatus: 'Vacant', cleaningType: 'Deep Cleaning', status: 'Cleaning', priority: 'Urgent', assignee: 'Ali', started: '10:00 AM', completed: '-' },
   { id: '104', type: 'Standard', guest: 'Sarah Connor', stayStatus: 'Checkout', cleaningType: 'Checkout Cleaning', status: 'Inspection Required', priority: 'Normal', assignee: 'Bilal', started: '09:00 AM', completed: '10:30 AM' },
@@ -42,7 +42,13 @@ export const getRooms = () => {
 };
 
 export const saveRooms = (rooms) => {
-  localStorage.setItem('hk_rooms', JSON.stringify(rooms));
+  const linked = rooms.map((room) => {
+    if (room.roomId || room.id === undefined || room.id === null) return room;
+    const canonicalRoom = getRoomByRoomNo(room.id);
+    if (!canonicalRoom) return room;
+    return { ...room, roomId: canonicalRoom.id };
+  });
+  localStorage.setItem('hk_rooms', JSON.stringify(linked));
   window.dispatchEvent(new Event('hk_update'));
     try { addAuditLog({ module: 'Housekeeping', action: 'Updated Record', description: 'INITIAL_ROOMS was called.', importance: 'Normal' }); } catch(e){}
 };

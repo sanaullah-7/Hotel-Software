@@ -7,8 +7,6 @@ import {
   TextField, FormControl, InputLabel, Select, MenuItem,
   Typography, Box
 } from '@mui/material';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 const initialRates = [
   { id: 1, roomType: 'Single', ratePlan: 'Standard', baseRate: 50, seasonalRate: 55, promotionalRate: 45, effectiveDate: '2024-01-01', endDate: '2024-12-31', status: 'Active', bookingWindow: '30 days', cancellationPolicy: '24-hour notice', minStay: '1 night', maxOccupancy: 1 },
@@ -104,7 +102,12 @@ export default function RatePricing() {
     document.body.removeChild(link);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
+    const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
     doc.text('Room Rates & Pricing', 14, 15);
     const tableColumn = ['Room Type', 'Rate Plan', 'Base Rate', 'Seasonal Rate', 'Promo Rate', 'Effective', 'End', 'Status'];

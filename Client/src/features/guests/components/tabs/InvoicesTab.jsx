@@ -61,6 +61,7 @@ export default function InvoicesTab({
       if (onInvoicesUpdated) onInvoicesUpdated();
     } catch (err) {
       alert(err.message || 'Failed to record payment');
+      throw err;
     }
   };
 

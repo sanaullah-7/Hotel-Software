@@ -5,8 +5,10 @@ export const registeredGuests = [
 ];
 
 export const availableRooms = [
-  { id: '101', number: '101', type: 'Standard' },
-  { id: '102', number: '102', type: 'Standard' },
-  { id: '205', number: '205', type: 'Deluxe' },
+  { id: '101', number: '101', type: 'Deluxe' },
+  { id: '102', number: '102', type: 'Deluxe' },
+  { id: '105', number: '105', type: 'Deluxe' },
+  { id: '108', number: '108', type: 'Deluxe' },
+  { id: '201', number: '201', type: 'Single' },
   { id: '301', number: '301', type: 'Suite' },
 ];

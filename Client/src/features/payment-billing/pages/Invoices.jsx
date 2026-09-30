@@ -165,6 +165,7 @@ export default function Invoices() {
  message: err.message ||'Failed to record payment.',
  severity:'error',
  });
+ throw err;
  }
  };
 

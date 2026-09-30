@@ -1,5 +1,3 @@
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { 
   Add, Refresh, PictureAsPdf, EditOutlined, DeleteOutlined, Close,
   KeyboardArrowLeft, KeyboardArrowRight, TableChart, 
@@ -129,7 +127,12 @@ export default function Rooms() {
     document.body.removeChild(link);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
+    const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
     doc.text('AllRooms', 14, 15);
     const tableColumn = ['Room No', 'Room Type', 'AC/Non AC', 'Meal', 'Bed Capacity', 'Status', 'Rent', 'Mobile'];

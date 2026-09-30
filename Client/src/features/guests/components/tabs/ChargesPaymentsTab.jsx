@@ -312,6 +312,7 @@ export default function ChargesPaymentsTab({
           open={isAddChargeOpen}
           onClose={() => setIsAddChargeOpen(false)}
           prefilledData={{
+            guestId: guest.id,
             guestName: guest.name,
             roomNumber: guest.roomNumber || '101'
           }}

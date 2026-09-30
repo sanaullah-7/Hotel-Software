@@ -7,9 +7,6 @@ import {
   PeopleOutlined as PeopleOutlinedIcon,
   AttachMoneyOutlined as AttachMoneyOutlinedIcon
 } from '@mui/icons-material';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
 
 import EventSummaryCards from '../components/EventSummaryCards';
 import EventToolbar from '../components/EventToolbar';
@@ -346,7 +343,12 @@ export default function AllEvents() {
   };
 
   // Export to PDF
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
+    const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF('landscape');
     doc.setFontSize(16);
     doc.setTextColor(30, 41, 59);
@@ -385,7 +387,8 @@ export default function AllEvents() {
   };
 
   // Export to Excel / CSV
-  const handleExportExcel = () => {
+  const handleExportExcel = async () => {
+    const XLSX = await import('xlsx');
     const exportData = filteredEvents.map((e) => ({
       'Event ID': e.id,
       'Event Name': e.name,

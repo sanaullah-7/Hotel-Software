@@ -17,6 +17,7 @@ export function useAddReservation() {
     
     checkInDate: '2026-09-11',
     checkOutDate: '2026-09-16',
+    roomType: '',
     room: '',
     totalPerson: '',
     numberOfRooms: '1',
@@ -77,6 +78,7 @@ export function useAddReservation() {
   return {
     navigate,
     formData,
+    setFormData,
     selectedFile,
     fileInputRef,
     handleFileChange,

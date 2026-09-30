@@ -1,6 +1,4 @@
 import { useState, useMemo } from 'react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { initialSalaryList } from './constants';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
@@ -160,7 +158,12 @@ export function useEmployeeSalary() {
   };
 
   // Full Table PDF Export Action
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
+    const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.setTextColor(30, 41, 59);
@@ -209,7 +212,12 @@ export function useEmployeeSalary() {
   };
 
   // Individual Payslip PDF Download Action
-  const handleDownloadPayslip = (row) => {
+  const handleDownloadPayslip = async (row) => {
+    const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
+    const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
     const net = (row.salary || 0) + (row.bonus || 0) - (row.deductions || 0);
 

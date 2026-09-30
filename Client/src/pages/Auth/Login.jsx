@@ -1,5 +1,5 @@
-import authBg from '../../assets/images/auth-bg.jpg';
-import authCardBg from '../../assets/images/authcard.jpg';
+import authBg from '../../assets/images/auth-bg.webp';
+import authCardBg from '../../assets/images/authcard.webp';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton } from '@mui/material';

@@ -56,7 +56,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
   const pathname = location.pathname;
 
   // Active paths
-  const isDashboardActive = pathname === '/';
+  const isDashboardActive = pathname === '/dashboard' || pathname === '/' || pathname === '/dashboard/';
   const isOccupancyActive = pathname.startsWith('/occupancy');
   const isFrontOfficeActive = pathname.startsWith('/front-office');
   const isReservationActive = pathname.startsWith('/reservation');

@@ -5,7 +5,13 @@ import {
   saveReservations,
   RESERVATIONS_UPDATED_EVENT
 } from '../state/reservationStore';
-import { getBookingDues } from '../../payment-billing/pages/paymentBillingStore';
+import {
+  getBookingDues,
+  getCanonicalBookingPaymentStatus,
+  INVOICES_UPDATED_EVENT,
+  PAYMENTS_UPDATED_EVENT,
+  REFUNDS_UPDATED_EVENT
+} from '../../payment-billing/pages/paymentBillingStore';
 import { addGuest, findGuestByExactIdentity, resolveGuestForBooking } from '../../guests/state/guestStore';
 import { getRoomByRoomNo } from '../../rooms/state/roomStore';
 import { isRoomBlockingBooking, normalizeBookingStatus, validateStayDates } from '../state/bookingRules';
@@ -91,9 +97,16 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
     const syncReservations = () => setBookings(getReservations(initialBookings));
     window.addEventListener('storage', syncReservations);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+    // Job 23: refresh list on any canonical financial mutation so payment column stays current
+    window.addEventListener(INVOICES_UPDATED_EVENT, syncReservations);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
+    window.addEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
     return () => {
       window.removeEventListener('storage', syncReservations);
       window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(INVOICES_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
     };
   }, []);
 
@@ -130,7 +143,7 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
         else if (col === 'Status') val = b.status;
         else if (col === 'Check In') val = b.checkIn;
         else if (col === 'Check Out') val = b.checkOut;
-        else if (col === 'Payment') val = b.payment;
+        else if (col === 'Payment') val = getCanonicalBookingPaymentStatus(b.id) ?? b.payment ?? '';
         else if (col === 'Dues') {
           const duesAmt = getBookingDues(b);
           val = duesAmt === null ? 'Unverified' : duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
@@ -180,7 +193,7 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
         else if (col === 'Status') val = b.status;
         else if (col === 'Check In') val = b.checkIn;
         else if (col === 'Check Out') val = b.checkOut;
-        else if (col === 'Payment') val = b.payment;
+        else if (col === 'Payment') val = getCanonicalBookingPaymentStatus(b.id) ?? b.payment ?? '';
         else if (col === 'Dues') {
           const duesAmt = getBookingDues(b);
           val = duesAmt === null ? 'Unverified' : duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';

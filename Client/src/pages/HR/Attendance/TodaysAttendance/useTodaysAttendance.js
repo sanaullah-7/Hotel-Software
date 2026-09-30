@@ -1,7 +1,5 @@
 import { addAuditLog } from '../../../../features/audit/state/auditStore.js';
 import { useState, useMemo } from 'react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { initialAttendanceRecords } from './constants';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
@@ -179,7 +177,12 @@ export function useTodaysAttendance() {
   };
 
   // PDF Export Action
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
+    const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.setTextColor(30, 41, 59);

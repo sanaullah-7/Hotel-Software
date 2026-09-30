@@ -3,30 +3,72 @@ const STORAGE_KEY = 'hotel_room_inventory_v1';
 export const ROOM_UPDATED_EVENT = 'room_inventory_update';
 
 export const INITIAL_ROOMS = [
-  { id: 1, roomNo: '101', roomImage: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop', roomType: 'Delux', acNonAc: 'AC', meal: 'All', capacity: 2, status: 'Booked', rent: 25, mobile: '1234567890' },
-  { id: 2, roomNo: '102', roomImage: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=100&h=100&fit=crop', roomType: 'Super Delux', acNonAc: 'Non AC', meal: 'Lunch', capacity: 3, status: 'Open', rent: 50, mobile: '1234567890' },
+  { id: 1, roomNo: '101', roomImage: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop', roomType: 'Deluxe', acNonAc: 'AC', meal: 'All', capacity: 2, status: 'Booked', rent: 25, mobile: '1234567890' },
+  { id: 2, roomNo: '102', roomImage: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=100&h=100&fit=crop', roomType: 'Deluxe', acNonAc: 'Non AC', meal: 'Lunch', capacity: 3, status: 'Open', rent: 50, mobile: '1234567890' },
   { id: 3, roomNo: '103', roomImage: 'https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=100&h=100&fit=crop', roomType: 'Super Delux', acNonAc: 'AC', meal: 'All', capacity: 2, status: 'Booked', rent: 31, mobile: '1234567890' },
-  { id: 4, roomNo: '104', roomImage: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=100&h=100&fit=crop', roomType: 'Delux', acNonAc: 'Non AC', meal: 'Dinner', capacity: 3, status: 'Inactive', rent: 31, mobile: '1234567890' },
-  { id: 5, roomNo: '105', roomImage: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=100&h=100&fit=crop', roomType: 'Vila', acNonAc: 'AC', meal: 'Breakfast', capacity: 2, status: 'Open', rent: 50, mobile: '1234567890' },
+  { id: 4, roomNo: '104', roomImage: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=100&h=100&fit=crop', roomType: 'Standard', acNonAc: 'Non AC', meal: 'Dinner', capacity: 3, status: 'Inactive', rent: 31, mobile: '1234567890' },
+  { id: 5, roomNo: '105', roomImage: 'https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=100&h=100&fit=crop', roomType: 'Deluxe', acNonAc: 'AC', meal: 'Breakfast', capacity: 2, status: 'Open', rent: 50, mobile: '1234567890' },
   { id: 6, roomNo: '106', roomImage: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=100&h=100&fit=crop', roomType: 'Double', acNonAc: 'AC', meal: 'None', capacity: 4, status: 'Booked', rent: 45, mobile: '1234567890' },
   { id: 7, roomNo: '201', roomImage: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?w=100&h=100&fit=crop', roomType: 'Single', acNonAc: 'Non AC', meal: 'None', capacity: 4, status: 'Booked', rent: 20, mobile: '1234567890' },
-  { id: 8, roomNo: '202', roomImage: 'https://images.unsplash.com/photo-1560185016-5c51088c4b12?w=100&h=100&fit=crop', roomType: 'Delux', acNonAc: 'AC', meal: 'Dinner', capacity: 3, status: 'Inactive', rent: 25, mobile: '1234567890' },
-  { id: 9, roomNo: '203', roomImage: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop', roomType: 'Delux', acNonAc: 'AC', meal: 'Breakfast', capacity: 2, status: 'Open', rent: 29, mobile: '1234567890' },
+  { id: 8, roomNo: '202', roomImage: 'https://images.unsplash.com/photo-1560185016-5c51088c4b12?w=100&h=100&fit=crop', roomType: 'Super Delux', acNonAc: 'AC', meal: 'Dinner', capacity: 3, status: 'Inactive', rent: 25, mobile: '1234567890' },
+  { id: 9, roomNo: '203', roomImage: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop', roomType: 'Single', acNonAc: 'AC', meal: 'Breakfast', capacity: 2, status: 'Open', rent: 29, mobile: '1234567890' },
   { id: 10, roomNo: '204', roomImage: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=100&h=100&fit=crop', roomType: 'Super Delux', acNonAc: 'Non AC', meal: 'Lunch', capacity: 6, status: 'Open', rent: 50, mobile: '1234567890' },
+  { id: 11, roomNo: '108', roomImage: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=100&h=100&fit=crop', roomType: 'Deluxe', acNonAc: 'AC', meal: 'Breakfast', capacity: 2, status: 'Open', rent: 50, mobile: '1234567890' },
 ];
+
+export function normalizeRoomType(type) {
+  const t = String(type || '').trim().toLowerCase();
+  if (t === 'delux' || t === 'deluxe') return 'deluxe';
+  if (t === 'super delux' || t === 'super deluxe') return 'super deluxe';
+  return t;
+}
 
 export function getRooms() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) {
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed : [];
+      let parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        // Automatically align rooms 101, 102, 105, 108 if loading default room inventory
+        const isDefaultInventory = parsed.some((r) => r.id === 1 && String(r.roomNo) === '101') && parsed.length >= 8;
+        if (isDefaultInventory) {
+          let updated = false;
+          if (!parsed.some((r) => String(r.roomNo) === '108')) {
+            const room108 = INITIAL_ROOMS.find((r) => String(r.roomNo) === '108');
+            if (room108) {
+              parsed = [...parsed, room108];
+              updated = true;
+            }
+          }
+          const deluxeNos = ['101', '102', '105', '108'];
+          parsed = parsed.map((r) => {
+            const no = String(r.roomNo || '').trim();
+            if (deluxeNos.includes(no) && r.roomType !== 'Deluxe') {
+              updated = true;
+              return { ...r, roomType: 'Deluxe' };
+            }
+            return r;
+          });
+          if (updated) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+          }
+        }
+        return parsed;
+      }
+      return [];
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_ROOMS));
   } catch {
     return [];
   }
   return INITIAL_ROOMS;
+}
+
+export function getRoomsByRoomType(roomType) {
+  const rooms = getRooms();
+  if (!roomType || String(roomType).trim() === '') return rooms;
+  const target = normalizeRoomType(roomType);
+  return rooms.filter((room) => normalizeRoomType(room.roomType) === target);
 }
 
 export function getRoomById(id) {

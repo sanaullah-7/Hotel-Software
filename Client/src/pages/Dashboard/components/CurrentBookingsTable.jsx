@@ -16,7 +16,13 @@ import { addGuest, findGuestByExactIdentity, resolveGuestForBooking } from '../.
 import { getRoomByRoomNo } from '../../../features/rooms/state/roomStore';
 import { normalizeBookingStatus, isRoomBlockingBooking, validateStayDates } from '../../../features/reservations/state/bookingRules';
 import { cancelBooking, checkOutBooking, saveBookingsWithRoomState, validateBookingRequest } from '../../../features/reservations/state/reservationLifecycle';
-import { getBookingDues } from '../../../features/payment-billing/pages/paymentBillingStore';
+import {
+  getBookingDues,
+  getCanonicalBookingPaymentStatus,
+  INVOICES_UPDATED_EVENT,
+  PAYMENTS_UPDATED_EVENT,
+  REFUNDS_UPDATED_EVENT
+} from '../../../features/payment-billing/pages/paymentBillingStore';
 import SearchInput from '../../../components/common/SearchInput';
 import RefreshButton from '../../../components/common/RefreshButton';
 import PaginationControls from '../../../components/common/PaginationControls';
@@ -107,9 +113,16 @@ export default function CurrentBookingsTable({
     const syncReservations = () => setBookings(getReservations(initialBookings));
     window.addEventListener('storage', syncReservations);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+    // Job 23: refresh booking list on financial mutations so payment display stays current
+    window.addEventListener(INVOICES_UPDATED_EVENT, syncReservations);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
+    window.addEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
     return () => {
       window.removeEventListener('storage', syncReservations);
       window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(INVOICES_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
     };
   }, []);
 
@@ -136,8 +149,15 @@ export default function CurrentBookingsTable({
     setCustomAnchorEl(null);
   };
 
-  // Functional Date + Search Filter
-  const filteredBookings = bookings.filter((b) => {
+  // Canonical active-booking filter: Current Bookings = Pending + Booked + Checked In
+  // Excludes Checked Out and Cancelled as they are no longer operationally active.
+  const activeBookings = bookings.filter((b) => {
+    const s = normalizeBookingStatus(b.status);
+    return s === 'Pending' || s === 'Booked' || s === 'Checked In';
+  });
+
+  // Functional Date + Search Filter (applied on top of active-booking filter)
+  const filteredBookings = activeBookings.filter((b) => {
     const q = search.toLowerCase().trim();
     if (q) {
       const matchName = b.name && b.name.toLowerCase().includes(q);
@@ -155,14 +175,28 @@ export default function CurrentBookingsTable({
     const checkInDate = parseDate(b.checkIn);
     if (!checkInDate) return true;
 
+    const now = new Date();
+    const todayY = now.getFullYear();
+    const todayM = now.getMonth();
+    const todayD = now.getDate();
+
     const refYear = checkInDate.getFullYear();
     const refMonth = checkInDate.getMonth();
     const refDay = checkInDate.getDate();
 
-    if (dateFilter === 'Daily') return refDay >= 20 && refDay <= 28;
-    if (dateFilter === 'Weekly') return refDay >= 10 && refDay <= 20;
-    if (dateFilter === 'Monthly') return refMonth === 1 || refMonth === new Date().getMonth();
-    if (dateFilter === 'Yearly') return refYear === 2023 || refYear === new Date().getFullYear();
+    // Daily: check-in date is today
+    if (dateFilter === 'Daily') return refYear === todayY && refMonth === todayM && refDay === todayD;
+    // Weekly: check-in date falls within the current calendar week (Mon–Sun)
+    if (dateFilter === 'Weekly') {
+      const dayOfWeek = now.getDay(); // 0=Sun
+      const startOfWeek = new Date(todayY, todayM, todayD - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+      return checkInDate >= startOfWeek && checkInDate < endOfWeek;
+    }
+    // Monthly: check-in date is in the current calendar month
+    if (dateFilter === 'Monthly') return refYear === todayY && refMonth === todayM;
+    // Yearly: check-in date is in the current calendar year
+    if (dateFilter === 'Yearly') return refYear === todayY;
 
     if (dateFilter === 'Custom') {
       if (!customStartDate && !customEndDate) return true;
@@ -425,7 +459,7 @@ export default function CurrentBookingsTable({
         `"${b.status || ''}"`,
         `"${b.checkIn || ''}"`,
         `"${b.checkOut || ''}"`,
-        `"${b.payment || ''}"`,
+        `"${getCanonicalBookingPaymentStatus(b.id) ?? b.payment ?? ''}"`,
         `"${duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0'}"`,
         `"${b.mobile || ''}"`
       ];
@@ -473,7 +507,7 @@ export default function CurrentBookingsTable({
         <td>${b.status || ''}</td>
         <td>${b.checkIn || ''}</td>
         <td>${b.checkOut || ''}</td>
-        <td>${b.payment || ''}</td>
+        <td>${getCanonicalBookingPaymentStatus(b.id) ?? b.payment ?? ''}</td>
         <td>${duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0'}</td>
         <td>${b.mobile || ''}</td>
       </tr>`;

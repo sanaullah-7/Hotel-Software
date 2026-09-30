@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormControl, InputLabel, Select, MenuItem, TextField, Typography, Box } from '@mui/material';
 import {
   Search, AddCircleOutlined, Refresh,
@@ -11,14 +11,12 @@ import {
   CreditCardOutlined,
   MoneyOffOutlined
 } from '@mui/icons-material';
-
-const initialBookings = [
-  { id: 1, firstName: 'John', lastName: 'Doe', avatar: 'https://i.pravatar.cc/150?img=11', package: 'All inclusive', roomType: 'Delux', status: 'Cancelled', checkIn: '02/10/2024', payment: 'Paid', cancellationDate: '02/05/2024', refundStatus: 'Processed', cancellationFee: '50.00', email: 'john.doe@email.com', mobile: '1234567890', reason: 'Changed travel plans' },
-  { id: 2, firstName: 'Jane', lastName: 'Smith', avatar: 'https://i.pravatar.cc/150?img=5', package: 'Breakfast incl...', roomType: 'Suite', status: 'Cancelled', checkIn: '03/05/2024', payment: 'Paid', cancellationDate: '03/01/2024', refundStatus: 'Pending', cancellationFee: '100.00', email: 'jane.smith@email.com', mobile: '1234567890', reason: '' },
-  { id: 3, firstName: 'Alice', lastName: 'Johnson', avatar: 'https://i.pravatar.cc/150?img=12', package: 'Half board', roomType: 'Standard', status: 'Cancelled', checkIn: '04/01/2024', payment: 'Not Paid', cancellationDate: '03/28/2024', refundStatus: 'Cancelled', cancellationFee: '0.00', email: 'alice.j@email.com', mobile: '1234567890', reason: '' },
-  { id: 4, firstName: 'Michael', lastName: 'Brown', avatar: 'https://i.pravatar.cc/150?img=33', package: 'Room only', roomType: 'Superior', status: 'Cancelled', checkIn: '05/12/2024', payment: 'Paid', cancellationDate: '05/08/2024', refundStatus: 'Processed', cancellationFee: '30.00', email: 'mbrown@email.com', mobile: '1234567890', reason: '' },
-  { id: 5, firstName: 'Emily', lastName: 'White', avatar: 'https://i.pravatar.cc/150?img=44', package: 'Full board', roomType: 'Family', status: 'Cancelled', checkIn: '06/20/2024', payment: 'Paid', cancellationDate: '06/15/2024', refundStatus: 'Pending', cancellationFee: '70.00', email: 'ewhite@email.com', mobile: '1234567890', reason: '' },
-];
+import {
+  getReservations,
+  saveReservations,
+  RESERVATIONS_UPDATED_EVENT
+} from '../state/reservationStore';
+import { normalizeBookingStatus } from '../state/bookingRules';
 
 const statusStyles = {
   Cancelled: 'bg-orange-100 text-orange-500'
@@ -30,8 +28,38 @@ const refundStyles = {
   Cancelled: 'bg-red-100 text-red-500'
 };
 
+function mapCanonicalToCancelledRow(booking) {
+  let firstName = booking.firstName || '';
+  let lastName = booking.lastName || '';
+  if (!firstName && !lastName && booking.name) {
+    const parts = String(booking.name).trim().split(/\s+/);
+    firstName = parts[0] || '';
+    lastName = parts.slice(1).join(' ') || '';
+  }
+  return {
+    ...booking,
+    id: booking.id,
+    firstName,
+    lastName,
+    name: booking.name || `${firstName} ${lastName}`.trim(),
+    package: booking.package || '',
+    roomType: booking.roomType || '',
+    status: normalizeBookingStatus(booking.status),
+    checkIn: booking.checkIn || '',
+    checkOut: booking.checkOut || '',
+    payment: booking.payment || 'Unpaid',
+    cancellationDate: booking.cancellationDate || '',
+    refundStatus: booking.refundStatus || '',
+    cancellationFee: booking.cancellationFee !== undefined && booking.cancellationFee !== null ? String(booking.cancellationFee) : '',
+    email: booking.email || '',
+    mobile: booking.mobile || '',
+    reason: booking.reason || '',
+    avatar: booking.avatar || 'https://i.pravatar.cc/150'
+  };
+}
+
 export default function CancelledBookings() {
-  const [bookings, setBookings] = useState(initialBookings);
+  const [canonicalBookings, setCanonicalBookings] = useState(() => getReservations());
   const [search, setSearch] = useState('');
   
   // Modals state
@@ -48,25 +76,48 @@ export default function CancelledBookings() {
   const [form, setForm] = useState({
     firstName: '', lastName: '', package: 'All inclusive', roomType: 'Delux',
     status: 'Cancelled', cancellationDate: '', payment: 'Paid', refundStatus: 'Pending',
-    email: '', mobile: '', reason: '', cancellationFee: '0.00'
+    email: '', mobile: '', reason: '', cancellationFee: ''
+  });
+
+  useEffect(() => {
+    const syncReservations = () => setCanonicalBookings(getReservations());
+    window.addEventListener('storage', syncReservations);
+    window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+    return () => {
+      window.removeEventListener('storage', syncReservations);
+      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+    };
+  }, []);
+
+  const cancelledBookings = canonicalBookings
+    .filter((b) => normalizeBookingStatus(b.status) === 'Cancelled')
+    .map(mapCanonicalToCancelledRow);
+
+  const filteredBookings = cancelledBookings.filter((b) => {
+    const q = search.toLowerCase();
+    const fullName = (b.name || `${b.firstName || ''} ${b.lastName || ''}`).toLowerCase();
+    const email = (b.email || '').toLowerCase();
+    const mobile = (b.mobile || '').toLowerCase();
+    return fullName.includes(q) || email.includes(q) || mobile.includes(q);
   });
 
   const handleRefresh = () => {
     setSearch('');
-    setBookings(initialBookings);
+    setCanonicalBookings(getReservations());
   };
 
   const handleExportCSV = () => {
     const columns = [
-      { label: 'First Name', getVal: (b) => `${b.firstName} ${b.lastName}` },
-      { label: 'Package', getVal: (b) => b.package },
-      { label: 'Room Type', getVal: (b) => b.roomType },
-      { label: 'Status', getVal: (b) => b.status },
-      { label: 'Check In', getVal: (b) => b.checkIn },
-      { label: 'Payment', getVal: (b) => b.payment },
-      { label: 'Cancellation Date', getVal: (b) => b.cancellationDate },
-      { label: 'Refund Status', getVal: (b) => b.refundStatus },
-      { label: 'Cancellation Fee', getVal: (b) => b.cancellationFee },
+      { label: 'First Name', getVal: (b) => b.firstName || b.name || '' },
+      { label: 'Last Name', getVal: (b) => b.lastName || '' },
+      { label: 'Package', getVal: (b) => b.package || '' },
+      { label: 'Room Type', getVal: (b) => b.roomType || '' },
+      { label: 'Status', getVal: (b) => b.status || '' },
+      { label: 'Check In', getVal: (b) => b.checkIn || '' },
+      { label: 'Payment', getVal: (b) => b.payment || '' },
+      { label: 'Cancellation Date', getVal: (b) => b.cancellationDate || '' },
+      { label: 'Refund Status', getVal: (b) => b.refundStatus || '' },
+      { label: 'Cancellation Fee', getVal: (b) => b.cancellationFee || '' },
     ];
     let csvContent = columns.map(c => c.label).join(',') + '\n';
     
@@ -84,15 +135,16 @@ export default function CancelledBookings() {
 
   const handleExportPDF = () => {
     const columns = [
-      { label: 'First Name', getVal: (b) => `${b.firstName} ${b.lastName}` },
-      { label: 'Package', getVal: (b) => b.package },
-      { label: 'Room Type', getVal: (b) => b.roomType },
-      { label: 'Status', getVal: (b) => b.status },
-      { label: 'Check In', getVal: (b) => b.checkIn },
-      { label: 'Payment', getVal: (b) => b.payment },
-      { label: 'Cancellation Date', getVal: (b) => b.cancellationDate },
-      { label: 'Refund Status', getVal: (b) => b.refundStatus },
-      { label: 'Cancellation Fee', getVal: (b) => b.cancellationFee },
+      { label: 'First Name', getVal: (b) => b.firstName || b.name || '' },
+      { label: 'Last Name', getVal: (b) => b.lastName || '' },
+      { label: 'Package', getVal: (b) => b.package || '' },
+      { label: 'Room Type', getVal: (b) => b.roomType || '' },
+      { label: 'Status', getVal: (b) => b.status || '' },
+      { label: 'Check In', getVal: (b) => b.checkIn || '' },
+      { label: 'Payment', getVal: (b) => b.payment || '' },
+      { label: 'Cancellation Date', getVal: (b) => b.cancellationDate || '' },
+      { label: 'Refund Status', getVal: (b) => b.refundStatus || '' },
+      { label: 'Cancellation Fee', getVal: (b) => b.cancellationFee || '' },
     ];
     let html = `
     <html>
@@ -134,22 +186,18 @@ export default function CancelledBookings() {
     </html>`;
     
     const printWindow = window.open('', '_blank');
-    printWindow.document.write(html);
-    printWindow.document.close();
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+    }
   };
-
-  const filteredBookings = bookings.filter(b => 
-    b.firstName.toLowerCase().includes(search.toLowerCase()) || 
-    b.lastName.toLowerCase().includes(search.toLowerCase()) || 
-    b.email.toLowerCase().includes(search.toLowerCase())
-  );
 
   const openNewModal = () => {
     setEditingId(null);
     setForm({
       firstName: '', lastName: '', package: 'All inclusive', roomType: 'Delux',
-      status: 'Cancelled', cancellationDate: new Date().toISOString().split('T')[0], 
-      payment: 'Paid', refundStatus: 'Pending', email: '', mobile: '', reason: '', cancellationFee: '0.00'
+      status: 'Cancelled', cancellationDate: '',
+      payment: 'Paid', refundStatus: 'Pending', email: '', mobile: '', reason: '', cancellationFee: ''
     });
     setIsModalOpen(true);
   };
@@ -157,18 +205,18 @@ export default function CancelledBookings() {
   const openEditModal = (booking) => {
     setEditingId(booking.id);
     setForm({
-      firstName: booking.firstName,
-      lastName: booking.lastName,
-      package: booking.package,
-      roomType: booking.roomType,
-      status: booking.status,
-      cancellationDate: booking.cancellationDate,
-      payment: booking.payment,
-      refundStatus: booking.refundStatus,
-      email: booking.email,
-      mobile: booking.mobile,
+      firstName: booking.firstName || '',
+      lastName: booking.lastName || '',
+      package: booking.package || 'All inclusive',
+      roomType: booking.roomType || 'Delux',
+      status: booking.status || 'Cancelled',
+      cancellationDate: booking.cancellationDate || '',
+      payment: booking.payment || 'Paid',
+      refundStatus: booking.refundStatus || 'Pending',
+      email: booking.email || '',
+      mobile: booking.mobile || '',
       reason: booking.reason || '',
-      cancellationFee: booking.cancellationFee || '0.00'
+      cancellationFee: booking.cancellationFee || ''
     });
     setIsModalOpen(true);
   };
@@ -180,10 +228,32 @@ export default function CancelledBookings() {
 
   const handleSaveModal = (e) => {
     e.preventDefault();
+    const allBookings = getReservations();
+    const fullName = `${form.firstName} ${form.lastName}`.trim();
+
     if (editingId) {
-      setBookings(bookings.map(b => b.id === editingId ? { ...b, ...form } : b));
+      const next = allBookings.map((b) => {
+        if (String(b.id) === String(editingId)) {
+          return {
+            ...b,
+            ...form,
+            name: fullName || b.name,
+            status: 'Cancelled',
+          };
+        }
+        return b;
+      });
+      saveReservations(next);
     } else {
-      setBookings([...bookings, { ...form, id: bookings.length + 1, avatar: 'https://i.pravatar.cc/150' }]);
+      const newId = allBookings.length ? Math.max(...allBookings.map((b) => Number(b.id) || 0)) + 1 : 1;
+      const newBooking = {
+        ...form,
+        id: newId,
+        name: fullName,
+        status: 'Cancelled',
+        avatar: 'https://i.pravatar.cc/150'
+      };
+      saveReservations([...allBookings, newBooking]);
     }
     setIsModalOpen(false);
   };
@@ -194,7 +264,10 @@ export default function CancelledBookings() {
   };
 
   const handleDelete = () => {
-    setBookings(bookings.filter(b => b.id !== bookingToDelete.id));
+    if (!bookingToDelete) return;
+    const allBookings = getReservations();
+    const next = allBookings.filter((b) => String(b.id) !== String(bookingToDelete.id));
+    saveReservations(next);
     setIsDeleteModalOpen(false);
     setBookingToDelete(null);
   };
@@ -276,34 +349,48 @@ export default function CancelledBookings() {
                     <img src={booking.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover shadow-sm" />
                     <span className="text-[13px] text-gray-700 font-medium">{booking.firstName} {booking.lastName}</span>
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">{booking.package}</td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">{booking.roomType}</td>
+                  <td className="py-3 px-2 text-[13px] text-gray-600">{booking.package || '—'}</td>
+                  <td className="py-3 px-2 text-[13px] text-gray-600">{booking.roomType || '—'}</td>
                   <td className="py-3 px-2">
-                    <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${statusStyles[booking.status]}`}>
+                    <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${statusStyles[booking.status] || 'bg-gray-100 text-gray-600'}`}>
                       {booking.status}
                     </span>
                   </td>
                   <td className="py-3 px-2 text-[13px] text-gray-600">
                     <div className="flex items-center gap-1.5">
                       <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
-                      {booking.checkIn}
+                      {booking.checkIn || '—'}
                     </div>
                   </td>
                   <td className="py-3 px-2 text-[13px] text-gray-600 font-medium">
-                    {booking.payment}
+                    {booking.payment || '—'}
                   </td>
                   <td className="py-3 px-2 text-[13px] text-gray-600">
-                    <div className="flex items-center gap-1.5">
-                      <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
-                      {booking.cancellationDate}
-                    </div>
+                    {booking.cancellationDate ? (
+                      <div className="flex items-center gap-1.5">
+                        <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
+                        {booking.cancellationDate}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">—</span>
+                    )}
                   </td>
                   <td className="py-3 px-2">
-                    <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${refundStyles[booking.refundStatus]}`}>
-                      {booking.refundStatus}
-                    </span>
+                    {booking.refundStatus && refundStyles[booking.refundStatus] ? (
+                      <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${refundStyles[booking.refundStatus]}`}>
+                        {booking.refundStatus}
+                      </span>
+                    ) : booking.refundStatus ? (
+                      <span className="px-3 py-1 rounded-[4px] text-[11px] font-bold bg-gray-100 text-gray-600">
+                        {booking.refundStatus}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 text-[12px]">—</span>
+                    )}
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">{booking.cancellationFee}</td>
+                  <td className="py-3 px-2 text-[13px] text-gray-600">
+                    {booking.cancellationFee ? booking.cancellationFee : <span className="text-gray-400">—</span>}
+                  </td>
                   <td className="py-3 px-2 relative">
                     <div className="flex items-center gap-3">
                       <button onClick={(e) => { e.stopPropagation(); openEditModal(booking); }} className="text-[var(--primary-main)] hover:text-green-700 transition-colors cursor-pointer" title="Edit">
@@ -327,7 +414,7 @@ export default function CancelledBookings() {
           </table>
         </div>
         
-        {/* Pagination placeholder */}
+        {/* Pagination bar */}
         <div className="flex items-center justify-end px-2 py-4 border-t border-gray-100 bg-white gap-4">
           <div className="flex items-center gap-2">
             <span className="text-[12px] text-gray-500">Items per page:</span>
@@ -352,13 +439,13 @@ export default function CancelledBookings() {
             <div className="bg-[var(--primary-main)] px-5 py-3.5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {editingId ? (
-                  <img src={bookings.find(b=>b.id===editingId)?.avatar || 'https://i.pravatar.cc/150'} alt="guest" className="w-8 h-8 rounded-full border border-white" />
+                  <img src={canonicalBookings.find(b=>b.id===editingId)?.avatar || 'https://i.pravatar.cc/150'} alt="guest" className="w-8 h-8 rounded-full border border-white" />
                 ) : (
                   <div className="w-8 h-8 rounded-full border border-white bg-[var(--primary-main)] brightness-110 flex items-center justify-center text-white">
                     <Person sx={{ fontSize: 20 }} />
                   </div>
                 )}
-                <h2 className="text-white text-[17px] font-bold">{editingId ? form.firstName + ' ' + form.lastName : 'New Cancelled Booking'}</h2>
+                <h2 className="text-white text-[17px] font-bold">{editingId ? `${form.firstName} ${form.lastName}`.trim() : 'New Cancelled Booking'}</h2>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
                 <Close sx={{ fontSize: 18 }} />
@@ -405,7 +492,6 @@ export default function CancelledBookings() {
                     Cancellation Date
                   </Typography>
                   <TextField
-                    required
                     type="date"
                     label=""
                     name="cancellationDate"
@@ -521,7 +607,7 @@ export default function CancelledBookings() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Room Type</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingBooking.roomType}</span>
+                    <span className="text-[14px] font-bold text-gray-800">{viewingBooking.roomType || '—'}</span>
                   </div>
                 </div>
 
@@ -532,7 +618,7 @@ export default function CancelledBookings() {
                   </div>
                   <div className="flex flex-col items-start">
                     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Status</span>
-                    <span className={`px-2 py-0.5 rounded-[4px] text-[12px] font-bold mt-0.5 ${statusStyles[viewingBooking.status]}`}>
+                    <span className={`px-2 py-0.5 rounded-[4px] text-[12px] font-bold mt-0.5 ${statusStyles[viewingBooking.status] || 'bg-gray-100 text-gray-600'}`}>
                       {viewingBooking.status}
                     </span>
                   </div>
@@ -545,7 +631,7 @@ export default function CancelledBookings() {
                   </div>
                   <div className="flex flex-col items-start">
                     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Payment</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingBooking.payment}</span>
+                    <span className="text-[14px] font-bold text-gray-800">{viewingBooking.payment || '—'}</span>
                   </div>
                 </div>
 
@@ -556,7 +642,7 @@ export default function CancelledBookings() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Cancellation Date</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingBooking.cancellationDate}</span>
+                    <span className="text-[14px] font-bold text-gray-800">{viewingBooking.cancellationDate || '—'}</span>
                   </div>
                 </div>
                 
@@ -567,9 +653,13 @@ export default function CancelledBookings() {
                   </div>
                   <div className="flex flex-col items-start">
                     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Refund Status</span>
-                    <span className={`px-2 py-0.5 rounded-[4px] text-[12px] font-bold mt-0.5 ${refundStyles[viewingBooking.refundStatus]}`}>
-                      {viewingBooking.refundStatus}
-                    </span>
+                    {viewingBooking.refundStatus && refundStyles[viewingBooking.refundStatus] ? (
+                      <span className={`px-2 py-0.5 rounded-[4px] text-[12px] font-bold mt-0.5 ${refundStyles[viewingBooking.refundStatus]}`}>
+                        {viewingBooking.refundStatus}
+                      </span>
+                    ) : (
+                      <span className="text-[14px] font-bold text-gray-800 mt-0.5">{viewingBooking.refundStatus || '—'}</span>
+                    )}
                   </div>
                 </div>
 
@@ -580,7 +670,7 @@ export default function CancelledBookings() {
                   </div>
                   <div className="flex flex-col items-start">
                     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Cancellation Fee</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingBooking.cancellationFee}</span>
+                    <span className="text-[14px] font-bold text-gray-800">{viewingBooking.cancellationFee || '—'}</span>
                   </div>
                 </div>
 

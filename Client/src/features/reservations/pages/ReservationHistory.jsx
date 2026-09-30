@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, Download, MoreVert, Visibility, Print, ChevronLeft, ChevronRight,
   Inventory2, KeyboardArrowDown, Close, Person, Phone, Hotel, Event, CheckCircle,
@@ -7,7 +7,167 @@ import {
 import { 
   Menu, MenuItem, IconButton, Popover, Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
-import { getBookingDues } from '../../payment-billing/pages/paymentBillingStore';
+import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../state/reservationStore';
+import { normalizeBookingStatus } from '../state/bookingRules';
+import { getGuestById, resolveGuestForBooking } from '../../guests/state/guestStore';
+import { getRoomById, getRoomByRoomNo } from '../../rooms/state/roomStore';
+import { getBookingDues, getInvoices } from '../../payment-billing/pages/paymentBillingStore';
+import { getGuestCharges } from '../../inventory/pages/inventoryStore';
+
+function parseReservationDate(value) {
+  if (!value) return null;
+  const str = String(value).trim();
+  const datePart = str.split(' ')[0].split('T')[0];
+
+  const isoMatch = datePart.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (isoMatch) {
+    const [, y, m, d] = isoMatch;
+    return new Date(Number(y), Number(m) - 1, Number(d));
+  }
+
+  const usMatch = datePart.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (usMatch) {
+    let [, m, d, y] = usMatch;
+    let year = Number(y);
+    if (year < 100) year += year < 50 ? 2000 : 1900;
+    return new Date(year, Number(m) - 1, Number(d));
+  }
+
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function normalizeToDateOnly(d) {
+  if (!d || isNaN(d.getTime())) return null;
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+function isChargeWithinStay(charge, booking) {
+  const chargeDateVal = charge.date || charge.reportedDate;
+  if (!chargeDateVal) return false;
+  const cParsed = parseReservationDate(chargeDateVal);
+  const inParsed = parseReservationDate(booking.checkIn);
+  const outParsed = parseReservationDate(booking.checkOut);
+
+  if (!cParsed || !inParsed || !outParsed) return false;
+
+  const cTime = normalizeToDateOnly(cParsed);
+  const inTime = normalizeToDateOnly(inParsed);
+  const outTime = normalizeToDateOnly(outParsed);
+
+  if (cTime === null || inTime === null || outTime === null) return false;
+  return cTime >= inTime && cTime <= outTime;
+}
+
+function isChargeAssociatedWithBooking(charge, booking, guestName, roomNo) {
+  if (!charge || typeof charge !== 'object' || !booking || typeof booking !== 'object') {
+    return false;
+  }
+
+  // 1. Explicit bookingId priority
+  if (charge.bookingId !== undefined && charge.bookingId !== null && String(charge.bookingId).trim() !== '') {
+    return String(charge.bookingId).trim() === String(booking.id).trim();
+  }
+
+  // 2. guestId priority (with verified stay boundaries and room consistency)
+  if (charge.guestId !== undefined && charge.guestId !== null && String(charge.guestId).trim() !== '') {
+    if (!booking.guestId || String(charge.guestId).trim() !== String(booking.guestId).trim()) {
+      return false;
+    }
+    if (charge.roomNumber && roomNo && roomNo !== '—') {
+      if (String(charge.roomNumber).trim() !== String(roomNo).trim()) {
+        return false;
+      }
+    }
+    return isChargeWithinStay(charge, booking);
+  }
+
+  // 3. Unambiguous existing relationship with verified stay boundaries
+  const cName = charge.guestName ? String(charge.guestName).trim().toLowerCase() : '';
+  const bName = guestName ? String(guestName).trim().toLowerCase() : '';
+  if (!cName || !bName || cName === 'guest' || bName === 'guest') {
+    return false;
+  }
+  if (cName !== bName) {
+    return false;
+  }
+
+  const cRoom = charge.roomNumber ? String(charge.roomNumber).trim() : '';
+  const bRoom = roomNo && roomNo !== '—' ? String(roomNo).trim() : '';
+  if (!cRoom || !bRoom || cRoom !== bRoom) {
+    return false;
+  }
+
+  return isChargeWithinStay(charge, booking);
+}
+
+function mapCanonicalToHistoryRow(booking, invoices = [], charges = []) {
+  const guest = booking.guestId ? getGuestById(booking.guestId) : resolveGuestForBooking(booking);
+  const guestName = guest?.name || booking.name || booking.guestName || 'Guest';
+  const mobile = guest?.phone || booking.mobile || booking.phone || '—';
+  const email = guest?.email || booking.email || booking.guestEmail || '—';
+
+  const room = booking.roomId ? getRoomById(booking.roomId) : (booking.roomNo ? getRoomByRoomNo(booking.roomNo) : null);
+  const roomNo = room?.roomNo || booking.roomNo || booking.roomNumber || (typeof booking.room === 'string' && booking.room.includes(' - ') ? booking.room.split(' - ')[0] : booking.room) || '—';
+  const roomType = room?.roomType || booking.roomType || (typeof booking.room === 'string' && booking.room.includes(' - ') ? booking.room.split(' - ')[1] : '') || '';
+  const roomDisplay = roomType ? `${roomNo} - ${roomType}` : (roomNo || '—');
+
+  const linkedInvoice = invoices.find((inv) => String(inv.bookingId) === String(booking.id));
+  let totalPrice = null;
+  if (linkedInvoice) {
+    if (linkedInvoice.totalAmount !== undefined && linkedInvoice.totalAmount !== null && !isNaN(Number(linkedInvoice.totalAmount))) {
+      totalPrice = Number(linkedInvoice.totalAmount);
+    }
+  } else if (booking.totalPrice !== undefined && booking.totalPrice !== null && !isNaN(Number(booking.totalPrice))) {
+    totalPrice = Number(booking.totalPrice);
+  }
+
+  let paymentStatus = '';
+  if (linkedInvoice) {
+    paymentStatus = linkedInvoice.status || '';
+  } else if (booking.paymentStatus) {
+    paymentStatus = booking.paymentStatus;
+  } else if (booking.payment) {
+    paymentStatus = booking.payment;
+  } else {
+    paymentStatus = normalizeBookingStatus(booking.status) === 'Cancelled' ? 'Cancelled' : 'Unpaid';
+  }
+
+  let inventory = [];
+  if (charges.length > 0) {
+    const matchedCharges = charges.filter((c) => isChargeAssociatedWithBooking(c, booking, guestName, roomNo));
+    if (matchedCharges.length > 0) {
+      inventory = matchedCharges.map((c) => ({
+        name: c.itemName || 'Incidental Charge',
+        date: c.date || c.reportedDate || '',
+        time: '',
+        price: Number(c.amount || c.unitPrice || 0)
+      }));
+    }
+  }
+
+  const reservationDate = booking.reservationDate || booking.createdAt || (booking.checkIn ? String(booking.checkIn).split(' ')[0] : '—');
+  const checkIn = booking.checkIn || '—';
+  const checkOut = booking.checkOut || '—';
+
+  return {
+    ...booking,
+    id: booking.id,
+    guestName,
+    mobile,
+    email,
+    room: roomDisplay,
+    roomNo,
+    roomType,
+    reservationDate,
+    checkIn,
+    checkOut,
+    inventory,
+    totalPrice,
+    paymentStatus,
+    normalizedStatus: normalizeBookingStatus(booking.status)
+  };
+}
 
 // Column shows a dropdown trigger — clicking it opens the full numbered
 // inventory list with date, time, price, and a total at the bottom.
@@ -86,93 +246,62 @@ export default function ReservationHistory() {
   const [selectedRes, setSelectedRes] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-  const mockReservations = [
-    { id: 'RES-001', guestName: 'John Doe', mobile: '0311 0000000', room: '105 - Standard', reservationDate: '2026-08-01', checkIn: '2026-08-10 14:00', checkOut: '2026-08-15 12:00', inventory: [
-      { name: 'Coke Can', date: '2026-08-10', time: '14:20', price: 3 },
-      { name: 'Dinner (Chicken Karahi)', date: '2026-08-11', time: '20:15', price: 18 },
-      { name: 'Lays Chips', date: '2026-08-12', time: '17:00', price: 2 },
-    ], paymentStatus: 'Paid', totalPrice: 500, dues: 0 },
-    { id: 'RES-002', guestName: 'Sarah Smith', mobile: '0300 1234567', room: '302 - Suite', reservationDate: '2026-08-20', checkIn: '2026-08-25 15:00', checkOut: '2026-08-28 11:00', inventory: [], paymentStatus: 'Paid', totalPrice: 900, dues: 0 },
-    { id: 'RES-003', guestName: 'Ahsan Khan', mobile: '0333 4455667', room: '101 - Standard', reservationDate: '2026-07-15', checkIn: '2026-07-20 13:00', checkOut: '2026-07-22 11:00', inventory: [
-      { name: 'Breakfast (Continental)', date: '2026-07-21', time: '08:30', price: 12 },
-    ], paymentStatus: 'Paid', totalPrice: 300, dues: 0 },
-    { id: 'RES-004', guestName: 'Maria Garcia', mobile: '0344 7788990', room: '205 - Deluxe', reservationDate: '2026-07-10', checkIn: '2026-07-22 14:30', checkOut: '2026-07-25 12:00', inventory: [], paymentStatus: 'Refunded', totalPrice: 600, dues: 0 },
-    { id: 'RES-005', guestName: 'Liam Johnson', mobile: '0312 9988776', room: '310 - Suite', reservationDate: '2026-06-25', checkIn: '2026-07-01 12:00', checkOut: '2026-07-05 10:00', inventory: [
-      { name: 'Coke Can', date: '2026-07-01', time: '12:10', price: 3 },
-      { name: 'Dinner (BBQ Platter)', date: '2026-07-01', time: '20:30', price: 25 },
-      { name: 'Water Bottle (1.5L)', date: '2026-07-02', time: '08:00', price: 2 },
-      { name: 'Lays Chips', date: '2026-07-03', time: '16:45', price: 2 },
-    ], paymentStatus: 'Paid', totalPrice: 1200, dues: 0 },
-    { id: 'RES-006', guestName: 'Ayesha Tariq', mobile: '0321 4433221', room: '102 - Standard', reservationDate: '2026-06-12', checkIn: '2026-06-18 15:00', checkOut: '2026-06-20 12:00', inventory: [], paymentStatus: 'Paid', totalPrice: 250, dues: 0 },
-    { id: 'RES-007', guestName: 'David Lee', mobile: '0301 5566778', room: '212 - Deluxe', reservationDate: '2026-06-05', checkIn: '2026-06-15 14:00', checkOut: '2026-06-18 11:00', inventory: [
-      { name: 'Club Sandwich', date: '2026-06-15', time: '14:30', price: 9 },
-      { name: 'Coke Can', date: '2026-06-16', time: '13:00', price: 3 },
-    ], paymentStatus: 'Paid', totalPrice: 550, dues: 0 },
-    { id: 'RES-008', guestName: 'Fatima Ali', mobile: '0334 1122112', room: '115 - Standard', reservationDate: '2026-05-20', checkIn: '2026-05-25 13:30', checkOut: '2026-05-27 12:00', inventory: [], paymentStatus: 'Cancelled', totalPrice: 300, dues: 300 },
-    { id: 'RES-009', guestName: 'Oliver Twist', mobile: '0345 8899000', room: '305 - Suite', reservationDate: '2026-05-15', checkIn: '2026-05-20 14:00', checkOut: '2026-05-25 10:00', inventory: [
-      { name: 'Dinner (Grilled Fish)', date: '2026-05-20', time: '20:00', price: 22 },
-    ], paymentStatus: 'Paid', totalPrice: 1500, dues: 0 },
-    { id: 'RES-010', guestName: 'Hassan Raza', mobile: '0311 6655443', room: '201 - Deluxe', reservationDate: '2026-05-01', checkIn: '2026-05-10 12:00', checkOut: '2026-05-12 12:00', inventory: [], paymentStatus: 'Paid', totalPrice: 400, dues: 0 },
-    { id: 'RES-011', guestName: 'Emma Watson', mobile: '0300 9988776', room: '108 - Standard', reservationDate: '2026-04-25', checkIn: '2026-05-02 15:00', checkOut: '2026-05-05 11:00', inventory: [
-      { name: 'Coke Can', date: '2026-05-02', time: '15:10', price: 3 },
-      { name: 'Lays Chips', date: '2026-05-02', time: '15:12', price: 2 },
-      { name: 'Dinner (Chicken Karahi)', date: '2026-05-03', time: '20:15', price: 18 },
-      { name: 'Breakfast (Continental)', date: '2026-05-04', time: '08:30', price: 12 },
-    ], paymentStatus: 'Refunded', totalPrice: 350, dues: 0 },
-    { id: 'RES-012', guestName: 'Zainab Abbas', mobile: '0322 3344556', room: '220 - Deluxe', reservationDate: '2026-04-10', checkIn: '2026-04-15 14:00', checkOut: '2026-04-18 12:00', inventory: [], paymentStatus: 'Paid', totalPrice: 700, dues: 0 },
-    { id: 'RES-013', guestName: 'Michael Scott', mobile: '0333 7777777', room: '312 - Suite', reservationDate: '2026-04-01', checkIn: '2026-04-10 13:00', checkOut: '2026-04-15 11:00', inventory: [
-      { name: 'Club Sandwich', date: '2026-04-10', time: '13:20', price: 9 },
-    ], paymentStatus: 'Paid', totalPrice: 1250, dues: 0 },
-    { id: 'RES-014', guestName: 'Sana Javed', mobile: '0345 1231234', room: '110 - Standard', reservationDate: '2026-03-20', checkIn: '2026-03-25 14:00', checkOut: '2026-03-27 12:00', inventory: [], paymentStatus: 'Paid', totalPrice: 200, dues: 0 },
-    { id: 'RES-015', guestName: 'Usman Khawaja', mobile: '0313 5554443', room: '208 - Deluxe', reservationDate: '2026-03-15', checkIn: '2026-03-20 15:00', checkOut: '2026-03-24 10:00', inventory: [
-      { name: 'Dinner (BBQ Platter)', date: '2026-03-20', time: '20:30', price: 25 },
-      { name: 'Coke Can', date: '2026-03-21', time: '11:00', price: 3 },
-    ], paymentStatus: 'Cancelled', totalPrice: 800, dues: 800 },
-  ];
+  // Canonical reservations state
+  const [rawBookings, setRawBookings] = useState(() => getReservations());
+
+  useEffect(() => {
+    const syncReservations = () => setRawBookings(getReservations());
+    window.addEventListener('storage', syncReservations);
+    window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+    return () => {
+      window.removeEventListener('storage', syncReservations);
+      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+    };
+  }, []);
+
+  const invoices = getInvoices();
+  let charges = [];
+  try {
+    charges = getGuestCharges();
+  } catch {}
+
+  const historicalReservations = rawBookings
+    .filter((booking) => {
+      const status = normalizeBookingStatus(booking.status);
+      return status === 'Checked Out' || status === 'Cancelled';
+    })
+    .map((booking) => mapCanonicalToHistoryRow(booking, invoices, charges));
 
   const getRecordDate = (res) => {
-    const str = res.reservationDate || res.checkIn?.split(' ')[0];
-    if (!str) return null;
-    return new Date(str + 'T00:00:00');
+    return parseReservationDate(res.checkOut || res.cancellationDate || res.checkIn || res.reservationDate);
   };
-
-  const maxDatasetTime = Math.max(...mockReservations.map(r => getRecordDate(r)?.getTime() || 0));
-  const anchorDate = new Date(maxDatasetTime); // 2026-08-20
 
   const filterByDate = (res) => {
     const recDate = getRecordDate(res);
-    if (!recDate) return true;
+    if (!recDate) {
+      return activeTab === 'Custom' && !customStartDate && !customEndDate;
+    }
+
+    const now = new Date();
 
     if (activeTab === 'Daily') {
-      const now = new Date();
-      const isToday = recDate.getFullYear() === now.getFullYear() &&
-                      recDate.getMonth() === now.getMonth() &&
-                      recDate.getDate() === now.getDate();
-      const isAnchorDay = recDate.getFullYear() === anchorDate.getFullYear() &&
-                          recDate.getMonth() === anchorDate.getMonth() &&
-                          recDate.getDate() === anchorDate.getDate();
-      return isToday || isAnchorDay;
+      return recDate.getFullYear() === now.getFullYear() &&
+             recDate.getMonth() === now.getMonth() &&
+             recDate.getDate() === now.getDate();
     }
 
     if (activeTab === 'Weekly') {
-      const now = new Date();
-      const diffAnchor = Math.abs(anchorDate.getTime() - recDate.getTime()) / (1000 * 60 * 60 * 24);
       const diffNow = Math.abs(now.getTime() - recDate.getTime()) / (1000 * 60 * 60 * 24);
-      return diffAnchor <= 7 || diffNow <= 7;
+      return diffNow <= 7;
     }
 
     if (activeTab === 'Monthly') {
-      const now = new Date();
-      const isAnchorMonth = recDate.getFullYear() === anchorDate.getFullYear() &&
-                            recDate.getMonth() === anchorDate.getMonth();
-      const isNowMonth = recDate.getFullYear() === now.getFullYear() &&
-                         recDate.getMonth() === now.getMonth();
-      return isAnchorMonth || isNowMonth;
+      return recDate.getFullYear() === now.getFullYear() &&
+             recDate.getMonth() === now.getMonth();
     }
 
     if (activeTab === 'Yearly') {
-      const now = new Date();
-      return recDate.getFullYear() === anchorDate.getFullYear() || recDate.getFullYear() === now.getFullYear();
+      return recDate.getFullYear() === now.getFullYear();
     }
 
     if (activeTab === 'Custom') {
@@ -192,11 +321,13 @@ export default function ReservationHistory() {
     return true;
   };
 
-  const filteredReservations = mockReservations.filter(res => {
-    const matchesSearch = res.guestName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      res.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      res.room.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      res.mobile.includes(searchQuery);
+  const filteredReservations = historicalReservations.filter((res) => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch =
+      String(res.guestName || '').toLowerCase().includes(q) ||
+      String(res.id || '').toLowerCase().includes(q) ||
+      String(res.room || '').toLowerCase().includes(q) ||
+      String(res.mobile || '').includes(searchQuery);
 
     return matchesSearch && filterByDate(res);
   });
@@ -223,12 +354,9 @@ export default function ReservationHistory() {
 
   const handlePrintInvoice = () => {
     if (!selectedRes) return;
-    const dues = getBookingDues({
-      ...selectedRes,
-      name: selectedRes.guestName,
-      payment: selectedRes.paymentStatus,
-      dues: selectedRes.dues ?? selectedRes.remainingPrice
-    });
+    const dues = getBookingDues(selectedRes);
+    const duesDisplay = dues === null ? 'Unverified' : `$${dues}`;
+    const totalPriceDisplay = selectedRes.totalPrice !== null ? `$${selectedRes.totalPrice}` : '—';
 
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
@@ -279,20 +407,20 @@ export default function ReservationHistory() {
             <tbody>
               <tr>
                 <td>Room Stay (${selectedRes.room})</td>
-                <td style="text-align: right;">$${selectedRes.totalPrice}</td>
+                <td style="text-align: right;">${totalPriceDisplay}</td>
               </tr>
               ${(selectedRes.inventory || []).map(item => `
                 <tr>
-                  <td>${item.name} (${item.date} ${item.time || ''})</td>
+                  <td>${item.name} (${item.date || ''} ${item.time ? '• ' + item.time : ''})</td>
                   <td style="text-align: right;">$${item.price}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
           <div class="totals">
-            <div>Total Price: <strong>$${selectedRes.totalPrice}</strong></div>
+            <div>Total Price: <strong>${totalPriceDisplay}</strong></div>
             <div>Payment Status: <strong>${selectedRes.paymentStatus}</strong></div>
-            <div class="grand-total">Outstanding Dues: $${dues}</div>
+            <div class="grand-total">Outstanding Dues: ${duesDisplay}</div>
           </div>
           <script>
             window.onload = () => { window.print(); };
@@ -313,8 +441,12 @@ export default function ReservationHistory() {
         return <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-red-50 text-red-600 border border-red-200 whitespace-nowrap">Cancelled</span>;
       case 'Refunded':
         return <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-amber-50 text-amber-600 border border-amber-200 whitespace-nowrap">Refunded</span>;
+      case 'Partially Paid':
+        return <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-blue-50 text-blue-600 border border-blue-200 whitespace-nowrap">Partially Paid</span>;
+      case 'Unpaid':
+        return <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-gray-100 text-gray-600 whitespace-nowrap">Unpaid</span>;
       default:
-        return <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-gray-100 text-gray-600 whitespace-nowrap">{status}</span>;
+        return <span className="px-2 py-0.5 rounded-full text-[10.5px] font-bold bg-gray-100 text-gray-600 whitespace-nowrap">{status || '—'}</span>;
     }
   };
 
@@ -334,7 +466,9 @@ export default function ReservationHistory() {
     ];
 
     const rows = filteredReservations.map((res) => {
-      const dues = getBookingDues({ ...res, name: res.guestName, payment: res.paymentStatus, dues: res.dues ?? res.remainingPrice });
+      const dues = getBookingDues(res);
+      const duesDisplay = dues === null ? 'Unverified' : `$${dues}`;
+      const priceDisplay = res.totalPrice !== null ? `$${res.totalPrice}` : '—';
       const inventoryStr = (res.inventory && res.inventory.length > 0)
         ? res.inventory.map(item => `${item.name} ($${item.price})`).join('; ')
         : 'None';
@@ -344,12 +478,12 @@ export default function ReservationHistory() {
         res.guestName,
         res.mobile,
         res.room,
-        res.reservationDate || res.checkIn?.split(' ')[0] || '',
+        res.reservationDate || '',
         res.checkIn,
         res.checkOut,
         inventoryStr,
-        `$${res.totalPrice}`,
-        `$${dues}`,
+        priceDisplay,
+        duesDisplay,
         res.paymentStatus
       ];
     });
@@ -500,7 +634,7 @@ export default function ReservationHistory() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginatedReservations.map((res) => {
-                const dues = getBookingDues({ ...res, name: res.guestName, payment: res.paymentStatus, dues: res.dues ?? res.remainingPrice });
+                const dues = getBookingDues(res);
 
                 return (
                   <tr key={res.id} className="hover:bg-gray-50/50 transition-colors">
@@ -514,7 +648,9 @@ export default function ReservationHistory() {
                     <td className="py-2 px-2 whitespace-nowrap">
                       <InventoryCell items={res.inventory} />
                     </td>
-                    <td className="py-2 px-2 text-[11.5px] font-bold text-gray-900 whitespace-nowrap">${res.totalPrice}</td>
+                    <td className="py-2 px-2 text-[11.5px] font-bold text-gray-900 whitespace-nowrap">
+                      {res.totalPrice !== null ? `$${res.totalPrice}` : '—'}
+                    </td>
                     <td className="py-2 px-2 text-[11.5px] font-semibold whitespace-nowrap">
                       {dues === null ? <span className="text-amber-600">Unverified</span> : dues > 0 ? (
                         <span className="text-red-500 font-bold">${dues}</span>
@@ -659,17 +795,17 @@ export default function ReservationHistory() {
                 <div className="grid grid-cols-3 gap-2 border border-gray-100 p-3 rounded-lg text-center">
                   <div>
                     <div className="text-gray-400 text-[10.5px] uppercase font-bold">Total Price</div>
-                    <div className="text-[14px] font-bold text-gray-900 mt-0.5">${selectedRes.totalPrice}</div>
+                    <div className="text-[14px] font-bold text-gray-900 mt-0.5">
+                      {selectedRes.totalPrice !== null ? `$${selectedRes.totalPrice}` : '—'}
+                    </div>
                   </div>
                   <div>
                     <div className="text-gray-400 text-[10.5px] uppercase font-bold">Outstanding Dues</div>
                     <div className="text-[14px] font-bold text-red-500 mt-0.5">
-                      ${getBookingDues({
-                        ...selectedRes,
-                        name: selectedRes.guestName,
-                        payment: selectedRes.paymentStatus,
-                        dues: selectedRes.dues ?? selectedRes.remainingPrice
-                      })}
+                      {(() => {
+                        const dues = getBookingDues(selectedRes);
+                        return dues === null ? <span className="text-amber-600 font-medium">Unverified</span> : `$${dues}`;
+                      })()}
                     </div>
                   </div>
                   <div>

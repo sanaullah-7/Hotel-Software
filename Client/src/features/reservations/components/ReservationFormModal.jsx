@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Close, CloudUpload, DeleteOutlined, ImageOutlined } from '@mui/icons-material';
 import useModalFocus from '../../../components/common/useModalFocus';
+import { getRooms, getRoomsByRoomType } from '../../rooms/state/roomStore.js';
 
 export default function ReservationFormModal({
   open,
@@ -22,6 +23,29 @@ export default function ReservationFormModal({
   const handleFieldChange = (field, value) => {
     if (typeof onFormChange === 'function') {
       onFormChange(field, value);
+    }
+  };
+
+  const allRooms = getRooms();
+  const selectedType = form.roomType || '';
+  const filteredRooms = selectedType ? getRoomsByRoomType(selectedType) : allRooms;
+
+  const currentRoomVal = String(form.roomNo || form.room || '').trim();
+  const roomOptions = [...filteredRooms];
+  if (currentRoomVal && !roomOptions.some((r) => String(r.roomNo) === currentRoomVal)) {
+    const existing = allRooms.find((r) => String(r.roomNo) === currentRoomVal);
+    roomOptions.unshift(existing || { id: `custom-${currentRoomVal}`, roomNo: currentRoomVal, roomType: form.roomType || '' });
+  }
+
+  const handleRoomTypeChange = (e) => {
+    const newType = e.target.value;
+    handleFieldChange('roomType', newType);
+    if (newType) {
+      const validRooms = getRoomsByRoomType(newType);
+      const current = String(form.roomNo || form.room || '').trim();
+      if (current && validRooms.length > 0 && !validRooms.some((r) => String(r.roomNo) === current)) {
+        handleFieldChange('roomNo', '');
+      }
     }
   };
 
@@ -276,27 +300,57 @@ export default function ReservationFormModal({
                 <select
                   id="res-room-type"
                   value={form.roomType || ''}
-                  onChange={(e) => handleFieldChange('roomType', e.target.value)}
+                  onChange={handleRoomTypeChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                 >
                   <option value="">Select</option>
+                  <option value="Deluxe">Deluxe</option>
                   <option value="Delux">Delux</option>
                   <option value="Super Delux">Super Delux</option>
-                  <option value="Vila">Vila</option>
+                  <option value="Standard">Standard</option>
                   <option value="Single">Single</option>
                   <option value="Double">Double</option>
+                  <option value="Suite">Suite</option>
+                  <option value="Vila">Vila</option>
                 </select>
               </div>
               <div className="md:col-span-1">
                 <label htmlFor="res-room-no" className="block text-[12px] text-gray-600 font-medium mb-1">Room / Room No.</label>
-                <input
+                <select
                   id="res-room-no"
-                  type="text"
+                  placeholder="e.g. 101, 102, 201"
                   value={form.roomNo || form.room || ''}
                   onChange={(e) => handleFieldChange('roomNo', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
-                  placeholder="e.g. 101, 102, 201"
-                />
+                >
+                  <option value="">Select Room No.</option>
+                  {roomOptions.map((room) => (
+                    <option key={room.id || room.roomNo} value={room.roomNo}>
+                      Room {room.roomNo} ({room.roomType})
+                    </option>
+                  ))}
+                </select>
+                {filteredRooms.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2" aria-label="Quick Select Rooms">
+                    {filteredRooms.map((room) => {
+                      const isSelected = String(form.roomNo || form.room) === String(room.roomNo);
+                      return (
+                        <button
+                          key={room.id || room.roomNo}
+                          type="button"
+                          onClick={() => handleFieldChange('roomNo', room.roomNo)}
+                          className={`px-2 py-0.5 text-[11px] font-bold rounded border transition-colors cursor-pointer ${
+                            isSelected
+                              ? 'bg-[var(--primary-main)] text-white border-[var(--primary-main)] shadow-sm'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-[var(--primary-main)] hover:bg-emerald-50/50'
+                          }`}
+                        >
+                          [{room.roomNo}]
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div className="md:col-span-1">
                 <label htmlFor="res-arrival-time" className="block text-[12px] text-gray-600 font-medium mb-1">Arrival Time</label>

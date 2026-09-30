@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../../features/reservations/state/reservationStore';
 import { getRooms } from '../../features/housekeeping/pages/hkStore';
 import { getRooms as getRoomInventory, ROOM_UPDATED_EVENT } from '../../features/rooms/state/roomStore';
+import {
+  INVOICES_UPDATED_EVENT,
+  PAYMENTS_UPDATED_EVENT,
+  REFUNDS_UPDATED_EVENT
+} from '../../features/payment-billing/pages/paymentBillingStore';
 
 import DashboardMetrics from './components/DashboardMetrics';
 import DashboardRoomStatus from './components/DashboardRoomStatus';
@@ -40,9 +45,16 @@ export default function Dashboard() {
     const syncReservations = () => setReservations(getReservations());
     window.addEventListener('storage', syncReservations);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+    // Job 23: refresh reservation state on financial mutations so KPIs stay current
+    window.addEventListener(INVOICES_UPDATED_EVENT, syncReservations);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
+    window.addEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
     return () => {
       window.removeEventListener('storage', syncReservations);
       window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(INVOICES_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
     };
   }, []);
 

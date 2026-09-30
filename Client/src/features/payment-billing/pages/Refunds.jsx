@@ -119,22 +119,23 @@ export default function Refunds() {
  };
 
  const handleProcessRefund = (refundData) => {
- try {
- processRefund(refundData);
- reloadData();
- setSnackbar({
- open: true,
- message:`Refund ${refundData.amount ?`$${refundData.amount.toFixed(2)}` :''} processed successfully!`,
- severity:'success',
- });
- } catch (err) {
- setSnackbar({
- open: true,
- message: err.message ||'Failed to process refund.',
- severity:'error',
- });
- }
- };
+    try {
+      processRefund(refundData);
+      reloadData();
+      setSnackbar({
+        open: true,
+        message: `Refund ${refundData.amount ? `${refundData.amount.toFixed(2)}` : ''} processed successfully!`,
+        severity: 'success',
+      });
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: err.message || 'Failed to process refund.',
+        severity: 'error',
+      });
+      throw err;
+    }
+  };
 
  return (
  <div className="space-y-2 pb-2 animate-fade-in pt-1">

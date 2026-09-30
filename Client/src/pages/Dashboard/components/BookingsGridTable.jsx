@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import {
   CalendarTodayOutlined,
   PhoneOutlined,
@@ -11,7 +11,13 @@ import {
 } from '@mui/icons-material';
 import StatusBadge from '../../../components/common/StatusBadge';
 import { statusStyles, paymentStyles } from '../../../features/reservations/components/ReservationTable';
-import { getBookingDues } from '../../../features/payment-billing/pages/paymentBillingStore';
+import {
+  getBookingDues,
+  getCanonicalBookingPaymentStatus,
+  INVOICES_UPDATED_EVENT,
+  PAYMENTS_UPDATED_EVENT,
+  REFUNDS_UPDATED_EVENT
+} from '../../../features/payment-billing/pages/paymentBillingStore';
 
 export default function BookingsGridTable({
   filteredBookings,
@@ -26,6 +32,33 @@ export default function BookingsGridTable({
   confirmCancel
 }) {
   const menuRef = useRef(null);
+
+  // Canonical financial status map: { [bookingId]: 'Paid' | 'Partially Paid' | 'Unpaid' | null }
+  const [financialStatusMap, setFinancialStatusMap] = useState({});
+
+  const refreshFinancialStatus = useCallback(() => {
+    const map = {};
+    (filteredBookings || []).forEach((b) => {
+      map[b.id] = getCanonicalBookingPaymentStatus(b.id);
+    });
+    setFinancialStatusMap(map);
+  }, [filteredBookings]);
+
+  useEffect(() => {
+    refreshFinancialStatus();
+  }, [refreshFinancialStatus]);
+
+  // Job 23: respond to canonical billing mutations so mounted table updates immediately
+  useEffect(() => {
+    window.addEventListener(INVOICES_UPDATED_EVENT, refreshFinancialStatus);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, refreshFinancialStatus);
+    window.addEventListener(REFUNDS_UPDATED_EVENT, refreshFinancialStatus);
+    return () => {
+      window.removeEventListener(INVOICES_UPDATED_EVENT, refreshFinancialStatus);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, refreshFinancialStatus);
+      window.removeEventListener(REFUNDS_UPDATED_EVENT, refreshFinancialStatus);
+    };
+  }, [refreshFinancialStatus]);
 
   useEffect(() => {
     if (activeMenuId && menuRef.current) {
@@ -229,11 +262,15 @@ export default function BookingsGridTable({
 
               {/* Payment */}
               <td className="py-2.5 px-2">
-                <StatusBadge
-                  status={booking.payment}
-                  stylesMap={paymentStyles}
-                  size="xs"
-                />
+                {financialStatusMap[booking.id] !== null && financialStatusMap[booking.id] !== undefined ? (
+                  <StatusBadge
+                    status={financialStatusMap[booking.id]}
+                    stylesMap={paymentStyles}
+                    size="xs"
+                  />
+                ) : (
+                  <span className="text-gray-400 text-[10px]">—</span>
+                )}
               </td>
 
               {/* Dues */}

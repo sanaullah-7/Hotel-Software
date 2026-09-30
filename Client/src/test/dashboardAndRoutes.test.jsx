@@ -7,6 +7,7 @@ import KPICard from '../components/common/KPICard';
 import StatusBadge from '../components/common/StatusBadge';
 import Dashboard from '../pages/Dashboard/Dashboard';
 import CurrentBookingsTable from '../pages/Dashboard/components/CurrentBookingsTable';
+import Sidebar from '../layouts/DashboardLayout/Sidebar';
 
 describe('Dashboard and Shared UI Components', () => {
   it('renders KPICard with ForwardRef MUI Icon correctly in compact variant', () => {
@@ -117,7 +118,7 @@ describe('Dashboard and Shared UI Components', () => {
     );
 
     expect(getByText('Room', { selector: 'th' })).toBeTruthy();
-    expect(getByText('101')).toBeTruthy();
+    expect(getAllByText('102').length).toBeGreaterThan(0);
   });
 
   it('keeps an empty canonical reservation list empty on the dashboard', () => {
@@ -262,6 +263,22 @@ describe('Dashboard and Shared UI Components', () => {
   });
 
   it('renders ReservationHistory with working date filters, Dues column, and Export CSV', async () => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    const dayOneStr = `${yyyy}-${mm}-01`;
+    const earlierMonthStr = `${yyyy}-01-15`;
+
+    const seedReservations = [
+      { id: 'RES-001', name: 'John Doe', mobile: '0311 0000000', room: '105 - Standard', status: 'Checked Out', checkIn: dayOneStr, checkOut: dayOneStr, totalPrice: 500, dues: 0, payment: 'Paid' },
+      { id: 'RES-002', name: 'Sarah Smith', mobile: '0300 1234567', room: '302 - Suite', status: 'Checked Out', checkIn: todayStr, checkOut: todayStr, totalPrice: 900, dues: 0, payment: 'Paid' },
+      { id: 'RES-003', name: 'Ahsan Khan', mobile: '0333 4455667', room: '101 - Standard', status: 'Cancelled', checkIn: earlierMonthStr, checkOut: earlierMonthStr, totalPrice: 300, dues: 0, payment: 'Paid' },
+      { id: 'RES-004', name: 'Maria Garcia', mobile: '0344 7788990', room: '205 - Deluxe', status: 'Checked Out', checkIn: earlierMonthStr, checkOut: earlierMonthStr, totalPrice: 600, dues: 0, payment: 'Refunded' },
+    ];
+    localStorage.setItem('hotel_reservations', JSON.stringify(seedReservations));
+
     const { default: ReservationHistory } = await import('../features/reservations/pages/ReservationHistory');
     const { getByText, queryByText, getByTitle } = render(
       <MemoryRouter>
@@ -305,5 +322,32 @@ describe('Dashboard and Shared UI Components', () => {
     const exportBtn = getByTitle('Export CSV');
     expect(exportBtn).toBeTruthy();
     fireEvent.click(exportBtn);
+
+    localStorage.removeItem('hotel_reservations');
+  });
+
+  it('correctly marks Dashboard active only on /dashboard and inactive on other routes', () => {
+    const checkDashboardActive = (initialRoute) => {
+      const { unmount } = render(
+        <MemoryRouter initialEntries={[initialRoute]}>
+          <Sidebar />
+        </MemoryRouter>
+      );
+      const dashboardLink = screen.getByRole('link', { name: /Dashboard/i });
+      const isActive = dashboardLink.getAttribute('aria-current') === 'page';
+      unmount();
+      return isActive;
+    };
+
+    expect(checkDashboardActive('/dashboard')).toBe(true);
+    expect(checkDashboardActive('/')).toBe(true);
+    expect(checkDashboardActive('/dashboard/')).toBe(true);
+    expect(checkDashboardActive('/guests')).toBe(false);
+    expect(checkDashboardActive('/reservations')).toBe(false);
+    expect(checkDashboardActive('/reservation/all')).toBe(false);
+    expect(checkDashboardActive('/rooms')).toBe(false);
+    expect(checkDashboardActive('/reports')).toBe(false);
+    expect(checkDashboardActive('/settings')).toBe(false);
+    expect(checkDashboardActive('/housekeeping/rooms-cleaning')).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FormControl, InputLabel, Select, MenuItem, TextField, Box, Typography } from '@mui/material';
 import RefreshButton from '../../../components/common/RefreshButton';
 import {
@@ -7,32 +7,111 @@ import {
   MeetingRoomOutlined, CleaningServicesOutlined, 
   EventOutlined, AccessTimeOutlined, PersonOutlined, FlagOutlined
 } from '@mui/icons-material';
-
-const initialRecords = [
-  { id: 1, roomNo: '101', floor: '1', guestName: 'John Doe', cleaningStatus: 'Scheduled', scheduledDate: '08-07-2024', scheduledTime: '09:00', assignedStaff: 'Alice Smith', completionTime: '', notes: 'No special instructions.', priority: 'Standard', cleaningType: 'Full Clean', lastCleanedDate: '08/06/2024', frequency: 'Daily' },
-  { id: 2, roomNo: '102', floor: '1', guestName: 'Jane Doe', cleaningStatus: 'Completed', scheduledDate: '08-07-2024', scheduledTime: '10:00', assignedStaff: 'Bob Johnson', completionTime: '10:30', notes: 'Requested extra towels.', priority: 'High', cleaningType: 'Full Clean', lastCleanedDate: '08/06/2024', frequency: 'Daily' },
-  { id: 3, roomNo: '103', floor: '1', guestName: 'Emily Clark', cleaningStatus: 'In Progress', scheduledDate: '08-07-2024', scheduledTime: '11:00', assignedStaff: 'Carol Lee', completionTime: '', notes: 'Requires vacuuming.', priority: 'Standard', cleaningType: 'Light Clean', lastCleanedDate: '08/05/2024', frequency: 'Every Other Day' },
-  { id: 4, roomNo: '104', floor: '1', guestName: 'Michael Brown', cleaningStatus: 'Scheduled', scheduledDate: '08-07-2024', scheduledTime: '12:00', assignedStaff: 'Diana Green', completionTime: '', notes: 'No specific request...', priority: 'Low', cleaningType: 'Full Clean', lastCleanedDate: '08/04/2024', frequency: 'Weekly' },
-  { id: 5, roomNo: '201', floor: '2', guestName: 'Sarah Davis', cleaningStatus: 'Completed', scheduledDate: '08-07-2024', scheduledTime: '13:00', assignedStaff: 'James Wilson', completionTime: '13:45', notes: 'Ensure bathroom is...', priority: 'High', cleaningType: 'Full Clean', lastCleanedDate: '08/06/2024', frequency: 'Daily' },
-  { id: 6, roomNo: '202', floor: '2', guestName: 'Robert Martinez', cleaningStatus: 'Scheduled', scheduledDate: '08-07-2024', scheduledTime: '14:00', assignedStaff: 'Linda Anderson', completionTime: '', notes: 'Check for any main...', priority: 'Standard', cleaningType: 'Light Clean', lastCleanedDate: '08/06/2024', frequency: 'Daily' },
-  { id: 7, roomNo: '203', floor: '2', guestName: 'Laura Wilson', cleaningStatus: 'In Progress', scheduledDate: '08-07-2024', scheduledTime: '15:00', assignedStaff: 'Frank Taylor', completionTime: '', notes: 'Extra cleaning supp...', priority: 'High', cleaningType: 'Full Clean', lastCleanedDate: '08/05/2024', frequency: 'Every Other Day' },
-  { id: 8, roomNo: '204', floor: '2', guestName: 'Jessica Young', cleaningStatus: 'Scheduled', scheduledDate: '08-07-2024', scheduledTime: '16:00', assignedStaff: 'George Thompson', completionTime: '', notes: 'No special instructi...', priority: 'Low', cleaningType: 'Light Clean', lastCleanedDate: '08/03/2024', frequency: 'Weekly' },
-];
+import { getRooms, saveRooms } from './hkStore';
+import { getRoomByRoomNo } from '../../rooms/state/roomStore';
 
 const statusStyles = {
   'Scheduled': 'bg-blue-50 text-blue-500',
   'Completed': 'bg-green-50 text-green-600',
-  'In Progress': 'bg-orange-50 text-orange-500'
+  'In Progress': 'bg-orange-50 text-orange-500',
+  'Clean / Ready': 'bg-green-50 text-green-600',
+  'Cleaning': 'bg-orange-50 text-orange-500',
+  'Dirty': 'bg-red-50 text-red-500',
+  'Assigned': 'bg-purple-50 text-purple-600',
+  'Inspection Required': 'bg-amber-50 text-amber-600',
+  'Maintenance': 'bg-gray-100 text-gray-600',
+  'DND': 'bg-red-50 text-red-600'
 };
 
 const priorityStyles = {
   'Standard': 'bg-blue-100 text-blue-600',
+  'Normal': 'bg-blue-100 text-blue-600',
   'High': 'bg-orange-100 text-orange-600',
+  'Urgent': 'bg-red-100 text-red-600',
   'Low': 'bg-green-100 text-green-600'
 };
 
+function mapCanonicalToRecord(r) {
+  const roomNo = String(r.roomNo || r.id || '');
+  const guestName = r.guestName !== undefined ? r.guestName : (r.guest && r.guest !== '-' ? r.guest : '');
+  const assignedStaff = r.assignedStaff !== undefined ? r.assignedStaff : (r.assignee && r.assignee !== '-' ? r.assignee : '');
+  const completionTime = r.completionTime !== undefined ? r.completionTime : (r.completed && r.completed !== '-' ? r.completed : '');
+  const scheduledTime = r.scheduledTime !== undefined ? r.scheduledTime : (r.started && r.started !== '-' ? r.started : '');
+
+  let cleaningStatus = r.cleaningStatus;
+  if (!cleaningStatus) {
+    if (r.status === 'Clean / Ready') cleaningStatus = 'Completed';
+    else if (r.status === 'Cleaning') cleaningStatus = 'In Progress';
+    else cleaningStatus = 'Scheduled';
+  }
+
+  let priority = r.priority || 'Standard';
+  if (priority === 'Normal') priority = 'Standard';
+
+  const todayDate = new Date().toISOString().split('T')[0];
+
+  return {
+    ...r,
+    id: r.id || roomNo,
+    roomNo,
+    guestName,
+    cleaningStatus,
+    scheduledDate: r.scheduledDate || todayDate,
+    scheduledTime: scheduledTime || '09:00',
+    assignedStaff,
+    completionTime,
+    notes: r.notes || '',
+    priority,
+    cleaningType: r.cleaningType && r.cleaningType !== '-' ? r.cleaningType : 'Full Clean',
+    lastCleanedDate: r.lastCleanedDate || (r.status === 'Clean / Ready' ? 'Today' : ''),
+    floor: r.floor || (roomNo.length >= 3 ? roomNo[0] : '1'),
+    frequency: r.frequency || 'Daily'
+  };
+}
+
+function mapFormToCanonical(form, existingRecord = {}) {
+  const roomNo = String(form.roomNo || existingRecord.roomNo || existingRecord.id || '').trim();
+  const canonicalRoom = getRoomByRoomNo(roomNo);
+  const roomId = existingRecord.roomId || (canonicalRoom ? canonicalRoom.id : undefined);
+
+  let status = existingRecord.status;
+  if (form.cleaningStatus === 'Completed') {
+    status = 'Clean / Ready';
+  } else if (form.cleaningStatus === 'In Progress') {
+    status = 'Cleaning';
+  } else if (form.cleaningStatus === 'Scheduled') {
+    status = form.assignedStaff && form.assignedStaff.trim() ? 'Assigned' : 'Dirty';
+  } else if (!status) {
+    status = 'Dirty';
+  }
+
+  return {
+    ...existingRecord,
+    id: roomNo,
+    roomId,
+    roomNo,
+    guestName: form.guestName || '',
+    guest: form.guestName && form.guestName.trim() ? form.guestName : (existingRecord.guest || '-'),
+    cleaningStatus: form.cleaningStatus || 'Scheduled',
+    status,
+    priority: form.priority || 'Standard',
+    cleaningType: form.cleaningType || 'Full Clean',
+    assignedStaff: form.assignedStaff || '',
+    assignee: form.assignedStaff && form.assignedStaff.trim() ? form.assignedStaff : (existingRecord.assignee || '-'),
+    scheduledDate: form.scheduledDate || '',
+    scheduledTime: form.scheduledTime || '',
+    started: form.scheduledTime && form.scheduledTime.trim() ? form.scheduledTime : (existingRecord.started || '-'),
+    completionTime: form.completionTime || '',
+    completed: form.completionTime && form.completionTime.trim() ? form.completionTime : (existingRecord.completed || '-'),
+    notes: form.notes || '',
+    floor: form.floor || existingRecord.floor || (roomNo.length >= 3 ? roomNo[0] : '1'),
+    lastCleanedDate: existingRecord.lastCleanedDate || (form.cleaningStatus === 'Completed' ? new Date().toLocaleDateString() : ''),
+    frequency: existingRecord.frequency || 'Daily'
+  };
+}
+
 export default function RoomsAndCleaning() {
-  const [records, setRecords] = useState(initialRecords);
+  const [records, setRecords] = useState(() => getRooms().map(mapCanonicalToRecord));
   const [search, setSearch] = useState('');
   
   // Columns state
@@ -65,9 +144,21 @@ export default function RoomsAndCleaning() {
     setIsViewModalOpen(true);
   };
 
+  useEffect(() => {
+    const syncData = () => {
+      setRecords(getRooms().map(mapCanonicalToRecord));
+    };
+    window.addEventListener('storage', syncData);
+    window.addEventListener('hk_update', syncData);
+    return () => {
+      window.removeEventListener('storage', syncData);
+      window.removeEventListener('hk_update', syncData);
+    };
+  }, []);
+
   const handleRefresh = () => {
     setSearch('');
-    setRecords(initialRecords);
+    setRecords(getRooms().map(mapCanonicalToRecord));
     
     setVisibleColumns({
       Room: true, Guest: true,
@@ -78,9 +169,9 @@ export default function RoomsAndCleaning() {
   };
 
   const filteredRecords = records.filter(r => 
-    r.roomNo.toLowerCase().includes(search.toLowerCase()) ||
-    r.guestName.toLowerCase().includes(search.toLowerCase()) || 
-    r.assignedStaff.toLowerCase().includes(search.toLowerCase())
+    (r.roomNo || '').toLowerCase().includes(search.toLowerCase()) ||
+    (r.guestName || '').toLowerCase().includes(search.toLowerCase()) ||
+    (r.assignedStaff || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleExportCSV = () => {
@@ -196,10 +287,24 @@ export default function RoomsAndCleaning() {
 
   const handleSaveModal = (e) => {
     e.preventDefault();
+    const currentCanonicalRooms = getRooms();
     if (editingId) {
-      setRecords(records.map(r => r.id === editingId ? { ...r, ...form } : r));
+      const existing = currentCanonicalRooms.find(r => (r.id === editingId || r.roomNo === editingId));
+      const updated = currentCanonicalRooms.map(r =>
+        (r.id === editingId || r.roomNo === editingId) ? mapFormToCanonical(form, existing || r) : r
+      );
+      saveRooms(updated);
+      setRecords(getRooms().map(mapCanonicalToRecord));
     } else {
-      setRecords([...records, { ...form, id: records.length + 1, floor: '1', lastCleanedDate: new Date().toLocaleDateString(), frequency: 'Daily' }]);
+      const newRecord = mapFormToCanonical(form, {
+        id: form.roomNo,
+        roomNo: form.roomNo,
+        floor: form.roomNo ? form.roomNo[0] : '1',
+        lastCleanedDate: form.cleaningStatus === 'Completed' ? new Date().toLocaleDateString() : '',
+        frequency: 'Daily'
+      });
+      saveRooms([...currentCanonicalRooms, newRecord]);
+      setRecords(getRooms().map(mapCanonicalToRecord));
     }
     setIsModalOpen(false);
   };
@@ -210,7 +315,10 @@ export default function RoomsAndCleaning() {
   };
 
   const handleDelete = () => {
-    setRecords(records.filter(r => r.id !== recordToDelete.id));
+    const currentCanonicalRooms = getRooms();
+    const updated = currentCanonicalRooms.filter(r => r.id !== recordToDelete.id && r.roomNo !== recordToDelete.roomNo);
+    saveRooms(updated);
+    setRecords(getRooms().map(mapCanonicalToRecord));
     setIsDeleteModalOpen(false);
     setRecordToDelete(null);
   };
@@ -358,7 +466,7 @@ export default function RoomsAndCleaning() {
                 <option>50</option>
               </select>
             </div>
-            <span className="text-[11px] text-gray-500">1 - {filteredRecords.length} of 16</span>
+            <span className="text-[11px] text-gray-500">1 - {filteredRecords.length} of {records.length}</span>
             <div className="flex items-center gap-1">
               <button className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50">&lt;</button>
               <button className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50">&gt;</button>
