@@ -17,6 +17,8 @@ export const DropdownSection = ({
       <button
         type="button"
         onClick={toggle}
+        aria-label={label}
+        aria-expanded={open}
         title={!isOpen ? label : undefined}
         className={`w-full flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 cursor-pointer border-none text-left ${
           active

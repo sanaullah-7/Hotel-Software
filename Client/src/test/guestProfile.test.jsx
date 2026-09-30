@@ -6,6 +6,7 @@ import GuestProfile from '../features/guests/pages/GuestProfile';
 import { saveGuests } from '../features/guests/state/guestStore';
 import { saveReservations } from '../features/reservations/state/reservationStore';
 import { saveInvoices, savePayments, saveRefunds } from '../features/payment-billing/pages/paymentBillingStore';
+import { saveGuestCharges } from '../features/inventory/pages/inventoryStore';
 
 describe('Guest Profile 360 Workspace & 7-Tab Redesign', () => {
   beforeEach(() => {
@@ -224,5 +225,230 @@ describe('Guest Profile 360 Workspace & 7-Tab Redesign', () => {
     expect(screen.getAllByText('Sarah Johnson').length).toBeGreaterThan(0);
     expect(screen.getAllByText('London').length).toBeGreaterThan(0);
     unmountB();
+  });
+
+  it('fulfills the accessibility contract for tablist, tab, tabpanel, and keyboard navigation', () => {
+    renderProfile();
+
+    // 1. Tab container has role="tablist"
+    const tablist = screen.getByRole('tablist', { name: 'Guest profile tabs' });
+    expect(tablist).toBeTruthy();
+
+    // 2. All 7 tabs have role="tab"
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs).toHaveLength(7);
+
+    // 3. Exactly one active tab has aria-selected="true" initially
+    const activeTabs = tabs.filter((t) => t.getAttribute('aria-selected') === 'true');
+    expect(activeTabs).toHaveLength(1);
+    expect(activeTabs[0]).toHaveProperty('id', 'guest-profile-tab-overview');
+    expect(activeTabs[0].getAttribute('tabindex')).toBe('0');
+
+    // 4. Inactive tabs expose aria-selected="false" and tabindex="-1"
+    const inactiveTabs = tabs.filter((t) => t.getAttribute('aria-selected') === 'false');
+    expect(inactiveTabs).toHaveLength(6);
+    inactiveTabs.forEach((tab) => {
+      expect(tab.getAttribute('tabindex')).toBe('-1');
+    });
+
+    // 5. Every tab has a unique ID and valid aria-controls
+    const tabIds = tabs.map((t) => t.id);
+    expect(new Set(tabIds).size).toBe(7);
+    tabs.forEach((tab) => {
+      const controlsId = tab.getAttribute('aria-controls');
+      expect(controlsId).toBeTruthy();
+      expect(controlsId).toBe(`guest-profile-panel-${tab.id.replace('guest-profile-tab-', '')}`);
+    });
+
+    // 6. Rendered active panel has role="tabpanel" and aria-labelledby pointing to its tab
+    const initialPanel = screen.getByRole('tabpanel');
+    expect(initialPanel).toBeTruthy();
+    expect(initialPanel.id).toBe('guest-profile-panel-overview');
+    expect(initialPanel.getAttribute('aria-labelledby')).toBe('guest-profile-tab-overview');
+
+    // 7. Clicking a tab changes the active panel and selection
+    const resTab = screen.getByRole('tab', { name: /Reservations & Stays/i });
+    fireEvent.click(resTab);
+
+    expect(resTab.getAttribute('aria-selected')).toBe('true');
+    expect(resTab.getAttribute('tabindex')).toBe('0');
+    expect(screen.getByRole('tab', { name: /Overview/i }).getAttribute('aria-selected')).toBe('false');
+
+    const updatedPanel = screen.getByRole('tabpanel');
+    expect(updatedPanel.id).toBe('guest-profile-panel-reservations');
+    expect(updatedPanel.getAttribute('aria-labelledby')).toBe('guest-profile-tab-reservations');
+
+    // 8. Keyboard navigation: ArrowRight moves to next tab
+    resTab.focus();
+    fireEvent.keyDown(resTab, { key: 'ArrowRight' });
+    const chargesTab = screen.getByRole('tab', { name: /Charges & Payments/i });
+    expect(chargesTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(chargesTab);
+
+    // 9. Keyboard navigation: ArrowLeft moves to previous tab
+    fireEvent.keyDown(chargesTab, { key: 'ArrowLeft' });
+    expect(resTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(resTab);
+
+    // 10. Keyboard navigation: Home moves to first tab
+    fireEvent.keyDown(resTab, { key: 'Home' });
+    const overviewTab = screen.getByRole('tab', { name: /Overview/i });
+    expect(overviewTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(overviewTab);
+
+    // 11. Keyboard navigation: End moves to last tab
+    fireEvent.keyDown(overviewTab, { key: 'End' });
+    const activityTab = screen.getByRole('tab', { name: /Activity Log/i });
+    expect(activityTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(activityTab);
+
+    // 12. Keyboard navigation: Wrap-around from last to first on ArrowRight
+    fireEvent.keyDown(activityTab, { key: 'ArrowRight' });
+    expect(overviewTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(overviewTab);
+
+    // 13. Keyboard navigation: Wrap-around from first to last on ArrowLeft
+    fireEvent.keyDown(overviewTab, { key: 'ArrowLeft' });
+    expect(activityTab.getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(activityTab);
+
+    // 14. No duplicate IDs across tabs and panels
+    const allIds = [
+      ...Array.from(document.querySelectorAll('[role="tab"]')).map((el) => el.id),
+      ...Array.from(document.querySelectorAll('[role="tabpanel"]')).map((el) => el.id)
+    ];
+    expect(new Set(allIds).size).toBe(allIds.length);
+  });
+
+  it('strictly isolates financial, charge, complaint, and invoice data between different guest profiles even with matching rooms', () => {
+    const guestYounas = {
+      id: 'GST-YOUNAS-1',
+      name: 'Younas Khan',
+      email: 'younas@example.com',
+      phone: '+923001234567',
+      city: 'Lahore',
+      totalStays: 1,
+      status: 'Active'
+    };
+    const guestAli = {
+      id: 'GST-ALI-2',
+      name: 'Ali Raza',
+      email: 'ali@example.com',
+      phone: '+923007654321',
+      city: 'Karachi',
+      totalStays: 1,
+      status: 'Active'
+    };
+    saveGuests([guestYounas, guestAli]);
+
+    // Both guests stayed in Room 101 in different bookings
+    const reservations = [
+      {
+        id: 'RES-YOUNAS',
+        bookingId: 'BK-YOUNAS',
+        guestId: guestYounas.id,
+        name: guestYounas.name,
+        email: guestYounas.email,
+        roomNumber: '101',
+        roomType: 'Deluxe',
+        checkIn: '2026-05-10',
+        checkOut: '2026-05-12',
+        status: 'Booked',
+        payment: 'Paid'
+      },
+      {
+        id: 'RES-ALI',
+        bookingId: 'BK-ALI',
+        guestId: guestAli.id,
+        name: guestAli.name,
+        email: guestAli.email,
+        roomNumber: '101',
+        roomType: 'Deluxe',
+        checkIn: '2026-05-15',
+        checkOut: '2026-05-17',
+        status: 'Booked',
+        payment: 'Pending'
+      }
+    ];
+    saveReservations(reservations);
+
+    // Invoices: Younas has paid invoice INV-YOUNAS-01
+    const invoices = [
+      {
+        id: 'INV-YOUNAS-01',
+        invoiceNumber: 'INV-YOUNAS-01',
+        bookingId: 'RES-YOUNAS',
+        guestId: guestYounas.id,
+        guestName: guestYounas.name,
+        guestEmail: guestYounas.email,
+        roomNumber: '101',
+        totalAmount: 1500.00,
+        paidAmount: 1500.00,
+        balanceDue: 0.00,
+        status: 'Paid',
+        items: []
+      },
+      {
+        id: 'INV-ALI-01',
+        invoiceNumber: 'INV-ALI-01',
+        bookingId: 'RES-ALI',
+        guestId: guestAli.id,
+        guestName: guestAli.name,
+        guestEmail: guestAli.email,
+        roomNumber: '101',
+        totalAmount: 300.00,
+        paidAmount: 0.00,
+        balanceDue: 300.00,
+        status: 'Unpaid',
+        items: []
+      }
+    ];
+    saveInvoices(invoices);
+
+    // Payments: Younas has payment PAY-YOUNAS-01
+    savePayments([
+      {
+        id: 'PAY-YOUNAS-01',
+        paymentId: 'PAY-YOUNAS-01',
+        invoiceId: 'INV-YOUNAS-01',
+        bookingId: 'RES-YOUNAS',
+        guestId: guestYounas.id,
+        amount: 1500.00,
+        paymentMethod: 'Credit Card',
+        status: 'Completed'
+      }
+    ]);
+
+    // Folio Charges: Younas has a Spa charge on Room 101
+    saveGuestCharges([
+      {
+        id: 'GC-YOUNAS',
+        bookingId: 'RES-YOUNAS',
+        guestId: guestYounas.id,
+        guestName: guestYounas.name,
+        roomNumber: '101',
+        itemName: 'VIP Spa Package',
+        amount: 500,
+        status: 'Added to Folio'
+      }
+    ]);
+
+    // 1. Render Younas profile and verify his data is present
+    const { unmount: unmountYounas } = renderProfile(`/guests/${guestYounas.id}`);
+    expect(screen.getAllByText('Younas Khan').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('$1500.00').length).toBeGreaterThan(0);
+    unmountYounas();
+
+    // 2. Render Ali's profile and verify Younas's data does NOT leak into Ali's profile
+    const { unmount: unmountAli } = renderProfile(`/guests/${guestAli.id}`);
+    expect(screen.getAllByText('Ali Raza').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Younas Khan')).toBeNull();
+    expect(screen.queryByText('INV-YOUNAS-01')).toBeNull();
+    expect(screen.queryByText('$1500.00')).toBeNull();
+    expect(screen.queryByText('VIP Spa Package')).toBeNull();
+
+    // Ali's own invoice ($300.00) should be visible on Invoices / Overview tab
+    expect(screen.getAllByText('$300.00').length).toBeGreaterThan(0);
+    unmountAli();
   });
 });

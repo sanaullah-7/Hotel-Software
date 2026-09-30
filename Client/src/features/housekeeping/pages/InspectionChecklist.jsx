@@ -1,5 +1,6 @@
-import { FilterList, AddCircleOutlined, Refresh, TableChart, PictureAsPdf, Assignment, CheckCircle, Cancel, Star } from'@mui/icons-material';
+import { FilterList, AddCircleOutlined, TableChart, PictureAsPdf, Assignment, CheckCircle, Cancel, Star } from'@mui/icons-material';
 import React, { useState, useRef, useEffect } from'react';
+import RefreshButton from '../../../components/common/RefreshButton';
 
 import { TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment , TablePagination, Box, Typography } from'@mui/material';
 
@@ -444,9 +445,7 @@ export default function InspectionChecklist() {
  <button onClick={handleOpenNew} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="New Record">
  <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
  </button>
- <button onClick={handleRefresh} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
- <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
- </button>
+ <RefreshButton onClick={handleRefresh} />
  <button onClick={handleExportCSV} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Export CSV">
  <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
  </button>

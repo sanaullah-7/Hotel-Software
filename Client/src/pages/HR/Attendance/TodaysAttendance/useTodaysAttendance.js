@@ -1,7 +1,5 @@
-﻿import { addAuditLog } from '../../../../features/audit/state/auditStore.js';
+import { addAuditLog } from '../../../../features/audit/state/auditStore.js';
 import { useState, useMemo } from 'react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { initialAttendanceRecords } from './constants';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
@@ -29,8 +27,7 @@ export function useTodaysAttendance() {
   const [visibleColumns, setVisibleColumns] = useState({
     name: true,
     firstIn: true,
-    breakFrom: true,
-    breakTo: true,
+    breakTime: true,
     lastOut: true,
     totalHours: true,
     status: true,
@@ -55,8 +52,7 @@ export function useTodaysAttendance() {
     name: '',
     shift: 'Day Shift',
     firstIn: '10:30',
-    breakFrom: '14:00',
-      breakTo: '15:00',
+    breakTime: '01:00',
     lastOut: '19:30',
     totalHours: '08:00',
     status: 'present',
@@ -67,23 +63,16 @@ export function useTodaysAttendance() {
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
   // Calculate dynamic total hours on time change
-  const calculateTotalHours = (firstIn, lastOut, breakFrom, breakTo) => {
+  const calculateTotalHours = (firstIn, lastOut, breakTime) => {
     if (!firstIn || !lastOut) return '08:00';
     try {
       const [inH, inM] = firstIn.split(':').map(Number);
       const [outH, outM] = lastOut.split(':').map(Number);
-      
-      let brkMinutes = 0;
-      if (breakFrom && breakTo) {
-        const [bfH, bfM] = breakFrom.split(':').map(Number);
-        const [btH, btM] = breakTo.split(':').map(Number);
-        let bDiff = (btH * 60 + btM) - (bfH * 60 + bfM);
-        if (bDiff < 0) bDiff += 24 * 60;
-        brkMinutes = bDiff;
-      }
-      
+      const [brkH, brkM] = (breakTime || '01:00').split(':').map(Number);
+
       const inMinutes = inH * 60 + inM;
       const outMinutes = outH * 60 + outM;
+      const brkMinutes = brkH * 60 + brkM;
 
       let diffMinutes = outMinutes - inMinutes - brkMinutes;
       if (diffMinutes < 0) diffMinutes += 24 * 60; // Crosses midnight
@@ -188,36 +177,12 @@ export function useTodaysAttendance() {
   };
 
   // PDF Export Action
-  const handleExportCSV = () => {
-    const headers = ["Employee Name", "First In", "Break From", "Break To", "Last Out", "Total Hours", "Status", "Shift"];
-    const csvRows = [headers.join(',')];
-
-    sortedRecords.forEach(item => {
-      const row = [
-        `"${item.name}"`,
-        `"${item.firstIn}"`,
-        `"${item.breakFrom || ''}"`,
-        `"${item.breakTo || ''}"`,
-        `"${item.lastOut || ''}"`,
-        `"${item.totalHours}"`,
-        `"${item.status.toUpperCase()}"`,
-        `"${item.shift}"`
-      ];
-      csvRows.push(row.join(','));
-    });
-
-    const csvString = csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `Attendance_Report_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
+    const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
     doc.setFontSize(16);
     doc.setTextColor(30, 41, 59);
@@ -230,8 +195,7 @@ export function useTodaysAttendance() {
     const tableData = sortedRecords.map((item) => [
       item.name,
       item.firstIn,
-      item.breakFrom,
-      item.breakTo,
+      item.breakTime,
       item.lastOut,
       item.totalHours,
       item.status.toUpperCase(),
@@ -240,7 +204,7 @@ export function useTodaysAttendance() {
 
     autoTable(doc, {
       startY: 30,
-      head: [['Employee Name', 'First In', 'Break From', 'Break To', 'Last Out', 'Total Hours', 'Status', 'Shift']],
+      head: [['Employee Name', 'First In', 'Break', 'Last Out', 'Total Hours', 'Status', 'Shift']],
       body: tableData,
       theme: 'grid',
       headStyles: {
@@ -268,8 +232,7 @@ export function useTodaysAttendance() {
       name: '',
       shift: 'Day Shift',
       firstIn: '10:30',
-      breakFrom: '14:00',
-      breakTo: '15:00',
+      breakTime: '01:00',
       lastOut: '19:30',
       totalHours: '08:00',
       status: 'present',
@@ -283,7 +246,7 @@ export function useTodaysAttendance() {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
-    const total = calculateTotalHours(formData.firstIn, formData.lastOut, formData.breakFrom, formData.breakTo);
+    const total = calculateTotalHours(formData.firstIn, formData.lastOut, formData.breakTime);
     const newRecord = {
       id: Date.now(),
       empId: `EMP-${Math.floor(100 + Math.random() * 900)}`,
@@ -292,8 +255,7 @@ export function useTodaysAttendance() {
         formData.avatar ||
         `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=5d5fef&color=fff`,
       firstIn: formData.firstIn,
-      breakFrom: formData.breakFrom,
-        breakTo: formData.breakTo,
+      breakTime: formData.breakTime,
       lastOut: formData.lastOut,
       totalHours: total,
       status: formData.status,
@@ -316,8 +278,7 @@ export function useTodaysAttendance() {
       name: record.name,
       shift: record.shift,
       firstIn: record.firstIn,
-      breakFrom: record.breakFrom,
-      breakTo: record.breakTo,
+      breakTime: record.breakTime,
       lastOut: record.lastOut,
       totalHours: record.totalHours,
       status: record.status,
@@ -331,7 +292,7 @@ export function useTodaysAttendance() {
     e.preventDefault();
     if (!selectedRecord) return;
 
-    const total = calculateTotalHours(formData.firstIn, formData.lastOut, formData.breakFrom, formData.breakTo);
+    const total = calculateTotalHours(formData.firstIn, formData.lastOut, formData.breakTime);
     setAttendanceList(
       attendanceList.map((item) =>
         item.id === selectedRecord.id
@@ -340,8 +301,7 @@ export function useTodaysAttendance() {
               name: formData.name,
               shift: formData.shift,
               firstIn: formData.firstIn,
-              breakFrom: formData.breakFrom,
-        breakTo: formData.breakTo,
+              breakTime: formData.breakTime,
               lastOut: formData.lastOut,
               totalHours: total,
               status: formData.status
@@ -500,7 +460,6 @@ export function useTodaysAttendance() {
     isAllSelected,
     isSomeSelected,
     handleRefresh,
-    handleExportCSV,
     handleExportPDF,
     handleOpenAddModal,
     handleSaveNewAttendance,
@@ -511,4 +470,3 @@ export function useTodaysAttendance() {
     attendanceStats
   };
 }
-

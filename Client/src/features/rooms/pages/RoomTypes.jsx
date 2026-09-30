@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { 
   Refresh, PictureAsPdf, EditOutlined, DeleteOutlined, Close, Search, 
   KeyboardArrowLeft, KeyboardArrowRight, CloudUploadOutlined, TableChart, AddCircleOutlined 
@@ -150,7 +148,12 @@ export default function RoomTypes() {
     document.body.removeChild(link);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
+    const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
     doc.text('RoomTypes', 14, 15);
     const tableColumn = ['Room No', 'Room Type', 'AC/Non AC', 'Short Code', 'Status', 'Capacity', 'Rent'];
@@ -184,6 +187,7 @@ export default function RoomTypes() {
               onClick={handleOpenAdd}
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
               title="Add"
+              aria-label="Add room type"
             >
               <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#1b7f43]" />
             </button>
@@ -191,6 +195,7 @@ export default function RoomTypes() {
               onClick={() => setRooms(initialRoomTypes)}
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
               title="Refresh"
+              aria-label="Refresh room types"
             >
               <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
             </button>
@@ -198,6 +203,7 @@ export default function RoomTypes() {
               onClick={handleExportCSV} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
               title="Export CSV"
+              aria-label="Export CSV"
             >
               <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
             </button>
@@ -205,6 +211,7 @@ export default function RoomTypes() {
               onClick={handleExportPDF} 
               className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" 
               title="Export PDF"
+              aria-label="Export PDF"
             >
               <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
             </button>
@@ -247,10 +254,10 @@ export default function RoomTypes() {
                   <td className="px-5 py-3 text-[13.5px] text-gray-600">${room.rent}</td>
                   <td className="px-5 py-3 text-center">
                     <div className="flex items-center justify-center gap-3">
-                      <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded transition-colors cursor-pointer" title="Edit">
+                      <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded transition-colors cursor-pointer" title="Edit" aria-label="Edit room type">
                         <EditOutlined sx={{ fontSize: 18 }} />
                       </button>
-                      <button onClick={() => handleOpenDelete(room)} className="text-[#ef4444] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer" title="Delete">
+                      <button onClick={() => handleOpenDelete(room)} className="text-[#ef4444] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer" title="Delete" aria-label="Delete room type">
                         <DeleteOutlined sx={{ fontSize: 18 }} />
                       </button>
                     </div>
@@ -287,6 +294,7 @@ export default function RoomTypes() {
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))} 
               disabled={page === 1}
+              aria-label="Previous page"
               className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <KeyboardArrowLeft sx={{ fontSize: 20 }} />
@@ -294,6 +302,7 @@ export default function RoomTypes() {
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
               disabled={page === totalPages || totalPages === 0}
+              aria-label="Next page"
               className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               <KeyboardArrowRight sx={{ fontSize: 20 }} />
@@ -313,7 +322,7 @@ export default function RoomTypes() {
                 </div>
                 <h2 className="text-[16px] font-bold">New Record</h2>
               </div>
-              <button onClick={() => setIsAddModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
+              <button onClick={() => setIsAddModalOpen(false)} aria-label="Close" className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
                 <Close sx={{ fontSize: 18 }} />
               </button>
             </div>
@@ -372,7 +381,7 @@ export default function RoomTypes() {
                 <h2 className="text-[18px] font-bold">Edit Room - #{editForm.roomNo}</h2>
                 <p className="text-white/80 text-[12.5px] mt-0.5">Update room specifications, amenities, and operational settings</p>
               </div>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
+              <button onClick={() => setIsEditModalOpen(false)} aria-label="Close" className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
                 <Close sx={{ fontSize: 20 }} />
               </button>
             </div>

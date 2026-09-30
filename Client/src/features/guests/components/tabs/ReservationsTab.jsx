@@ -119,75 +119,76 @@ export default function ReservationsTab({ reservations = [], guest }) {
         </div>
 
         {/* Table Content */}
-        <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50/50">
-              <tr>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Reservation Ref</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room & Type</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Check-In</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Check-Out</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Package</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Stay Status</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Payment</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-right">Dues</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>
+        <div className="w-full overflow-x-auto min-w-0 hide-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[700px]">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50/50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                <th className="py-3 px-4">Reservation Ref</th>
+                <th className="py-3 px-4">Room & Type</th>
+                <th className="py-3 px-4">Check-In</th>
+                <th className="py-3 px-4">Check-Out</th>
+                <th className="py-3 px-4">Package</th>
+                <th className="py-3 px-4">Stay Status</th>
+                <th className="py-3 px-4">Payment</th>
+                <th className="py-3 px-4 text-right">Dues</th>
+                <th className="py-3 px-4 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="text-xs text-gray-700">
+            <tbody className="divide-y divide-gray-50 text-xs text-gray-700">
               {currentItems.map((res) => {
                 const dues = getBookingDues(res);
                 const bookingRef = res.bookingId || `BK-${res.id}`;
                 return (
-                  <tr key={res.id} className="hover:bg-gray-50/30 transition">
-                    <td className="py-2 px-3 font-mono font-bold text-gray-900">
+                  <tr key={res.id} className="hover:bg-gray-50/60 transition">
+                    <td className="py-3 px-4 font-mono font-bold text-gray-900">
                       {bookingRef}
                     </td>
-                    <td className="py-2 px-3">
+                    <td className="py-3 px-4">
                       <div className="font-semibold text-gray-800 flex items-center gap-1">
                         <MeetingRoomOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
                         Room {res.roomNumber || res.room || '101'}
                       </div>
                       <span className="text-[10.5px] text-gray-500 block">{res.roomType || 'Standard'}</span>
                     </td>
-                    <td className="py-2 px-3 text-gray-600 font-medium">
+                    <td className="py-3 px-4 text-gray-600 font-medium">
                       <div className="flex items-center gap-1">
                         <CalendarTodayOutlined sx={{ fontSize: 13 }} className="text-gray-400" />
                         {res.checkIn || 'N/A'}
                       </div>
                     </td>
-                    <td className="py-2 px-3 text-gray-600 font-medium">
+                    <td className="py-3 px-4 text-gray-600 font-medium">
                       <div className="flex items-center gap-1">
                         <CalendarTodayOutlined sx={{ fontSize: 13 }} className="text-gray-400" />
                         {res.checkOut || 'N/A'}
                       </div>
                     </td>
-                    <td className="py-2 px-3 text-gray-700 font-medium">
+                    <td className="py-3 px-4 text-gray-700 font-medium">
                       {res.package || 'Standard'}
                     </td>
-                    <td className="py-2 px-3">
+                    <td className="py-3 px-4">
                       {getStatusBadge(res.status)}
                     </td>
-                    <td className="py-2 px-3">
+                    <td className="py-3 px-4">
                       <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
                         res.payment === 'Paid' ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'
                       }`}>
                         {res.payment || 'Unpaid'}
                       </span>
                     </td>
-                    <td className="py-2 px-3 text-right font-bold">
-                      {dues > 0 ? (
+                    <td className="py-3 px-4 text-right font-bold">
+                      {dues === null ? <span className="text-amber-600">Unverified</span> : dues > 0 ? (
                         <span className="text-rose-600">${Number(dues).toFixed(2)}</span>
                       ) : (
                         <span className="text-gray-400 font-normal">$0.00</span>
                       )}
                     </td>
-                    <td className="py-2 px-3 text-center">
+                    <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <Link
                           to={`/reservation/edit/${res.id}`}
                           className="p-1 text-gray-400 hover:text-[#1b7f43] hover:bg-emerald-50 rounded transition cursor-pointer"
                           title="Edit reservation"
+                          aria-label="Edit reservation"
                         >
                           <EditOutlined sx={{ fontSize: 16 }} />
                         </Link>
@@ -224,6 +225,7 @@ export default function ReservationsTab({ reservations = [], guest }) {
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
+                aria-label="Previous page"
                 className="p-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 <ChevronLeft sx={{ fontSize: 16 }} />
@@ -234,6 +236,7 @@ export default function ReservationsTab({ reservations = [], guest }) {
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
+                aria-label="Next page"
                 className="p-1 rounded border border-gray-200 text-gray-600 hover:bg-gray-50 disabled:opacity-40 cursor-pointer"
               >
                 <ChevronRight sx={{ fontSize: 16 }} />

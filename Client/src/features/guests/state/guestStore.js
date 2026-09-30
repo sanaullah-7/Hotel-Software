@@ -1,8 +1,9 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
-import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../../reservations/state/reservationStore';
 
 const STORAGE_KEY = 'hotel_guests_v1';
 export const GUESTS_UPDATED_EVENT = 'guests_update';
+// Kept as an event contract for existing reservation consumers.
+export const RESERVATIONS_UPDATED_EVENT = 'reservations_update';
 
 const INITIAL_GUESTS = [
   { id: 'GST64188', name: 'John Smith', email: 'john.smith@example.com', phone: '+1234567890', city: 'New York', totalStays: 15, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=1' },
@@ -14,70 +15,40 @@ const INITIAL_GUESTS = [
 function readGuests() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored !== null) {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_GUESTS));
   } catch {
-    return INITIAL_GUESTS;
+    return [];
   }
   return INITIAL_GUESTS;
 }
 
-export function getGuests() {
-  const savedGuests = readGuests();
-  const guestMap = new Map();
+export const getGuests = () => readGuests();
 
-  // 1. Seed with all saved guests (they take absolute priority)
-  savedGuests.forEach((g) => {
-    guestMap.set(String(g.id).toLowerCase(), { ...g });
-  });
+export function getGuestById(id) {
+  if (id === undefined || id === null || id === '') return null;
+  return readGuests().find((guest) => String(guest.id) === String(id)) || null;
+}
 
-  // Helper maps for matching reservations to saved guests
-  const byId = new Map(savedGuests.map((g) => [String(g.id).toLowerCase(), g]));
-  const byEmail = new Map(savedGuests.filter((g) => g.email).map((g) => [g.email.toLowerCase(), g]));
+export function findGuestByExactIdentity(name, email, guests = readGuests()) {
+  if (!name?.trim() || !email?.trim()) return null;
+  const matches = guests.filter((guest) =>
+    String(guest.name || '').trim().toLowerCase() === name.trim().toLowerCase() &&
+    String(guest.email || '').trim().toLowerCase() === email.trim().toLowerCase()
+  );
+  return matches.length === 1 ? matches[0] : null;
+}
 
-  // 2. Merge reservations
-  getReservations().forEach((reservation) => {
-    const resGuestId = reservation.guestId
-      ? String(reservation.guestId).toLowerCase()
-      : `gst-${reservation.id}`.toLowerCase();
-    const email = (reservation.email || `${reservation.id}@guest.local`).toLowerCase();
-
-    // Check if matching saved guest exists by ID or email
-    const existing = byId.get(resGuestId) || byEmail.get(email) || guestMap.get(resGuestId);
-
-    if (existing) {
-      const key = String(existing.id).toLowerCase();
-      const current = guestMap.get(key) || existing;
-      // Keep saved guest's edited fields! Do NOT let reservation defaults overwrite them.
-      guestMap.set(key, {
-        id: current.id,
-        name: current.name || reservation.name || 'Guest',
-        email: current.email || reservation.email || `${reservation.id}@guest.local`,
-        phone: current.phone || reservation.mobile || '',
-        city: current.city || '',
-        totalStays: current.totalStays !== undefined ? current.totalStays : 1,
-        status: current.status || 'Active',
-        avatar: current.avatar || reservation.avatar || 'https://i.pravatar.cc/150?u=guest',
-      });
-    } else {
-      const newGuestId = reservation.guestId || `GST-${reservation.id}`;
-      const key = String(newGuestId).toLowerCase();
-      if (!guestMap.has(key)) {
-        guestMap.set(key, {
-          id: newGuestId,
-          name: reservation.name || 'Guest',
-          email: reservation.email || `${reservation.id}@guest.local`,
-          phone: reservation.mobile || '',
-          city: '',
-          totalStays: 1,
-          status: 'Active',
-          avatar: reservation.avatar || 'https://i.pravatar.cc/150?u=guest',
-        });
-      }
-    }
-  });
-
-  return Array.from(guestMap.values());
+export function resolveGuestForBooking(booking) {
+  if (!booking) return null;
+  const guests = readGuests();
+  if (booking.guestId !== undefined && booking.guestId !== null && booking.guestId !== '') {
+    return guests.find((guest) => String(guest.id) === String(booking.guestId)) || null;
+  }
+  return findGuestByExactIdentity(booking.name || booking.guestName, booking.email || booking.guestEmail, guests);
 }
 
 export function saveGuests(guests) {
@@ -88,87 +59,26 @@ export function saveGuests(guests) {
 export function addGuest(guest) {
   const nextGuest = { ...guest, id: guest.id || `GST-${Date.now()}`, status: guest.status || 'Active', totalStays: Number(guest.totalStays) || 0 };
   saveGuests([nextGuest, ...readGuests()]);
-  try {
-    addAuditLog({ module: 'Guests', action: 'Added Guest', recordId: nextGuest.id, description: `Guest ${nextGuest.name} was added.`, importance: 'Important' });
-  } catch(e) {}
+  try { addAuditLog({ module: 'Guests', action: 'Added Guest', recordId: nextGuest.id, description: `Guest ${nextGuest.name} was added.`, importance: 'Important' }); } catch {}
   return nextGuest;
 }
 
 export function updateGuest(id, updates) {
-  const normalizedId = String(id).toLowerCase();
-  const currentGuests = readGuests();
-  const index = currentGuests.findIndex((guest) =>
-    String(guest.id).toLowerCase() === normalizedId ||
-    String(guest.id).toLowerCase() === `gst-${normalizedId}` ||
-    (normalizedId.startsWith('gst-') && String(guest.id).toLowerCase() === normalizedId.replace('gst-', ''))
-  );
-
-  let updatedList;
-  let updatedGuest;
-  if (index >= 0) {
-    updatedGuest = { ...currentGuests[index], ...updates };
-    updatedList = [...currentGuests];
-    updatedList[index] = updatedGuest;
-  } else {
-    // If not previously in saved guests list, fetch full guest object and merge updates
-    const existingFull = getGuestById(id) || {};
-    updatedGuest = { ...existingFull, ...updates, id };
-    updatedList = [updatedGuest, ...currentGuests];
-  }
-
-  saveGuests(updatedList);
-  if (updatedGuest) {
-    try {
-      addAuditLog({ module: 'Guests', action: 'Updated Guest', recordId: id, description: `Guest ${updatedGuest.name} was updated.`, importance: 'Normal' });
-    } catch(e) {}
-  }
+  const guests = readGuests();
+  const index = guests.findIndex((guest) => String(guest.id) === String(id));
+  if (index < 0) return null;
+  const updatedGuest = { ...guests[index], ...updates, id: guests[index].id };
+  guests[index] = updatedGuest;
+  saveGuests(guests);
+  try { addAuditLog({ module: 'Guests', action: 'Updated Guest', recordId: id, description: `Guest ${updatedGuest.name} was updated.`, importance: 'Normal' }); } catch {}
   return updatedGuest;
 }
 
 export function deleteGuest(id) {
-  const normalizedId = String(id).toLowerCase();
-  const guestToDelete = readGuests().find((guest) => String(guest.id).toLowerCase() === normalizedId);
-  saveGuests(readGuests().filter((guest) => String(guest.id).toLowerCase() !== normalizedId));
-  if (guestToDelete) {
-    try {
-      addAuditLog({ module: 'Guests', action: 'Deleted Guest', recordId: id, description: `Guest ${guestToDelete.name} was deleted.`, importance: 'Critical' });
-    } catch(e) {}
+  const guests = readGuests();
+  const updated = guests.filter((guest) => String(guest.id) !== String(id));
+  if (updated.length !== guests.length) {
+    saveGuests(updated);
+    try { addAuditLog({ module: 'Guests', action: 'Deleted Guest', recordId: id, importance: 'Critical' }); } catch {}
   }
 }
-
-export function getGuestById(id) {
-  if (!id) return null;
-  const allGuests = getGuests();
-  const normalizedId = String(id).toLowerCase();
-
-  let guest = allGuests.find((g) =>
-    String(g.id).toLowerCase() === normalizedId ||
-    String(g.id).toLowerCase() === `gst-${normalizedId}` ||
-    (normalizedId.startsWith('gst-') && String(g.id).toLowerCase() === normalizedId.replace('gst-', ''))
-  );
-
-  if (!guest) {
-    const reservations = getReservations();
-    const res = reservations.find((r) =>
-      String(r.id) === String(id) ||
-      `GST-${r.id}`.toLowerCase() === normalizedId ||
-      (r.name && r.name.toLowerCase() === normalizedId)
-    );
-    if (res) {
-      guest = {
-        id: `GST-${res.id}`,
-        name: res.name || 'Guest',
-        email: res.email || `${res.id}@guest.local`,
-        phone: res.mobile || '',
-        city: 'New York',
-        totalStays: 1,
-        status: 'Active',
-        avatar: res.avatar || 'https://i.pravatar.cc/150?u=guest',
-      };
-    }
-  }
-
-  return guest || null;
-}
-
-export { RESERVATIONS_UPDATED_EVENT };

@@ -7,6 +7,7 @@ import KPICard from '../components/common/KPICard';
 import StatusBadge from '../components/common/StatusBadge';
 import Dashboard from '../pages/Dashboard/Dashboard';
 import CurrentBookingsTable from '../pages/Dashboard/components/CurrentBookingsTable';
+import Sidebar from '../layouts/DashboardLayout/Sidebar';
 
 describe('Dashboard and Shared UI Components', () => {
   it('renders KPICard with ForwardRef MUI Icon correctly in compact variant', () => {
@@ -61,7 +62,8 @@ describe('Dashboard and Shared UI Components', () => {
   });
 
   it('allows adding a booking and typing into all form inputs', () => {
-    const { getByTitle, getByPlaceholderText, getByText } = render(
+    localStorage.clear();
+    const { getByTitle, getByPlaceholderText, getByText, getAllByText, container } = render(
       <MemoryRouter>
         <CurrentBookingsTable />
       </MemoryRouter>
@@ -84,20 +86,28 @@ describe('Dashboard and Shared UI Components', () => {
     fireEvent.change(firstNameInput, { target: { value: 'Zaid' } });
     fireEvent.change(lastNameInput, { target: { value: 'Khan' } });
     fireEvent.change(mobileInput, { target: { value: '5551234' } });
-    fireEvent.change(roomInput, { target: { value: '305' } });
+    fireEvent.change(roomInput, { target: { value: '102' } });
+    const dateInputs = container.querySelectorAll('input[type="date"]');
+    fireEvent.change(dateInputs[0], { target: { value: '2026-10-01' } });
+    fireEvent.change(dateInputs[1], { target: { value: '2026-10-03' } });
 
     expect(firstNameInput.value).toBe('Zaid');
     expect(lastNameInput.value).toBe('Khan');
     expect(mobileInput.value).toBe('5551234');
-    expect(roomInput.value).toBe('305');
+    expect(roomInput.value).toBe('102');
 
     // Click Add New Booking
     const submitBtn = getByText('Add New Booking', { selector: 'button' });
     fireEvent.click(submitBtn);
 
-    // Verify new booking and room number 305 are rendered in table
+    // Verify the booking uses the canonical room assignment.
     expect(getByText('Zaid Khan')).toBeTruthy();
-    expect(getByText('305')).toBeTruthy();
+    expect(getAllByText('102').length).toBeGreaterThan(0);
+    const savedBooking = JSON.parse(localStorage.getItem('hotel_reservations')).find((booking) => booking.name === 'Zaid Khan');
+    const savedGuest = JSON.parse(localStorage.getItem('hotel_guests_v1')).find((guest) => guest.id === savedBooking.guestId);
+    expect(savedBooking.guestId).toBeTruthy();
+    expect(savedGuest.name).toBe('Zaid Khan');
+    expect(savedBooking.roomId).toBe(2);
   });
 
   it('renders Room column in table headers and room numbers in rows', () => {
@@ -108,10 +118,23 @@ describe('Dashboard and Shared UI Components', () => {
     );
 
     expect(getByText('Room', { selector: 'th' })).toBeTruthy();
-    expect(getByText('101')).toBeTruthy();
+    expect(getAllByText('102').length).toBeGreaterThan(0);
+  });
+
+  it('keeps an empty canonical reservation list empty on the dashboard', () => {
+    localStorage.setItem('hotel_reservations', '[]');
+    const { getByText } = render(
+      <MemoryRouter>
+        <CurrentBookingsTable />
+      </MemoryRouter>
+    );
+
+    expect(getByText('No bookings found matching criteria.')).toBeTruthy();
+    expect(localStorage.getItem('hotel_reservations')).toBe('[]');
   });
 
   it('navigates to Guest Profile when clicking a Current Booking row', () => {
+    localStorage.clear();
     const { getAllByRole, getByText } = render(
       <MemoryRouter>
         <CurrentBookingsTable />
@@ -151,6 +174,8 @@ describe('Dashboard and Shared UI Components', () => {
     const searchInput = getByPlaceholderText('Search rooms, guests...');
     fireEvent.change(searchInput, { target: { value: 'Deluxe' } });
     expect(searchInput.value).toBe('Deluxe');
+    const occupancyRooms = JSON.parse(localStorage.getItem('hotel_rooms'));
+    expect(occupancyRooms.find((room) => room.number === 101).roomId).toBe(1);
 
     const clearBtn = getByText('Clear');
     expect(clearBtn).toBeTruthy();
@@ -160,6 +185,7 @@ describe('Dashboard and Shared UI Components', () => {
   });
 
   it('renders CheckInOut table with visible Booking IDs in the Booking ID column', async () => {
+    localStorage.clear();
     const { default: CheckInOut } = await import('../features/front-office/pages/CheckInOut');
     const { getByText } = render(
       <MemoryRouter>
@@ -167,10 +193,9 @@ describe('Dashboard and Shared UI Components', () => {
       </MemoryRouter>
     );
 
-    // Verify header and booking IDs
+    // Verify canonical reservation rows render in Front Office.
     expect(getByText('Booking ID', { selector: 'th' })).toBeTruthy();
-    expect(getByText('BK-1001')).toBeTruthy();
-    expect(getByText('BK-1002')).toBeTruthy();
+    expect(getByText('1')).toBeTruthy();
   });
 
   it('renders GuestComplaint with working delete confirmation modal and text truncation', async () => {
@@ -238,6 +263,22 @@ describe('Dashboard and Shared UI Components', () => {
   });
 
   it('renders ReservationHistory with working date filters, Dues column, and Export CSV', async () => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+    const dayOneStr = `${yyyy}-${mm}-01`;
+    const earlierMonthStr = `${yyyy}-01-15`;
+
+    const seedReservations = [
+      { id: 'RES-001', name: 'John Doe', mobile: '0311 0000000', room: '105 - Standard', status: 'Checked Out', checkIn: dayOneStr, checkOut: dayOneStr, totalPrice: 500, dues: 0, payment: 'Paid' },
+      { id: 'RES-002', name: 'Sarah Smith', mobile: '0300 1234567', room: '302 - Suite', status: 'Checked Out', checkIn: todayStr, checkOut: todayStr, totalPrice: 900, dues: 0, payment: 'Paid' },
+      { id: 'RES-003', name: 'Ahsan Khan', mobile: '0333 4455667', room: '101 - Standard', status: 'Cancelled', checkIn: earlierMonthStr, checkOut: earlierMonthStr, totalPrice: 300, dues: 0, payment: 'Paid' },
+      { id: 'RES-004', name: 'Maria Garcia', mobile: '0344 7788990', room: '205 - Deluxe', status: 'Checked Out', checkIn: earlierMonthStr, checkOut: earlierMonthStr, totalPrice: 600, dues: 0, payment: 'Refunded' },
+    ];
+    localStorage.setItem('hotel_reservations', JSON.stringify(seedReservations));
+
     const { default: ReservationHistory } = await import('../features/reservations/pages/ReservationHistory');
     const { getByText, queryByText, getByTitle } = render(
       <MemoryRouter>
@@ -281,7 +322,32 @@ describe('Dashboard and Shared UI Components', () => {
     const exportBtn = getByTitle('Export CSV');
     expect(exportBtn).toBeTruthy();
     fireEvent.click(exportBtn);
+
+    localStorage.removeItem('hotel_reservations');
+  });
+
+  it('correctly marks Dashboard active only on /dashboard and inactive on other routes', () => {
+    const checkDashboardActive = (initialRoute) => {
+      const { unmount } = render(
+        <MemoryRouter initialEntries={[initialRoute]}>
+          <Sidebar />
+        </MemoryRouter>
+      );
+      const dashboardLink = screen.getByRole('link', { name: /Dashboard/i });
+      const isActive = dashboardLink.getAttribute('aria-current') === 'page';
+      unmount();
+      return isActive;
+    };
+
+    expect(checkDashboardActive('/dashboard')).toBe(true);
+    expect(checkDashboardActive('/')).toBe(true);
+    expect(checkDashboardActive('/dashboard/')).toBe(true);
+    expect(checkDashboardActive('/guests')).toBe(false);
+    expect(checkDashboardActive('/reservations')).toBe(false);
+    expect(checkDashboardActive('/reservation/all')).toBe(false);
+    expect(checkDashboardActive('/rooms')).toBe(false);
+    expect(checkDashboardActive('/reports')).toBe(false);
+    expect(checkDashboardActive('/settings')).toBe(false);
+    expect(checkDashboardActive('/housekeeping/rooms-cleaning')).toBe(false);
   });
 });
-
-

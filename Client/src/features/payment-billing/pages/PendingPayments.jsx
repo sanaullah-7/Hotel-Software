@@ -28,13 +28,14 @@ import {
 } from'@mui/icons-material';
 import {
  getInvoices,
+ getInvoiceWithFinancialState,
  recordInvoicePayment,
 } from'./paymentBillingStore';
 import InvoiceDetailModal from'./components/InvoiceDetailModal';
 import RecordPaymentModal from'./components/RecordPaymentModal';
 
 export default function PendingPayments() {
- const [invoices, setInvoices] = useState(() => getInvoices());
+ const [invoices, setInvoices] = useState(() => getInvoices().map(getInvoiceWithFinancialState));
  const [searchTerm, setSearchTerm] = useState('');
  const [urgencyFilter, setUrgencyFilter] = useState('All');
 
@@ -49,12 +50,12 @@ export default function PendingPayments() {
  const [snackbar, setSnackbar] = useState({ open: false, message:'', severity:'success' });
 
  const reloadData = () => {
- setInvoices(getInvoices());
+ setInvoices(getInvoices().map(getInvoiceWithFinancialState));
  };
 
  // Only invoices with balanceDue > 0
  const pendingInvoices = useMemo(() => {
- return invoices.filter((inv) => inv.balanceDue > 0);
+ return invoices.filter((inv) => inv.financialIntegrity === 'verified' && inv.balanceDue > 0);
  }, [invoices]);
 
  // Metrics
@@ -120,6 +121,7 @@ export default function PendingPayments() {
  message: err.message ||'Failed to record payment.',
  severity:'error',
  });
+ throw err;
  }
  };
 

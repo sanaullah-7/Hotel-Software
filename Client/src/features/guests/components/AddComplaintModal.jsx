@@ -8,6 +8,7 @@ import {
   MenuItem
 } from '@mui/material';
 import { Close, ReportProblemOutlined } from '@mui/icons-material';
+import useModalFocus from '../../../components/common/useModalFocus';
 
 const muiInputSx = {
   '& .MuiOutlinedInput-root': {
@@ -38,6 +39,7 @@ const COMPLAINT_TYPES = [
 ];
 
 export default function AddComplaintModal({ isOpen, onClose, guest, defaultRoom, onSave }) {
+  const { dialogRef, titleId } = useModalFocus({ open: isOpen, onClose });
   const [form, setForm] = useState({
     type: 'Housekeeping',
     roomNo: defaultRoom || '101',
@@ -55,6 +57,7 @@ export default function AddComplaintModal({ isOpen, onClose, guest, defaultRoom,
 
     onSave({
       id: Date.now(),
+      guestId: guest.id,
       guestName: guest.name,
       roomNo: form.roomNo,
       type: form.type,
@@ -72,6 +75,11 @@ export default function AddComplaintModal({ isOpen, onClose, guest, defaultRoom,
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className="bg-white rounded-2xl shadow-2xl w-full max-w-[540px] overflow-hidden flex flex-col border border-gray-100"
         onClick={(e) => e.stopPropagation()}
       >
@@ -79,13 +87,14 @@ export default function AddComplaintModal({ isOpen, onClose, guest, defaultRoom,
           <div className="flex items-center gap-2 text-white">
             <ReportProblemOutlined sx={{ fontSize: 20 }} />
             <div>
-              <h2 className="text-[16px] font-bold">New Guest Request / Complaint</h2>
+              <h2 id={titleId} className="text-[16px] font-bold">New Guest Request / Complaint</h2>
               <p className="text-[11px] text-emerald-100 mt-0.5">Filing ticket for {guest.name}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close"
             className="text-white/80 hover:text-white p-1.5 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer"
           >
             <Close sx={{ fontSize: 18 }} />

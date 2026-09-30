@@ -34,7 +34,7 @@ export default function AllEventsHeader({
         />
 
         <Tooltip title="Refresh">
-          <IconButton onClick={onRefresh} size="small" className="border border-gray-200">
+          <IconButton onClick={onRefresh} size="small" aria-label="Refresh events" className="border border-gray-200">
             <RefreshIcon fontSize="small" />
           </IconButton>
         </Tooltip>

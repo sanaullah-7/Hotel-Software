@@ -1,5 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Close, CloudUpload, DeleteOutlined, ImageOutlined } from '@mui/icons-material';
+import useModalFocus from '../../../components/common/useModalFocus';
+import { getRooms, getRoomsByRoomType } from '../../rooms/state/roomStore.js';
 
 export default function ReservationFormModal({
   open,
@@ -10,6 +12,7 @@ export default function ReservationFormModal({
   onSave,
   onSubmit
 }) {
+  const { dialogRef, titleId } = useModalFocus({ open, onClose });
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -20,6 +23,29 @@ export default function ReservationFormModal({
   const handleFieldChange = (field, value) => {
     if (typeof onFormChange === 'function') {
       onFormChange(field, value);
+    }
+  };
+
+  const allRooms = getRooms();
+  const selectedType = form.roomType || '';
+  const filteredRooms = selectedType ? getRoomsByRoomType(selectedType) : allRooms;
+
+  const currentRoomVal = String(form.roomNo || form.room || '').trim();
+  const roomOptions = [...filteredRooms];
+  if (currentRoomVal && !roomOptions.some((r) => String(r.roomNo) === currentRoomVal)) {
+    const existing = allRooms.find((r) => String(r.roomNo) === currentRoomVal);
+    roomOptions.unshift(existing || { id: `custom-${currentRoomVal}`, roomNo: currentRoomVal, roomType: form.roomType || '' });
+  }
+
+  const handleRoomTypeChange = (e) => {
+    const newType = e.target.value;
+    handleFieldChange('roomType', newType);
+    if (newType) {
+      const validRooms = getRoomsByRoomType(newType);
+      const current = String(form.roomNo || form.room || '').trim();
+      if (current && validRooms.length > 0 && !validRooms.some((r) => String(r.roomNo) === current)) {
+        handleFieldChange('roomNo', '');
+      }
     }
   };
 
@@ -75,16 +101,22 @@ export default function ReservationFormModal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
         className="bg-white rounded-lg shadow-2xl w-full max-w-[850px] overflow-hidden flex flex-col h-[90vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="bg-[var(--primary-main)] px-5 py-4 flex items-center justify-between shrink-0">
-          <h2 className="text-white text-[16px] font-bold">
+          <h2 id={titleId} className="text-white text-[16px] font-bold">
             {editingId ? 'Edit Booking' : 'Add New Booking'}
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center text-[12px] font-bold"
           >
             <Close sx={{ fontSize: 18 }} />
@@ -106,8 +138,9 @@ export default function ReservationFormModal({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">First Name *</label>
+                <label htmlFor="res-first-name" className="block text-[12px] text-gray-600 font-medium mb-1">First Name *</label>
                 <input
+                  id="res-first-name"
                   type="text"
                   value={form.firstName || ''}
                   onChange={(e) => handleFieldChange('firstName', e.target.value)}
@@ -117,8 +150,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Last Name</label>
+                <label htmlFor="res-last-name" className="block text-[12px] text-gray-600 font-medium mb-1">Last Name</label>
                 <input
+                  id="res-last-name"
                   type="text"
                   value={form.lastName || ''}
                   onChange={(e) => handleFieldChange('lastName', e.target.value)}
@@ -127,8 +161,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Email Address</label>
+                <label htmlFor="res-email" className="block text-[12px] text-gray-600 font-medium mb-1">Email Address</label>
                 <input
+                  id="res-email"
                   type="email"
                   value={form.email || ''}
                   onChange={(e) => handleFieldChange('email', e.target.value)}
@@ -137,8 +172,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Gender</label>
+                <label htmlFor="res-gender" className="block text-[12px] text-gray-600 font-medium mb-1">Gender</label>
                 <select
+                  id="res-gender"
                   value={form.gender || ''}
                   onChange={(e) => handleFieldChange('gender', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
@@ -150,8 +186,9 @@ export default function ReservationFormModal({
                 </select>
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Mobile</label>
+                <label htmlFor="res-mobile" className="block text-[12px] text-gray-600 font-medium mb-1">Mobile</label>
                 <input
+                  id="res-mobile"
                   type="text"
                   value={form.mobile || ''}
                   onChange={(e) => handleFieldChange('mobile', e.target.value)}
@@ -160,8 +197,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">City</label>
+                <label htmlFor="res-city" className="block text-[12px] text-gray-600 font-medium mb-1">City</label>
                 <input
+                  id="res-city"
                   type="text"
                   value={form.city || ''}
                   onChange={(e) => handleFieldChange('city', e.target.value)}
@@ -170,8 +208,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">ID/Passport Number</label>
+                <label htmlFor="res-passport" className="block text-[12px] text-gray-600 font-medium mb-1">ID/Passport Number</label>
                 <input
+                  id="res-passport"
                   type="text"
                   value={form.passport || ''}
                   onChange={(e) => handleFieldChange('passport', e.target.value)}
@@ -180,8 +219,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Nationality</label>
+                <label htmlFor="res-nationality" className="block text-[12px] text-gray-600 font-medium mb-1">Nationality</label>
                 <input
+                  id="res-nationality"
                   type="text"
                   value={form.nationality || ''}
                   onChange={(e) => handleFieldChange('nationality', e.target.value)}
@@ -199,8 +239,9 @@ export default function ReservationFormModal({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Check In Date</label>
+                <label htmlFor="res-check-in" className="block text-[12px] text-gray-600 font-medium mb-1">Check In Date</label>
                 <input
+                  id="res-check-in"
                   type="date"
                   value={form.checkIn || ''}
                   onChange={(e) => handleFieldChange('checkIn', e.target.value)}
@@ -208,8 +249,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Check Out Date</label>
+                <label htmlFor="res-check-out" className="block text-[12px] text-gray-600 font-medium mb-1">Check Out Date</label>
                 <input
+                  id="res-check-out"
                   type="date"
                   value={form.checkOut || ''}
                   onChange={(e) => handleFieldChange('checkOut', e.target.value)}
@@ -217,8 +259,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Select Package Type</label>
+                <label htmlFor="res-package" className="block text-[12px] text-gray-600 font-medium mb-1">Select Package Type</label>
                 <select
+                  id="res-package"
                   value={form.package || ''}
                   onChange={(e) => handleFieldChange('package', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
@@ -230,8 +273,9 @@ export default function ReservationFormModal({
                 </select>
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Total Person *</label>
+                <label htmlFor="res-total-person" className="block text-[12px] text-gray-600 font-medium mb-1">Total Person *</label>
                 <input
+                  id="res-total-person"
                   type="number"
                   required
                   value={form.totalPerson || ''}
@@ -241,8 +285,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Number of Rooms</label>
+                <label htmlFor="res-num-rooms" className="block text-[12px] text-gray-600 font-medium mb-1">Number of Rooms</label>
                 <input
+                  id="res-num-rooms"
                   type="number"
                   value={form.numRooms || ''}
                   onChange={(e) => handleFieldChange('numRooms', e.target.value)}
@@ -251,33 +296,66 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Select Room Type</label>
+                <label htmlFor="res-room-type" className="block text-[12px] text-gray-600 font-medium mb-1">Select Room Type</label>
                 <select
+                  id="res-room-type"
                   value={form.roomType || ''}
-                  onChange={(e) => handleFieldChange('roomType', e.target.value)}
+                  onChange={handleRoomTypeChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
                 >
                   <option value="">Select</option>
+                  <option value="Deluxe">Deluxe</option>
                   <option value="Delux">Delux</option>
                   <option value="Super Delux">Super Delux</option>
-                  <option value="Vila">Vila</option>
+                  <option value="Standard">Standard</option>
                   <option value="Single">Single</option>
                   <option value="Double">Double</option>
+                  <option value="Suite">Suite</option>
+                  <option value="Vila">Vila</option>
                 </select>
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Room / Room No.</label>
-                <input
-                  type="text"
+                <label htmlFor="res-room-no" className="block text-[12px] text-gray-600 font-medium mb-1">Room / Room No.</label>
+                <select
+                  id="res-room-no"
+                  placeholder="e.g. 101, 102, 201"
                   value={form.roomNo || form.room || ''}
                   onChange={(e) => handleFieldChange('roomNo', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
-                  placeholder="e.g. 101, 102, 201"
-                />
+                >
+                  <option value="">Select Room No.</option>
+                  {roomOptions.map((room) => (
+                    <option key={room.id || room.roomNo} value={room.roomNo}>
+                      Room {room.roomNo} ({room.roomType})
+                    </option>
+                  ))}
+                </select>
+                {filteredRooms.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2" aria-label="Quick Select Rooms">
+                    {filteredRooms.map((room) => {
+                      const isSelected = String(form.roomNo || form.room) === String(room.roomNo);
+                      return (
+                        <button
+                          key={room.id || room.roomNo}
+                          type="button"
+                          onClick={() => handleFieldChange('roomNo', room.roomNo)}
+                          className={`px-2 py-0.5 text-[11px] font-bold rounded border transition-colors cursor-pointer ${
+                            isSelected
+                              ? 'bg-[var(--primary-main)] text-white border-[var(--primary-main)] shadow-sm'
+                              : 'bg-white text-gray-700 border-gray-300 hover:border-[var(--primary-main)] hover:bg-emerald-50/50'
+                          }`}
+                        >
+                          [{room.roomNo}]
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Arrival Time</label>
+                <label htmlFor="res-arrival-time" className="block text-[12px] text-gray-600 font-medium mb-1">Arrival Time</label>
                 <select
+                  id="res-arrival-time"
                   value={form.arrivalTime || ''}
                   onChange={(e) => handleFieldChange('arrivalTime', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
@@ -289,8 +367,9 @@ export default function ReservationFormModal({
                 </select>
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Purpose of Stay</label>
+                <label htmlFor="res-purpose" className="block text-[12px] text-gray-600 font-medium mb-1">Purpose of Stay</label>
                 <select
+                  id="res-purpose"
                   value={form.purpose || ''}
                   onChange={(e) => handleFieldChange('purpose', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
@@ -311,8 +390,9 @@ export default function ReservationFormModal({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Payment Method</label>
+                <label htmlFor="res-payment-method" className="block text-[12px] text-gray-600 font-medium mb-1">Payment Method</label>
                 <select
+                  id="res-payment-method"
                   value={form.paymentMethod || ''}
                   onChange={(e) => handleFieldChange('paymentMethod', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded text-[13px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
@@ -326,8 +406,9 @@ export default function ReservationFormModal({
                 </select>
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Discount Code</label>
+                <label htmlFor="res-discount-code" className="block text-[12px] text-gray-600 font-medium mb-1">Discount Code</label>
                 <input
+                  id="res-discount-code"
                   type="text"
                   value={form.discountCode || ''}
                   onChange={(e) => handleFieldChange('discountCode', e.target.value)}
@@ -336,8 +417,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Booking Reference</label>
+                <label htmlFor="res-booking-ref" className="block text-[12px] text-gray-600 font-medium mb-1">Booking Reference</label>
                 <input
+                  id="res-booking-ref"
                   type="text"
                   value={form.bookingRef || ''}
                   onChange={(e) => handleFieldChange('bookingRef', e.target.value)}
@@ -346,8 +428,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Emergency Contact Name</label>
+                <label htmlFor="res-emergency-name" className="block text-[12px] text-gray-600 font-medium mb-1">Emergency Contact Name</label>
                 <input
+                  id="res-emergency-name"
                   type="text"
                   value={form.emergencyName || ''}
                   onChange={(e) => handleFieldChange('emergencyName', e.target.value)}
@@ -356,8 +439,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Emergency Contact Phone</label>
+                <label htmlFor="res-emergency-phone" className="block text-[12px] text-gray-600 font-medium mb-1">Emergency Contact Phone</label>
                 <input
+                  id="res-emergency-phone"
                   type="text"
                   value={form.emergencyPhone || ''}
                   onChange={(e) => handleFieldChange('emergencyPhone', e.target.value)}
@@ -375,8 +459,9 @@ export default function ReservationFormModal({
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Address</label>
+                <label htmlFor="res-address" className="block text-[12px] text-gray-600 font-medium mb-1">Address</label>
                 <input
+                  id="res-address"
                   type="text"
                   value={form.address || ''}
                   onChange={(e) => handleFieldChange('address', e.target.value)}
@@ -385,8 +470,9 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Special Requests</label>
+                <label htmlFor="res-special-requests" className="block text-[12px] text-gray-600 font-medium mb-1">Special Requests</label>
                 <input
+                  id="res-special-requests"
                   type="text"
                   value={form.specialRequests || ''}
                   onChange={(e) => handleFieldChange('specialRequests', e.target.value)}
@@ -395,10 +481,11 @@ export default function ReservationFormModal({
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">
+                <label htmlFor="res-guest-image" className="block text-[12px] text-gray-600 font-medium mb-1">
                   Upload Guest Image / Photo
                 </label>
                 <input
+                  id="res-guest-image"
                   type="file"
                   ref={fileInputRef}
                   accept="image/*"
@@ -434,6 +521,7 @@ export default function ReservationFormModal({
                         onClick={handleRemoveImage}
                         className="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors cursor-pointer"
                         title="Remove Image"
+                        aria-label="Remove image"
                       >
                         <DeleteOutlined sx={{ fontSize: 18 }} />
                       </button>
@@ -462,8 +550,9 @@ export default function ReservationFormModal({
                 )}
               </div>
               <div className="md:col-span-2">
-                <label className="block text-[12px] text-gray-600 font-medium mb-1">Note</label>
+                <label htmlFor="res-note" className="block text-[12px] text-gray-600 font-medium mb-1">Note</label>
                 <textarea
+                  id="res-note"
                   rows="3"
                   value={form.note || ''}
                   onChange={(e) => handleFieldChange('note', e.target.value)}

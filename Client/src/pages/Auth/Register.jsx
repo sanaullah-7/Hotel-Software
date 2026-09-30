@@ -1,5 +1,5 @@
-import authBg from '../../assets/images/auth-bg.jpg';
-import authCardBg from '../../assets/images/authcard.jpg';
+import authBg from '../../assets/images/auth-bg.webp';
+import authCardBg from '../../assets/images/authcard.webp';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton } from '@mui/material';
@@ -36,7 +36,7 @@ export default function Register() {
     <div className="h-screen w-full flex items-center justify-center relative overflow-hidden bg-gray-900">
       {/* Outer Background */}
       <div className="absolute inset-0 z-0">
-        <img src={authBg} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={authBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
       </div>
 
@@ -45,7 +45,7 @@ export default function Register() {
       {/* Left Image Side */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-gray-900 overflow-hidden">  
         <div className="absolute inset-0 bg-black/60 z-10"></div>
-        <img src={authCardBg} alt="cover" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={authCardBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         
         <div className="relative z-20 w-full flex flex-col items-center justify-center p-12 text-center">
           <div className="mb-6">
@@ -90,8 +90,8 @@ export default function Register() {
 
           <form onSubmit={handleRegister} className="space-y-3">
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Full Name</label>
-              <TextField fullWidth size="small" sx={{ 
+              <label htmlFor="register-full-name" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Full Name</label>
+              <TextField id="register-full-name" fullWidth size="small" sx={{ 
                   backgroundColor: "white", 
                   borderRadius: 1,
                   "& .MuiOutlinedInput-root": {
@@ -121,8 +121,8 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
-              <TextField fullWidth size="small" sx={{ 
+              <label htmlFor="register-email" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Email Address</label>
+              <TextField id="register-email" fullWidth size="small" sx={{ 
                   backgroundColor: "white", 
                   borderRadius: 1,
                   "& .MuiOutlinedInput-root": {
@@ -152,8 +152,8 @@ export default function Register() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Hotel Name</label>
-              <TextField fullWidth size="small" sx={{ 
+              <label htmlFor="register-hotel-name" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Hotel Name</label>
+              <TextField id="register-hotel-name" fullWidth size="small" sx={{ 
                   backgroundColor: "white", 
                   borderRadius: 1,
                   "& .MuiOutlinedInput-root": {
@@ -184,8 +184,8 @@ export default function Register() {
 
             <div className="flex gap-4">
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Password</label>
-                <TextField fullWidth size="small" sx={{ 
+                <label htmlFor="register-password" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Password</label>
+                <TextField id="register-password" fullWidth size="small" sx={{ 
                   backgroundColor: "white", 
                   borderRadius: 1,
                   "& .MuiOutlinedInput-root": {
@@ -216,8 +216,8 @@ export default function Register() {
               </div>
 
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Confirm</label>
-                <TextField fullWidth size="small" sx={{ 
+                <label htmlFor="register-confirm-password" className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Confirm Password</label>
+                <TextField id="register-confirm-password" fullWidth size="small" sx={{ 
                   backgroundColor: "white", 
                   borderRadius: 1,
                   "& .MuiOutlinedInput-root": {
@@ -243,7 +243,7 @@ export default function Register() {
                     ),
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end" size="small">
+                        <IconButton onClick={() => setShowPassword(!showPassword)} aria-label={showPassword ? 'Hide passwords' : 'Show passwords'} aria-pressed={showPassword} edge="end" size="small">
                           {showPassword ? <VisibilityOff className="text-gray-400" fontSize="small" /> : <Visibility className="text-gray-400" fontSize="small" />}
                         </IconButton>
                       </InputAdornment>

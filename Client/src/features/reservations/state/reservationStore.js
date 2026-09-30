@@ -1,18 +1,66 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
+import { getGuests } from '../../guests/state/guestStore.js';
+import { getRooms } from '../../rooms/state/roomStore.js';
+
 const STORAGE_KEY = 'hotel_reservations';
 const UPDATE_EVENT = 'reservations_update';
+
+export function migrateBookingRelationships(bookings, guests = getGuests(), rooms = getRooms()) {
+  let linkedGuests = 0;
+  let linkedRooms = 0;
+  let ambiguous = 0;
+  let changed = false;
+  const migrated = bookings.map((booking) => {
+    let next = booking;
+    if (booking.guestId) {
+      if (!guests.some((guest) => String(guest.id) === String(booking.guestId))) ambiguous += 1;
+    } else {
+      const name = String(booking.name || booking.guestName || '').trim().toLowerCase();
+      const email = String(booking.email || booking.guestEmail || '').trim().toLowerCase();
+      const matches = name && email ? guests.filter((guest) =>
+        String(guest.name || '').trim().toLowerCase() === name && String(guest.email || '').trim().toLowerCase() === email
+      ) : [];
+      if (matches.length === 1) {
+        next = { ...next, guestId: matches[0].id };
+        linkedGuests += 1;
+      } else if (matches.length > 1) ambiguous += 1;
+    }
+
+    if (next.roomId !== undefined && next.roomId !== null && next.roomId !== '') {
+      if (!rooms.some((room) => String(room.id) === String(next.roomId))) ambiguous += 1;
+    } else {
+      const roomNo = next.roomNo ?? next.roomNumber ?? next.room;
+      if (roomNo !== undefined && roomNo !== null && String(roomNo).trim()) {
+        const matches = rooms.filter((room) => String(room.roomNo).trim() === String(roomNo).trim());
+        if (matches.length === 1) {
+          next = { ...next, roomId: matches[0].id };
+          linkedRooms += 1;
+        } else if (matches.length > 1) ambiguous += 1;
+      }
+    }
+    if (next !== booking) changed = true;
+    return next;
+  });
+  return { bookings: migrated, linkedGuests, linkedRooms, ambiguous, changed };
+}
 
 export function getReservations(defaultReservations = []) {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : defaultReservations;
+    if (stored === null) return defaultReservations;
+    const bookings = JSON.parse(stored);
+    if (!Array.isArray(bookings)) return [];
+    const result = migrateBookingRelationships(bookings);
+    if (result.changed) localStorage.setItem(STORAGE_KEY, JSON.stringify(result.bookings));
+    return result.bookings;
   } catch {
-    return defaultReservations;
+    return [];
   }
 }
 
 export function saveReservations(reservations) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(reservations));
+  const { bookings } = migrateBookingRelationships(reservations);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
   window.dispatchEvent(new Event(UPDATE_EVENT));
 }
 

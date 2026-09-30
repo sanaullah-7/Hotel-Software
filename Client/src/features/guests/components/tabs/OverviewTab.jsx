@@ -75,10 +75,10 @@ export default function OverviewTab({
             <Warning sx={{ fontSize: 18 }} className={totalDues > 0 ? 'text-rose-500' : 'text-gray-300'} />
           </div>
           <div className={`text-xl font-black ${totalDues > 0 ? 'text-rose-600' : 'text-gray-800'}`}>
-            ${Number(totalDues).toFixed(2)}
+            {totalDues === null ? 'Unresolved' : `$${Number(totalDues).toFixed(2)}`}
           </div>
           <p className="text-[10.5px] text-gray-400 mt-0.5">
-            {totalDues > 0 ? 'Pending folio settlement' : 'Account is clear'}
+            {totalDues === null ? 'Financial records need review' : totalDues > 0 ? 'Pending folio settlement' : 'Account is clear'}
           </p>
         </div>
       </div>
@@ -232,7 +232,7 @@ export default function OverviewTab({
                     <div className="text-right shrink-0">
                       <span className="text-xs font-bold text-gray-900 block">${Number(inv.totalAmount).toFixed(2)}</span>
                       <span className="text-[10.5px] text-gray-500">
-                        Due: <strong className={inv.balanceDue > 0 ? 'text-rose-600' : 'text-gray-700'}>${Number(inv.balanceDue).toFixed(2)}</strong>
+                        Due: <strong className={inv.financialIntegrity !== 'verified' || inv.balanceDue > 0 ? 'text-rose-600' : 'text-gray-700'}>{inv.financialIntegrity === 'verified' ? `$${Number(inv.balanceDue).toFixed(2)}` : 'Unresolved'}</strong>
                       </span>
                     </div>
                   </div>

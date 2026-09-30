@@ -1,18 +1,45 @@
+import React, { useMemo } from 'react';
 import {
  Dialog, DialogContent, DialogActions,
  IconButton, Divider
-} from'@mui/material';
+} from '@mui/material';
 import {
  Close, Print, ReceiptLong, Hotel, Person,
  CalendarMonth, Payment, CheckCircle, Warning, AssignmentReturn as RefundIcon, AccessTime
-} from'@mui/icons-material';
+} from '@mui/icons-material';
+import {
+ reconcileBookingChargesToInvoice,
+ getInvoiceWithFinancialState,
+ getInvoices,
+} from '../paymentBillingStore';
 
 export default function InvoiceDetailModal({
  open,
  onClose,
- invoice,
- onRecordPayment
+ invoice: initialInvoice,
+ onRecordPayment,
+ onRecordPaymentClick,
 }) {
+ const recordPaymentAction = onRecordPayment || onRecordPaymentClick;
+
+ const invoice = useMemo(() => {
+  if (!initialInvoice) return null;
+  const targetId = initialInvoice.id || initialInvoice.invoiceNumber;
+  const freshInvoice = getInvoices().find((inv) => inv && (inv.id === targetId || inv.invoiceNumber === targetId)) || initialInvoice;
+  const cleanBookingId = String(freshInvoice.bookingId || '').trim();
+  if (cleanBookingId) {
+   try {
+    const reconResult = reconcileBookingChargesToInvoice(cleanBookingId);
+    if (reconResult && reconResult.success && reconResult.invoice) {
+     return reconResult.invoice;
+    }
+   } catch (err) {
+    console.warn('Reconciliation error before invoice detail view:', err);
+   }
+  }
+  return getInvoiceWithFinancialState(freshInvoice);
+ }, [initialInvoice]);
+
  if (!invoice) return null;
 
  const getStatusBadge = (status) => {
@@ -292,11 +319,11 @@ export default function InvoiceDetailModal({
  {/* Footer Actions */}
  <DialogActions sx={{ p: 2.5, backgroundColor:'white', borderTop:'1px solid #f3f4f6', justifyContent:'space-between' }}>
  <div>
- {invoice.balanceDue > 0 && onRecordPayment && (
+ {invoice.balanceDue > 0 && recordPaymentAction && (
  <button
  onClick={() => {
  onClose();
- onRecordPayment(invoice);
+ recordPaymentAction(invoice);
  }}
  className="px-4 py-1.5 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
  >

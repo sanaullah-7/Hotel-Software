@@ -66,7 +66,7 @@ export default function ChargesPaymentsTab({
             Folio Charges Total
           </span>
           <div className="text-xl font-extrabold text-gray-900">
-            ${Number(totalChargesAmount || totalInvoiced).toFixed(2)}
+            ${Number(totalChargesAmount).toFixed(2)}
           </div>
           <span className="text-[10.5px] text-gray-400 block mt-0.5">{charges.length} itemized records</span>
         </div>
@@ -86,10 +86,10 @@ export default function ChargesPaymentsTab({
             Outstanding Balance
           </span>
           <div className={`text-xl font-extrabold ${totalDues > 0 ? 'text-rose-600' : 'text-gray-800'}`}>
-            ${Number(totalDues).toFixed(2)}
+            {totalDues === null ? 'Unresolved' : `$${Number(totalDues).toFixed(2)}`}
           </div>
           <span className="text-[10.5px] text-gray-400 block mt-0.5">
-            {totalDues > 0 ? 'Due for settlement' : 'Fully settled'}
+            {totalDues === null ? 'Financial records need review' : totalDues > 0 ? 'Due for settlement' : 'Fully settled'}
           </span>
         </div>
 
@@ -312,6 +312,7 @@ export default function ChargesPaymentsTab({
           open={isAddChargeOpen}
           onClose={() => setIsAddChargeOpen(false)}
           prefilledData={{
+            guestId: guest.id,
             guestName: guest.name,
             roomNumber: guest.roomNumber || '101'
           }}

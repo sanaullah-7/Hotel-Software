@@ -27,6 +27,7 @@ import {
 } from '@mui/icons-material';
 import {
   getInvoices,
+  getInvoiceWithFinancialState,
   getPayments,
   recordInvoicePayment,
 } from './paymentBillingStore';
@@ -38,7 +39,7 @@ export default function Invoices() {
   const location = useLocation();
 
   const queryGuest = searchParams.get('guest') || searchParams.get('search') || location.state?.search || location.state?.guestName || '';
-  const [invoices, setInvoices] = useState(() => getInvoices());
+  const [invoices, setInvoices] = useState(() => getInvoices().map(getInvoiceWithFinancialState));
   const [searchTerm, setSearchTerm] = useState(queryGuest);
   const [statusFilter, setStatusFilter] = useState('All');
 
@@ -61,7 +62,7 @@ export default function Invoices() {
 
  // Sync state helper
  const reloadData = () => {
- setInvoices(getInvoices());
+ setInvoices(getInvoices().map(getInvoiceWithFinancialState));
  };
 
  // Status Chip Renderer
@@ -164,6 +165,7 @@ export default function Invoices() {
  message: err.message ||'Failed to record payment.',
  severity:'error',
  });
+ throw err;
  }
  };
 
@@ -355,11 +357,11 @@ export default function Invoices() {
  <td className="py-2 px-1 text-right font-bold text-gray-900 font-mono text-xs truncate">
  ${inv.totalAmount?.toFixed(2)}
  </td>
- <td className="py-2 px-1 text-right font-bold text-emerald-600 font-mono text-xs truncate">
- ${inv.paidAmount?.toFixed(2)}
+ <td className="py-2 px-1 text-right font-bold text-emerald-600 font-mono text-xs truncate" title={inv.financialIssue || ''}>
+ {inv.financialIntegrity === 'verified' ? `$${inv.paidAmount.toFixed(2)}` : 'Unresolved'}
  </td>
- <td className="py-2 px-1 text-right font-bold text-red-600 font-mono text-xs truncate">
- ${inv.balanceDue?.toFixed(2)}
+ <td className="py-2 px-1 text-right font-bold text-red-600 font-mono text-xs truncate" title={inv.financialIssue || ''}>
+ {inv.financialIntegrity === 'verified' ? `$${inv.balanceDue.toFixed(2)}` : 'Unresolved'}
  </td>
  <td className="py-2 px-1 text-center">
  {renderStatusBadge(inv.status)}
@@ -379,7 +381,7 @@ export default function Invoices() {
  <ViewIcon sx={{ fontSize: 16 }} />
  </IconButton>
  </Tooltip>
- {inv.balanceDue > 0 && (
+ {inv.financialIntegrity === 'verified' && inv.balanceDue > 0 && (
  <Tooltip title="Record Payment">
  <IconButton
  size="small"
