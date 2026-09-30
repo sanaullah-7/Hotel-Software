@@ -319,10 +319,18 @@ export default function DocumentsTab({
                 </div>
               </div>
 
+              
               {viewingDoc.notes && (
                 <div className="p-3 bg-emerald-50/40 rounded-xl border border-emerald-100">
                   <span className="text-gray-500 font-bold block mb-1">Notes:</span>
                   <p className="text-gray-700">{viewingDoc.notes}</p>
+                </div>
+              )}
+
+              {viewingDoc.cnicImage && (
+                <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex flex-col items-center">
+                  <span className="text-gray-500 font-bold block mb-2 w-full text-left">Document Image:</span>
+                  <img src={viewingDoc.cnicImage} alt="CNIC Document" className="max-h-64 object-contain rounded border shadow-sm" />
                 </div>
               )}
 

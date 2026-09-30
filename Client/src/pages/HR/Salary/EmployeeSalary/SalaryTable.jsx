@@ -161,7 +161,7 @@ export const SalaryTable = ({
               }}
             >
               <PictureAsPdfIcon sx={{ fontSize: 26 }} />
-            </IconButton>
+s            </IconButton>
           </Tooltip>
         </div>
       </div>

@@ -212,67 +212,11 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
   };
 
   const openNewModal = () => {
-    setEditingId(null);
-    setForm({
-      firstName: '',
-      lastName: '',
-      email: '',
-      gender: '',
-      mobile: '',
-      city: '',
-      passport: '',
-      nationality: '',
-      checkIn: '',
-      checkOut: '',
-      package: 'All inclusive',
-      totalPerson: '1',
-      numRooms: '1',
-      roomType: 'Delux',
-      arrivalTime: 'Morning',
-      purpose: 'Leisure',
-      paymentMethod: 'Paid',
-      discountCode: '',
-      bookingRef: '',
-      emergencyName: '',
-      emergencyPhone: '',
-      address: '',
-      specialRequests: '',
-      note: ''
-    });
-    setIsBookingModalOpen(true);
+    navigate('/reservation/new');
   };
 
   const openEditModal = (booking) => {
-    setEditingId(booking.id);
-    const [firstName, ...lastNames] = (booking.name || '').split(' ');
-    setForm({
-      firstName: firstName || '',
-      lastName: lastNames.join(' ') || '',
-      email: booking.email || '',
-      gender: booking.gender || '',
-      mobile: booking.mobile || '',
-      city: booking.city || '',
-      passport: booking.passport || '',
-      nationality: booking.nationality || '',
-      checkIn: booking.checkIn || '',
-      checkOut: booking.checkOut || '',
-      package: booking.package || 'All inclusive',
-      totalPerson: booking.totalPerson || '1',
-      numRooms: booking.numRooms || '1',
-      roomType: booking.roomType || 'Delux',
-      arrivalTime: booking.arrivalTime || 'Morning',
-      purpose: booking.purpose || 'Leisure',
-      paymentMethod: booking.payment || 'Paid',
-      discountCode: booking.discountCode || '',
-      bookingRef: booking.bookingRef || `BK-${booking.id}`,
-      emergencyName: booking.emergencyName || '',
-      emergencyPhone: booking.emergencyPhone || '',
-      address: booking.address || '',
-      specialRequests: booking.specialRequests || '',
-      note: booking.note || ''
-    });
-    setIsBookingModalOpen(true);
-    setActiveMenuId(null);
+    navigate('/reservation/edit/' + booking.id);
   };
 
   const handleFormChange = (field, value) => {

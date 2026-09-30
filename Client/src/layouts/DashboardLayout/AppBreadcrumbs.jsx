@@ -17,6 +17,7 @@ export default function AppBreadcrumbs() {
     'cancelled': 'Canceled Booking',
     'group': 'Group Booking',
     'new': 'Add New Booking',
+    'edit': 'Edit Booking',
     'rates-pricing': 'Rates & Pricing',
     'rate-plans': 'Rate Plans',
     'taxes-fees': 'Taxes & Fees',

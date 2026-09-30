@@ -44,12 +44,45 @@ export default function AddReservation() {
 
  const [selectedFile, setSelectedFile] = useState(null);
  const fileInputRef = React.useRef(null);
+ const [guestProfileImage, setGuestProfileImage] = useState(null);
+ const profileImageInputRef = React.useRef(null);
 
- const handleFileChange = (e) => {
- if (e.target.files && e.target.files.length > 0) {
- setSelectedFile(e.target.files[0]);
- }
+ const [cnicBase64, setCnicBase64] = useState(null);
+ const handleFileChange = async (e) => {
+   if (e.target.files && e.target.files.length > 0) {
+     const file = e.target.files[0];
+     setSelectedFile(file);
+     const compressed = await compressImage(file, 400, 0.6);
+     setCnicBase64(compressed);
+   }
  };
+
+ const compressImage = (file, maxWidth = 200, quality = 0.6) => {
+   return new Promise((resolve) => {
+     const reader = new FileReader();
+     reader.onloadend = () => {
+       const img = new Image();
+       img.onload = () => {
+         const canvas = document.createElement('canvas');
+         const scale = Math.min(1, maxWidth / img.width);
+         canvas.width = img.width * scale;
+         canvas.height = img.height * scale;
+         const ctx = canvas.getContext('2d');
+         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+         resolve(canvas.toDataURL('image/jpeg', quality));
+       };
+       img.src = reader.result;
+     };
+     reader.readAsDataURL(file);
+   });
+ };
+ const handleProfileImageChange = async (e) => {
+     if (e.target.files && e.target.files.length > 0) {
+       const file = e.target.files[0];
+       const compressed = await compressImage(file, 150, 0.5);
+       setGuestProfileImage(compressed);
+     }
+   };
 
  // Dummy list of already registered guests for the dropdown
  const registeredGuests = [
@@ -100,7 +133,7 @@ export default function AddReservation() {
   saveReservations([{
     id: nextId,
    name: `${formData.firstName} ${formData.lastName}`.trim() || 'New Guest',
-   avatar: 'https://i.pravatar.cc/150?img=1',
+   avatar: guestProfileImage || 'https://i.pravatar.cc/150?img=1',
    package: formData.purposeOfStay || 'Standard',
    room: selectedRoom?.number || '—',
    roomType: selectedRoom?.type || 'Not assigned',
@@ -112,8 +145,32 @@ export default function AddReservation() {
    mobile: formData.mobile,
  }, ...reservations]);
  if (selectedRoom) updateRoom(selectedRoom.sourceId, { status: 'Booked', mobile: formData.mobile });
- navigate('/reservation/all');
- };
+    // Save CNIC Document if uploaded
+    if (cnicBase64) {
+      const INITIAL_DOCS = [{"id":"DOC-1","formNo":"REG-2026-089","guest":"Kamran Akmal","idType":"CNIC","idNumber":"42101-1122334-1","room":"101","date":"2026-05-10","status":"Signed & Verified"},{"id":"DOC-2","formNo":"REG-2026-088","guest":"Cara Stevens","idType":"Passport","idNumber":"USA-9988221","room":"102","date":"2026-05-01","status":"Signed & Verified"},{"id":"DOC-3","formNo":"REG-2026-087","guest":"Airi Satou","idType":"Passport","idNumber":"JPN-4455112","room":"105","date":"2026-05-02","status":"Pending Signature"},{"id":"DOC-4","formNo":"REG-2026-086","guest":"Mahira Khan","idType":"CNIC","idNumber":"42201-6655443-2","room":"201","date":"2026-05-09","status":"Signed & Verified"},{"id":"DOC-5","formNo":"REG-2026-085","guest":"Jens Brincker","idType":"Passport","idNumber":"GER-8833119","room":"302","date":"2026-05-03","status":"Signed & Verified"},{"id":"DOC-6","formNo":"REG-2026-001","guest":"John Smith","idType":"Passport","idNumber":"USA-4491028","room":"101","date":"2026-05-20","status":"Signed & Verified"},{"id":"DOC-7","formNo":"REG-2026-002","guest":"Sarah Johnson","idType":"Passport","idNumber":"UK-8891002","room":"205","date":"2026-05-19","status":"Signed & Verified"}];
+      let storedDocs = [];
+      try {
+        const rawDocs = localStorage.getItem('hotel_registration_forms');
+        storedDocs = rawDocs ? JSON.parse(rawDocs) : INITIAL_DOCS;
+      } catch {
+        storedDocs = INITIAL_DOCS;
+      }
+      const newDoc = {
+        id: 'DOC-' + Date.now(),
+        formNo: 'REG-' + Date.now(),
+        guest: `${formData.firstName} ${formData.lastName}`.trim() || 'New Guest',
+        idType: 'CNIC',
+        idNumber: formData.idNumber || 'N/A',
+        room: selectedRoom?.number || 'N/A',
+        date: new Date().toISOString().split('T')[0],
+        status: 'Signed & Verified',
+        cnicImage: cnicBase64
+      };
+      try { localStorage.setItem('hotel_registration_forms', JSON.stringify([newDoc, ...storedDocs])); } catch(e) { console.warn("CNIC storage error", e); }
+    }
+
+    navigate('/reservation/all');
+   };
 
  const muiInputSx = {'& .MuiOutlinedInput-root': {
  borderRadius:'8px',
@@ -141,6 +198,31 @@ export default function AddReservation() {
  <div className="flex items-center gap-2">
  <Person sx={{ fontSize: 22, color:'#1b7f43' }} />
  <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Guest Information</h3>
+ </div>
+
+ {/* Upload Profile Field */}
+ <div className="flex items-center justify-center">
+   <input 
+     type="file" 
+     accept="image/*" 
+     className="hidden" 
+     id="profile-upload"
+     ref={profileImageInputRef} 
+     onChange={handleProfileImageChange} 
+   />
+   <label htmlFor="profile-upload" className="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 cursor-pointer overflow-hidden relative group">
+     {guestProfileImage ? (
+       <img src={guestProfileImage} alt="Profile" className="w-full h-full object-cover" />
+     ) : (
+       <Person className="text-gray-400" />
+     )}
+     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+       <span className="text-[10px] text-white font-medium text-center leading-tight">Upload</span>
+     </div>
+   </label>
+   <div className="text-xs text-gray-500 hidden sm:block ml-2">
+     Upload<br/>Profile
+   </div>
  </div>
  
  {/* Auto-fill Dropdown */}
@@ -253,27 +335,29 @@ export default function AddReservation() {
  <NoteAlt sx={{ fontSize: 22, color:'#1b7f43' }} />
  <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Additional Details</h3>
  </div>
- <div className="space-y-4">
+ <div className="flex items-center gap-3 flex-col space-y-4">
  <TextField label="Address" name="address" value={formData.address} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
  <TextField label="Special Requests (Dietary requirements, accessibility needs, etc.)" name="specialRequests" value={formData.specialRequests} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
  
  {/* File Upload Box */}
- <div 
- className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer bg-[#fafafa]"
- onClick={() => fileInputRef.current?.click()}
- >
  <input 
- type="file" 
- ref={fileInputRef} 
- onChange={handleFileChange} 
- className="hidden" 
+   type="file" 
+   ref={fileInputRef} 
+   onChange={handleFileChange} 
+   accept="image/*,.pdf"
+   className="hidden" 
+   id="cnic-upload"
  />
- <UploadFile className="text-gray-400 mb-2" sx={{ fontSize: 32 }} />
- <p className="text-sm font-semibold text-gray-700">Upload or drag and drop file here</p>
- <p className="text-xs text-gray-400 mt-1">
- {selectedFile ? <span className="text-[#1b7f43] font-medium">{selectedFile.name}</span> :'No file chosen'}
- </p>
- </div>
+ <label 
+   htmlFor="cnic-upload"
+   className="w-full border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer bg-[#fafafa]"
+ >
+   <UploadFile className="text-gray-400 mb-2" sx={{ fontSize: 32 }} />
+   <p className="text-sm font-semibold text-gray-700">Upload Your CNIC</p>
+   <p className="text-xs text-gray-400 mt-1">
+     {selectedFile ? <span className="text-[#1b7f43] font-medium">{selectedFile.name}</span> : 'No file chosen'}
+   </p>
+ </label>
 
  <TextField label="Note" name="note" value={formData.note} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
  </div>

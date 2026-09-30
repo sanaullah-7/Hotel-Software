@@ -206,37 +206,7 @@ export default function CurrentBookingsTable({
   };
 
   const openNewModal = () => {
-    setEditingId(null);
-    setForm({
-      firstName: '',
-      lastName: '',
-      email: '',
-      gender: '',
-      mobile: '',
-      city: '',
-      passport: '',
-      nationality: '',
-      checkIn: '',
-      checkOut: '',
-      package: 'All inclusive',
-      totalPerson: '1',
-      numRooms: '1',
-      roomType: 'Delux',
-      roomNo: '101',
-      arrivalTime: 'Morning',
-      purpose: 'Leisure',
-      paymentMethod: 'Paid',
-      discountCode: '',
-      bookingRef: '',
-      emergencyName: '',
-      emergencyPhone: '',
-      address: '',
-      specialRequests: '',
-      note: '',
-      avatar: '',
-      avatarFileName: ''
-    });
-    setIsBookingModalOpen(true);
+    navigate('/reservation/new');
   };
 
   const openEditModal = (booking) => {
