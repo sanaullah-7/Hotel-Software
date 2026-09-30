@@ -1,0 +1,3 @@
+/**
+ * # Physical hotel rooms.
+ */

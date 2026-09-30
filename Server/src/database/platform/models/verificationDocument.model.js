@@ -1,0 +1,3 @@
+/**
+ * # Hotel verification/registration documents.
+ */

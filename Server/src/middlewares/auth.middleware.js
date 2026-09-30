@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
 import ApiError from "../utils/apiError.js";
 import { ENV } from "../config/env.js";
-import Account from "../modules/accounts/account.model.js";
+import Account from "../database/platform/models/account.model.js";
 
 // Ye middleware karta kya hai?
 // "Ye user kaun hai?
