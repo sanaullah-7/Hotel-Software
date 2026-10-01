@@ -18,18 +18,24 @@ const MOCK_APPROVALS = [
 ];
 
 // Helper to get data from localStorage (shared if same domain, or just mock)
-const getLocalApprovals = () => {
-  const localData = localStorage.getItem('hotel_registration_requests');
-  if (localData) {
-    return JSON.parse(localData);
-  }
-  // If no local data, return empty array to show no dummy data
-  return [];
+
+const getSharedReqs = () => {
+  try {
+    const match = document.cookie.match(new RegExp('(^| )hotel_registration_requests=([^;]+)'));
+    if (match) return JSON.parse(decodeURIComponent(match[2]));
+  } catch(e) {}
+  return JSON.parse(localStorage.getItem('hotel_registration_requests') || '[]');
 };
 
-const saveLocalApprovals = (data) => {
-  localStorage.setItem('hotel_registration_requests', JSON.stringify(data));
+const setSharedReqs = (reqs) => {
+  const val = JSON.stringify(reqs);
+  localStorage.setItem('hotel_registration_requests', val);
+  document.cookie = "hotel_registration_requests=" + encodeURIComponent(val) + "; path=/; max-age=31536000";
 };
+
+const getLocalApprovals = () => getSharedReqs();
+
+const saveLocalApprovals = (data) => setSharedReqs(data);
 
 export const ApprovalService = {
   async getApprovals({ status = '', page = 1, limit = 10, search = '' } = {}) {

@@ -6,6 +6,22 @@ import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButt
 import { Visibility, VisibilityOff, Email, Lock, Hotel, AccessTime, ArrowBack } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
+
+// Cross-port shared storage helper
+const getSharedReqs = () => {
+  try {
+    const match = document.cookie.match(new RegExp('(^| )hotel_registration_requests=([^;]+)'));
+    if (match) return JSON.parse(decodeURIComponent(match[2]));
+  } catch(e) {}
+  return JSON.parse(localStorage.getItem('hotel_registration_requests') || '[]');
+};
+
+const setSharedReqs = (reqs) => {
+  const val = JSON.stringify(reqs);
+  localStorage.setItem('hotel_registration_requests', val);
+  document.cookie = "hotel_registration_requests=" + encodeURIComponent(val) + "; path=/; max-age=31536000";
+};
+
 export default function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
@@ -28,7 +44,7 @@ export default function Login() {
     const cleanPassword = password.trim();
 
     // Check hotel_registration_requests from localStorage
-    const reqs = JSON.parse(localStorage.getItem('hotel_registration_requests') || '[]');
+    const reqs = getSharedReqs();
     const userReq = reqs.find(r => r.managerEmail && r.managerEmail.toLowerCase() === cleanEmail && r.password === cleanPassword);
 
     if (userReq) {
