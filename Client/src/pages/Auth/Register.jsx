@@ -20,6 +20,7 @@ export default function Register() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  
   const handleRegister = (e) => {
     e.preventDefault();
     if (formData.hotelName) {
@@ -28,9 +29,29 @@ export default function Register() {
     if (formData.fullName) {
       localStorage.setItem('fullName', formData.fullName);
     }
+    
+    // Create new registration request
+    const existingReqs = JSON.parse(localStorage.getItem('hotel_registration_requests') || '[]');
+    const newReq = {
+      id: 'req-' + Date.now(),
+      hotelName: formData.hotelName,
+      managerName: formData.fullName,
+      managerEmail: formData.email,
+      password: formData.password, // Only for frontend simulation
+      status: 'PENDING',
+      registeredAt: new Date().toISOString().split('T')[0],
+      totalRooms: 100, // Default for mock
+      subscriptionPlan: 'STANDARD',
+      city: 'Unknown',
+      phone: 'Unknown'
+    };
+    existingReqs.push(newReq);
+    localStorage.setItem('hotel_registration_requests', JSON.stringify(existingReqs));
+
     // Redirect to login or dashboard
-    navigate('/login');
+    navigate('/login', { state: { registeredEmail: formData.email } });
   };
+
 
   return (
     <div className="h-screen w-full flex items-center justify-center relative overflow-hidden bg-gray-900">
