@@ -23,9 +23,8 @@ const getLocalApprovals = () => {
   if (localData) {
     return JSON.parse(localData);
   }
-  // If no local data, seed it with mock
-  localStorage.setItem('hotel_registration_requests', JSON.stringify(MOCK_APPROVALS));
-  return MOCK_APPROVALS;
+  // If no local data, return empty array to show no dummy data
+  return [];
 };
 
 const saveLocalApprovals = (data) => {
