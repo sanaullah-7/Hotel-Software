@@ -46,7 +46,18 @@ export default function Register() {
       phone: 'Unknown'
     };
     existingReqs.push(newReq);
-    localStorage.setItem('hotel_registration_requests', JSON.stringify(existingReqs));
+    
+    try {
+      localStorage.setItem('hotel_registration_requests', JSON.stringify(existingReqs));
+    } catch (err) {
+      console.warn("Storage quota exceeded, trying to free space by keeping only the latest request...");
+      try {
+        localStorage.setItem('hotel_registration_requests', JSON.stringify([newReq]));
+      } catch (err2) {
+        alert("Browser storage is completely full from previous test images/bookings. To continue testing, please clear your browser local storage (F12 -> Application -> Local Storage -> Clear).");
+        return;
+      }
+    }
 
     // Redirect to login or dashboard
     navigate('/login', { state: { registeredEmail: formData.email } });
