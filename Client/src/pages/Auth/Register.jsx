@@ -2,7 +2,7 @@ import authBg from '../../assets/images/auth-bg.webp';
 import authCardBg from '../../assets/images/authcard.webp';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton } from '@mui/material';
+import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton, Snackbar, Alert } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock, Person, Business } from '@mui/icons-material';
 
 
@@ -24,6 +24,8 @@ const setSharedReqs = (reqs) => {
 export default function Register() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [successMsg, setSuccessMsg] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -39,6 +41,16 @@ export default function Register() {
   
   const handleRegister = (e) => {
     e.preventDefault();
+    setEmailError('');
+    
+    const existingReqs = getSharedReqs();
+    
+    // 1. Check if email already exists
+    if (existingReqs.some(req => req.managerEmail && req.managerEmail.toLowerCase() === formData.email.trim().toLowerCase())) {
+      setEmailError('Email already exists');
+      return;
+    }
+    
     if (formData.hotelName) {
       localStorage.setItem('hotelName', formData.hotelName);
     }
@@ -47,7 +59,6 @@ export default function Register() {
     }
     
     // Create new registration request
-    const existingReqs = getSharedReqs();
     const newReq = {
       id: 'req-' + Date.now(),
       hotelName: formData.hotelName,
@@ -75,8 +86,11 @@ export default function Register() {
       }
     }
 
-    // Redirect to login or dashboard
-    navigate('/login', { state: { registeredEmail: formData.email } });
+    // 2. Show success popup and delay navigation
+    setSuccessMsg(true);
+    setTimeout(() => {
+      navigate('/login', { state: { registeredEmail: formData.email } });
+    }, 4000);
   };
 
 
@@ -184,9 +198,7 @@ export default function Register() {
                 }}
                 variant="outlined"
                 placeholder="you@example.com"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
+                name="email" value={formData.email} onChange={handleChange} error={!!emailError} helperText={emailError}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -333,8 +345,14 @@ export default function Register() {
             </Button>
           </form>
         </div>
-      </div>
-          </div>
+          {/* Success Toast */}
+      <Snackbar open={successMsg} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity="success" sx={{ width: '100%', mb: 2, fontSize: '15px' }} variant="filled">
+          Registration is pending, your request has been sent to the admin. After approval, you can login.
+        </Alert>
+      </Snackbar>
     </div>
+  </div>
+</div>
   );
 }

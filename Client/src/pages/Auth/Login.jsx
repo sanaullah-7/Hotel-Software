@@ -53,6 +53,10 @@ export default function Login() {
         return;
       } else if (userReq.status === 'APPROVED') {
         setError('');
+        // Update hotelName for Sidebar
+        if (userReq.hotelName) localStorage.setItem('hotelName', userReq.hotelName);
+        if (userReq.managerName) localStorage.setItem('fullName', userReq.managerName);
+        
         login({
           email: userReq.managerEmail,
           role: 'Admin',
@@ -65,6 +69,7 @@ export default function Login() {
 
     if (cleanEmail === 'admin@hotel.com' && cleanPassword === 'admin123') {
       setError('');
+      localStorage.setItem('hotelName', 'Luxuria Hotel');
       login({
         email: 'admin@hotel.com',
         role: 'Admin',
