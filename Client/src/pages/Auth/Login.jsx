@@ -115,7 +115,6 @@ export default function Login() {
           </button>
         </div>
       ) : (
-      {/* Main Card */}
       <div className="z-10 flex w-[95%] max-w-[1000px] h-[90vh] max-h-[700px] bg-black rounded-2xl shadow-2xl overflow-hidden border border-white/40 ring-1 ring-white/20">
 
       {/* Left Form Side */}
