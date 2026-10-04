@@ -11,6 +11,7 @@ import {
 } from '@mui/icons-material';
 import StatusBadge from '../../../components/common/StatusBadge';
 import { statusStyles, paymentStyles } from '../../../features/reservations/components/ReservationTable';
+import { toStandardRoomType } from '../../../features/rooms/state/roomStore';
 import {
   getBookingDues,
   getCanonicalBookingPaymentStatus,
@@ -102,131 +103,118 @@ export default function BookingsGridTable({
       return;
     }
 
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!menuRef.current) return;
-      const items = Array.from(
-        menuRef.current.querySelectorAll('[role="menuitem"]:not([disabled])')
-      );
-      if (items.length === 0) return;
-      const currentIndex = items.indexOf(document.activeElement);
-      if (currentIndex === -1) {
-        items[0].focus({ preventScroll: true });
-      } else if (e.key === 'ArrowDown') {
-        const nextIndex = (currentIndex + 1) % items.length;
-        items[nextIndex].focus({ preventScroll: true });
-      } else if (e.key === 'ArrowUp') {
-        const prevIndex = (currentIndex - 1 + items.length) % items.length;
-        items[prevIndex].focus({ preventScroll: true });
-      }
-      return;
-    }
+    if (!menuRef.current) return;
+    const items = Array.from(
+      menuRef.current.querySelectorAll('[role="menuitem"]:not([disabled])')
+    );
+    if (items.length === 0) return;
 
-    if (e.key === 'Home') {
-      e.preventDefault();
-      if (!menuRef.current) return;
-      const items = Array.from(
-        menuRef.current.querySelectorAll('[role="menuitem"]:not([disabled])')
-      );
-      if (items.length > 0) items[0].focus({ preventScroll: true });
-      return;
-    }
+    const currentIndex = items.indexOf(document.activeElement);
 
-    if (e.key === 'End') {
+    if (e.key === 'ArrowDown') {
       e.preventDefault();
-      if (!menuRef.current) return;
-      const items = Array.from(
-        menuRef.current.querySelectorAll('[role="menuitem"]:not([disabled])')
-      );
-      if (items.length > 0) items[items.length - 1].focus({ preventScroll: true });
-      return;
+      const nextIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
+      items[nextIndex].focus();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const prevIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
+      items[prevIndex].focus();
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      items[0].focus();
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      items[items.length - 1].focus();
     }
   };
 
   const handleTriggerKeyDown = (e, bookingId) => {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      if (activeMenuId !== bookingId) {
-        toggleMenu(e, bookingId);
-      }
-    } else if (e.key === 'Escape' && activeMenuId === bookingId) {
-      e.preventDefault();
-      e.stopPropagation();
-      setActiveMenuId(null);
+      setActiveMenuId(bookingId);
     }
   };
 
   return (
-    <div className="w-full max-lg:overflow-x-auto lg:overflow-x-hidden min-w-0">
-      <table className="w-full text-left border-collapse table-fixed max-lg:min-w-[850px]">
+    <div className="w-full overflow-hidden">
+      <table className="w-full table-fixed text-left border-collapse">
         <colgroup>
-          <col style={{ width: '14%' }} />
-          <col style={{ width: '6%' }} />
-          <col style={{ width: '10%' }} />
-          <col style={{ width: '9%' }} />
-          <col style={{ width: '9%' }} />
-          <col style={{ width: '10%' }} />
-          <col style={{ width: '10%' }} />
-          <col style={{ width: '9%' }} />
-          <col style={{ width: '7%' }} />
-          <col style={{ width: '10%' }} />
-          <col style={{ width: '6%' }} />
+          <col className="w-[13%]" />
+          <col className="w-[5.5%]" />
+          <col className="w-[9.5%]" />
+          <col className="w-[8%]" />
+          <col className="w-[9%]" />
+          <col className="w-[10.5%]" />
+          <col className="w-[10.5%]" />
+          <col className="w-[9%]" />
+          <col className="w-[7%]" />
+          <col className="w-[10.5%]" />
+          <col className="w-[7.5%]" />
         </colgroup>
         <thead>
-          <tr className="border-b border-gray-100 bg-gray-50/50">
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Name</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Room</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Room Type</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Package</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Status</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Check In</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Check Out</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Payment</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Dues</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide whitespace-nowrap">Mobile</th>
-            <th className="py-2.5 px-2 text-[11px] font-bold text-gray-600 uppercase tracking-wide text-center whitespace-nowrap">Actions</th>
+          <tr className="border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none bg-slate-50/50">
+            <th className="py-2 px-1.5 truncate">Name</th>
+            <th className="py-2 px-1.5 truncate">Room</th>
+            <th className="py-2 px-1.5 truncate">Room Type</th>
+            <th className="py-2 px-1.5 truncate">Package</th>
+            <th className="py-2 px-1.5 truncate">Status</th>
+            <th className="py-2 px-1.5 truncate">Check In</th>
+            <th className="py-2 px-1.5 truncate">Check Out</th>
+            <th className="py-2 px-1.5 truncate">Payment</th>
+            <th className="py-2 px-1.5 truncate">Dues</th>
+            <th className="py-2 px-1.5 truncate">Mobile</th>
+            <th className="py-2 px-1 text-center whitespace-nowrap">Action</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-gray-50 text-[11px]">
           {filteredBookings.map((booking) => (
             <tr
               key={booking.id}
               onClick={() => handleRowClick(booking)}
-              className="border-b border-gray-50 hover:bg-gray-50/60 transition-colors cursor-pointer"
               title="Click to view Guest Profile"
+              className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
             >
-              {/* Name */}
-              <td className="py-2.5 px-2">
+              {/* Name & Avatar */}
+              <td className="py-1.5 px-1.5">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <img
-                    src={booking.avatar}
-                    alt="Avatar"
-                    className="w-7 h-7 rounded-full object-cover shadow-xs shrink-0"
+                    src={booking.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&auto=format&fit=crop&q=80'}
+                    alt={booking.name || 'Guest'}
+                    className="w-5 h-5 rounded-full object-cover border border-gray-200 shrink-0"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&auto=format&fit=crop&q=80';
+                    }}
                   />
-                  <span
-                    className="text-[12px] text-gray-800 font-bold hover:text-[#1b7f43] transition-colors truncate"
-                  >
+                  <span className="font-semibold text-gray-800 text-[11px] truncate block" title={booking.name}>
                     {booking.name}
                   </span>
                 </div>
               </td>
 
               {/* Room */}
-              <td className="py-2.5 px-2">
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-bold bg-gray-100 text-gray-800 border border-gray-200 whitespace-nowrap">
+              <td className="py-1.5 px-1.5">
+                <span className="inline-block px-1 py-0.5 bg-gray-100 rounded text-[10px] font-bold text-gray-800 border border-gray-200/60 font-mono whitespace-nowrap">
                   {booking.roomNo || booking.room || '101'}
                 </span>
               </td>
 
               {/* Room Type */}
-              <td className="py-2.5 px-2 text-[11.5px] text-gray-600">{booking.roomType}</td>
+              <td className="py-1.5 px-1.5">
+                <span className="text-[10.5px] text-gray-600 truncate block" title={toStandardRoomType(booking.roomType)}>
+                  {toStandardRoomType(booking.roomType)}
+                </span>
+              </td>
 
               {/* Package */}
-              <td className="py-2.5 px-2 text-[11.5px] text-gray-600">{booking.package}</td>
+              <td className="py-1.5 px-1.5">
+                <span className="text-[10.5px] text-gray-600 truncate block" title={booking.package || 'Standard'}>
+                  {booking.package || 'Standard'}
+                </span>
+              </td>
 
               {/* Status */}
-              <td className="py-2.5 px-2">
+              <td className="py-1.5 px-1.5">
                 <StatusBadge
                   status={booking.status}
                   stylesMap={statusStyles}
@@ -235,33 +223,31 @@ export default function BookingsGridTable({
               </td>
 
               {/* Check In */}
-              <td className="py-2.5 px-2 text-[11px] text-gray-600">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1 whitespace-nowrap text-gray-800 font-medium">
-                    <CalendarTodayOutlined sx={{ fontSize: 11 }} className="text-gray-400" />
+              <td className="py-1.5 px-1.5">
+                <div className="flex flex-col min-w-0 leading-tight">
+                  <span className="text-[10px] text-gray-800 font-medium whitespace-nowrap truncate" title={booking.checkIn}>
                     {booking.checkIn}
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-normal pl-3.5">
+                  </span>
+                  <span className="text-[9px] text-gray-400 font-normal whitespace-nowrap truncate" title={booking.checkInTime || '02:00 PM'}>
                     {booking.checkInTime || '02:00 PM'}
                   </span>
                 </div>
               </td>
 
               {/* Check Out */}
-              <td className="py-2.5 px-2 text-[11px] text-gray-600">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-1 whitespace-nowrap text-gray-800 font-medium">
-                    <CalendarTodayOutlined sx={{ fontSize: 11 }} className="text-gray-400" />
+              <td className="py-1.5 px-1.5">
+                <div className="flex flex-col min-w-0 leading-tight">
+                  <span className="text-[10px] text-gray-800 font-medium whitespace-nowrap truncate" title={booking.checkOut}>
                     {booking.checkOut}
-                  </div>
-                  <span className="text-[10px] text-gray-400 font-normal pl-3.5">
+                  </span>
+                  <span className="text-[9px] text-gray-400 font-normal whitespace-nowrap truncate" title={booking.checkOutTime || '11:00 AM'}>
                     {booking.checkOutTime || '11:00 AM'}
                   </span>
                 </div>
               </td>
 
               {/* Payment */}
-              <td className="py-2.5 px-2">
+              <td className="py-1.5 px-1.5">
                 {financialStatusMap[booking.id] !== null && financialStatusMap[booking.id] !== undefined ? (
                   <StatusBadge
                     status={financialStatusMap[booking.id]}
@@ -269,32 +255,33 @@ export default function BookingsGridTable({
                     size="xs"
                   />
                 ) : (
-                  <span className="text-gray-400 text-[10px]">—</span>
+                  <span className="text-gray-400 text-[10px] whitespace-nowrap">—</span>
                 )}
               </td>
 
               {/* Dues */}
-              <td className="py-2.5 px-2 text-[11.5px] font-semibold">
+              <td className="py-1.5 px-1.5 font-semibold">
                 {(() => {
                   const duesAmt = getBookingDues(booking);
-                  return duesAmt === null ? <span className="text-amber-600">Unverified</span> : duesAmt > 0 ? (
-                    <span className="text-red-600 font-bold">${duesAmt.toLocaleString()}</span>
+                  return duesAmt === null ? (
+                    <span className="text-amber-600 text-[10px] font-medium whitespace-nowrap">Unverified</span>
+                  ) : duesAmt > 0 ? (
+                    <span className="text-red-600 font-bold text-[10.5px] whitespace-nowrap">${duesAmt.toLocaleString()}</span>
                   ) : (
-                    <span className="text-gray-400 font-normal">$0</span>
+                    <span className="text-gray-400 font-normal text-[10.5px] whitespace-nowrap">$0</span>
                   );
                 })()}
               </td>
 
               {/* Mobile */}
-              <td className="py-2.5 px-2 text-[11px] text-gray-600">
-                <div className="flex items-center gap-1 whitespace-nowrap">
-                  <PhoneOutlined sx={{ fontSize: 11 }} className="text-emerald-500" />
+              <td className="py-1.5 px-1.5">
+                <span className="text-[10px] text-gray-600 whitespace-nowrap font-mono truncate block" title={booking.mobile}>
                   {booking.mobile}
-                </div>
+                </span>
               </td>
 
               {/* Actions */}
-              <td className="py-2.5 px-2 text-center relative" onClick={(e) => e.stopPropagation()}>
+              <td className="py-1.5 px-1.5 text-center relative" onClick={(e) => e.stopPropagation()}>
                 <button
                   id={`booking-actions-trigger-${booking.id}`}
                   onClick={(e) => toggleMenu(e, booking.id)}
@@ -303,9 +290,9 @@ export default function BookingsGridTable({
                   aria-haspopup="menu"
                   aria-expanded={activeMenuId === booking.id}
                   aria-controls={activeMenuId === booking.id ? `booking-actions-menu-${booking.id}` : undefined}
-                  className="text-gray-600 hover:bg-gray-100 rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors cursor-pointer"
+                  className="text-gray-600 hover:bg-gray-100 rounded-full w-5 h-5 flex items-center justify-center mx-auto transition-colors cursor-pointer"
                 >
-                  <MoreHoriz sx={{ fontSize: 18 }} />
+                  <MoreHoriz sx={{ fontSize: 15 }} />
                 </button>
 
                 {activeMenuId === booking.id && (
@@ -315,58 +302,57 @@ export default function BookingsGridTable({
                     role="menu"
                     aria-labelledby={`booking-actions-trigger-${booking.id}`}
                     onKeyDown={(e) => handleMenuKeyDown(e, booking.id)}
-                    className="absolute right-3 top-9 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-lg border border-gray-100 z-50 py-1.5 w-40 animate-fade-in text-left"
+                    className="absolute right-1 top-7 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-lg border border-gray-100 z-50 py-1.5 w-36 animate-fade-in text-left"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       role="menuitem"
                       tabIndex={-1}
                       onClick={() => { setActiveMenuId(null); openViewModal(booking); }}
-                      className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
+                      className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-xs text-gray-700 font-medium cursor-pointer"
                     >
-                      <SubjectOutlined className="text-[#10b981]" sx={{ fontSize: 16 }} /> View Details
+                      <SubjectOutlined className="text-[#10b981]" sx={{ fontSize: 14 }} /> View Details
                     </button>
                     <button
                       role="menuitem"
                       tabIndex={-1}
                       onClick={() => { setActiveMenuId(null); openEditModal(booking); }}
-                      className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
+                      className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-xs text-gray-700 font-medium cursor-pointer"
                     >
-                      <EditOutlined className="text-[#6366f1]" sx={{ fontSize: 16 }} /> Edit Booking
+                      <EditOutlined className="text-[#6366f1]" sx={{ fontSize: 14 }} /> Edit Booking
                     </button>
                     <button
                       role="menuitem"
                       tabIndex={-1}
                       onClick={() => { setActiveMenuId(null); confirmDelete(booking); }}
-                      className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
+                      className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-xs text-gray-700 font-medium cursor-pointer"
                     >
-                      <DeleteOutlined className="text-[#ef4444]" sx={{ fontSize: 16 }} /> Delete
+                      <DeleteOutlined className="text-[#ef4444]" sx={{ fontSize: 14 }} /> Delete
                     </button>
                     <button
                       role="menuitem"
                       tabIndex={-1}
                       onClick={() => { setActiveMenuId(null); handleCheckout(booking.id); }}
-                      className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
+                      className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-xs text-gray-700 font-medium cursor-pointer"
                     >
-                      <LogoutOutlined className="text-[#64748b]" sx={{ fontSize: 16 }} /> Check Out
+                      <LogoutOutlined className="text-[#64748b]" sx={{ fontSize: 14 }} /> Check Out
                     </button>
                     <button
                       role="menuitem"
                       tabIndex={-1}
                       onClick={() => { setActiveMenuId(null); confirmCancel(booking); }}
-                      className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2.5 text-[12px] text-gray-700 font-medium cursor-pointer"
+                      className="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center gap-2 text-xs text-gray-700 font-medium cursor-pointer"
                     >
-                      <CancelOutlined className="text-[#64748b]" sx={{ fontSize: 16 }} /> Cancel Booking
+                      <CancelOutlined className="text-[#64748b]" sx={{ fontSize: 14 }} /> Cancel Booking
                     </button>
                   </div>
                 )}
               </td>
             </tr>
           ))}
-
           {filteredBookings.length === 0 && (
             <tr>
-              <td colSpan={11} className="py-8 text-center text-gray-400 text-xs">
+              <td colSpan={11} className="py-7 text-center text-gray-400 text-xs">
                 No bookings found matching criteria.
               </td>
             </tr>

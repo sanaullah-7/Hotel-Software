@@ -22,7 +22,12 @@ function computePendingPayments() {
   let count = 0;
   for (const inv of invoices) {
     const state = getInvoiceFinancialState(inv.id || inv.invoiceNumber);
-    if (state.integrity === 'verified' && state.due > 0.005) count++;
+    if (state.integrity === 'verified') {
+      if (state.due > 0.005) count++;
+    } else {
+      const balance = Number(inv.balanceDue ?? (Number(inv.totalAmount || 0) - Number(inv.paidAmount || 0)));
+      if (balance > 0.005 && inv.status !== 'Paid') count++;
+    }
   }
   return count;
 }
@@ -51,20 +56,22 @@ export default function DashboardRoomStatus({
     refreshPending();
   }, [refreshPending]);
 
-  // Job 23: refresh on canonical financial mutations
+  // Refresh on canonical financial mutations & storage
   useEffect(() => {
     window.addEventListener(INVOICES_UPDATED_EVENT, refreshPending);
     window.addEventListener(PAYMENTS_UPDATED_EVENT, refreshPending);
     window.addEventListener(REFUNDS_UPDATED_EVENT, refreshPending);
+    window.addEventListener('storage', refreshPending);
     return () => {
       window.removeEventListener(INVOICES_UPDATED_EVENT, refreshPending);
       window.removeEventListener(PAYMENTS_UPDATED_EVENT, refreshPending);
       window.removeEventListener(REFUNDS_UPDATED_EVENT, refreshPending);
+      window.removeEventListener('storage', refreshPending);
     };
   }, [refreshPending]);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
       <KPICard
         title="Rooms Dirty"
         value={dirtyCount}

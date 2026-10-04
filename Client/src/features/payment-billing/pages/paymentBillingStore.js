@@ -333,6 +333,26 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
     amount,
   });
 
+  // Synchronize reservation payment status in hotel_reservations
+  if (targetInvoice.bookingId) {
+    try {
+      const rawBookings = localStorage.getItem('hotel_reservations');
+      if (rawBookings) {
+        const bookingsList = JSON.parse(rawBookings);
+        if (Array.isArray(bookingsList)) {
+          const updatedBookingsList = bookingsList.map((b) => {
+            if (String(b.id) === String(targetInvoice.bookingId) || String(b.bookingId) === String(targetInvoice.bookingId)) {
+              return { ...b, payment: nextStatus };
+            }
+            return b;
+          });
+          localStorage.setItem('hotel_reservations', JSON.stringify(updatedBookingsList));
+          window.dispatchEvent(new Event('reservations_update'));
+        }
+      }
+    } catch {}
+  }
+
   try {
     addAuditLog({
       module: 'Payment & Billing',
@@ -1797,7 +1817,9 @@ export const getOrCreateBookingInvoice = (bookingId) => {
     roomType: roomTypeName,
     checkIn: String(booking.checkIn).trim(),
     checkOut: String(booking.checkOut).trim(),
-    issueDate: String(booking.checkIn).trim() || new Date().toISOString().split('T')[0],
+    date: new Date().toISOString().split('T')[0],
+    createdAt: new Date().toISOString().split('T')[0],
+    issueDate: new Date().toISOString().split('T')[0],
     dueDate: String(booking.checkOut).trim() || new Date().toISOString().split('T')[0],
     currency: 'USD',
     subtotal: totalBase,

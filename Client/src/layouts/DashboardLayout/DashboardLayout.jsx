@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }) {
         <Topbar onMobileNavToggle={() => setMobileOpen((prev) => !prev)} />
 
         {/* Page Content Wrapper */}
-        <div className="flex-1 min-h-0 px-1.5 sm:px-3 pb-2 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 min-h-0 px-1.5 sm:px-2.5 pb-1 overflow-y-auto overflow-x-hidden">
           {children}
         </div>
       </main>

@@ -470,11 +470,11 @@ export default function AllEvents() {
   ];
 
   return (
-    <div className="assigned-form-surface w-full p-0">
+    <div className="w-full space-y-2.5 pb-3 flex flex-col">
       <EventSummaryCards cards={eventCards} />
 
       {/* Main Card Container */}
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xs border border-gray-100 overflow-hidden">
         {/* Toolbar */}
         <EventToolbar
           searchQuery={searchQuery}

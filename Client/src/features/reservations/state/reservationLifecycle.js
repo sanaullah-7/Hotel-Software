@@ -46,24 +46,54 @@ function isOperationalOccupancyBlock(occupancy) {
 
 export function getRoomAvailability(room, checkIn, checkOut, bookings = getReservations(), excludeBookingId) {
   if (!room || room.id === undefined || room.id === null) return { available: false, reason: 'Room is not a canonical inventory room.' };
-  try { validateStayDates(checkIn, checkOut); } catch (error) { return { available: false, reason: error.message }; }
   const inventoryStatus = String(room.status || '').trim().toLowerCase();
+  if (['inactive', 'maintenance', 'out of order'].includes(inventoryStatus)) {
+    return { available: false, reason: `Room ${roomNumber(room)} is currently under maintenance or inactive.` };
+  }
   if (!['open', 'booked', 'available'].includes(inventoryStatus)) {
     return { available: false, reason: `Room ${roomNumber(room)} is not operationally available.` };
   }
-  const hasBookingConflict = bookings.some((booking) =>
-    String(booking.id) !== String(excludeBookingId ?? '') &&
-    String(booking.roomId ?? '') === String(room.id) &&
-    isRoomBlockingBooking(booking) &&
-    hasBookingDateOverlap(booking, checkIn, checkOut)
-  );
-  if (hasBookingConflict) return { available: false, reason: `Room ${roomNumber(room)} is booked for overlapping dates.` };
 
-  const occupancyConflict = readOccupancyRooms().some((occupancy) =>
-    occupancyRoomMatches(occupancy, room) &&
-    isOperationalOccupancyBlock(occupancy) &&
-    String(occupancy.bookingId || '') !== String(excludeBookingId ?? '')
-  );
+  if (checkIn && checkOut) {
+    try { 
+      validateStayDates(checkIn, checkOut); 
+    } catch (error) { 
+      return { available: false, reason: error.message }; 
+    }
+    const hasBookingConflict = bookings.some((booking) =>
+      String(booking.id) !== String(excludeBookingId ?? '') &&
+      String(booking.roomId ?? '') === String(room.id) &&
+      isRoomBlockingBooking(booking) &&
+      hasBookingDateOverlap(booking, checkIn, checkOut)
+    );
+    if (hasBookingConflict) return { available: false, reason: `Room ${roomNumber(room)} is booked for overlapping dates.` };
+  } else {
+    const hasBookingConflict = bookings.some((booking) =>
+      String(booking.id) !== String(excludeBookingId ?? '') &&
+      String(booking.roomId ?? '') === String(room.id) &&
+      isRoomBlockingBooking(booking)
+    );
+    if (inventoryStatus === 'booked' && hasBookingConflict) {
+      return { available: false, reason: `Room ${roomNumber(room)} is currently booked.` };
+    }
+  }
+
+  const occupancyList = readOccupancyRooms();
+  const occupancyConflict = occupancyList.some((occupancy) => {
+    if (!occupancyRoomMatches(occupancy, room)) return false;
+    const occStatus = String(occupancy.status || '').trim().toUpperCase();
+    if (['MAINTENANCE', 'OUT OF ORDER', 'INACTIVE'].includes(occStatus)) return true;
+    if (['CLEANING', 'DIRTY'].includes(occStatus)) {
+      if (excludeBookingId) {
+        return Boolean(occupancy.bookingId && String(occupancy.bookingId) !== String(excludeBookingId));
+      }
+      return true;
+    }
+    if (['OCCUPIED', 'BOOKED', 'RESERVED'].includes(occStatus)) {
+      return String(occupancy.bookingId || '') !== String(excludeBookingId ?? '');
+    }
+    return false;
+  });
   if (occupancyConflict) return { available: false, reason: `Room ${roomNumber(room)} has an active operational hold.` };
   return { available: true, reason: '' };
 }
@@ -165,7 +195,40 @@ export function saveBookingsWithRoomState(bookings, roomIds = []) {
     const status = roomOperationalStatus(room, bookings, occupancy);
     return room.status === status ? room : { ...room, status };
   });
-  commitLifecycleState({ bookings, rooms: changedRooms });
+
+  const baseOccupancy = occupancy.length ? [...occupancy] : rooms.map((r) => ({
+    number: Number(r.roomNo) || r.roomNo,
+    roomId: r.id,
+    type: r.roomType,
+    status: r.status === 'Booked' ? 'BOOKED' : (r.status === 'Inactive' ? 'INACTIVE' : 'AVAILABLE'),
+    statusColor: r.status === 'Booked' ? '#f59e0b' : '#1b7f43'
+  }));
+
+  const updatedOccupancy = baseOccupancy.map((record) => {
+    const canonicalRoom = rooms.find((r) => occupancyRoomMatches(record, r));
+    if (!canonicalRoom) return record;
+    const matchingBooking = bookings.find((b) =>
+      String(b.roomId || '') === String(canonicalRoom.id) && isRoomBlockingBooking(b)
+    );
+    if (matchingBooking) {
+      return {
+        ...record,
+        roomId: canonicalRoom.id,
+        bookingId: matchingBooking.id,
+        status: matchingBooking.status === 'Checked In' ? 'OCCUPIED' : 'BOOKED',
+        statusColor: matchingBooking.status === 'Checked In' ? '#ef4444' : '#f59e0b',
+        guest: {
+          ...(record.guest || {}),
+          name: matchingBooking.name,
+          checkIn: matchingBooking.checkIn,
+          checkOut: matchingBooking.checkOut
+        }
+      };
+    }
+    return record;
+  });
+
+  commitLifecycleState({ bookings, rooms: changedRooms, occupancyRooms: updatedOccupancy.length ? updatedOccupancy : undefined });
   return bookings;
 }
 
@@ -283,7 +346,12 @@ export function checkOutBooking(bookingId) {
   const nextOccupancy = occupancy.map((record) => active.includes(record)
     ? { ...record, status: 'AVAILABLE', statusColor: '#1b7f43', bookingId: '', guestId: '', checkIn: '', checkOut: '', guest: null }
     : record);
-  const nextBookings = bookings.map((item) => String(item.id) === String(booking.id) ? { ...item, status: 'Checked Out' } : item);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const nextBookings = bookings.map((item) =>
+    String(item.id) === String(booking.id)
+      ? { ...item, status: 'Checked Out', checkedOutAt: todayStr, checkoutDate: todayStr }
+      : item
+  );
   const nextRooms = getRooms().map((item) => String(item.id) === String(room.id)
     ? { ...item, status: roomOperationalStatus(item, nextBookings, nextOccupancy) }
     : item);

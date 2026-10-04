@@ -16,7 +16,7 @@ describe('CancelledBookings Canonical Alignment (Phase 7 Job 9)', () => {
         id: 101,
         name: 'Carlos Santana',
         package: 'All inclusive',
-        roomType: 'Delux',
+        roomType: 'Deluxe Room',
         status: 'Cancelled',
         checkIn: '2026-10-01',
         payment: 'Paid',
@@ -32,7 +32,7 @@ describe('CancelledBookings Canonical Alignment (Phase 7 Job 9)', () => {
     );
 
     expect(screen.getByText('Carlos Santana')).toBeTruthy();
-    expect(screen.getByText('Delux')).toBeTruthy();
+    expect(screen.getByText('Deluxe Room')).toBeTruthy();
     expect(screen.getAllByText('Cancelled').length).toBeGreaterThan(0);
   });
 

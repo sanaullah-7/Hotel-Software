@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import Pagination from '@mui/material/Pagination';
 import PaginationItem from '@mui/material/PaginationItem';
 import Stack from '@mui/material/Stack';
@@ -14,14 +14,15 @@ export default function CustomPagination({ totalItems, page, onPageChange }) {
   const endCount = Math.min(page * itemsPerPage, totalItems);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 pb-2 text-xs sm:text-sm text-slate-600 mt-2">
-      <span className="text-slate-500 font-medium ml-2">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2.5 pb-1 text-[11.5px] text-slate-600 mt-1">
+      <span className="text-slate-500 font-medium ml-1">
         Showing {startCount} to {endCount} of {totalItems} entries
       </span>
-      <Stack spacing={2} className="mr-2">
+      <Stack spacing={1} className="mr-1">
         <Pagination
           count={count}
           page={page}
+          size="small"
           onChange={onPageChange}
           color="primary"
           shape="rounded"
@@ -29,6 +30,7 @@ export default function CustomPagination({ totalItems, page, onPageChange }) {
             <PaginationItem
               slots={{ previous: ArrowBackIcon, next: ArrowForwardIcon }}
               {...item}
+              sx={{ minWidth: '26px', height: '26px', fontSize: '11px' }}
             />
           )}
           sx={{

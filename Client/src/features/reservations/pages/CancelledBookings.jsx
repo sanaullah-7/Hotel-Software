@@ -17,6 +17,7 @@ import {
   RESERVATIONS_UPDATED_EVENT
 } from '../state/reservationStore';
 import { normalizeBookingStatus } from '../state/bookingRules';
+import { toStandardRoomType } from '../../rooms/state/roomStore';
 
 const statusStyles = {
   Cancelled: 'bg-orange-100 text-orange-500'
@@ -290,114 +291,116 @@ export default function CancelledBookings() {
   };
 
   return (
-    <div className="w-full h-full flex flex-col pt-1 min-h-screen">
-      
+    <div className="w-full space-y-2.5 pb-3">
       {/* Top Header */}
-      <div className="bg-white rounded-[6px] p-2 flex items-center justify-between border-b border-gray-100">
-        <div className="flex items-center gap-4">
-          <h1 className="text-[16px] font-bold text-gray-700">Canceled Booking</h1>
+      <div className="bg-white rounded-lg p-2 sm:p-2.5 flex items-center justify-between border border-gray-100 shadow-xs">
+        <div className="flex items-center gap-3">
+          <h1 className="text-sm sm:text-base font-bold text-gray-800 tracking-tight">Canceled Booking</h1>
           <div className="relative">
             <input 
               type="text" 
               placeholder="Search..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-3 pr-10 py-1.5 border border-gray-200 rounded-md text-[13px] w-[200px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)] transition-colors"
+              className="pl-7.5 pr-2 py-1 border border-gray-200 rounded-md text-xs w-[160px] sm:w-[180px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)] transition-colors bg-white"
             />
-            <Search className="absolute right-2.5 top-2 text-gray-400" sx={{ fontSize: 18 }} />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" sx={{ fontSize: 15 }} />
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <button onClick={openNewModal} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="New Canceled Booking">
-            <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+        <div className="flex items-center gap-1.5">
+          <button onClick={openNewModal} className="w-7.5 h-7.5 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="New Canceled Booking">
+            <AddCircleOutlined sx={{ fontSize: 19 }} className="text-[var(--primary-main)]" />
           </button>
-          <button onClick={handleRefresh} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
-            <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+          <button onClick={handleRefresh} className="w-7.5 h-7.5 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
+            <Refresh sx={{ fontSize: 19 }} className="text-[var(--primary-main)]" />
           </button>
-          <button onClick={handleExportCSV} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Export CSV">
-            <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
+          <button onClick={handleExportCSV} className="w-7.5 h-7.5 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Export CSV">
+            <TableChart sx={{ fontSize: 17 }} className="text-[#0ea5e9]" />
           </button>
-          <button onClick={handleExportPDF} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" title="Export PDF">
-            <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
+          <button onClick={handleExportPDF} className="w-7.5 h-7.5 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" title="Export PDF">
+            <PictureAsPdf sx={{ fontSize: 17 }} className="text-[#ef4444]" />
           </button>
         </div>
       </div>
 
       {/* Table Section */}
-      <div className="bg-white rounded-b-xl shadow-sm border border-gray-100 flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <table className="w-full text-left">
+      <div className="bg-white rounded-lg border border-gray-200/80 shadow-xs flex-1 flex flex-col overflow-hidden">
+        <div className="w-full overflow-hidden min-w-0">
+          <table className="w-full text-left table-fixed border-collapse">
+            <colgroup><col style={{ width: '15%' }} /><col style={{ width: '10%' }} /><col style={{ width: '11%' }} /><col style={{ width: '8%' }} /><col style={{ width: '10%' }} /><col style={{ width: '8%' }} /><col style={{ width: '12%' }} /><col style={{ width: '11%' }} /><col style={{ width: '8%' }} /><col style={{ width: '7%' }} /></colgroup>
             <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">First Name</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Package</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Room Type</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Status</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Check In</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Payment</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Cancellation Date</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Refund Status</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Cancellation Fee</th>
-                <th className="py-4 px-2 text-[13px] font-bold text-[#1e293b]">Actions</th>
+              <tr className="border-b border-gray-100 bg-slate-50/50">
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Name</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Package</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Room Type</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Status</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Check In</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Payment</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Cancellation Date</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Refund Status</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Cancellation Fee</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider select-none text-center whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredBookings.map((booking) => (
                 <tr key={booking.id} onClick={() => openViewModal(booking)} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer">
-                  <td className="py-3 px-2 flex items-center gap-3">
-                    <img src={booking.avatar} alt="Avatar" className="w-8 h-8 rounded-full object-cover shadow-sm" />
-                    <span className="text-[13px] text-gray-700 font-medium">{booking.firstName} {booking.lastName}</span>
+                  <td className="py-1.5 px-1.5 whitespace-nowrap">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <img src={booking.avatar} alt="Avatar" className="w-6 h-6 rounded-full object-cover shadow-2xs shrink-0" />
+                      <span className="text-[11.5px] text-gray-700 font-semibold truncate">{booking.firstName} {booking.lastName}</span>
+                    </div>
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">{booking.package || '—'}</td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">{booking.roomType || '—'}</td>
-                  <td className="py-3 px-2">
-                    <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${statusStyles[booking.status] || 'bg-gray-100 text-gray-600'}`}>
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap truncate">{booking.package || '—'}</td>
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap truncate">{booking.roomType ? toStandardRoomType(booking.roomType) : '—'}</td>
+                  <td className="py-1.5 px-1.5 whitespace-nowrap">
+                    <span className={`px-2 py-0.5 rounded-[4px] text-[10px] font-bold ${statusStyles[booking.status] || 'bg-gray-100 text-gray-600'}`}>
                       {booking.status}
                     </span>
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">
-                    <div className="flex items-center gap-1.5">
-                      <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
+                    <div className="flex items-center gap-1">
+                      <CalendarTodayOutlined sx={{ fontSize: 11 }} className="text-gray-400 shrink-0" />
                       {booking.checkIn || '—'}
                     </div>
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600 font-medium">
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 font-medium whitespace-nowrap">
                     {booking.payment || '—'}
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
                     {booking.cancellationDate ? (
-                      <div className="flex items-center gap-1.5">
-                        <CalendarTodayOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
+                      <div className="flex items-center gap-1">
+                        <CalendarTodayOutlined sx={{ fontSize: 11 }} className="text-gray-400 shrink-0" />
                         {booking.cancellationDate}
                       </div>
                     ) : (
                       <span className="text-gray-400">—</span>
                     )}
                   </td>
-                  <td className="py-3 px-2">
+                  <td className="py-1.5 px-1.5 whitespace-nowrap">
                     {booking.refundStatus && refundStyles[booking.refundStatus] ? (
-                      <span className={`px-3 py-1 rounded-[4px] text-[11px] font-bold ${refundStyles[booking.refundStatus]}`}>
+                      <span className={`px-2 py-0.5 rounded-[4px] text-[10px] font-bold ${refundStyles[booking.refundStatus]}`}>
                         {booking.refundStatus}
                       </span>
                     ) : booking.refundStatus ? (
-                      <span className="px-3 py-1 rounded-[4px] text-[11px] font-bold bg-gray-100 text-gray-600">
+                      <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold bg-gray-100 text-gray-600">
                         {booking.refundStatus}
                       </span>
                     ) : (
-                      <span className="text-gray-400 text-[12px]">—</span>
+                      <span className="text-gray-400 text-[10px]">—</span>
                     )}
                   </td>
-                  <td className="py-3 px-2 text-[13px] text-gray-600">
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
                     {booking.cancellationFee ? booking.cancellationFee : <span className="text-gray-400">—</span>}
                   </td>
-                  <td className="py-3 px-2 relative">
-                    <div className="flex items-center gap-3">
+                  <td className="py-1.5 px-1.5 relative whitespace-nowrap text-center">
+                    <div className="flex items-center justify-center gap-2">
                       <button onClick={(e) => { e.stopPropagation(); openEditModal(booking); }} className="text-[var(--primary-main)] hover:text-green-700 transition-colors cursor-pointer" title="Edit">
-                        <EditOutlined sx={{ fontSize: 18 }} />
+                        <EditOutlined sx={{ fontSize: 16 }} />
                       </button>
                       <button onClick={(e) => { e.stopPropagation(); confirmDelete(booking); }} className="text-orange-500 hover:text-orange-600 transition-colors cursor-pointer" title="Delete">
-                        <DeleteOutlined sx={{ fontSize: 18 }} />
+                        <DeleteOutlined sx={{ fontSize: 16 }} />
                       </button>
                     </div>
                   </td>
@@ -405,7 +408,7 @@ export default function CancelledBookings() {
               ))}
               {filteredBookings.length === 0 && (
                 <tr>
-                  <td colSpan="10" className="py-8 text-center text-gray-500 text-sm">
+                  <td colSpan="10" className="py-6 text-center text-gray-500 text-xs">
                     No cancelled bookings found.
                   </td>
                 </tr>
@@ -415,19 +418,19 @@ export default function CancelledBookings() {
         </div>
         
         {/* Pagination bar */}
-        <div className="flex items-center justify-end px-2 py-4 border-t border-gray-100 bg-white gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-[12px] text-gray-500">Items per page:</span>
-            <select className="border border-gray-200 rounded px-2 py-1 text-[12px] text-gray-700 outline-none cursor-pointer">
+        <div className="flex items-center justify-end px-2 sm:px-2.5 py-2.5 border-t border-gray-100 bg-white gap-3 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] text-gray-500">Items per page:</span>
+            <select className="border border-gray-200 rounded px-1.5 py-0.5 text-[11px] text-gray-700 outline-none cursor-pointer">
               <option>10</option>
               <option>20</option>
               <option>50</option>
             </select>
           </div>
-          <span className="text-[12px] text-gray-500">1 - {filteredBookings.length} of {filteredBookings.length}</span>
+          <span className="text-[11px] text-gray-500">1 - {filteredBookings.length} of {filteredBookings.length}</span>
           <div className="flex items-center gap-1">
-            <button className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer">&lt;</button>
-            <button className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer">&gt;</button>
+            <button className="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer text-xs">&lt;</button>
+            <button className="w-6 h-6 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50 cursor-pointer text-xs">&gt;</button>
           </div>
         </div>
       </div>
@@ -607,7 +610,7 @@ export default function CancelledBookings() {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Room Type</span>
-                    <span className="text-[14px] font-bold text-gray-800">{viewingBooking.roomType || '—'}</span>
+                    <span className="text-[14px] font-bold text-gray-800">{viewingBooking.roomType ? toStandardRoomType(viewingBooking.roomType) : '—'}</span>
                   </div>
                 </div>
 

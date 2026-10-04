@@ -48,13 +48,13 @@ describe('Cascading Room Type -> Room Number Selection', () => {
   });
 
   describe('ReservationFormModal Cascading UI', () => {
-    it('renders cascading room options and badges [101] [102] [105] [108] when roomType is Deluxe', () => {
+    it('renders cascading room options and badges [101] [102] [105] [108] when roomType is Deluxe Room', () => {
       const handleFormChange = vi.fn();
 
       render(
         <ReservationFormModal
           open={true}
-          form={{ roomType: 'Deluxe', roomNo: '' }}
+          form={{ roomType: 'Deluxe Room', roomNo: '' }}
           onFormChange={handleFormChange}
           onClose={vi.fn()}
         />
@@ -63,7 +63,7 @@ describe('Cascading Room Type -> Room Number Selection', () => {
       // Verify Select Room Type is present
       const roomTypeSelect = screen.getByLabelText(/Select Room Type/i);
       expect(roomTypeSelect).toHaveProperty('id', 'res-room-type');
-      expect(roomTypeSelect.value).toBe('Deluxe');
+      expect(roomTypeSelect.value).toBe('Deluxe Room');
 
       // Verify Room Number select is present
       const roomNoSelect = screen.getByLabelText(/Room \/ Room No\./i);
@@ -93,23 +93,23 @@ describe('Cascading Room Type -> Room Number Selection', () => {
       render(
         <ReservationFormModal
           open={true}
-          form={{ roomType: 'Single', roomNo: '201' }}
+          form={{ roomType: 'Standard Room', roomNo: '201' }}
           onFormChange={handleFormChange}
           onClose={vi.fn()}
         />
       );
 
       const roomTypeSelect = screen.getByLabelText(/Select Room Type/i);
-      fireEvent.change(roomTypeSelect, { target: { value: 'Deluxe' } });
+      fireEvent.change(roomTypeSelect, { target: { value: 'Deluxe Room' } });
 
-      expect(handleFormChange).toHaveBeenCalledWith('roomType', 'Deluxe');
+      expect(handleFormChange).toHaveBeenCalledWith('roomType', 'Deluxe Room');
       // Because '201' is not in Deluxe, roomNo is reset
       expect(handleFormChange).toHaveBeenCalledWith('roomNo', '');
     });
   });
 
   describe('AddReservation Standalone Page Cascading UI', () => {
-    it('filters room options and renders quick select badges when Room Type is selected as Deluxe', () => {
+    it('filters room options and renders quick select badges when Room Type is selected as Deluxe Room', () => {
       render(
         <MemoryRouter>
           <AddReservation />
@@ -120,9 +120,9 @@ describe('Cascading Room Type -> Room Number Selection', () => {
       const roomTypeSelect = screen.getByRole('combobox', { name: /Select Room Type/i });
       expect(roomTypeSelect).toBeTruthy();
 
-      // Change Room Type to Deluxe
+      // Change Room Type to Deluxe Room
       fireEvent.mouseDown(roomTypeSelect);
-      const deluxeOption = screen.getByRole('option', { name: 'Deluxe' });
+      const deluxeOption = screen.getByRole('option', { name: 'Deluxe Room' });
       fireEvent.click(deluxeOption);
 
       // Verify quick-select badges [101], [102], [105], [108] appear
@@ -142,10 +142,10 @@ describe('Cascading Room Type -> Room Number Selection', () => {
         </MemoryRouter>
       );
 
-      // 1. Select Room Type Deluxe
+      // 1. Select Room Type Deluxe Room
       const roomTypeSelect = screen.getByRole('combobox', { name: /Select Room Type/i });
       fireEvent.mouseDown(roomTypeSelect);
-      const deluxeOption = screen.getByRole('option', { name: 'Deluxe' });
+      const deluxeOption = screen.getByRole('option', { name: 'Deluxe Room' });
       fireEvent.click(deluxeOption);
 
       // 2. Select canonical room 102

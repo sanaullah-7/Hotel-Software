@@ -1,6 +1,6 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
 import { getGuests } from '../../guests/state/guestStore.js';
-import { getRooms } from '../../rooms/state/roomStore.js';
+import { getRooms, toStandardRoomType } from '../../rooms/state/roomStore.js';
 
 const STORAGE_KEY = 'hotel_reservations';
 const UPDATE_EVENT = 'reservations_update';
@@ -38,6 +38,14 @@ export function migrateBookingRelationships(bookings, guests = getGuests(), room
         } else if (matches.length > 1) ambiguous += 1;
       }
     }
+
+    if (next.roomType) {
+      const standardType = toStandardRoomType(next.roomType);
+      if (next.roomType !== standardType) {
+        next = { ...next, roomType: standardType };
+      }
+    }
+
     if (next !== booking) changed = true;
     return next;
   });

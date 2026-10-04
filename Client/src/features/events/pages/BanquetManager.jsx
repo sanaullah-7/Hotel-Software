@@ -140,64 +140,50 @@ export default function BanquetManager() {
  )}
 
  {/* â”€â”€ 1. KPI Cards â”€â”€ */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
- {/* Card 1: Monthly Banquet Revenue */}
-  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 mt-1">
+  {/* Card 1: Monthly Banquet Revenue */}
+  <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between">
     <div>
-      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$184,500</div>
-      <div className="text-[13px] text-gray-500 font-medium">Monthly Revenue</div>
+      <div className="text-xl font-bold text-gray-900 leading-none mb-1">$184,500</div>
+      <div className="text-[11.5px] text-gray-500 font-medium">Monthly Revenue</div>
     </div>
-    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600 shrink-0">
-      <CelebrationIcon sx={{ fontSize: 18 }} />
+    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-50 text-emerald-600 shrink-0">
+      <CelebrationIcon sx={{ fontSize: 16 }} />
     </div>
   </div>
 
   {/* Card 2: Active Functions */}
-  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+  <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between">
     <div>
-      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">14</div>
-      <div className="text-[13px] text-gray-500 font-medium">Active Functions</div>
+      <div className="text-xl font-bold text-gray-900 leading-none mb-1">14</div>
+      <div className="text-[11.5px] text-gray-500 font-medium">Active Functions</div>
     </div>
-    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
-      <SeatIcon sx={{ fontSize: 18 }} />
+    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
+      <SeatIcon sx={{ fontSize: 16 }} />
     </div>
   </div>
 
   {/* Card 3: Venue Utilization */}
-  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+  <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between">
     <div>
-      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">88%</div>
-      <div className="text-[13px] text-gray-500 font-medium">Venue Utilization</div>
+      <div className="text-xl font-bold text-gray-900 leading-none mb-1">88%</div>
+      <div className="text-[11.5px] text-gray-500 font-medium">Venue Utilization</div>
     </div>
-    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600 shrink-0">
-      <VenueIcon sx={{ fontSize: 18 }} />
+    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-purple-50 text-purple-600 shrink-0">
+      <VenueIcon sx={{ fontSize: 16 }} />
     </div>
   </div>
 
   {/* Card 4: Avg Spend Per Guest */}
- <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 hover:border-[var(--primary-main)]/30 transition-colors">
- <div className="flex items-start justify-between">
- <div>
- <span className="text-[11px] font-semibold text-[var(--text-secondary)] tracking-wider uppercase block">
- Avg Spend / Guest
- </span>
- <div className="text-lg font-bold text-[var(--text-primary)] tracking-tight mt-0.5 mb-1 flex items-baseline">
- $285 <span className="text-xs font-normal text-[var(--text-secondary)] ml-1">/ Pax</span>
- </div>
- <div className="flex items-center gap-1.5 flex-wrap">
- <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
- Michelin Plated
- </span>
- <span className="rounded-full px-2 py-0.5 bg-slate-100 text-slate-600 text-[11px] font-medium">
- Sommelier Packages
- </span>
- </div>
- </div>
- <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
- <SpendIcon sx={{ fontSize: 17 }} />
- </div>
- </div>
- </div>
+  <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between">
+    <div>
+      <div className="text-xl font-bold text-gray-900 leading-none mb-1">$285 <span className="text-[11px] font-normal text-gray-400">/ Pax</span></div>
+      <div className="text-[11.5px] text-gray-500 font-medium">Avg Spend / Guest</div>
+    </div>
+    <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-amber-50 text-amber-600 shrink-0">
+      <SpendIcon sx={{ fontSize: 16 }} />
+    </div>
+  </div>
  </div>
 
  {/* â”€â”€ 2. Venue Filter Pills â”€â”€ */}

@@ -17,6 +17,7 @@ import {
   PAYMENTS_UPDATED_EVENT,
   REFUNDS_UPDATED_EVENT
 } from '../../payment-billing/pages/paymentBillingStore';
+import { toStandardRoomType } from '../../rooms/state/roomStore';
 
 export default function ReservationViewModal({
   open,
@@ -101,7 +102,7 @@ export default function ReservationViewModal({
               Assigned Room
             </span>
             <span className="text-[14px] font-bold text-gray-800">
-              Room {booking.roomNo || booking.room || '101'} ({booking.roomType || 'Standard'})
+              Room {booking.roomNo || booking.room || '101'} ({toStandardRoomType(booking.roomType)})
             </span>
           </div>
         </div>
@@ -128,7 +129,7 @@ export default function ReservationViewModal({
             <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
               Room Type
             </span>
-            <span className="text-[14px] font-bold text-gray-800">{booking.roomType}</span>
+            <span className="text-[14px] font-bold text-gray-800">{toStandardRoomType(booking.roomType)}</span>
           </div>
         </div>
 

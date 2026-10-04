@@ -62,19 +62,19 @@ export default function StatusBadge({
     'bg-gray-100 text-gray-700';
 
   let sizeClasses = 'px-2.5 py-0.5 text-[11px]';
-  if (size === 'xs') sizeClasses = 'px-1.5 py-0.2 text-[10px]';
+  if (size === 'xs') sizeClasses = 'px-1.5 py-0.5 text-[10.5px]';
   if (size === 'md') sizeClasses = 'px-3 py-1 text-[12px]';
 
   return (
     <span
-      className={`inline-flex items-center gap-1 font-bold rounded-[4px] leading-tight ${sizeClasses} ${resolvedStyle} ${className}`}
+      className={`inline-flex items-center gap-1 font-bold rounded-[4px] leading-tight whitespace-nowrap shrink-0 ${sizeClasses} ${resolvedStyle} ${className}`}
     >
       {icon && (
         <span className="shrink-0 flex items-center">
           {renderBadgeIcon(icon, { fontSize: size === 'xs' ? 10 : 13 })}
         </span>
       )}
-      <span>{displayContent}</span>
+      <span className="whitespace-nowrap">{displayContent}</span>
     </span>
   );
 }

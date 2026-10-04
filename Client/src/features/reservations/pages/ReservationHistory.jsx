@@ -10,7 +10,7 @@ import {
 import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../state/reservationStore';
 import { normalizeBookingStatus } from '../state/bookingRules';
 import { getGuestById, resolveGuestForBooking } from '../../guests/state/guestStore';
-import { getRoomById, getRoomByRoomNo } from '../../rooms/state/roomStore';
+import { getRoomById, getRoomByRoomNo, toStandardRoomType } from '../../rooms/state/roomStore';
 import { getBookingDues, getInvoices } from '../../payment-billing/pages/paymentBillingStore';
 import { getGuestCharges } from '../../inventory/pages/inventoryStore';
 
@@ -109,7 +109,8 @@ function mapCanonicalToHistoryRow(booking, invoices = [], charges = []) {
 
   const room = booking.roomId ? getRoomById(booking.roomId) : (booking.roomNo ? getRoomByRoomNo(booking.roomNo) : null);
   const roomNo = room?.roomNo || booking.roomNo || booking.roomNumber || (typeof booking.room === 'string' && booking.room.includes(' - ') ? booking.room.split(' - ')[0] : booking.room) || '—';
-  const roomType = room?.roomType || booking.roomType || (typeof booking.room === 'string' && booking.room.includes(' - ') ? booking.room.split(' - ')[1] : '') || '';
+  const rawRoomType = room?.roomType || booking.roomType || (typeof booking.room === 'string' && booking.room.includes(' - ') ? booking.room.split(' - ')[1] : '') || '';
+  const roomType = rawRoomType ? toStandardRoomType(rawRoomType) : '';
   const roomDisplay = roomType ? `${roomNo} - ${roomType}` : (roomNo || '—');
 
   const linkedInvoice = invoices.find((inv) => String(inv.bookingId) === String(booking.id));
@@ -515,121 +516,122 @@ export default function ReservationHistory() {
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto pb-4 animate-fade-in">
-      {/* Data Table Card */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 mt-1 overflow-hidden">
-        {/* Table Top Controls */}
-        <div className="p-3 sm:p-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h3 className="text-gray-800 font-bold text-[14px] lg:text-[15px] whitespace-nowrap">
-            Booking History
-          </h3>
+    <div className="w-full space-y-2.5 pb-3">
+      {/* Table Top Controls */}
+      <div className="bg-white rounded-lg p-2 sm:p-2.5 flex flex-col sm:flex-row sm:items-center justify-between border border-gray-100 shadow-xs gap-2.5">
+        <h3 className="text-gray-800 font-bold text-sm sm:text-base tracking-tight whitespace-nowrap">
+          Booking History
+        </h3>
 
-          <div className="flex flex-row items-center space-x-2 ml-auto">
-            {/* Search Bar */}
-            <div className="relative w-28 md:w-40 xl:w-52 shrink">
-              <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" sx={{ fontSize: 16 }} />
-              <input 
-                type="text" 
-                placeholder="Search history..." 
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full pl-8 pr-2 py-1.5 border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-shadow truncate bg-white"
-              />
-            </div>
-            
-            {/* Segmented Filter Control & Custom Popup */}
-            <div className="relative flex bg-white border border-gray-200 rounded-lg shrink-0">
-              {['Daily', 'Weekly', 'Monthly', 'Yearly', 'Custom'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => {
-                    setActiveTab(tab);
-                    setCurrentPage(1);
-                    if (tab === 'Custom') {
-                      setIsCustomPopupOpen(!isCustomPopupOpen);
-                    } else {
-                      setIsCustomPopupOpen(false);
-                    }
-                  }}
-                  className={`px-2.5 py-1.5 text-[11px] font-semibold transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
-                    activeTab === tab 
-                      ? 'bg-[#e5f4eb] text-[#1b7f43] border-[#1b7f43]/20 relative z-10 font-bold' 
-                      : 'text-gray-500 hover:bg-[#e5f4eb] hover:text-[#1b7f43]'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-
-              {/* Floating Custom Date Picker Popup */}
-              {activeTab === 'Custom' && isCustomPopupOpen && (
-                <div className="absolute right-0 top-[calc(100%+10px)] z-[100] bg-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] border border-gray-100 rounded-xl p-3 flex flex-col gap-2 min-w-[200px] animate-fade-in">
-                  <p className="text-[11px] font-bold text-gray-700">Custom Date Range</p>
-                  <div className="flex flex-col gap-1.5">
-                    <input 
-                      type="date" 
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded-md text-[11px] font-medium text-gray-600 focus:outline-none focus:border-[#1b7f43]"
-                      value={customStartDate}
-                      onChange={e => {
-                        const val = e.target.value;
-                        setCustomStartDate(val);
-                        setCurrentPage(1);
-                        if (val && customEndDate) {
-                          setTimeout(() => setIsCustomPopupOpen(false), 150);
-                        }
-                      }}
-                    />
-                    <span className="text-gray-400 text-[10px] font-bold text-center">TO</span>
-                    <input 
-                      type="date" 
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded-md text-[11px] font-medium text-gray-600 focus:outline-none focus:border-[#1b7f43]"
-                      value={customEndDate}
-                      onChange={e => {
-                        const val = e.target.value;
-                        setCustomEndDate(val);
-                        setCurrentPage(1);
-                        if (customStartDate && val) {
-                          setTimeout(() => setIsCustomPopupOpen(false), 150);
-                        }
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            {/* Export CSV Button */}
-            <button 
-              onClick={handleExportCSV}
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer shrink-0"
-              title="Export CSV"
-              aria-label="Export CSV"
-            >
-              <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
-            </button>
+        <div className="flex flex-row items-center space-x-2 ml-auto">
+          {/* Search Bar */}
+          <div className="relative w-28 md:w-40 xl:w-52 shrink">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" sx={{ fontSize: 15 }} />
+            <input 
+              type="text" 
+              placeholder="Search history..." 
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-7.5 pr-2 py-1 border border-gray-200 rounded-md text-xs focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-shadow truncate bg-white"
+            />
           </div>
-        </div>
+          
+          {/* Segmented Filter Control & Custom Popup */}
+          <div className="relative flex bg-white border border-gray-200 rounded-md shadow-2xs shrink-0 overflow-hidden">
+            {['Daily', 'Weekly', 'Monthly', 'Yearly', 'Custom'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => {
+                  setActiveTab(tab);
+                  setCurrentPage(1);
+                  if (tab === 'Custom') {
+                    setIsCustomPopupOpen(!isCustomPopupOpen);
+                  } else {
+                    setIsCustomPopupOpen(false);
+                  }
+                }}
+                className={`px-2.5 py-1 text-[11px] font-semibold transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
+                  activeTab === tab 
+                    ? 'bg-[#e5f4eb] text-[#1b7f43] relative z-10 font-bold' 
+                    : 'text-gray-500 hover:bg-[#e5f4eb] hover:text-[#1b7f43]'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
 
+            {/* Floating Custom Date Picker Popup */}
+            {activeTab === 'Custom' && isCustomPopupOpen && (
+              <div className="absolute right-0 top-[calc(100%+8px)] z-[100] bg-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] border border-gray-100 rounded-lg p-3 flex flex-col gap-2 min-w-[200px] animate-fade-in">
+                <p className="text-xs font-bold text-gray-700">Custom Date Range</p>
+                <div className="flex flex-col gap-1.5">
+                  <input 
+                    type="date" 
+                    className="w-full px-2 py-1 border border-gray-200 rounded-md text-xs font-medium text-gray-600 focus:outline-none focus:border-[#1b7f43]"
+                    value={customStartDate}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setCustomStartDate(val);
+                      setCurrentPage(1);
+                      if (val && customEndDate) {
+                        setTimeout(() => setIsCustomPopupOpen(false), 150);
+                      }
+                    }}
+                  />
+                  <span className="text-gray-400 text-[10px] font-bold text-center">TO</span>
+                  <input 
+                    type="date" 
+                    className="w-full px-2 py-1 border border-gray-200 rounded-md text-xs font-medium text-gray-600 focus:outline-none focus:border-[#1b7f43]"
+                    value={customEndDate}
+                    onChange={e => {
+                      const val = e.target.value;
+                      setCustomEndDate(val);
+                      setCurrentPage(1);
+                      if (customStartDate && val) {
+                        setTimeout(() => setIsCustomPopupOpen(false), 150);
+                      }
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Export CSV Button */}
+          <button 
+            onClick={handleExportCSV}
+            className="w-7.5 h-7.5 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer shrink-0"
+            title="Export CSV"
+            aria-label="Export CSV"
+          >
+            <TableChart sx={{ fontSize: 17 }} className="text-[#0ea5e9]" />
+          </button>
+        </div>
+      </div>
+
+      {/* Data Table Card */}
+      <div className="bg-white rounded-lg border border-gray-200/80 shadow-xs overflow-hidden flex flex-col">
         {/* Table Content */}
-        <div className="w-full overflow-hidden">
-          <table className="w-full text-left border-collapse">
+        <div className="w-full overflow-hidden min-w-0">
+          <table className="w-full text-left table-fixed border-collapse">
+            <colgroup><col style={{ width: '6%' }} /><col style={{ width: '12%' }} /><col style={{ width: '10%' }} /><col style={{ width: '11%' }} /><col style={{ width: '9%' }} /><col style={{ width: '8%' }} /><col style={{ width: '8%' }} /><col style={{ width: '8%' }} /><col style={{ width: '7%' }} /><col style={{ width: '7%' }} /><col style={{ width: '8%' }} /><col style={{ width: '6%' }} /></colgroup>
             <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Res ID</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Guest Name</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Mobile No</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Room / Type</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Reservation Date</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Check-In</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Check-Out</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Inventory</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Total Price</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Dues</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider whitespace-nowrap">Payment</th>
-                <th className="py-2.5 px-2 text-[10.5px] font-bold text-gray-700 uppercase tracking-wider text-center whitespace-nowrap">Action</th>
+              <tr className="border-b border-gray-100 bg-slate-50/50">
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Res ID</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Guest Name</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Mobile No</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Room / Type</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Reservation Date</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Check-In</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Check-Out</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Inventory</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Total Price</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Dues</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none whitespace-nowrap">Payment</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider select-none text-center whitespace-nowrap">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -638,35 +640,35 @@ export default function ReservationHistory() {
 
                 return (
                   <tr key={res.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="py-2 px-2 text-[11.5px] font-bold text-gray-800 whitespace-nowrap">{res.id}</td>
-                    <td className="py-2 px-2 text-[11.5px] font-semibold text-gray-700 whitespace-nowrap">{res.guestName}</td>
-                    <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">{res.mobile}</td>
-                    <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">{res.room}</td>
-                    <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">{res.reservationDate}</td>
-                    <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">{res.checkIn}</td>
-                    <td className="py-2 px-2 text-[11px] text-gray-600 whitespace-nowrap">{res.checkOut}</td>
-                    <td className="py-2 px-2 whitespace-nowrap">
+                    <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-800 whitespace-nowrap truncate">{res.id}</td>
+                    <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-700 whitespace-nowrap truncate">{res.guestName}</td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap truncate">{res.mobile}</td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap truncate">{res.room}</td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap truncate">{res.reservationDate}</td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap truncate">{res.checkIn}</td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap truncate">{res.checkOut}</td>
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
                       <InventoryCell items={res.inventory} />
                     </td>
-                    <td className="py-2 px-2 text-[11.5px] font-bold text-gray-900 whitespace-nowrap">
+                    <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-900 whitespace-nowrap truncate">
                       {res.totalPrice !== null ? `$${res.totalPrice}` : '—'}
                     </td>
-                    <td className="py-2 px-2 text-[11.5px] font-semibold whitespace-nowrap">
+                    <td className="py-1.5 px-1.5 text-[11px] font-semibold whitespace-nowrap">
                       {dues === null ? <span className="text-amber-600">Unverified</span> : dues > 0 ? (
                         <span className="text-red-500 font-bold">${dues}</span>
                       ) : (
                         <span className="text-gray-400 font-normal">$0</span>
                       )}
                     </td>
-                    <td className="py-2 px-2 whitespace-nowrap">{getPaymentStatusBadge(res.paymentStatus)}</td>
-                    <td className="py-2 px-2 text-center relative whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">{getPaymentStatusBadge(res.paymentStatus)}</td>
+                    <td className="py-1.5 px-1.5 text-center relative whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={(e) => handleActionClick(e, res)}
-                        className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full w-7 h-7 inline-flex items-center justify-center transition-colors cursor-pointer"
+                        className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full w-6.5 h-6.5 inline-flex items-center justify-center transition-colors cursor-pointer"
                         title="Actions"
                         aria-label="Reservation actions"
                       >
-                        <MoreVert sx={{ fontSize: 16 }} />
+                        <MoreVert sx={{ fontSize: 15 }} />
                       </button>
                     </td>
                   </tr>
@@ -675,7 +677,7 @@ export default function ReservationHistory() {
               
               {paginatedReservations.length === 0 && (
                 <tr>
-                  <td colSpan="12" className="py-8 text-center text-[12px] text-gray-500">
+                  <td colSpan="12" className="py-6 text-center text-xs text-gray-500">
                     No reservations found.
                   </td>
                 </tr>
@@ -686,7 +688,7 @@ export default function ReservationHistory() {
 
         {/* Pagination Controls */}
         {totalPages > 0 && (
-          <div className="p-3 border-t border-gray-100 flex items-center justify-between">
+          <div className="p-2 sm:p-2.5 border-t border-gray-100 flex items-center justify-between text-xs">
             <span className="text-[11px] text-gray-500">
               Showing <span className="font-semibold text-gray-700">{(currentPage - 1) * itemsPerPage + 1}</span> to <span className="font-semibold text-gray-700">{Math.min(currentPage * itemsPerPage, filteredReservations.length)}</span> of <span className="font-semibold text-gray-700">{filteredReservations.length}</span>
             </span>
@@ -705,7 +707,7 @@ export default function ReservationHistory() {
                 <button
                   key={i}
                   onClick={() => setCurrentPage(i + 1)}
-                  className={`w-6 h-6 rounded-md text-[11px] font-medium flex items-center justify-center transition-colors cursor-pointer ${
+                  className={`w-5.5 h-5.5 rounded-md text-[11px] font-medium flex items-center justify-center transition-colors cursor-pointer ${
                     currentPage === i + 1 
                       ? 'bg-[#1b7f43] text-white' 
                       : 'text-gray-600 hover:bg-gray-100'

@@ -12,10 +12,9 @@ import {
   saveReservations,
   RESERVATIONS_UPDATED_EVENT
 } from '../../../features/reservations/state/reservationStore';
-import { addGuest, findGuestByExactIdentity, resolveGuestForBooking } from '../../../features/guests/state/guestStore';
-import { getRoomByRoomNo } from '../../../features/rooms/state/roomStore';
-import { normalizeBookingStatus, isRoomBlockingBooking, validateStayDates } from '../../../features/reservations/state/bookingRules';
-import { cancelBooking, checkOutBooking, saveBookingsWithRoomState, validateBookingRequest } from '../../../features/reservations/state/reservationLifecycle';
+import { resolveGuestForBooking } from '../../../features/guests/state/guestStore';
+import { normalizeBookingStatus } from '../../../features/reservations/state/bookingRules';
+import { cancelBooking, checkOutBooking } from '../../../features/reservations/state/reservationLifecycle';
 import {
   getBookingDues,
   getCanonicalBookingPaymentStatus,
@@ -28,7 +27,6 @@ import RefreshButton from '../../../components/common/RefreshButton';
 import PaginationControls from '../../../components/common/PaginationControls';
 
 import ReservationViewModal from '../../../features/reservations/components/ReservationViewModal';
-import ReservationFormModal from '../../../features/reservations/components/ReservationFormModal';
 import ReservationDeleteModal from '../../../features/reservations/components/ReservationDeleteModal';
 import ReservationCancelModal from '../../../features/reservations/components/ReservationCancelModal';
 import { initialBookings, parseDate } from '../data/currentBookingsData';
@@ -60,9 +58,6 @@ export default function CurrentBookingsTable({
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingBooking, setViewingBooking] = useState(null);
 
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [bookingToDelete, setBookingToDelete] = useState(null);
 
@@ -71,43 +66,6 @@ export default function CurrentBookingsTable({
 
   // Action Menu state
   const [activeMenuId, setActiveMenuId] = useState(null);
-
-  // Booking Form State
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    gender: '',
-    mobile: '',
-    city: '',
-    passport: '',
-    nationality: '',
-    checkIn: '',
-    checkOut: '',
-    package: 'All inclusive',
-    totalPerson: '1',
-    numRooms: '1',
-    roomType: 'Delux',
-    roomNo: '101',
-    arrivalTime: 'Morning',
-    purpose: 'Leisure',
-    paymentMethod: 'Paid',
-    discountCode: '',
-    bookingRef: '',
-    emergencyName: '',
-    emergencyPhone: '',
-    address: '',
-    specialRequests: '',
-    note: '',
-    avatar: '',
-    avatarFileName: ''
-  });
-
-  const isFormValid = (form.firstName || '').trim() !== '';
-
-  const handleFormChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
 
   useEffect(() => {
     const syncReservations = () => setBookings(getReservations(initialBookings));
@@ -253,126 +211,7 @@ export default function CurrentBookingsTable({
   };
 
   const openEditModal = (booking) => {
-    setEditingId(booking.id);
-    const [firstName, ...lastNames] = (booking.name || '').split(' ');
-    setForm({
-      firstName: firstName || '',
-      lastName: lastNames.join(' ') || '',
-      email: booking.email || '',
-      gender: booking.gender || '',
-      mobile: booking.mobile || '',
-      city: booking.city || '',
-      passport: booking.passport || '',
-      nationality: booking.nationality || '',
-      checkIn: booking.checkIn || '',
-      checkOut: booking.checkOut || '',
-      package: booking.package || 'All inclusive',
-      totalPerson: booking.totalPerson || '1',
-      numRooms: booking.numRooms || '1',
-      roomType: booking.roomType || 'Delux',
-      roomNo: booking.roomNo || booking.room || '101',
-      arrivalTime: booking.arrivalTime || 'Morning',
-      purpose: booking.purpose || 'Leisure',
-      paymentMethod: booking.payment || 'Paid',
-      discountCode: booking.discountCode || '',
-      bookingRef: booking.bookingRef || `BK-${booking.id}`,
-      emergencyName: booking.emergencyName || '',
-      emergencyPhone: booking.emergencyPhone || '',
-      address: booking.address || '',
-      specialRequests: booking.specialRequests || '',
-      note: booking.note || '',
-      avatar: booking.avatar || '',
-      avatarFileName: ''
-    });
-    setIsBookingModalOpen(true);
-  };
-
-  const handleSaveBooking = (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!isFormValid) return;
-    try {
-    const editingBooking = editingId ? bookings.find((booking) => booking.id === editingId) : null;
-    validateStayDates(form.checkIn, form.checkOut);
-    const room = form.roomNo ? getRoomByRoomNo(form.roomNo) : null;
-    if (form.roomNo && !room) throw new Error(`Room ${form.roomNo} does not identify exactly one canonical room.`);
-    if (!editingBooking || isRoomBlockingBooking(editingBooking)) {
-      if (room) validateBookingRequest({ roomId: room.id, checkIn: form.checkIn, checkOut: form.checkOut, bookings, excludeBookingId: editingId });
-    }
-
-    if (editingId) {
-      const previousRoomId = editingBooking?.roomId;
-      const updated = bookings.map((b) =>
-        b.id === editingId
-          ? {
-              ...b,
-              name: `${form.firstName || ''} ${form.lastName || ''}`.trim() || b.name,
-              avatar: form.avatar || b.avatar,
-              email: form.email,
-              gender: form.gender,
-              mobile: form.mobile,
-              city: form.city,
-              passport: form.passport,
-              nationality: form.nationality,
-              package: form.package,
-              roomType: form.roomType,
-              roomNo: form.roomNo || b.roomNo || '101',
-              roomId: room?.id,
-              checkIn: form.checkIn,
-              checkOut: form.checkOut,
-              payment: form.paymentMethod,
-              arrivalTime: form.arrivalTime,
-              purpose: form.purpose,
-              discountCode: form.discountCode,
-              bookingRef: form.bookingRef,
-              emergencyName: form.emergencyName,
-              emergencyPhone: form.emergencyPhone,
-              address: form.address,
-              specialRequests: form.specialRequests,
-              note: form.note
-            }
-          : b
-      );
-      setBookings(updated);
-      saveBookingsWithRoomState(updated, [previousRoomId, room?.id].filter((id) => id !== undefined && id !== null));
-    } else {
-      const fullName = `${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Guest';
-      const guest = findGuestByExactIdentity(fullName, form.email) || addGuest({ name: fullName, email: form.email || '', phone: form.mobile || '', city: form.city || '' });
-      let newId = Date.now();
-      while (bookings.some((booking) => String(booking.id) === String(newId))) newId += 1;
-      const newBooking = {
-        id: newId,
-        guestId: guest.id,
-        roomId: room?.id,
-        name: fullName,
-        avatar: form.avatar || ('https://i.pravatar.cc/150?img=' + Math.floor(Math.random() * 50 + 1)),
-        roomNo: form.roomNo || '101',
-        package: form.package || 'All inclusive',
-        roomType: form.roomType || 'Delux',
-        status: 'Booked',
-        checkIn: form.checkIn,
-        checkOut: form.checkOut,
-        payment: form.paymentMethod || 'Paid',
-        email: form.email || '',
-        mobile: form.mobile || '',
-        city: form.city || '',
-        passport: form.passport || '',
-        nationality: form.nationality || '',
-        arrivalTime: form.arrivalTime || 'Morning',
-        purpose: form.purpose || 'Leisure',
-        discountCode: form.discountCode || '',
-        bookingRef: form.bookingRef || `BK-${Date.now().toString().slice(-6)}`,
-        emergencyName: form.emergencyName || '',
-        emergencyPhone: form.emergencyPhone || '',
-        address: form.address || '',
-        specialRequests: form.specialRequests || '',
-        note: form.note || ''
-      };
-      const updated = [newBooking, ...bookings];
-      setBookings(updated);
-      saveBookingsWithRoomState(updated, room ? [room.id] : []);
-    }
-    setIsBookingModalOpen(false);
-    } catch (error) { window.alert(error.message); }
+    navigate(`/reservation/edit/${booking.id}`);
   };
 
   const confirmDelete = (booking) => {
@@ -500,9 +339,9 @@ export default function CurrentBookingsTable({
   return (
     <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm">
       {/* Dashboard Toolbar */}
-      <div className="p-3 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-[15px] font-bold text-gray-800 whitespace-nowrap">{title}</h2>
+      <div className="px-3.5 py-2 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h2 className="text-sm font-bold text-gray-800 whitespace-nowrap">{title}</h2>
 
           <SearchInput
             placeholder="Search..."
@@ -519,7 +358,7 @@ export default function CurrentBookingsTable({
                 <button
                   key={filter}
                   onClick={(e) => (filter === 'Custom' ? handleCustomClick(e) : setDateFilter(filter))}
-                  className={`px-2.5 py-1 text-[11.5px] font-medium transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-medium transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
                     dateFilter === filter
                       ? 'bg-[#e5f4eb] text-[#1b7f43] font-bold'
                       : 'text-gray-600 hover:bg-gray-50'
@@ -536,9 +375,9 @@ export default function CurrentBookingsTable({
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'center' }}
               >
-                <div className="p-3.5 w-[260px]">
+                <div className="p-3.5 w-[250px]">
                   <h3 className="font-bold text-gray-700 text-xs mb-2.5">Custom Date Range</h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     <div>
                       <span className="text-[10.5px] text-gray-500 font-semibold block mb-0.5">Start Date</span>
                       <input
@@ -634,16 +473,6 @@ export default function CurrentBookingsTable({
           setIsViewModalOpen(false);
           openEditModal(b);
         }}
-      />
-
-      <ReservationFormModal
-        open={isBookingModalOpen}
-        editingId={editingId}
-        form={form}
-        onFormChange={handleFormChange}
-        onClose={() => setIsBookingModalOpen(false)}
-        onSave={handleSaveBooking}
-        onSubmit={handleSaveBooking}
       />
 
       <ReservationDeleteModal

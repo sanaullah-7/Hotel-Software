@@ -18,18 +18,34 @@ import {
   REFUNDS_UPDATED_EVENT
 } from '../../../features/payment-billing/pages/paymentBillingStore';
 
-/** Checks if a date string or timestamp corresponds to today in the local calendar. */
+/** Checks if a date string or timestamp corresponds to today in local calendar or ISO format. */
 function isToday(dateValue) {
   if (!dateValue) return false;
-  const ts = typeof dateValue === 'number' ? dateValue : parseStayDate(dateValue);
-  if (ts === null || ts === undefined) return false;
-  const d = new Date(ts);
+  const rawStr = String(dateValue).trim();
+  const todayIso = new Date().toISOString().split('T')[0];
+  if (rawStr.startsWith(todayIso)) return true;
+
   const now = new Date();
-  return (
-    d.getUTCFullYear() === now.getFullYear() &&
-    d.getUTCMonth() === now.getMonth() &&
-    d.getUTCDate() === now.getDate()
-  );
+  const localIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  if (rawStr.startsWith(localIso)) return true;
+
+  const ts = typeof dateValue === 'number' ? dateValue : parseStayDate(dateValue);
+  if (ts !== null && ts !== undefined && !isNaN(ts)) {
+    const d = new Date(ts);
+    const dIso = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+    if (dIso === todayIso || dIso === localIso) return true;
+  }
+
+  const parsed = new Date(dateValue);
+  if (!isNaN(parsed.getTime())) {
+    return (
+      parsed.getFullYear() === now.getFullYear() &&
+      parsed.getMonth() === now.getMonth() &&
+      parsed.getDate() === now.getDate()
+    );
+  }
+
+  return false;
 }
 
 /** Sum invoiced revenue for verified invoices attributable to today. */
@@ -66,7 +82,7 @@ export default function DashboardMetrics({
 }) {
   // Reservation Today: reservations created/booked for today or checking in today
   const reservationTodayCount = reservations.filter((r) =>
-    isToday(r.createdAt || r.date || r.reservationDate || r.bookingDate || r.checkIn)
+    isToday(r.createdAt || r.bookingDate || r.reservationDate || r.date || r.checkIn)
   ).length;
 
   const occupiedCount = roomInventory.filter((room) => room.status === 'Booked').length;
@@ -79,10 +95,10 @@ export default function DashboardMetrics({
   // Checkout Today: bookings in canonical 'Checked Out' state whose checkOut date is today
   const checkOutCount = reservations.filter((r) => {
     if (normalizeBookingStatus(r.status) !== 'Checked Out') return false;
-    return isToday(r.checkOut);
+    return isToday(r.checkedOutAt || r.checkoutDate || r.checkOut);
   }).length;
 
-  // Billing-derived KPIs (reactive to Job 23 events)
+  // Billing-derived KPIs (reactive to payment & invoice events)
   const [revenueToday, setRevenueToday] = useState(0);
   const [paymentsTodayCount, setPaymentsTodayCount] = useState(0);
 
@@ -97,20 +113,21 @@ export default function DashboardMetrics({
     refreshBillingKPIs();
   }, [refreshBillingKPIs]);
 
-  // Job 23: update KPIs on canonical financial mutations
   useEffect(() => {
     window.addEventListener(INVOICES_UPDATED_EVENT, refreshBillingKPIs);
     window.addEventListener(PAYMENTS_UPDATED_EVENT, refreshBillingKPIs);
     window.addEventListener(REFUNDS_UPDATED_EVENT, refreshBillingKPIs);
+    window.addEventListener('storage', refreshBillingKPIs);
     return () => {
       window.removeEventListener(INVOICES_UPDATED_EVENT, refreshBillingKPIs);
       window.removeEventListener(PAYMENTS_UPDATED_EVENT, refreshBillingKPIs);
       window.removeEventListener(REFUNDS_UPDATED_EVENT, refreshBillingKPIs);
+      window.removeEventListener('storage', refreshBillingKPIs);
     };
   }, [refreshBillingKPIs]);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-1">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
       <KPICard
         title="Reservation Today"
         value={reservationTodayCount}

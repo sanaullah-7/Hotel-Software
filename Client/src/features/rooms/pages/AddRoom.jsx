@@ -92,34 +92,32 @@ export default function AddRoom() {
     '& .MuiOutlinedInput-root': {
       borderRadius: '8px', 
       backgroundColor: '#ffffff', 
-      fontSize: '13px',
+      fontSize: '12.5px',
       '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' },
       '&:hover fieldset': { borderColor: '#9ca3af' },
       '&.Mui-focused fieldset': { borderColor: '#1b7f43', borderWidth: '1.5px' },
     },
     '& .MuiInputLabel-root': { 
-      fontSize: '13px', 
+      fontSize: '12.5px', 
       color: '#6b7280',
       '&.Mui-focused': { color: '#1b7f43' } 
     },
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto animate-fade-in">
-      <div className="h-2"></div>
-
+    <div className="w-full space-y-2.5 pb-3">
       {/* FORM CARD */}
-      <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 flex-1 overflow-hidden">
-        <div className="p-4 bg-white">
-          <form onSubmit={handleSave} className="space-y-8">
+      <div className="bg-white rounded-lg shadow-xs border border-gray-100 overflow-hidden">
+        <div className="p-3 sm:p-5 bg-white">
+          <form onSubmit={handleSave} className="space-y-4">
             
             {/* SECTION 1: ROOM INFORMATION */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Hotel sx={{ fontSize: 22, color: '#1b7f43' }} />
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Room Information</h3>
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                <Hotel sx={{ fontSize: 18, color: '#1b7f43' }} />
+                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Room Information</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <TextField required label="Room Number" name="roomNumber" value={formData.roomNumber} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
                 
                 <FormControl size="small" fullWidth sx={muiInputSx}>
@@ -169,15 +167,13 @@ export default function AddRoom() {
               </div>
             </div>
 
-            <hr className="border-gray-100" />
-
             {/* SECTION 2: BED & SPACE */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <KingBed sx={{ fontSize: 22, color: '#1b7f43' }} />
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Bed & Space Specifications</h3>
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                <KingBed sx={{ fontSize: 18, color: '#1b7f43' }} />
+                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Bed & Space Specifications</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <TextField label="Capacity (Persons)" name="capacity" type="number" value={formData.capacity} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
                 <FormControl size="small" fullWidth sx={muiInputSx}>
                   <InputLabel>Bed Type</InputLabel>
@@ -204,15 +200,13 @@ export default function AddRoom() {
               </div>
             </div>
 
-            <hr className="border-gray-100" />
-
             {/* SECTION 3: AMENITIES */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <SettingsSystemDaydream sx={{ fontSize: 22, color: '#1b7f43' }} />
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Amenities & Facilities</h3>
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                <SettingsSystemDaydream sx={{ fontSize: 18, color: '#1b7f43' }} />
+                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Amenities & Facilities</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
                 <FormControl required size="small" fullWidth sx={muiInputSx}>
                   <InputLabel>TV Type</InputLabel>
                   <Select name="tvType" value={formData.tvType} label="TV Type *" onChange={handleChange}>
@@ -239,23 +233,21 @@ export default function AddRoom() {
                 </FormControl>
               </div>
               
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-2">
-                <FormControlLabel control={<Switch checked={formData.wifiAvailable} onChange={handleChange} name="wifiAvailable" color="success" />} label={<span className="text-sm text-gray-700">WiFi Available</span>} />
-                <FormControlLabel control={<Switch checked={formData.balconyAvailable} onChange={handleChange} name="balconyAvailable" color="success" />} label={<span className="text-sm text-gray-700">Balcony Available</span>} />
-                <FormControlLabel control={<Switch checked={formData.miniBarAvailable} onChange={handleChange} name="miniBarAvailable" color="success" />} label={<span className="text-sm text-gray-700">Mini Bar Available</span>} />
-                <FormControlLabel control={<Switch checked={formData.petFriendly} onChange={handleChange} name="petFriendly" color="success" />} label={<span className="text-sm text-gray-700">Pet Friendly</span>} />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 px-1 py-1">
+                <FormControlLabel control={<Switch size="small" checked={formData.wifiAvailable} onChange={handleChange} name="wifiAvailable" color="success" />} label={<span className="text-xs text-gray-700">WiFi Available</span>} />
+                <FormControlLabel control={<Switch size="small" checked={formData.balconyAvailable} onChange={handleChange} name="balconyAvailable" color="success" />} label={<span className="text-xs text-gray-700">Balcony Available</span>} />
+                <FormControlLabel control={<Switch size="small" checked={formData.miniBarAvailable} onChange={handleChange} name="miniBarAvailable" color="success" />} label={<span className="text-xs text-gray-700">Mini Bar Available</span>} />
+                <FormControlLabel control={<Switch size="small" checked={formData.petFriendly} onChange={handleChange} name="petFriendly" color="success" />} label={<span className="text-xs text-gray-700">Pet Friendly</span>} />
               </div>
             </div>
 
-            <hr className="border-gray-100" />
-
             {/* SECTION 4: OPERATIONS & POLICIES */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <CleaningServices sx={{ fontSize: 22, color: '#1b7f43' }} />
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Operations & Policies</h3>
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                <CleaningServices sx={{ fontSize: 18, color: '#1b7f43' }} />
+                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Operations & Policies</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <FormControl required size="small" fullWidth sx={muiInputSx}>
                   <InputLabel>Housekeeping Status</InputLabel>
                   <Select name="housekeepingStatus" value={formData.housekeepingStatus} label="Housekeeping Status *" onChange={handleChange}>
@@ -284,20 +276,18 @@ export default function AddRoom() {
               </div>
             </div>
 
-            <hr className="border-gray-100" />
-
             {/* SECTION 5: ADDITIONAL DETAILS */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Info sx={{ fontSize: 22, color: '#1b7f43' }} />
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Additional Details</h3>
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                <Info sx={{ fontSize: 18, color: '#1b7f43' }} />
+                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Additional Details</h3>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">Room Images / Documents</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Room Images / Documents</label>
                   <div 
-                    className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => fileInputRef.current && fileInputRef.current.click()}
                   >
                     <input 
@@ -307,18 +297,18 @@ export default function AddRoom() {
                       className="hidden" 
                       accept="image/*,.pdf,.doc,.docx"
                     />
-                    <CloudUpload sx={{ fontSize: 32, color: '#9ca3af' }} className="mb-2" />
-                    <p className="text-sm font-semibold text-gray-700">Click to upload <span className="font-normal text-gray-500">or drag and drop file here</span></p>
-                    <p className="text-xs text-gray-400 mt-1">{selectedFile ? <span className="text-[#1b7f43] font-medium">{selectedFile.name}</span> : 'No file chosen'}</p>
+                    <CloudUpload sx={{ fontSize: 24, color: '#9ca3af' }} className="mb-1" />
+                    <p className="text-xs font-semibold text-gray-700">Click to upload <span className="font-normal text-gray-500">or drag and drop file here</span></p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">{selectedFile ? <span className="text-[#1b7f43] font-medium">{selectedFile.name}</span> : 'No file chosen'}</p>
                   </div>
                 </div>
                 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">Notes & Instructions</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1.5">Notes & Instructions</label>
                   <TextField 
                     name="notes" 
                     multiline 
-                    rows={5}
+                    rows={3}
                     value={formData.notes} 
                     onChange={handleChange} 
                     sx={muiInputSx} 
@@ -329,20 +319,20 @@ export default function AddRoom() {
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 pt-4 w-full justify-end border-t border-gray-100">
+            <div className="flex items-center space-x-2 pt-3 w-full justify-end border-t border-gray-100">
               <button 
                 type="button" 
                 onClick={handleReset} 
-                className="flex items-center space-x-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all cursor-pointer"
+                className="flex items-center space-x-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-3.5 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-all cursor-pointer"
               >
-                <RestartAlt sx={{ fontSize: 18 }} />
+                <RestartAlt sx={{ fontSize: 16 }} />
                 <span>Reset</span>
               </button>
               <button 
                 type="submit" 
-                className="flex items-center space-x-1.5 bg-[var(--primary-main)] hover:brightness-110 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition-all cursor-pointer"
+                className="flex items-center space-x-1 bg-[var(--primary-main)] hover:brightness-110 text-white px-4 py-1.5 rounded-lg text-xs font-semibold shadow-xs transition-all cursor-pointer"
               >
-                <Save sx={{ fontSize: 18 }} />
+                <Save sx={{ fontSize: 16 }} />
                 <span>Save Room</span>
               </button>
             </div>

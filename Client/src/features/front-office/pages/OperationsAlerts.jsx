@@ -141,28 +141,36 @@ const initialAlerts = [
 const PRIORITY_OPTIONS = ['All','Critical','High','Medium','Low'];
 const STATUS_OPTIONS = ['All','Open','In Progress','Assigned','Resolved'];
 
-const muiSelectSx = {'& .MuiOutlinedInput-root': {
- borderRadius:'8px',
- backgroundColor:'#ffffff',
- fontSize:'12px',
- height:'32px',
- color:'#1f2937','& fieldset': { borderColor:'#e5e7eb', borderWidth:'1.2px' },'&:hover fieldset': { borderColor:'#9ca3af' },'&.Mui-focused fieldset': { borderColor:'#1b7f43', borderWidth:'1.5px' },
- },'& .MuiSelect-select': {
- padding:'0 8px',
- display:'flex',
- alignItems:'center',
- height:'32px',
- },'& .MuiInputLabel-root': {
- fontSize:'13px',
- color:'#6b7280',
- transform:'translate(14px, 7px) scale(1)','&.Mui-focused': { color:'#1b7f43' }
- },'& .MuiInputLabel-root.MuiInputLabel-shrink': {
- transform:'translate(14px, -9px) scale(0.75)',
- },
+const muiSelectSx = {
+  '& .MuiOutlinedInput-root': {
+    borderRadius: '6px',
+    backgroundColor: '#ffffff',
+    fontSize: '11.5px',
+    height: '28px',
+    color: '#1f2937',
+    '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' },
+    '&:hover fieldset': { borderColor: '#9ca3af' },
+    '&.Mui-focused fieldset': { borderColor: '#1b7f43', borderWidth: '1.5px' },
+  },
+  '& .MuiSelect-select': {
+    padding: '0 8px',
+    display: 'flex',
+    alignItems: 'center',
+    height: '28px',
+  },
+  '& .MuiInputLabel-root': {
+    fontSize: '11.5px',
+    color: '#6b7280',
+    transform: 'translate(10px, 5px) scale(1)',
+    '&.Mui-focused': { color: '#1b7f43' }
+  },
+  '& .MuiInputLabel-root.MuiInputLabel-shrink': {
+    transform: 'translate(10px, -8px) scale(0.75)',
+  },
 };
 
 export default function OperationsAlerts() {
- const [alerts, setAlerts] = useState(() => {
+  const [alerts, setAlerts] = useState(() => {
     const saved = localStorage.getItem('hotel_ops_alerts');
     if (saved) {
       try { return JSON.parse(saved); } catch(e) {}
@@ -173,69 +181,69 @@ export default function OperationsAlerts() {
   useEffect(() => {
     localStorage.setItem('hotel_ops_alerts', JSON.stringify(alerts));
   }, [alerts]);
- const [searchQuery, setSearchQuery] = useState('');
- const [deptFilter, setDeptFilter] = useState('All');
- const [priorityFilter, setPriorityFilter] = useState('All');
- const [statusFilter, setStatusFilter] = useState('All');
- const [broadcastOpen, setBroadcastOpen] = useState(false);
- const [broadcastMsg, setBroadcastMsg] = useState('');
- const [alertTitle, setAlertTitle] = useState('');
- const [alertDept, setAlertDept] = useState(DEFAULT_DEPARTMENT);
- const [alertPriority, setAlertPriority] = useState('High');
- const [broadcastSentMsg, setBroadcastSentMsg] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [deptFilter, setDeptFilter] = useState('All');
+  const [priorityFilter, setPriorityFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertDept, setAlertDept] = useState(DEFAULT_DEPARTMENT);
+  const [alertPriority, setAlertPriority] = useState('High');
+  const [broadcastSentMsg, setBroadcastSentMsg] = useState('');
 
- // ---- Derived summary counts (live — react to status changes below) ----
- const activeCount = alerts.filter(a => a.status !=='Resolved').length;
- const criticalCount = alerts.filter(a => a.priority ==='Critical' && a.status !=='Resolved').length;
- const inProgressCount = alerts.filter(a => a.status ==='In Progress').length;
- const resolvedCount = alerts.filter(a => a.status ==='Resolved').length;
+  // ---- Derived summary counts (live — react to status changes below) ----
+  const activeCount = alerts.filter(a => a.status !== 'Resolved').length;
+  const criticalCount = alerts.filter(a => a.priority === 'Critical' && a.status !== 'Resolved').length;
+  const inProgressCount = alerts.filter(a => a.status === 'In Progress').length;
+  const resolvedCount = alerts.filter(a => a.status === 'Resolved').length;
 
- const departmentLoad = useMemo(() => {
- return Object.keys(DEPARTMENTS).map(dept => {
- const active = alerts.filter(a => a.department === dept && a.status !=='Resolved').length;
- return { dept, active };
- });
- }, [alerts]);
- const maxLoad = Math.max(1, ...departmentLoad.map(d => d.active));
+  const departmentLoad = useMemo(() => {
+    return Object.keys(DEPARTMENTS).map(dept => {
+      const active = alerts.filter(a => a.department === dept && a.status !== 'Resolved').length;
+      return { dept, active };
+    });
+  }, [alerts]);
+  const maxLoad = Math.max(1, ...departmentLoad.map(d => d.active));
 
- const filteredAlerts = useMemo(() => {
- return alerts.filter(a => {
- if (deptFilter !=='All' && a.department !== deptFilter) return false;
- if (priorityFilter !=='All' && a.priority !== priorityFilter) return false;
- if (statusFilter !=='All' && a.status !== statusFilter) return false;
- if (searchQuery) {
- const q = searchQuery.toLowerCase();
- const matches = a.title.toLowerCase().includes(q) ||
- a.location.toLowerCase().includes(q) ||
- a.guest.toLowerCase().includes(q) ||
- a.id.toLowerCase().includes(q) ||
- a.reportedBy.toLowerCase().includes(q);
- if (!matches) return false;
- }
- return true;
- });
- }, [alerts, deptFilter, priorityFilter, statusFilter, searchQuery]);
+  const filteredAlerts = useMemo(() => {
+    return alerts.filter(a => {
+      if (deptFilter !== 'All' && a.department !== deptFilter) return false;
+      if (priorityFilter !== 'All' && a.priority !== priorityFilter) return false;
+      if (statusFilter !== 'All' && a.status !== statusFilter) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matches = a.title.toLowerCase().includes(q) ||
+          a.location.toLowerCase().includes(q) ||
+          a.guest.toLowerCase().includes(q) ||
+          a.id.toLowerCase().includes(q) ||
+          a.reportedBy.toLowerCase().includes(q);
+        if (!matches) return false;
+      }
+      return true;
+    });
+  }, [alerts, deptFilter, priorityFilter, statusFilter, searchQuery]);
 
- const handleReset = () => {
- setSearchQuery('');
- setDeptFilter('All');
- setPriorityFilter('All');
- setStatusFilter('All');
- };
+  const handleReset = () => {
+    setSearchQuery('');
+    setDeptFilter('All');
+    setPriorityFilter('All');
+    setStatusFilter('All');
+  };
 
- const handleEscalate = (id) => {
- setAlerts(prev => prev.map(a => a.id === id ? { ...a, priority:'Critical' } : a));
- };
+  const handleEscalate = (id) => {
+    setAlerts(prev => prev.map(a => a.id === id ? { ...a, priority: 'Critical' } : a));
+  };
 
- const handleAcknowledge = (id) => {
- setAlerts(prev => prev.map(a => a.id === id ? { ...a, status:'In Progress' } : a));
- };
+  const handleAcknowledge = (id) => {
+    setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: 'In Progress' } : a));
+  };
 
- const handleResolve = (id) => {
- setAlerts(prev => prev.map(a => a.id === id ? { ...a, status:'Resolved' } : a));
- };
+  const handleResolve = (id) => {
+    setAlerts(prev => prev.map(a => a.id === id ? { ...a, status: 'Resolved' } : a));
+  };
 
- const handleSendBroadcast = () => {
+  const handleSendBroadcast = () => {
     if (!alertTitle.trim()) return;
     
     const newAlert = {
@@ -261,262 +269,270 @@ export default function OperationsAlerts() {
     setTimeout(() => setBroadcastSentMsg(''), 4000);
   };
 
- return (
- <div className="pt-1 min-h-screen">
- {/* TOP SUMMARY CARDS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
-          <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{activeCount}</div>
-              <div className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Active Alerts</div>
-            </div>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
-              <NotificationsIcon sx={{ fontSize: 18 }} />
-            </div>
+  return (
+    <div className="animate-fade-in space-y-2.5 pb-3">
+      {/* TOP SUMMARY CARDS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-0.5">
+        <div className="bg-white p-2.5 sm:p-3 rounded-[6px] shadow-xs border border-gray-100 flex items-center justify-between">
+          <div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{activeCount}</div>
+            <div className="text-xs text-gray-500 font-medium whitespace-nowrap">Active Alerts</div>
           </div>
-  
-          <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{criticalCount}</div>
-              <div className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Critical & Urgent</div>
-            </div>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600 shrink-0">
-              <ReportProblemIcon sx={{ fontSize: 18 }} />
-            </div>
-          </div>
-  
-          <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{inProgressCount}</div>
-              <div className="text-[13px] text-gray-500 font-medium whitespace-nowrap">In Progress</div>
-            </div>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-orange-50 text-orange-600 shrink-0">
-              <PendingActionsIcon sx={{ fontSize: 18 }} />
-            </div>
-          </div>
-  
-          <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
-            <div>
-              <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{resolvedCount}</div>
-              <div className="text-[13px] text-gray-500 font-medium whitespace-nowrap">Resolved Today</div>
-            </div>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600 shrink-0">
-              <TaskAltIcon sx={{ fontSize: 18 }} />
-            </div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
+            <NotificationsIcon sx={{ fontSize: 17 }} />
           </div>
         </div>
-  
-        {/* DEPARTMENT OPERATIONS LOAD */}
- <div className="bg-white rounded-[10px] shadow-[0_2px_12px_-4px_rgba(0,0,0,0.05)] border border-gray-100 p-4 mb-2">
- <div className="flex justify-between items-center border-b border-gray-100 mb-4">
- <div className="flex items-center gap-3">
- <h2 className="text-[20px] font-black text-[#0f172a]">Department Operations Load</h2>
- </div>
- <span className="text-[#64748b] font-medium text-[13px]">Click a department to filter active tickets</span>
- </div>
 
- <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
- {departmentLoad.map(({ dept, active }) => {
- const theme = DEPARTMENTS[dept] ?? DEPARTMENTS[DEFAULT_DEPARTMENT];
- const Icon = theme.icon;
- const isActive = deptFilter === dept;
- return (
- <button
- key={dept}
- onClick={() => setDeptFilter(isActive ?'All' : dept)}
- className={`text-left border rounded-[16px] p-4 flex flex-col gap-3 transition-all cursor-pointer ${
- isActive ?'border-[#2e7d32] ring-1 ring-[#2e7d32]/30 bg-[#f5f6ff]' :'border-gray-100 hover:border-gray-200'
- }`}
- >
- <div className="flex items-center gap-3">
- 
- <div className="flex flex-col min-w-0">
- <span className="text-[#0f172a] font-black text-[14px] leading-tight truncate">{dept}</span>
- <span className="text-[#64748b] font-medium text-[12px]">{active} active</span>
- </div>
- </div>
- <div className="w-full bg-[#f1f5f9] rounded-full h-[6px] mt-1">
- <div
- className="h-[6px] rounded-full transition-all"
- style={{ width:`${Math.round((active / maxLoad) * 100)}%`, backgroundColor: active > 0 ? theme.color :'#e2e8f0' }}
- ></div>
- </div>
- </button>
- );
- })}
- </div>
- </div>
+        <div className="bg-white p-2.5 sm:p-3 rounded-[6px] shadow-xs border border-gray-100 flex items-center justify-between">
+          <div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{criticalCount}</div>
+            <div className="text-xs text-gray-500 font-medium whitespace-nowrap">Critical & Urgent</div>
+          </div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50 text-red-600 shrink-0">
+            <ReportProblemIcon sx={{ fontSize: 17 }} />
+          </div>
+        </div>
 
- {/* SEARCH BAR */}
- <div className="flex items-center gap-3 mb-3">
- <div className="relative flex-1">
- 
- <input
- type="text"
- value={searchQuery}
- onChange={(e) => setSearchQuery(e.target.value)}
- placeholder="Search alerts by task, room, guest, or staff..."
- className="w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl text-[13px] bg-white focus:outline-none focus:border-[#2e7d32] focus:ring-1 focus:ring-[#2e7d32] transition-shadow"
- />
- </div>
- <span className="text-[#2e7d32] bg-[#edf7ed] text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0">
- {filteredAlerts.length} matching alert{filteredAlerts.length !== 1 ?'s' :''}
- </span>
- <button
- onClick={() => setBroadcastOpen(true)}
- className="flex items-center gap-1.5 bg-[#2e7d32] hover:brightness-110 text-white px-4 py-2.5 rounded-xl text-[12.5px] font-bold shadow-sm transition-all shrink-0 cursor-pointer"
- >
- Broadcast Alert
- </button>
- </div>
+        <div className="bg-white p-2.5 sm:p-3 rounded-[6px] shadow-xs border border-gray-100 flex items-center justify-between">
+          <div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{inProgressCount}</div>
+            <div className="text-xs text-gray-500 font-medium whitespace-nowrap">In Progress</div>
+          </div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-orange-50 text-orange-600 shrink-0">
+            <PendingActionsIcon sx={{ fontSize: 17 }} />
+          </div>
+        </div>
 
- {broadcastSentMsg && (
- <p className="text-[12px] font-semibold text-[#10b981] flex items-center gap-1.5 mb-3">
- {broadcastSentMsg}
- </p>
- )}
+        <div className="bg-white p-2.5 sm:p-3 rounded-[6px] shadow-xs border border-gray-100 flex items-center justify-between">
+          <div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{resolvedCount}</div>
+            <div className="text-xs text-gray-500 font-medium whitespace-nowrap">Resolved Today</div>
+          </div>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-green-50 text-green-600 shrink-0">
+            <TaskAltIcon sx={{ fontSize: 17 }} />
+          </div>
+        </div>
+      </div>
 
- {/* FILTER CHIPS + DROPDOWNS */}
- <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
- <div className="flex flex-wrap items-center gap-2">
- <button
- onClick={() => setDeptFilter('All')}
- className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors cursor-pointer ${
- deptFilter ==='All' ?'bg-[#2e7d32] text-white' :'bg-white border border-gray-200 text-gray-600 hover:border-gray-300'
- }`}
- >
- All
- </button>
- {Object.keys(DEPARTMENTS).map(dept => (
- <button
- key={dept}
- onClick={() => setDeptFilter(dept)}
- className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-colors cursor-pointer ${
- deptFilter === dept ?'bg-[#2e7d32] text-white' :'bg-white border border-gray-200 text-gray-600 hover:border-gray-300'
- }`}
- >
- {dept}
- </button>
- ))}
- </div>
+      {/* DEPARTMENT OPERATIONS LOAD */}
+      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 p-3">
+        <div className="flex justify-between items-center border-b border-gray-100 pb-2 mb-2.5">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold text-slate-800">Department Operations Load</h2>
+          </div>
+          <span className="text-gray-400 font-normal text-[11px]">Click a department to filter active tickets</span>
+        </div>
 
- <div className="flex items-center gap-2">
- <Dropdown
- label="Priority"
- options={PRIORITY_OPTIONS}
- value={priorityFilter}
- onChange={(e) => setPriorityFilter(e.target.value)}
- fullWidth={false}
- formControlSx={{ minWidth: 100, ...muiSelectSx }}
- optionSx={{ fontSize: 12 }}
- />
- <Dropdown
- label="Status"
- options={STATUS_OPTIONS}
- value={statusFilter}
- onChange={(e) => setStatusFilter(e.target.value)}
- fullWidth={false}
- formControlSx={{ minWidth: 100, ...muiSelectSx }}
- optionSx={{ fontSize: 12 }}
- />
- <button
- onClick={handleReset}
- className="flex items-center gap-1 px-3 h-[32px] border border-gray-200 rounded-lg text-[12px] font-semibold text-gray-500 hover:bg-gray-50 transition-colors cursor-pointer shrink-0"
- >
- Reset
- </button>
- </div>
- </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-2">
+          {departmentLoad.map(({ dept, active }) => {
+            const theme = DEPARTMENTS[dept] ?? DEPARTMENTS[DEFAULT_DEPARTMENT];
+            const Icon = theme.icon;
+            const isActive = deptFilter === dept;
+            return (
+              <button
+                key={dept}
+                onClick={() => setDeptFilter(isActive ? 'All' : dept)}
+                className={`text-left border rounded-[6px] p-2.5 flex flex-col gap-1.5 transition-all cursor-pointer ${
+                  isActive ? 'border-[#1b7f43] ring-1 ring-[#1b7f43]/30 bg-[#edf7ed]' : 'border-gray-100 hover:border-gray-200 bg-slate-50/40'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="text-slate-800 font-bold text-[12px] leading-tight truncate">{dept}</span>
+                    <span className="text-gray-500 font-normal text-[10.5px]">{active} active</span>
+                  </div>
+                </div>
+                <div className="w-full bg-gray-200/80 rounded-full h-[5px] mt-0.5">
+                  <div
+                    className="h-[5px] rounded-full transition-all"
+                    style={{ width: `${Math.round((active / maxLoad) * 100)}%`, backgroundColor: active > 0 ? theme.color : '#cbd5e1' }}
+                  ></div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
- {/* ALERTS LIST */}
- <div className="flex flex-col gap-2">
- {filteredAlerts.map(alert => {
- const theme = DEPARTMENTS[alert.department] ?? DEPARTMENTS[DEFAULT_DEPARTMENT];
- const Icon = theme.icon;
- const isResolved = alert.status ==='Resolved';
+      {/* SEARCH BAR & FILTERS */}
+      <div className="bg-white rounded-[6px] border border-gray-100 shadow-sm p-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* Left search */}
+          <div className="flex items-center gap-2 flex-1 min-w-[200px]">
+            <div className="relative flex-1 max-w-sm">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search alerts by task, room, guest, or staff..."
+                className="w-full pl-8 pr-3 py-1 border border-gray-200 rounded-[6px] text-xs bg-white focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-shadow h-[28px]"
+              />
+              <SearchIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" sx={{ fontSize: 16 }} />
+            </div>
+            <span className="text-[#1b7f43] bg-[#edf7ed] text-[10.5px] font-bold px-2 py-0.5 rounded-full shrink-0">
+              {filteredAlerts.length} matching
+            </span>
+          </div>
 
- return (
- <div key={alert.id} className="bg-white rounded-[6px] shadow-sm border border-gray-100 p-5">
- {/* Header row */}
- <div className="flex items-start justify-between gap-3 mb-2">
- <div className="flex items-start gap-3 min-w-0">
- 
- <div className="min-w-0">
- <div className="flex items-center flex-wrap gap-2">
- <h3 className="text-[14.5px] font-black text-[#0f172a] leading-tight">{alert.title}</h3>
- <span className="text-[10px] font-bold text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded">{alert.id}</span>
- <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${PRIORITY_STYLES[alert.priority]}`}>{alert.priority}</span>
- <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[alert.status]}`}>{alert.status}</span>
- </div>
- <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5 text-[11px] text-gray-500 font-medium">
- <span className="flex items-center gap-1">{alert.time}</span>
- <span className="flex items-center gap-1">{alert.location}</span>
- <span className="flex items-center gap-1">{alert.guest}</span>
- <span className="flex items-center gap-1">By {alert.reportedBy} ({alert.reportedAgo})</span>
- </div>
- </div>
- </div>
+          {/* Right Action */}
+          <button
+            onClick={() => setBroadcastOpen(true)}
+            className="flex items-center gap-1.5 bg-[#1b7f43] hover:brightness-105 text-white px-3 h-[28px] rounded-[6px] text-xs font-semibold shadow-xs transition-all shrink-0 cursor-pointer"
+          >
+            <CampaignIcon sx={{ fontSize: 15 }} />
+            Broadcast Alert
+          </button>
+        </div>
 
- <span className="flex items-center gap-1.5 text-[10.5px] font-bold text-[#2e7d32] border border-[#c7d2fe] bg-[#edf7ed] px-2.5 py-1 rounded-full shrink-0">
- {alert.assignedTo}
- </span>
- </div>
+        {broadcastSentMsg && (
+          <p className="text-xs font-semibold text-[#10b981] flex items-center gap-1 mt-2">
+            {broadcastSentMsg}
+          </p>
+        )}
 
- {/* Description */}
- <p className="text-[12.5px] text-gray-500 leading-relaxed mb-3">{alert.description}</p>
+        {/* FILTER CHIPS + DROPDOWNS */}
+        <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-gray-100">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              onClick={() => setDeptFilter('All')}
+              className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+                deptFilter === 'All' ? 'bg-[#1b7f43] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              All
+            </button>
+            {Object.keys(DEPARTMENTS).map(dept => (
+              <button
+                key={dept}
+                onClick={() => setDeptFilter(dept)}
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold transition-colors cursor-pointer ${
+                  deptFilter === dept ? 'bg-[#1b7f43] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {dept}
+              </button>
+            ))}
+          </div>
 
- {/* Action Required box */}
- <div className="bg-[#edf7ed] border border-[#e0e7ff] rounded-xl px-3.5 py-2.5 mb-3 flex items-start gap-2">
- 
- <p className="text-[12px] text-[#4338ca] leading-snug">
- <span className="font-bold">Action Required:</span> {alert.action}
- </p>
- </div>
+          <div className="flex items-center gap-2">
+            <Dropdown
+              label="Priority"
+              options={PRIORITY_OPTIONS}
+              value={priorityFilter}
+              onChange={(e) => setPriorityFilter(e.target.value)}
+              fullWidth={false}
+              formControlSx={{ minWidth: 90, ...muiSelectSx }}
+              optionSx={{ fontSize: 11.5 }}
+            />
+            <Dropdown
+              label="Status"
+              options={STATUS_OPTIONS}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              fullWidth={false}
+              formControlSx={{ minWidth: 90, ...muiSelectSx }}
+              optionSx={{ fontSize: 11.5 }}
+            />
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-1 px-2.5 h-[28px] border border-gray-200 rounded-[6px] text-xs font-semibold text-gray-600 hover:bg-gray-50 transition-colors cursor-pointer shrink-0"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
 
- {/* Footer row */}
- <div className="flex items-center justify-between gap-3">
- {isResolved ? (
- <span className="flex items-center gap-1.5 text-[12px] font-bold text-[#10b981]">
- Resolved
- </span>
- ) : alert.priority !=='Critical' ? (
- <button
- onClick={() => handleEscalate(alert.id)}
- className="flex items-center gap-1 text-[11.5px] font-bold text-[#ef4444] hover:underline cursor-pointer"
- >
- Escalate Urgency
- </button>
- ) : <span />}
+      {/* ALERTS LIST */}
+      <div className="flex flex-col gap-2">
+        {filteredAlerts.map(alert => {
+          const theme = DEPARTMENTS[alert.department] ?? DEPARTMENTS[DEFAULT_DEPARTMENT];
+          const Icon = theme.icon;
+          const isResolved = alert.status === 'Resolved';
 
- {!isResolved && (
- <div className="flex items-center gap-2">
- {alert.status !=='In Progress' && (
- <button
- onClick={() => handleAcknowledge(alert.id)}
- className="flex items-center gap-1.5 bg-[#2e7d32] hover:brightness-110 text-white px-3.5 py-1.5 rounded-lg text-[11.5px] font-bold shadow-sm transition-all cursor-pointer"
- >
- Acknowledge
- </button>
- )}
- <button
- onClick={() => handleResolve(alert.id)}
- className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-white px-3.5 py-1.5 rounded-lg text-[11.5px] font-bold shadow-sm transition-all cursor-pointer"
- >
- Mark Resolved
- </button>
- </div>
- )}
- </div>
- </div>
- );
- })}
+          return (
+            <div key={alert.id} className="bg-white rounded-[6px] shadow-sm border border-gray-100 p-3">
+              {/* Header row */}
+              <div className="flex items-start justify-between gap-2.5 mb-1.5">
+                <div className="flex items-start gap-2.5 min-w-0">
+                  <div className="min-w-0">
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      <h3 className="text-[13px] font-bold text-slate-800 leading-tight">{alert.title}</h3>
+                      <span className="text-[9.5px] font-bold text-gray-400 bg-gray-50 border border-gray-200 px-1.5 py-0.5 rounded font-mono">{alert.id}</span>
+                      <span className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded-[4px] whitespace-nowrap ${PRIORITY_STYLES[alert.priority]}`}>{alert.priority}</span>
+                      <span className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded-[4px] whitespace-nowrap ${STATUS_STYLES[alert.status]}`}>{alert.status}</span>
+                    </div>
+                    <div className="flex items-center flex-wrap gap-x-3 gap-y-0.5 mt-1 text-[10.5px] text-gray-500 font-normal">
+                      <span className="flex items-center gap-1">{alert.time}</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">{alert.location}</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">{alert.guest}</span>
+                      <span>•</span>
+                      <span className="flex items-center gap-1">By {alert.reportedBy} ({alert.reportedAgo})</span>
+                    </div>
+                  </div>
+                </div>
 
- {filteredAlerts.length === 0 && (
- <div className="bg-white rounded-[18px] border border-gray-100 p-10 text-center text-gray-400 text-[13px]">
- No alerts match your current filters.
- </div>
- )}
- </div>
+                <span className="flex items-center gap-1 text-[10px] font-bold text-[#1b7f43] border border-[#a7f3d0] bg-[#edf7ed] px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap">
+                  {alert.assignedTo}
+                </span>
+              </div>
+
+              {/* Description */}
+              <p className="text-[11.5px] text-gray-600 leading-normal my-1.5">{alert.description}</p>
+
+              {/* Action Required box */}
+              <div className="bg-[#edf7ed] border border-[#d1fae5] rounded-[6px] px-2.5 py-1.5 mb-2 flex items-start gap-1.5">
+                <p className="text-[11px] text-[#1b7f43] leading-snug">
+                  <span className="font-bold">Action Required:</span> {alert.action}
+                </p>
+              </div>
+
+              {/* Footer row */}
+              <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-gray-50">
+                {isResolved ? (
+                  <span className="flex items-center gap-1 text-[11px] font-bold text-[#10b981]">
+                    <CheckCircleIcon sx={{ fontSize: 13 }} /> Resolved
+                  </span>
+                ) : alert.priority !== 'Critical' ? (
+                  <button
+                    onClick={() => handleEscalate(alert.id)}
+                    className="flex items-center gap-1 text-[10.5px] font-bold text-[#ef4444] hover:underline cursor-pointer"
+                  >
+                    Escalate Urgency
+                  </button>
+                ) : <span />}
+
+                {!isResolved && (
+                  <div className="flex items-center gap-1.5">
+                    {alert.status !== 'In Progress' && (
+                      <button
+                        onClick={() => handleAcknowledge(alert.id)}
+                        className="inline-flex items-center gap-1 bg-[#1b7f43] hover:brightness-105 text-white px-2.5 py-0.5 rounded-[4px] text-[10.5px] font-semibold shadow-2xs transition-all cursor-pointer"
+                      >
+                        Acknowledge
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleResolve(alert.id)}
+                      className="inline-flex items-center gap-1 bg-gray-800 hover:bg-gray-700 text-white px-2.5 py-0.5 rounded-[4px] text-[10.5px] font-semibold shadow-2xs transition-all cursor-pointer"
+                    >
+                      Mark Resolved
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {filteredAlerts.length === 0 && (
+          <div className="bg-white rounded-[6px] border border-gray-100 p-8 text-center text-gray-400 text-xs">
+            No alerts match your current filters.
+          </div>
+        )}
+      </div>
 
  {/* BROADCAST ALERT MODAL */}
  {broadcastOpen && (

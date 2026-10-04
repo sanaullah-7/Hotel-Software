@@ -11,14 +11,14 @@ export default function MetricCards({ cards, className = '', compactSubtext = fa
         return (
           <div
             key={card.id}
-            className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between"
+            className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between"
           >
             <div>
-              <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{card.value}</div>
-              <div className="text-[13px] text-gray-500 font-medium">{card.title}</div>
+              <div className="text-xl font-bold text-gray-900 leading-none mb-1">{card.value}</div>
+              <div className="text-[11px] text-gray-500 font-medium">{card.title}</div>
             </div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
-              <IconComp sx={{ fontSize: 18 }} />
+            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
+              <IconComp sx={{ fontSize: 16 }} />
             </div>
           </div>
         );

@@ -59,7 +59,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="animate-fade-in pt-1 pb-6 space-y-1.5">
+    <div className="animate-fade-in pt-1 pb-4 space-y-3">
       {/* 6 TOP METRIC CARDS */}
       <DashboardMetrics
         reservations={reservations}

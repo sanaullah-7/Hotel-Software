@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Search, FilterList, AddCircleOutlined, Refresh, 
   TableChart, PictureAsPdf, Close,
@@ -276,71 +276,81 @@ export default function GuestComplaint() {
   const totalPages = Math.ceil(filteredComplaints.length / 10);
 
   return (
-    <div className="pt-1 w-full animate-fade-in relative">
+    <div className="w-full animate-fade-in pb-3 relative">
       
       {/* Main Card */}
       <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden relative">
         
         {/* Header Options */}
-        <div className="flex flex-col md:flex-row items-center justify-between p-2 border-b border-gray-100 gap-4">
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <h2 className="text-gray-600 font-semibold text-[17px] whitespace-nowrap">Guest Complaint Management</h2>
-            <div className="relative w-full md:w-64 flex-1">
+        <div className="flex flex-col md:flex-row items-center justify-between px-3 py-2 border-b border-gray-100 gap-2">
+          <div className="flex items-center gap-2.5 w-full md:w-auto">
+            <h2 className="text-gray-800 font-bold text-sm whitespace-nowrap">Guest Complaint Management</h2>
+            <div className="relative w-full md:w-60 flex-1">
               <input 
                 type="text" 
                 placeholder="Search..." 
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                className="w-full pl-4 pr-10 py-2 border border-gray-400 rounded-md text-[13px] text-gray-700 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)]"
+                className="w-full pl-3 pr-8 py-1 border border-gray-300 rounded-[6px] text-xs text-gray-700 focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)] h-[28px]"
               />
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 cursor-pointer" sx={{ fontSize: 20 }} />
+              <Search className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer" sx={{ fontSize: 16 }} />
             </div>
           </div>
           
-          <div className="flex items-center gap-2 relative">
-            <button onClick={openNewModal} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-green-50 transition-colors cursor-pointer" title="Add Complaint">
-              <AddCircleOutlined sx={{ fontSize: 24 }} className="text-[#1b7f43]" />
+          <div className="flex items-center gap-1.5 relative">
+            <button onClick={openNewModal} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-green-50 transition-colors cursor-pointer" title="Add Complaint">
+              <AddCircleOutlined sx={{ fontSize: 18 }} className="text-[#1b7f43]" />
             </button>
-            <button onClick={handleRefresh} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
-              <Refresh sx={{ fontSize: 24 }} className="text-[var(--primary-main)]" />
+            <button onClick={handleRefresh} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
+              <Refresh sx={{ fontSize: 18 }} className="text-[var(--primary-main)]" />
             </button>
-            <button onClick={handleExportCSV} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Export CSV">
-              <TableChart sx={{ fontSize: 22 }} className="text-[#0ea5e9]" />
+            <button onClick={handleExportCSV} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Export CSV">
+              <TableChart sx={{ fontSize: 16 }} className="text-[#0ea5e9]" />
             </button>
-            <button onClick={handleExportPDF} className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" title="Export PDF">
-              <PictureAsPdf sx={{ fontSize: 22 }} className="text-[#ef4444]" />
+            <button onClick={handleExportPDF} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" title="Export PDF">
+              <PictureAsPdf sx={{ fontSize: 16 }} className="text-[#ef4444]" />
             </button>
           </div>
         </div>
         
         {/* Table - Non-scrolling on desktop, scrollable on mobile */}
-        <div className="w-full max-lg:overflow-x-auto lg:overflow-x-hidden min-w-0">
-          <table className="w-full text-left border-collapse table-fixed max-lg:min-w-[800px]">
+        <div className="w-full overflow-hidden">
+          <table className="w-full text-left border-collapse table-fixed">
+            <colgroup>
+              <col className="w-[10%]" />
+              <col className="w-[14%]" />
+              <col className="w-[8%]" />
+              <col className="w-[13%]" />
+              <col className="w-[30%]" />
+              <col className="w-[8%]" />
+              <col className="w-[9%]" />
+              <col className="w-[8%]" />
+            </colgroup>
             <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                {visibleColumns['Date'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[11%]">Date</th>}
-                {visibleColumns['Guest Name'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[14%]">Guest Name</th>}
-                {visibleColumns['Room No'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[8%]">Room No</th>}
-                {visibleColumns['Complaint Type'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[14%]">Complaint Type</th>}
-                {visibleColumns['Description'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[29%]">Description</th>}
-                {visibleColumns['Priority'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[9%]">Priority</th>}
-                {visibleColumns['Status'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide whitespace-nowrap w-[9%]">Status</th>}
-                {visibleColumns['Actions'] && <th className="py-2.5 px-2 text-[11px] font-bold text-[#1e293b] uppercase tracking-wide text-center whitespace-nowrap w-[6%]">Actions</th>}
+              <tr className="border-b border-gray-100 bg-slate-50/50">
+                {visibleColumns['Date'] && <th className="py-2 px-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none truncate">Date</th>}
+                {visibleColumns['Guest Name'] && <th className="py-2 px-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none truncate">Guest Name</th>}
+                {visibleColumns['Room No'] && <th className="py-2 px-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none truncate">Room No</th>}
+                {visibleColumns['Complaint Type'] && <th className="py-2 px-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none truncate">Type</th>}
+                {visibleColumns['Description'] && <th className="py-2 px-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none truncate">Description</th>}
+                {visibleColumns['Priority'] && <th className="py-2 px-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none truncate">Priority</th>}
+                {visibleColumns['Status'] && <th className="py-2 px-1.5 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none truncate">Status</th>}
+                {visibleColumns['Actions'] && <th className="py-2 px-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none text-center whitespace-nowrap">Actions</th>}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-50 text-[11px]">
               {paginatedComplaints.map(complaint => (
-                <tr key={complaint.id} onClick={() => openViewModal(complaint)} className="border-b border-gray-50 hover:bg-gray-50/50 cursor-pointer">
+                <tr key={complaint.id} onClick={() => openViewModal(complaint)} className="hover:bg-slate-50/70 transition-colors cursor-pointer">
                   {visibleColumns['Date'] && (
-                    <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 whitespace-nowrap">
-                        <CalendarToday sx={{ fontSize: 13 }} className="text-gray-700 shrink-0" />
+                    <td className="py-1.5 px-1.5 text-[10.5px] text-[#475569] font-medium whitespace-nowrap">
+                      <div className="flex items-center gap-1 whitespace-nowrap">
+                        <CalendarToday sx={{ fontSize: 11 }} className="text-gray-400 shrink-0" />
                         <span className="truncate">{complaint.date}</span>
                       </div>
                     </td>
                   )}
                   {visibleColumns['Guest Name'] && (
-                    <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium">
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-800 font-semibold">
                       <Tooltip title={complaint.guestName} arrow placement="top">
                         <span className="truncate block cursor-default">
                           {complaint.guestName}
@@ -349,12 +359,14 @@ export default function GuestComplaint() {
                     </td>
                   )}
                   {visibleColumns['Room No'] && (
-                    <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium whitespace-nowrap">
-                      {complaint.roomNo}
+                    <td className="py-1.5 px-1.5 text-[10.5px] text-gray-700 font-mono whitespace-nowrap">
+                      <span className="inline-block px-1 py-0.5 bg-gray-100 rounded text-[10px] font-bold text-gray-800 border border-gray-200/60 font-mono whitespace-nowrap">
+                        {complaint.roomNo}
+                      </span>
                     </td>
                   )}
                   {visibleColumns['Complaint Type'] && (
-                    <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium">
+                    <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600">
                       <Tooltip title={complaint.type} arrow placement="top">
                         <span className="truncate block cursor-default">
                           {complaint.type}
@@ -363,36 +375,36 @@ export default function GuestComplaint() {
                     </td>
                   )}
                   {visibleColumns['Description'] && (
-                    <td className="py-2.5 px-2 text-[11.5px] text-[#475569] font-medium">
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600">
                       <Tooltip title={complaint.description} arrow placement="top">
-                        <span className="truncate block cursor-default">
+                        <span className="truncate block cursor-default" title={complaint.description}>
                           {complaint.description}
                         </span>
                       </Tooltip>
                     </td>
                   )}
                   {visibleColumns['Priority'] && (
-                    <td className="py-2.5 px-2 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-bold whitespace-nowrap inline-block ${priorityStyles[complaint.priority]}`}>
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
+                      <span className={`px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold whitespace-nowrap inline-block ${priorityStyles[complaint.priority]}`}>
                         {complaint.priority}
                       </span>
                     </td>
                   )}
                   {visibleColumns['Status'] && (
-                    <td className="py-2.5 px-2 whitespace-nowrap">
-                      <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-bold whitespace-nowrap inline-block ${statusStyles[complaint.status]}`}>
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
+                      <span className={`px-1.5 py-0.5 rounded-[4px] text-[10px] font-bold whitespace-nowrap inline-block ${statusStyles[complaint.status]}`}>
                         {complaint.status}
                       </span>
                     </td>
                   )}
                   {visibleColumns['Actions'] && (
-                    <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button onClick={(e) => { e.stopPropagation(); openEditModal(complaint); }} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer group" title="Edit Complaint">
-                          <EditOutlined className="text-[var(--primary-main)]" sx={{ fontSize: 18 }} />
+                    <td className="py-1.5 px-1 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={(e) => { e.stopPropagation(); openEditModal(complaint); }} className="w-5.5 h-5.5 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer group" title="Edit Complaint">
+                          <EditOutlined className="text-[var(--primary-main)]" sx={{ fontSize: 15 }} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); confirmDelete(complaint); }} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer group" title="Delete Complaint">
-                          <DeleteOutlined className="text-[#f97316] group-hover:text-orange-600" sx={{ fontSize: 18 }} />
+                        <button onClick={(e) => { e.stopPropagation(); confirmDelete(complaint); }} className="w-5.5 h-5.5 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors cursor-pointer group" title="Delete Complaint">
+                          <DeleteOutlined className="text-[#f97316] group-hover:text-orange-600" sx={{ fontSize: 15 }} />
                         </button>
                       </div>
                     </td>
@@ -401,13 +413,13 @@ export default function GuestComplaint() {
               ))}
               {paginatedComplaints.length === 0 && (
                 <tr>
-                  <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="py-8 text-center text-gray-400 text-[14px]">
+                  <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="py-8 text-center text-gray-400 text-xs">
                     No complaints found.
                   </td>
                 </tr>
               )}
             </tbody>
-                    </table>
+          </table>
         </div>
 
         {totalPages > 1 && (

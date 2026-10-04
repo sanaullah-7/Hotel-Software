@@ -96,15 +96,15 @@ export default function PaginationControls({
 
   if (variant === 'compact') {
     return (
-      <nav aria-label="Pagination" className={`p-4 flex items-center justify-end gap-6 text-[12px] text-gray-600 border-t border-gray-100 ${className}`}>
+      <nav aria-label="Pagination" className={`px-3 py-1.5 flex items-center justify-end gap-5 text-xs text-gray-600 border-t border-gray-100 ${className}`}>
         {rowsPerPageOptions && onRowsPerPageChange && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <span>Items per page:</span>
             <select
               aria-label="Items per page"
               value={rowsPerPage}
               onChange={(e) => onRowsPerPageChange(Number(e.target.value))}
-              className="border border-gray-300 rounded px-2 py-1 outline-none text-[12px] bg-white cursor-pointer"
+              className="border border-gray-300 rounded px-1.5 py-0.5 outline-none text-xs bg-white cursor-pointer"
             >
               {rowsPerPageOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -119,13 +119,13 @@ export default function PaginationControls({
           {startRecord} - {endRecord} of {totalRecords}
         </span>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <button
             type="button"
             aria-label="Previous page"
             onClick={() => onPageChange && onPageChange(Math.max(currentPage - 1, 1))}
             disabled={currentPage <= 1}
-            className="text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed cursor-pointer"
+            className="text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed cursor-pointer font-bold px-1.5 py-0.5"
           >
             {'<'}
           </button>
@@ -134,7 +134,7 @@ export default function PaginationControls({
             aria-label="Next page"
             onClick={() => onPageChange && onPageChange(Math.min(currentPage + 1, calculatedTotalPages))}
             disabled={currentPage >= calculatedTotalPages}
-            className="text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed cursor-pointer"
+            className="text-gray-600 hover:text-gray-900 disabled:text-gray-300 disabled:cursor-not-allowed cursor-pointer font-bold px-1.5 py-0.5"
           >
             {'>'}
           </button>

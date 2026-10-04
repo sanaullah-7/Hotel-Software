@@ -189,7 +189,7 @@ export default function AddReservation() {
  <NoteAlt sx={{ fontSize: 22, color:'#1b7f43' }} />
  <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Additional Details</h3>
  </div>
- <div className="space-y-4">
+ <div className="flex flex-col gap-[8px]">
  <TextField label="Address" name="address" value={formData.address} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
  <TextField label="Special Requests (Dietary requirements, accessibility needs, etc.)" name="specialRequests" value={formData.specialRequests} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
  
