@@ -1,8 +1,8 @@
 import authBg from '../../assets/images/auth-bg.webp';
 import authCardBg from '../../assets/images/authcard.webp';
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton } from '@mui/material';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton, Snackbar, Alert } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock, Hotel, AccessTime, ArrowBack } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 
@@ -24,11 +24,13 @@ const setSharedReqs = (reqs) => {
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isAuthenticated } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(location.state?.email || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
   const [awaitingApproval, setAwaitingApproval] = useState(false);
 
   useEffect(() => {
