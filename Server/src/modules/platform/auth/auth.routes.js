@@ -3,7 +3,7 @@ import { Router } from "express";
 import * as authController from "./auth.controller.js";
 import validate from "../../../middlewares/validate.middleware.js";
 import authMiddleware from "../../../middlewares/auth.middleware.js";
-import { registerSchema, loginSchema } from "./auth.validation.js";
+import { registerSchema, loginSchema, forgotPasswordSchema, resetPasswordSchema } from "./auth.validation.js";
 
 
 // Router() ek function call hai jo ek router object return karta hai.
@@ -11,6 +11,9 @@ const router = Router();
 
 router.post("/register", validate(registerSchema), authController.register);
 router.post("/login", validate(loginSchema), authController.login);
+router.post("/refresh", authController.refresh);
+router.post("/forgot-password", validate(forgotPasswordSchema), authController.forgotPassword);
+router.post("/reset-password", validate(resetPasswordSchema), authController.resetPassword);
 router.post("/logout", authMiddleware, authController.logout);
 router.get("/me", authMiddleware, authController.getMe);
 

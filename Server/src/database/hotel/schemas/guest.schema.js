@@ -1,3 +1,0 @@
-/**
- * # Guest/customer profile.
- */

@@ -61,7 +61,8 @@ res.cookie("refreshToken", refreshToken, {
 });
 
 export const logout = asyncHandler(async (req, res) => {
-  // Browser se refresh-token cookie clear karne ki koshish.
+  // Revoke every token issued so far for this account, then clear the cookie.
+  await authService.logoutAccount(req.user.id);
   res.clearCookie("refreshToken");
   //Logout ka server-side log.
     logger.info(
@@ -71,8 +72,36 @@ export const logout = asyncHandler(async (req, res) => {
   res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, null, "Logged out successfully"));
 });
 
+export const refresh = asyncHandler(async (req, res) => {
+  const token = req.cookies?.refreshToken || req.body.refreshToken;
+  const { newAccessToken, newRefreshToken } = await authService.refreshAuthToken(token);
+
+  res.cookie("refreshToken", newRefreshToken, {
+    httpOnly: true,
+    secure: ENV.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  })
+  .status(HTTP_STATUS.OK)
+  .json(new ApiResponse(HTTP_STATUS.OK, { accessToken: newAccessToken }, "Token refreshed successfully"));
+});
+
 export const getMe = asyncHandler(async (req, res) => {
   res
     .status(HTTP_STATUS.OK)
     .json(new ApiResponse(HTTP_STATUS.OK, req.user, "Current account fetched"));
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  await authService.forgotPassword(req.body.email);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, null, "If that email exists, an OTP has been sent."));
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  await authService.resetPassword(req.body);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, null, "Password has been successfully reset."));
 });

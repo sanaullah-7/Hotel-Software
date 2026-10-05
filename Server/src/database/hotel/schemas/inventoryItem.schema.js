@@ -1,3 +1,0 @@
-/**
- * # Inventory/stock item definitions.
- */

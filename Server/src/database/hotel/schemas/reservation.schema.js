@@ -1,3 +1,0 @@
-/**
- * # Reservation/booking records.
- */

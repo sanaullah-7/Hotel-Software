@@ -16,10 +16,10 @@ import request from 'supertest';
 import app from '../src/app.js';
 
 describe('Hotel Software Backend API', () => {
-  it('should return API running message on GET /', async () => {
+  it('should return done on GET /', async () => {
     const response = await request(app).get('/');
 
     expect(response.status).toBe(200);
-    expect(response.text).toBe('Api is Running and must i will block it.');
+    expect(response.text).toBe('done');
   });
 });

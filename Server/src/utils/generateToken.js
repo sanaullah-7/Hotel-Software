@@ -1,17 +1,16 @@
 import jwt from "jsonwebtoken";
 import { ENV } from "../config/env.js";
 
+// Tokens carry an explicit `type` so a refresh token can never be replayed as an access token
+// (and vice-versa), even if both secrets were configured identically.
 export const generateAccessToken = (payload) =>
-  // Is package se hum:jwt.sign() use karke token banate hain.
-//payload: Payload JWT ke andar rakhi hui information hai.
-  jwt.sign(payload, ENV.JWT_ACCESS_SECRET, {
+  jwt.sign({ ...payload, type: "access" }, ENV.JWT_ACCESS_SECRET, {
+    algorithm: "HS256",
     expiresIn: ENV.JWT_ACCESS_EXPIRY,
   });
 
-  // Ye refresh token generate karta hai.
-export const generateRefreshToken = (payload) =>{
-  return jwt.sign(payload,// WHAT DATA?,
-     ENV.JWT_REFRESH_SECRET, // WHICH SECRET?,
-   {
-    expiresIn: ENV.JWT_REFRESH_EXPIRY,// HOW LONG?
-  })};
+export const generateRefreshToken = (payload) =>
+  jwt.sign({ ...payload, type: "refresh" }, ENV.JWT_REFRESH_SECRET, {
+    algorithm: "HS256",
+    expiresIn: ENV.JWT_REFRESH_EXPIRY,
+  });

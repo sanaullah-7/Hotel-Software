@@ -5,12 +5,7 @@ export const GUESTS_UPDATED_EVENT = 'guests_update';
 // Kept as an event contract for existing reservation consumers.
 export const RESERVATIONS_UPDATED_EVENT = 'reservations_update';
 
-const INITIAL_GUESTS = [
-  { id: 'GST64188', name: 'John Smith', email: 'john.smith@example.com', phone: '+1234567890', city: 'New York', totalStays: 15, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=1' },
-  { id: 'GST6419F', name: 'Sarah Johnson', email: 'sarah.johnson@example.com', phone: '+1234567893', city: 'London', totalStays: 28, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=2' },
-  { id: 'GST64198', name: 'Carlos Rodriguez', email: 'carlos.rodriguez@example.com', phone: '+1234567895', city: 'Madrid', totalStays: 8, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=3' },
-  { id: 'GST64197', name: 'Emma Davis', email: 'emma.davis@example.com', phone: '+1234567897', city: 'Toronto', totalStays: 5, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=4' },
-];
+const INITIAL_GUESTS = [];
 
 function readGuests() {
   try {
@@ -19,11 +14,10 @@ function readGuests() {
       const parsed = JSON.parse(stored);
       return Array.isArray(parsed) ? parsed : [];
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_GUESTS));
   } catch {
     return [];
   }
-  return INITIAL_GUESTS;
+  return [];
 }
 
 export const getGuests = () => readGuests();

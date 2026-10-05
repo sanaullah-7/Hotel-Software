@@ -1,11 +1,9 @@
-import mongoose from "mongoose";
-import { ENV } from "./env.js";
+import { connectPlatformDB } from "../database/platform/platformConnection.js";
 import logger from "./logger.js";
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(ENV.MONGO_URI);
-    logger.info("MongoDB connected");
+    await connectPlatformDB();
   } catch (err) {
     logger.error(`MongoDB connection failed: ${err.message}`);
     process.exit(1);
@@ -13,3 +11,4 @@ const connectDB = async () => {
 };
 
 export default connectDB;
+

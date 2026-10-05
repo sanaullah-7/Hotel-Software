@@ -9,19 +9,14 @@ export const getStoredStaff = () => {
     const stored = localStorage.getItem(STAFF_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
   } catch (error) {
     console.error('Error reading staff from localStorage:', error);
   }
-  try {
-    localStorage.setItem(STAFF_STORAGE_KEY, JSON.stringify(mockStaff));
-  } catch (error) {
-    console.error('Error initializing staff localStorage:', error);
-  }
-  return [...mockStaff];
+  return [];
 };
 
 // Helper to save staff to localStorage
