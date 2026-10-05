@@ -11,6 +11,7 @@ import {
   resolveBookingReference,
   validateStayDates,
 } from './bookingRules.js';
+import { getInvoices, getOrCreateBookingInvoice, reconcileBookingChargesToInvoice } from '../../payment-billing/pages/paymentBillingStore.js';
 
 const OCCUPANCY_KEY = 'hotel_rooms';
 export const OCCUPANCY_UPDATED_EVENT = 'occupancy_update';
@@ -45,24 +46,54 @@ function isOperationalOccupancyBlock(occupancy) {
 
 export function getRoomAvailability(room, checkIn, checkOut, bookings = getReservations(), excludeBookingId) {
   if (!room || room.id === undefined || room.id === null) return { available: false, reason: 'Room is not a canonical inventory room.' };
-  try { validateStayDates(checkIn, checkOut); } catch (error) { return { available: false, reason: error.message }; }
   const inventoryStatus = String(room.status || '').trim().toLowerCase();
+  if (['inactive', 'maintenance', 'out of order'].includes(inventoryStatus)) {
+    return { available: false, reason: `Room ${roomNumber(room)} is currently under maintenance or inactive.` };
+  }
   if (!['open', 'booked', 'available'].includes(inventoryStatus)) {
     return { available: false, reason: `Room ${roomNumber(room)} is not operationally available.` };
   }
-  const hasBookingConflict = bookings.some((booking) =>
-    String(booking.id) !== String(excludeBookingId ?? '') &&
-    String(booking.roomId ?? '') === String(room.id) &&
-    isRoomBlockingBooking(booking) &&
-    hasBookingDateOverlap(booking, checkIn, checkOut)
-  );
-  if (hasBookingConflict) return { available: false, reason: `Room ${roomNumber(room)} is booked for overlapping dates.` };
 
-  const occupancyConflict = readOccupancyRooms().some((occupancy) =>
-    occupancyRoomMatches(occupancy, room) &&
-    isOperationalOccupancyBlock(occupancy) &&
-    String(occupancy.bookingId || '') !== String(excludeBookingId ?? '')
-  );
+  if (checkIn && checkOut) {
+    try { 
+      validateStayDates(checkIn, checkOut); 
+    } catch (error) { 
+      return { available: false, reason: error.message }; 
+    }
+    const hasBookingConflict = bookings.some((booking) =>
+      String(booking.id) !== String(excludeBookingId ?? '') &&
+      String(booking.roomId ?? '') === String(room.id) &&
+      isRoomBlockingBooking(booking) &&
+      hasBookingDateOverlap(booking, checkIn, checkOut)
+    );
+    if (hasBookingConflict) return { available: false, reason: `Room ${roomNumber(room)} is booked for overlapping dates.` };
+  } else {
+    const hasBookingConflict = bookings.some((booking) =>
+      String(booking.id) !== String(excludeBookingId ?? '') &&
+      String(booking.roomId ?? '') === String(room.id) &&
+      isRoomBlockingBooking(booking)
+    );
+    if (inventoryStatus === 'booked' && hasBookingConflict) {
+      return { available: false, reason: `Room ${roomNumber(room)} is currently booked.` };
+    }
+  }
+
+  const occupancyList = readOccupancyRooms();
+  const occupancyConflict = occupancyList.some((occupancy) => {
+    if (!occupancyRoomMatches(occupancy, room)) return false;
+    const occStatus = String(occupancy.status || '').trim().toUpperCase();
+    if (['MAINTENANCE', 'OUT OF ORDER', 'INACTIVE'].includes(occStatus)) return true;
+    if (['CLEANING', 'DIRTY'].includes(occStatus)) {
+      if (excludeBookingId) {
+        return Boolean(occupancy.bookingId && String(occupancy.bookingId) !== String(excludeBookingId));
+      }
+      return true;
+    }
+    if (['OCCUPIED', 'BOOKED', 'RESERVED'].includes(occStatus)) {
+      return String(occupancy.bookingId || '') !== String(excludeBookingId ?? '');
+    }
+    return false;
+  });
   if (occupancyConflict) return { available: false, reason: `Room ${roomNumber(room)} has an active operational hold.` };
   return { available: true, reason: '' };
 }
@@ -164,7 +195,40 @@ export function saveBookingsWithRoomState(bookings, roomIds = []) {
     const status = roomOperationalStatus(room, bookings, occupancy);
     return room.status === status ? room : { ...room, status };
   });
-  commitLifecycleState({ bookings, rooms: changedRooms });
+
+  const baseOccupancy = occupancy.length ? [...occupancy] : rooms.map((r) => ({
+    number: Number(r.roomNo) || r.roomNo,
+    roomId: r.id,
+    type: r.roomType,
+    status: r.status === 'Booked' ? 'BOOKED' : (r.status === 'Inactive' ? 'INACTIVE' : 'AVAILABLE'),
+    statusColor: r.status === 'Booked' ? '#f59e0b' : '#1b7f43'
+  }));
+
+  const updatedOccupancy = baseOccupancy.map((record) => {
+    const canonicalRoom = rooms.find((r) => occupancyRoomMatches(record, r));
+    if (!canonicalRoom) return record;
+    const matchingBooking = bookings.find((b) =>
+      String(b.roomId || '') === String(canonicalRoom.id) && isRoomBlockingBooking(b)
+    );
+    if (matchingBooking) {
+      return {
+        ...record,
+        roomId: canonicalRoom.id,
+        bookingId: matchingBooking.id,
+        status: matchingBooking.status === 'Checked In' ? 'OCCUPIED' : 'BOOKED',
+        statusColor: matchingBooking.status === 'Checked In' ? '#ef4444' : '#f59e0b',
+        guest: {
+          ...(record.guest || {}),
+          name: matchingBooking.name,
+          checkIn: matchingBooking.checkIn,
+          checkOut: matchingBooking.checkOut
+        }
+      };
+    }
+    return record;
+  });
+
+  commitLifecycleState({ bookings, rooms: changedRooms, occupancyRooms: updatedOccupancy.length ? updatedOccupancy : undefined });
   return bookings;
 }
 
@@ -194,7 +258,59 @@ export function checkInBooking(bookingId) {
   const nextBookings = bookings.map((item) => String(item.id) === String(booking.id) ? { ...item, status: 'Checked In' } : item);
   const nextRooms = getRooms().map((item) => String(item.id) === String(room.id) ? { ...item, status: 'Booked' } : item);
   commitLifecycleState({ bookings: nextBookings, rooms: nextRooms, occupancyRooms: nextOccupancy });
-  return nextBookings.find((item) => String(item.id) === String(booking.id));
+
+  let invoiceResult;
+  try {
+    invoiceResult = getOrCreateBookingInvoice(booking.id);
+  } catch (err) {
+    invoiceResult = { success: false, reason: err?.message || 'Failed to initialize stay invoice for checked-in booking.' };
+  }
+
+  if (!invoiceResult || !invoiceResult.success) {
+    // Phase 7 Job 22 Consistency Fix:
+    // Operational check-in state was committed before invoice initialization failed.
+    // Restore pre-check-in operational state ONLY for what this check-in operation modified.
+    const currentBookings = getReservations();
+    const currentRooms = getRooms();
+    const currentOccupancy = readOccupancyRooms();
+
+    const revertedBookings = currentBookings.map((item) =>
+      String(item.id) === String(booking.id) ? { ...item, status: booking.status } : item
+    );
+
+    const revertedRooms = currentRooms.map((item) =>
+      String(item.id) === String(room.id) ? { ...item, status: room.status } : item
+    );
+
+    let revertedOccupancy;
+    if (current) {
+      revertedOccupancy = currentOccupancy.map((record) =>
+        (String(record.bookingId || '') === String(booking.id) && String(record.roomId ?? '') === String(room.id)) ||
+        record === current ||
+        slots.some((s) => s === record || (s.roomId && String(s.roomId) === String(record.roomId)))
+          ? current
+          : record
+      );
+    } else {
+      revertedOccupancy = currentOccupancy.filter((record) =>
+        !(String(record.bookingId || '') === String(booking.id) && String(record.roomId ?? '') === String(room.id))
+      );
+    }
+
+    commitLifecycleState({
+      bookings: revertedBookings,
+      rooms: revertedRooms,
+      occupancyRooms: revertedOccupancy
+    });
+
+    throw new Error(invoiceResult?.reason || 'Failed to initialize stay invoice for checked-in booking.');
+  }
+
+  const updatedBooking = nextBookings.find((item) => String(item.id) === String(booking.id));
+  return {
+    ...updatedBooking,
+    invoice: invoiceResult.invoice || invoiceResult
+  };
 }
 
 export function checkOutBooking(bookingId) {
@@ -210,15 +326,41 @@ export function checkOutBooking(bookingId) {
   if (active.length !== 1 || !isOperationalOccupancyBlock(active[0])) {
     throw new Error('The checked-in booking does not have exactly one active linked occupancy record.');
   }
+
+  // Ensure an invoice exists if somehow missing for this checked-in booking (e.g. legacy test fixture)
+  const invoices = getInvoices();
+  const linkedInvoices = invoices.filter((inv) => String(inv.bookingId) === String(booking.id));
+  if (linkedInvoices.length === 0) {
+    const invResult = getOrCreateBookingInvoice(booking.id);
+    if (!invResult || !invResult.success) {
+      throw new Error(invResult?.reason || 'Failed to initialize invoice before checkout reconciliation.');
+    }
+  }
+
+  // Phase 7 Job 22: Reconcile eligible folio charges into booking invoice before checkout processing
+  const reconResult = reconcileBookingChargesToInvoice(booking.id);
+  if (!reconResult || !reconResult.success) {
+    throw new Error(reconResult?.reason || 'Failed to reconcile folio charges for booking before checkout.');
+  }
+
   const nextOccupancy = occupancy.map((record) => active.includes(record)
     ? { ...record, status: 'AVAILABLE', statusColor: '#1b7f43', bookingId: '', guestId: '', checkIn: '', checkOut: '', guest: null }
     : record);
-  const nextBookings = bookings.map((item) => String(item.id) === String(booking.id) ? { ...item, status: 'Checked Out' } : item);
+  const todayStr = new Date().toISOString().split('T')[0];
+  const nextBookings = bookings.map((item) =>
+    String(item.id) === String(booking.id)
+      ? { ...item, status: 'Checked Out', checkedOutAt: todayStr, checkoutDate: todayStr }
+      : item
+  );
   const nextRooms = getRooms().map((item) => String(item.id) === String(room.id)
     ? { ...item, status: roomOperationalStatus(item, nextBookings, nextOccupancy) }
     : item);
   commitLifecycleState({ bookings: nextBookings, rooms: nextRooms, occupancyRooms: nextOccupancy });
-  return nextBookings.find((item) => String(item.id) === String(booking.id));
+  const updatedBooking = nextBookings.find((item) => String(item.id) === String(booking.id));
+  return {
+    ...updatedBooking,
+    reconciliation: reconResult
+  };
 }
 
 export function cancelBooking(bookingId, fallbackBookings) {

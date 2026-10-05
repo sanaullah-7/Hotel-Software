@@ -1,12 +1,5 @@
 import React from 'react';
 import {
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Box
-} from '@mui/material';
-import {
   FilterList as FilterIcon,
   GridView as GridIcon,
   TableRows as TableIcon,
@@ -17,42 +10,13 @@ import {
 import SearchInput from '../../../components/common/SearchInput';
 import RefreshButton from '../../../components/common/RefreshButton';
 
-const muiSelectSx = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '8px',
-    backgroundColor: '#ffffff',
-    fontSize: '12px',
-    height: '32px',
-    color: '#1f2937',
-    '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' },
-    '&:hover fieldset': { borderColor: '#9ca3af' },
-    '&.Mui-focused fieldset': { borderColor: '#1b7f43', borderWidth: '1.5px' },
-  },
-  '& .MuiSelect-select': {
-    padding: '0 8px',
-    display: 'flex',
-    alignItems: 'center',
-    height: '32px',
-  },
-  '& .MuiInputLabel-root': {
-    fontSize: '13px',
-    color: '#6b7280',
-    transform: 'translate(14px, 7px) scale(1)',
-    '&.Mui-focused': { color: '#1b7f43' }
-  },
-  '& .MuiInputLabel-root.MuiInputLabel-shrink': {
-    transform: 'translate(14px, -9px) scale(0.75)',
-  },
-};
-
 export default function EventToolbar({
-  title = "All Events",
   searchQuery,
   onSearchChange,
   selectedCount = 0,
   onBulkDelete,
   isFilterOpen,
-  onToggleFilter, // We might not need this anymore if filters are always visible, but keep for prop signature
+  onToggleFilter,
   viewMode,
   onViewModeChange,
   onRefresh,
@@ -71,27 +35,25 @@ export default function EventToolbar({
   return (
     <>
       {/* Card Header & Action Toolbar */}
-      <div className="p-3 border-b border-gray-100 flex flex-col xl:flex-row xl:items-center justify-between gap-3">
-        
-        {/* Left Side: Title & Search */}
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
-          <h2 className="text-[15px] font-bold text-gray-800 whitespace-nowrap">{title}</h2>
+      <div className="p-2 sm:p-2.5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        {/* Left Side: Search Bar Input & Bulk Actions */}
+        <div className="assigned-table-toolbar flex items-center gap-2 flex-1 max-w-md">
           <SearchInput
             placeholder="Search..."
             value={searchQuery}
             onChange={onSearchChange}
             variant="slate"
             size="sm"
-            inputClassName="border-gray-300"
+            width="w-full sm:w-72"
           />
 
           {selectedCount > 0 && (
             <button
               onClick={onBulkDelete}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer ml-2"
+              className="flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors cursor-pointer"
             >
               <DeleteIcon sx={{ fontSize: 15 }} />
-              Delete ({selectedCount})
+              Delete Selected ({selectedCount})
             </button>
           )}
         </div>
@@ -112,37 +74,6 @@ export default function EventToolbar({
             <FilterIcon sx={{ fontSize: 18 }} />
           </button>
 
-          <FormControl size="small" sx={{ minWidth: 120, ...muiSelectSx }}>
-            <InputLabel>Venue</InputLabel>
-            <Select
-              value={filterVenue}
-              onChange={(e) => onFilterVenueChange(e.target.value)}
-              label="Venue"
-            >
-              <MenuItem value="All" sx={{ fontSize: 12 }}>All Venues</MenuItem>
-              {venueOptions.map((v) => (
-                <MenuItem key={v} value={v} sx={{ fontSize: 12 }}>{v}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-
-          <FormControl size="small" sx={{ minWidth: 120, ...muiSelectSx }}>
-            <InputLabel>Status</InputLabel>
-            <Select
-              value={filterStatus}
-              onChange={(e) => onFilterStatusChange(e.target.value)}
-              label="Status"
-            >
-              <MenuItem value="All" sx={{ fontSize: 12 }}>All Statuses</MenuItem>
-              {statusOptions.map((s) => (
-                <MenuItem key={s} value={s} sx={{ fontSize: 12 }}>{s}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </div>
-
-        {/* Right Side: Action Icons */}
-        <div className="flex items-center gap-1.5 shrink-0">
           {/* View Mode Toggle: Table View */}
           <button
             onClick={() => onViewModeChange('table')}
@@ -150,11 +81,11 @@ export default function EventToolbar({
             aria-label="Table view"
             className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
               viewMode === 'table'
-                ? 'bg-[#1b7f43] text-white shadow-xs'
-                : 'text-gray-600 hover:bg-[#e5f4eb]'
+                ? 'bg-[#1b7f43] border-[#1b7f43] text-white shadow-xs'
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
-            <TableIcon sx={{ fontSize: 16 }} />
+            <TableIcon sx={{ fontSize: 18 }} />
           </button>
 
           {/* View Mode Toggle: Grid View */}
@@ -164,19 +95,18 @@ export default function EventToolbar({
             aria-label="Grid view"
             className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
               viewMode === 'grid'
-                ? 'bg-[#1b7f43] text-white shadow-xs'
-                : 'text-gray-600 hover:bg-[#e5f4eb]'
+                ? 'bg-[#1b7f43] border-[#1b7f43] text-white shadow-xs'
+                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
             }`}
           >
-            <GridIcon sx={{ fontSize: 16 }} />
+            <GridIcon sx={{ fontSize: 18 }} />
           </button>
 
           {/* Reload / Refresh Button */}
           <RefreshButton
             onClick={onRefresh}
             title="Refresh"
-            size="sm"
-            variant="circle"
+            variant="square"
           />
 
           {/* PDF Export Button */}
@@ -196,19 +126,63 @@ export default function EventToolbar({
             aria-label="Export Excel"
             className="toolbar-export-icon p-1.5 bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 rounded-xl transition-all cursor-pointer"
           >
-            <DownloadIcon sx={{ fontSize: 16 }} className="text-[#0ea5e9]" />
-          </button>
-          
-          {/* PDF Export Button */}
-          <button
-            onClick={onExportPDF}
-            title="Export PDF"
-            className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer"
-          >
-            <PdfIcon sx={{ fontSize: 16 }} className="text-[#ef4444]" />
+            <DownloadIcon sx={{ fontSize: 18 }} />
           </button>
         </div>
       </div>
+
+      {/* Collapsible Filter Bar */}
+      {isFilterOpen && (
+        <div className="p-2.5 bg-slate-50 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-2.5 animate-fadeIn">
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">Event Type</label>
+            <select
+              value={filterType}
+              onChange={(e) => onFilterTypeChange(e.target.value)}
+              className="w-full text-xs sm:text-sm bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20"
+            >
+              <option value="All">All Types</option>
+              {typeOptions.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">Venue</label>
+            <select
+              value={filterVenue}
+              onChange={(e) => onFilterVenueChange(e.target.value)}
+              className="w-full text-xs sm:text-sm bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20"
+            >
+              <option value="All">All Venues</option>
+              {venueOptions.map((v) => (
+                <option key={v} value={v}>
+                  {v}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-600 mb-1">Status</label>
+            <select
+              value={filterStatus}
+              onChange={(e) => onFilterStatusChange(e.target.value)}
+              className="w-full text-xs sm:text-sm bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1b7f43]/20"
+            >
+              <option value="All">All Statuses</option>
+              {statusOptions.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
     </>
   );
 }

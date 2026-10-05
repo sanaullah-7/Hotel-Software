@@ -7,8 +7,6 @@ import {
   TextField, FormControl, InputLabel, Select, MenuItem,
   Typography, Box
 } from '@mui/material';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 
 const initialRates = [
   { id: 1, roomType: 'Single', ratePlan: 'Standard', baseRate: 50, seasonalRate: 55, promotionalRate: 45, effectiveDate: '2024-01-01', endDate: '2024-12-31', status: 'Active', bookingWindow: '30 days', cancellationPolicy: '24-hour notice', minStay: '1 night', maxOccupancy: 1 },
@@ -104,7 +102,12 @@ export default function RatePricing() {
     document.body.removeChild(link);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable')
+    ]);
+    const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
     doc.text('Room Rates & Pricing', 14, 15);
     const tableColumn = ['Room Type', 'Rate Plan', 'Base Rate', 'Seasonal Rate', 'Promo Rate', 'Effective', 'End', 'Status'];
@@ -142,103 +145,114 @@ export default function RatePricing() {
   };
 
   return (
-    <div className="w-full bg-transparent pt-1 flex flex-col">
-      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 flex-1 flex flex-col overflow-hidden">
+    <div className="w-full space-y-2.5 pb-3 flex flex-col">
+      <div className="bg-white rounded-lg shadow-xs border border-gray-100 flex-1 flex flex-col overflow-hidden">
         
         {/* Header Bar */}
-        <div className="p-2 flex items-center justify-between border-b border-gray-100">
-          <div className="flex items-center gap-4">
-            <h2 className="text-[16px] font-bold text-gray-700">Room Rates</h2>
+        <div className="p-2 sm:p-2.5 flex items-center justify-between border-b border-gray-100">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <h2 className="text-xs sm:text-sm font-bold text-gray-800">Room Rates</h2>
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" sx={{ fontSize: 20 }} />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" sx={{ fontSize: 15 }} />
               <input 
                 type="text" 
                 placeholder="Search..." 
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="pl-9 pr-4 py-1.5 w-64 border border-gray-200 rounded-md text-[13.5px] outline-none focus:border-[var(--primary-main)]"
+                className="pl-7 pr-3 py-1 w-36 sm:w-48 lg:w-56 border border-gray-200 rounded-lg text-xs outline-none focus:border-[var(--primary-main)]"
               />
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <button 
               onClick={handleOpenAdd}
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
               title="Add"
               aria-label="Add rate plan"
             >
-              <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[#1b7f43]" />
+              <AddCircleOutlined sx={{ fontSize: 18 }} className="text-[#1b7f43]" />
             </button>
             <button 
               onClick={() => setRates(initialRates)}
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
               title="Refresh"
               aria-label="Refresh rate plans"
             >
-              <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+              <Refresh sx={{ fontSize: 18 }} className="text-[var(--primary-main)]" />
             </button>
             <button 
               onClick={handleExportCSV} 
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
               title="Export CSV"
               aria-label="Export CSV"
             >
-              <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
+              <TableChart sx={{ fontSize: 16 }} className="text-[#0ea5e9]" />
             </button>
             <button 
               onClick={handleExportPDF} 
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" 
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" 
               title="Export PDF"
               aria-label="Export PDF"
             >
-              <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
+              <PictureAsPdf sx={{ fontSize: 16 }} className="text-[#ef4444]" />
             </button>
           </div>
         </div>
 
         {/* Table */}
-        <div className="flex-1">
-          <table className="w-full text-left border-collapse">
+        <div className="flex-1 overflow-hidden">
+          <table className="w-full text-left border-collapse table-fixed">
+            <colgroup>
+              <col style={{ width: '13%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '8%' }} />
+            </colgroup>
             <thead>
-              <tr className="border-b border-gray-100">
-                <th className="px-5 py-3.5 text-[12.5px] font-bold text-gray-700">Room Type</th>
-                <th className="px-5 py-3.5 text-[12.5px] font-bold text-gray-700">Rate Plan</th>
-                <th className="px-5 py-3.5 text-[12.5px] font-bold text-gray-700">Base Rate</th>
-                <th className="px-5 py-3.5 text-[12.5px] font-bold text-gray-700">Seasonal Rate</th>
-                <th className="px-5 py-3.5 text-[12.5px] font-bold text-gray-700">Promotional Rate</th>
-                <th className="px-5 py-3.5 text-[12.5px] font-bold text-gray-700">Effective Date</th>
-                <th className="px-5 py-3.5 text-[12.5px] font-bold text-gray-700">End Date</th>
-                <th className="px-5 py-3.5 text-[12.5px] font-bold text-gray-700">Status</th>
-                <th className="px-5 py-3.5 text-[12.5px] font-bold text-gray-700 text-center">Actions</th>
+              <tr className="border-b border-gray-100 bg-slate-50/50">
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Room Type</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Rate Plan</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Base Rate</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Seasonal Rate</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Promo Rate</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Effective Date</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">End Date</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-50">
               {currentRates.map((rate) => (
-                <tr key={rate.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                  <td className="px-5 py-3 text-[13.5px] text-gray-600">{rate.roomType}</td>
-                  <td className="px-5 py-3 text-[13.5px] text-gray-600">{rate.ratePlan}</td>
-                  <td className="px-5 py-3 text-[13.5px] text-gray-600">${rate.baseRate}</td>
-                  <td className="px-5 py-3 text-[13.5px] text-gray-600">${rate.seasonalRate}</td>
-                  <td className="px-5 py-3 text-[13.5px] text-gray-600">${rate.promotionalRate}</td>
-                  <td className="px-5 py-3 text-[13.5px] text-gray-600">
+                <tr key={rate.id} className="hover:bg-gray-50/60 transition-colors">
+                  <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-800 truncate">{rate.roomType}</td>
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 truncate">{rate.ratePlan}</td>
+                  <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-700">${rate.baseRate}</td>
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600">${rate.seasonalRate}</td>
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600">${rate.promotionalRate}</td>
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
                     {formatDate(rate.effectiveDate)}
                   </td>
-                  <td className="px-5 py-3 text-[13.5px] text-gray-600">
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
                     {formatDate(rate.endDate)}
                   </td>
-                  <td className="px-5 py-3">
-                    <span className={`px-3 py-1 rounded text-[11px] font-medium ${getStatusStyles(rate.status)}`}>
+                  <td className="py-1.5 px-1.5">
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap ${getStatusStyles(rate.status)}`}>
                       {rate.status}
                     </span>
                   </td>
-                  <td className="px-5 py-3 text-center">
-                    <div className="flex items-center justify-center gap-3">
-                      <button onClick={() => handleOpenEdit(rate)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded transition-colors cursor-pointer" title="Edit" aria-label="Edit rate plan">
-                        <EditOutlined sx={{ fontSize: 18 }} />
+                  <td className="py-1.5 px-1.5 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <button onClick={() => handleOpenEdit(rate)} className="text-[#3b82f6] hover:bg-blue-50 p-0.5 rounded transition-colors cursor-pointer" title="Edit" aria-label="Edit rate plan">
+                        <EditOutlined sx={{ fontSize: 14 }} />
                       </button>
-                      <button onClick={() => handleOpenDelete(rate)} className="text-[#ef4444] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer" title="Delete" aria-label="Delete rate plan">
-                        <DeleteOutlined sx={{ fontSize: 18 }} />
+                      <button onClick={() => handleOpenDelete(rate)} className="text-[#ef4444] hover:bg-red-50 p-0.5 rounded transition-colors cursor-pointer" title="Delete" aria-label="Delete rate plan">
+                        <DeleteOutlined sx={{ fontSize: 14 }} />
                       </button>
                     </div>
                   </td>
@@ -246,7 +260,7 @@ export default function RatePricing() {
               ))}
               {currentRates.length === 0 && (
                 <tr>
-                  <td colSpan="9" className="text-center py-10 text-gray-500 text-[14px]">No rates found.</td>
+                  <td colSpan="9" className="text-center py-6 text-gray-500 text-xs">No rates found.</td>
                 </tr>
               )}
             </tbody>
@@ -254,11 +268,11 @@ export default function RatePricing() {
         </div>
 
         {/* Pagination Footer */}
-        <div className="flex items-center justify-end gap-6 px-5 py-3 border-t border-gray-100 bg-white text-[13px] text-gray-600">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-3 sm:gap-4 px-3 py-1.5 sm:py-2 border-t border-gray-100 bg-white text-xs text-gray-500">
+          <div className="flex items-center gap-1.5">
             <span>Items per page:</span>
             <select 
-              className="border border-gray-200 rounded px-2 py-1 outline-none text-gray-700 focus:border-[var(--primary-main)] cursor-pointer"
+              className="border border-gray-200 rounded px-1.5 py-0.5 outline-none text-xs text-gray-700 focus:border-[var(--primary-main)] cursor-pointer"
               value={itemsPerPage}
               onChange={(e) => { setItemsPerPage(Number(e.target.value)); setPage(1); }}
             >
@@ -270,22 +284,22 @@ export default function RatePricing() {
           <span>
             {Math.min((page - 1) * itemsPerPage + 1, filteredRates.length)} - {Math.min(page * itemsPerPage, filteredRates.length)} of {filteredRates.length}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))} 
               disabled={page === 1}
               aria-label="Previous page"
-              className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="p-1 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
-              <KeyboardArrowLeft sx={{ fontSize: 20 }} />
+              <KeyboardArrowLeft sx={{ fontSize: 17 }} />
             </button>
             <button 
               onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
               disabled={page === totalPages || totalPages === 0}
               aria-label="Next page"
-              className="p-1 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="p-1 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
-              <KeyboardArrowRight sx={{ fontSize: 20 }} />
+              <KeyboardArrowRight sx={{ fontSize: 17 }} />
             </button>
           </div>
         </div>
@@ -293,19 +307,19 @@ export default function RatePricing() {
 
       {/* Add / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[800px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="bg-[var(--primary-main)] px-5 py-4 flex items-center justify-between">
-              <h2 className="text-[16px] font-bold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsModalOpen(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[700px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-[var(--primary-main)] px-4 py-2.5 flex items-center justify-between">
+              <h2 className="text-sm font-bold text-white">
                 {editingId ? form.roomType : 'New Record'}
               </h2>
               <button onClick={() => setIsModalOpen(false)} aria-label="Close" className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
-                <Close sx={{ fontSize: 18 }} />
+                <Close sx={{ fontSize: 16 }} />
               </button>
             </div>
             
-            <form onSubmit={handleSave} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
+            <form onSubmit={handleSave} className="p-4 sm:p-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-3.5">
                 <FormControl size="small" fullWidth sx={muiInputSx}>
                   <InputLabel>Room Type*</InputLabel>
                   <Select required value={form.roomType} label="Room Type*" onChange={e => setForm({...form, roomType: e.target.value})}>
@@ -332,7 +346,7 @@ export default function RatePricing() {
                 <TextField type="number" label="Promotional Rate" value={form.promotionalRate} onChange={e => setForm({...form, promotionalRate: e.target.value})} sx={muiInputSx} size="small" fullWidth />
                 
                 <Box>
-                  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+                  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5, fontSize: '11.5px', color: '#4b5563' }}>
                     Effective Date*
                   </Typography>
                   <TextField
@@ -349,7 +363,7 @@ export default function RatePricing() {
                 </Box>
 
                 <Box>
-                  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
+                  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5, fontSize: '11.5px', color: '#4b5563' }}>
                     End Date*
                   </Typography>
                   <TextField
@@ -379,11 +393,11 @@ export default function RatePricing() {
                 <TextField type="number" label="Max Occupancy" value={form.maxOccupancy} onChange={e => setForm({...form, maxOccupancy: e.target.value})} sx={muiInputSx} size="small" fullWidth />
               </div>
               
-              <div className="flex items-center gap-3 mt-8">
-                <button type="submit" className="px-5 py-2 rounded-full border border-green-200 bg-green-50 text-[var(--primary-main)] font-bold text-[13.5px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm">
+              <div className="flex items-center gap-2.5 mt-5">
+                <button type="submit" className="px-4 py-1.5 rounded-lg border border-green-200 bg-green-50 text-[var(--primary-main)] font-semibold text-xs hover:bg-green-100 transition-colors cursor-pointer shadow-xs">
                   Save
                 </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13.5px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-1.5 rounded-lg border border-transparent bg-rose-50 text-rose-600 font-semibold text-xs hover:bg-rose-100 transition-colors cursor-pointer shadow-xs">
                   Cancel
                 </button>
               </div>
@@ -394,28 +408,24 @@ export default function RatePricing() {
 
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && rateToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[320px] overflow-hidden flex flex-col p-6" onClick={e => e.stopPropagation()}>
-            <h2 className="text-[22px] font-medium text-gray-800 mb-6 text-center">Are you sure?</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-[300px] overflow-hidden flex flex-col p-4 sm:p-5" onClick={e => e.stopPropagation()}>
+            <h2 className="text-base font-bold text-gray-800 mb-3 text-center">Are you sure?</h2>
             
-            <div className="space-y-3 mb-8">
-              <p className="text-[14px] text-gray-600 font-medium">Room Type: {rateToDelete.roomType}</p>
-              <p className="text-[14px] text-gray-600 font-medium">Rate Plan: {rateToDelete.ratePlan}</p>
-              <p className="text-[14px] text-gray-600 font-medium">Status: {rateToDelete.status}</p>
+            <div className="space-y-1.5 mb-5 text-xs text-gray-600">
+              <p><span className="font-medium text-gray-700">Room Type:</span> {rateToDelete.roomType}</p>
+              <p><span className="font-medium text-gray-700">Rate Plan:</span> {rateToDelete.ratePlan}</p>
+              <p><span className="font-medium text-gray-700">Status:</span> {rateToDelete.status}</p>
             </div>
             
-            <div className="flex justify-center gap-3">
-              <button onClick={handleDelete} className="px-5 py-2.5 rounded-full bg-[#c2410c] text-white font-bold text-[14px] hover:bg-[#9a3412] transition-colors cursor-pointer shadow-sm">
+            <div className="flex justify-center gap-2.5">
+              <button onClick={handleDelete} className="px-4 py-1.5 rounded-lg bg-orange-600 text-white font-semibold text-xs hover:bg-orange-700 transition-colors cursor-pointer shadow-xs">
                 Delete
-              </button>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-5 py-2.5 rounded-full bg-[#166534] text-white font-bold text-[14px] hover:bg-[#14532d] transition-colors cursor-pointer shadow-sm">
-                Cancel
               </button>
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

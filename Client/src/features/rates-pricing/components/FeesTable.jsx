@@ -1,10 +1,10 @@
 import React from 'react';
 import {
-  Search, Clear, Edit, Delete, ReceiptLong,
+  Search, Clear, Edit, Delete, AccountBalance,
   ChevronLeft, ChevronRight
 } from '@mui/icons-material';
 import { IconButton, Tooltip } from '@mui/material';
-import { AccountBalance, CheckCircle, Percent } from '@mui/icons-material';
+import { CheckCircle, ReceiptLong, Percent } from '@mui/icons-material';
 
 export const FeesTable = ({
   totalFeesCount,
@@ -32,55 +32,55 @@ export const FeesTable = ({
     <div className="space-y-2">
       {/* Fee Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1">
-  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
-    <div>
-      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{totalFeesCount}</div>
-      <div className="text-[13px] text-gray-500 font-medium">Total Fees</div>
-    </div>
-    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
-      <AccountBalance sx={{ fontSize: 18 }} />
-    </div>
-  </div>
+        <div className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xl font-bold text-gray-900 leading-none mb-1">{totalFeesCount}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Total Fees</div>
+          </div>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
+            <AccountBalance sx={{ fontSize: 16 }} />
+          </div>
+        </div>
 
-  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
-    <div>
-      <div className="text-2xl font-bold text-emerald-700 leading-none mb-1">{activeFeesCount}</div>
-      <div className="text-[13px] text-gray-500 font-medium">Active Fees</div>
-    </div>
-    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600 shrink-0">
-      <CheckCircle sx={{ fontSize: 18 }} />
-    </div>
-  </div>
+        <div className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xl font-bold text-emerald-700 leading-none mb-1">{activeFeesCount}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Active Fees</div>
+          </div>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center bg-emerald-50 text-emerald-600 shrink-0">
+            <CheckCircle sx={{ fontSize: 16 }} />
+          </div>
+        </div>
 
-  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
-    <div>
-      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{fixedFeesCount}</div>
-      <div className="text-[13px] text-gray-500 font-medium">Fixed Amount</div>
-    </div>
-    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 shrink-0">
-      <ReceiptLong sx={{ fontSize: 18 }} />
-    </div>
-  </div>
+        <div className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xl font-bold text-gray-900 leading-none mb-1">{fixedFeesCount}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Fixed Amount</div>
+          </div>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600 shrink-0">
+            <ReceiptLong sx={{ fontSize: 16 }} />
+          </div>
+        </div>
 
-  <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
-    <div>
-      <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{percentageFeesCount}</div>
-      <div className="text-[13px] text-gray-500 font-medium">Percentage</div>
-    </div>
-    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600 shrink-0">
-      <Percent sx={{ fontSize: 18 }} />
-    </div>
-  </div>
-</div>
+        <div className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xl font-bold text-gray-900 leading-none mb-1">{percentageFeesCount}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Percentage</div>
+          </div>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center bg-purple-50 text-purple-600 shrink-0">
+            <Percent sx={{ fontSize: 16 }} />
+          </div>
+        </div>
+      </div>
 
-{/* Fee Table Card */}
+      {/* Fee Table Card */}
       <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
         {/* Controls Bar */}
-        <div className="p-3 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="p-2.5 border-b border-gray-100 flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
             {/* Search */}
-            <div className="relative w-full sm:w-64 shrink-0">
-              <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" sx={{ fontSize: 16 }} />
+            <div className="relative w-full sm:w-60 shrink-0">
+              <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" sx={{ fontSize: 15 }} />
               <input
                 type="text"
                 placeholder="Search fee name, code, applies to..."
@@ -89,7 +89,7 @@ export const FeesTable = ({
                   setFeeSearch(e.target.value);
                   setFeePage(1);
                 }}
-                className="w-full pl-8 pr-7 py-1.5 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-shadow placeholder-gray-400 text-gray-800"
+                className="w-full pl-7 pr-7 py-1 bg-white border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-shadow placeholder-gray-400 text-gray-800"
               />
               {feeSearch && (
                 <button
@@ -99,13 +99,13 @@ export const FeesTable = ({
                   }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <Clear sx={{ fontSize: 14 }} />
+                  <Clear sx={{ fontSize: 13 }} />
                 </button>
               )}
             </div>
 
             {/* Status Segmented */}
-            <div className="flex bg-gray-50 p-0.5 border border-gray-200 rounded-xl hide-scrollbar shrink-0">
+            <div className="flex bg-gray-50 p-0.5 border border-gray-200 rounded-lg hide-scrollbar shrink-0">
               {['All', 'Active', 'Inactive'].map((tab) => (
                 <button
                   key={tab}
@@ -113,7 +113,7 @@ export const FeesTable = ({
                     setFeeStatusFilter(tab);
                     setFeePage(1);
                   }}
-                  className={`px-3 py-1 text-[11px] font-semibold transition-all rounded-lg cursor-pointer ${
+                  className={`px-2.5 py-0.5 text-[10.5px] font-semibold transition-all rounded-md cursor-pointer ${
                     feeStatusFilter === tab
                       ? 'bg-white text-[#1b7f43] shadow-xs font-bold'
                       : 'text-gray-500 hover:text-gray-800'
@@ -125,14 +125,14 @@ export const FeesTable = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-end lg:self-auto">
+          <div className="flex items-center gap-1.5 self-end lg:self-auto">
             <select
               value={feeCalcFilter}
               onChange={(e) => {
                 setFeeCalcFilter(e.target.value);
                 setFeePage(1);
               }}
-              className="py-1.5 px-2.5 border border-gray-200 rounded-xl text-[11px] font-semibold text-gray-700 bg-white focus:outline-none focus:border-[#1b7f43]"
+              className="py-1 px-2 border border-gray-200 rounded-lg text-[10.5px] font-semibold text-gray-700 bg-white focus:outline-none focus:border-[#1b7f43]"
             >
               <option value="All">All Calculations</option>
               <option value="Fixed Amount">Fixed Amount Only</option>
@@ -141,7 +141,7 @@ export const FeesTable = ({
 
             <button
               onClick={handleOpenAddFee}
-              className="px-3.5 py-1.5 bg-[#1b7f43] hover:bg-[#156736] text-white rounded-lg text-xs font-bold shadow-xs transition cursor-pointer"
+              className="px-2.5 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-[11px] font-bold shadow-xs transition cursor-pointer"
             >
               + Add Fee
             </button>
@@ -162,54 +162,54 @@ export const FeesTable = ({
             </colgroup>
             <thead>
               <tr className="bg-gray-50/80 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
-                <th className="py-2.5 px-2">Fee Name</th>
-                <th className="py-2.5 px-2">Fee Code</th>
-                <th className="py-2.5 px-1.5">Calculation</th>
-                <th className="py-2.5 px-1.5">Value / Rate</th>
-                <th className="py-2.5 px-2">Application</th>
-                <th className="py-2.5 px-1 text-center">Status</th>
-                <th className="py-2.5 px-1 text-right">Actions</th>
+                <th className="py-2 px-2.5">Fee Name</th>
+                <th className="py-2 px-2">Fee Code</th>
+                <th className="py-2 px-1.5">Calculation</th>
+                <th className="py-2 px-1.5">Value / Rate</th>
+                <th className="py-2 px-2">Application</th>
+                <th className="py-2 px-1 text-center">Status</th>
+                <th className="py-2 px-1 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs">
               {paginatedFees.map((fee) => (
                 <tr key={fee.id} className="hover:bg-gray-50/60 transition-colors">
-                  <td className="py-2 px-2">
+                  <td className="py-1.5 px-2.5">
                     <div className="min-w-0">
-                      <span className="font-bold text-gray-900 block text-xs leading-tight break-words">{fee.name}</span>
+                      <span className="font-bold text-gray-900 block text-[11px] leading-tight break-words">{fee.name}</span>
                       {fee.description && (
-                        <p className="text-[10px] text-gray-500 truncate mt-0.5" title={fee.description}>
+                        <p className="text-[9.5px] text-gray-500 truncate mt-0.5" title={fee.description}>
                           {fee.description}
                         </p>
                       )}
                     </div>
                   </td>
 
-                  <td className="py-2 px-2">
-                    <span className="font-mono font-bold text-[10.5px] bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded border border-gray-200 truncate inline-block max-w-full">
+                  <td className="py-1.5 px-2">
+                    <span className="font-mono font-bold text-[10px] bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded border border-gray-200 truncate inline-block max-w-full">
                       {fee.code}
                     </span>
                   </td>
 
-                  <td className="py-2 px-1.5 text-gray-700 font-semibold text-[10.5px] truncate">
+                  <td className="py-1.5 px-1.5 text-gray-700 font-semibold text-[10.5px] truncate">
                     {fee.calculationType}
                   </td>
 
-                  <td className="py-2 px-1.5">
-                    <span className="font-extrabold text-xs text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-mono truncate inline-block max-w-full">
+                  <td className="py-1.5 px-1.5">
+                    <span className="font-extrabold text-[11px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-mono truncate inline-block max-w-full">
                       {fee.calculationType === 'Percentage' ? `${fee.value}%` : `PKR ${Number(fee.value).toLocaleString()}`}
                     </span>
                   </td>
 
-                  <td className="py-2 px-2">
-                    <span className="text-gray-800 font-medium text-xs break-words">{fee.appliesTo}</span>
+                  <td className="py-1.5 px-2">
+                    <span className="text-gray-800 font-medium text-[11px] break-words">{fee.appliesTo}</span>
                   </td>
 
-                  <td className="py-2 px-1 text-center">
+                  <td className="py-1.5 px-1 text-center">
                     <button
                       onClick={() => handleToggleFeeStatus(fee)}
                       title="Toggle Active Status"
-                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold cursor-pointer transition-all ${
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold cursor-pointer transition-all ${
                         fee.status === 'Active'
                           ? 'bg-[#e5f4eb] text-[#1b7f43] hover:bg-[#d0ebd8] border border-[#1b7f43]/20'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200 border border-gray-200'
@@ -220,7 +220,7 @@ export const FeesTable = ({
                     </button>
                   </td>
 
-                  <td className="py-2 px-1 text-right">
+                  <td className="py-1.5 px-1 text-right">
                     <div className="flex items-center justify-end gap-0.5">
                       <Tooltip title="Edit Fee">
                         <IconButton
@@ -228,7 +228,7 @@ export const FeesTable = ({
                           onClick={() => handleOpenEditFee(fee)}
                           sx={{ padding: '2px', color: '#3b82f6', '&:hover': { backgroundColor: '#eff6ff' } }}
                         >
-                          <Edit sx={{ fontSize: 15 }} />
+                          <Edit sx={{ fontSize: 14 }} />
                         </IconButton>
                       </Tooltip>
 
@@ -238,7 +238,7 @@ export const FeesTable = ({
                           onClick={() => handlePromptDeleteFee(fee)}
                           sx={{ padding: '2px', color: '#ef4444', '&:hover': { backgroundColor: '#fef2f2' } }}
                         >
-                          <Delete sx={{ fontSize: 15 }} />
+                          <Delete sx={{ fontSize: 14 }} />
                         </IconButton>
                       </Tooltip>
                     </div>
@@ -248,10 +248,10 @@ export const FeesTable = ({
 
               {paginatedFees.length === 0 && (
                 <tr>
-                  <td colSpan="7" className="py-10 text-center text-gray-500">
-                    <div className="flex flex-col items-center justify-center gap-2">
-                      <ReceiptLong sx={{ fontSize: 36, color: '#d1d5db' }} />
-                      <p className="text-sm font-semibold text-gray-600">No fees match your search or filter criteria.</p>
+                  <td colSpan="7" className="py-8 text-center text-gray-500">
+                    <div className="flex flex-col items-center justify-center gap-1.5">
+                      <ReceiptLong sx={{ fontSize: 30, color: '#d1d5db' }} />
+                      <p className="text-[12px] font-semibold text-gray-600">No fees match your search or filter criteria.</p>
                     </div>
                   </td>
                 </tr>
@@ -262,8 +262,8 @@ export const FeesTable = ({
 
         {/* Pagination */}
         {totalFeePages > 0 && (
-          <div className="p-3.5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <span className="text-xs text-gray-500">
+          <div className="p-2.5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <span className="text-[11px] text-gray-500">
               Showing <span className="font-semibold text-gray-700">{(feePage - 1) * itemsPerPage + 1}</span> to{' '}
               <span className="font-semibold text-gray-700">{Math.min(feePage * itemsPerPage, filteredFees.length)}</span> of{' '}
               <span className="font-semibold text-gray-700">{filteredFees.length}</span> fees
@@ -282,7 +282,7 @@ export const FeesTable = ({
                 <button
                   key={i}
                   onClick={() => setFeePage(i + 1)}
-                  className={`w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center transition-colors cursor-pointer ${
+                  className={`w-6 h-6 rounded-md text-[11px] font-semibold flex items-center justify-center transition-colors cursor-pointer ${
                     feePage === i + 1
                       ? 'bg-[#1b7f43] text-white shadow-xs'
                       : 'text-gray-600 hover:bg-gray-100'

@@ -5,7 +5,13 @@ import {
   saveReservations,
   RESERVATIONS_UPDATED_EVENT
 } from '../state/reservationStore';
-import { getBookingDues } from '../../payment-billing/pages/paymentBillingStore';
+import {
+  getBookingDues,
+  getCanonicalBookingPaymentStatus,
+  INVOICES_UPDATED_EVENT,
+  PAYMENTS_UPDATED_EVENT,
+  REFUNDS_UPDATED_EVENT
+} from '../../payment-billing/pages/paymentBillingStore';
 import { addGuest, findGuestByExactIdentity, resolveGuestForBooking } from '../../guests/state/guestStore';
 import { getRoomByRoomNo } from '../../rooms/state/roomStore';
 import { isRoomBlockingBooking, normalizeBookingStatus, validateStayDates } from '../state/bookingRules';
@@ -80,9 +86,16 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
     const syncReservations = () => setBookings(getReservations(initialBookings));
     window.addEventListener('storage', syncReservations);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+    // Job 23: refresh list on any canonical financial mutation so payment column stays current
+    window.addEventListener(INVOICES_UPDATED_EVENT, syncReservations);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
+    window.addEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
     return () => {
       window.removeEventListener('storage', syncReservations);
       window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(INVOICES_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
     };
   }, []);
 
@@ -119,7 +132,7 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
         else if (col === 'Status') val = b.status;
         else if (col === 'Check In') val = b.checkIn;
         else if (col === 'Check Out') val = b.checkOut;
-        else if (col === 'Payment') val = b.payment;
+        else if (col === 'Payment') val = getCanonicalBookingPaymentStatus(b.id) ?? b.payment ?? '';
         else if (col === 'Dues') {
           const duesAmt = getBookingDues(b);
           val = duesAmt === null ? 'Unverified' : duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
@@ -169,7 +182,7 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
         else if (col === 'Status') val = b.status;
         else if (col === 'Check In') val = b.checkIn;
         else if (col === 'Check Out') val = b.checkOut;
-        else if (col === 'Payment') val = b.payment;
+        else if (col === 'Payment') val = getCanonicalBookingPaymentStatus(b.id) ?? b.payment ?? '';
         else if (col === 'Dues') {
           const duesAmt = getBookingDues(b);
           val = duesAmt === null ? 'Unverified' : duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0';
@@ -204,67 +217,11 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
   };
 
   const openNewModal = () => {
-    setEditingId(null);
-    setForm({
-      firstName: '',
-      lastName: '',
-      email: '',
-      gender: '',
-      mobile: '',
-      city: '',
-      passport: '',
-      nationality: '',
-      checkIn: '',
-      checkOut: '',
-      package: 'All inclusive',
-      totalPerson: '1',
-      numRooms: '1',
-      roomType: 'Delux',
-      arrivalTime: 'Morning',
-      purpose: 'Leisure',
-      paymentMethod: 'Paid',
-      discountCode: '',
-      bookingRef: '',
-      emergencyName: '',
-      emergencyPhone: '',
-      address: '',
-      specialRequests: '',
-      note: ''
-    });
-    setIsBookingModalOpen(true);
+    navigate('/reservation/new');
   };
 
   const openEditModal = (booking) => {
-    setEditingId(booking.id);
-    const [firstName, ...lastNames] = (booking.name || '').split(' ');
-    setForm({
-      firstName: firstName || '',
-      lastName: lastNames.join(' ') || '',
-      email: booking.email || '',
-      gender: booking.gender || '',
-      mobile: booking.mobile || '',
-      city: booking.city || '',
-      passport: booking.passport || '',
-      nationality: booking.nationality || '',
-      checkIn: booking.checkIn || '',
-      checkOut: booking.checkOut || '',
-      package: booking.package || 'All inclusive',
-      totalPerson: booking.totalPerson || '1',
-      numRooms: booking.numRooms || '1',
-      roomType: booking.roomType || 'Delux',
-      arrivalTime: booking.arrivalTime || 'Morning',
-      purpose: booking.purpose || 'Leisure',
-      paymentMethod: booking.payment || 'Paid',
-      discountCode: booking.discountCode || '',
-      bookingRef: booking.bookingRef || `BK-${booking.id}`,
-      emergencyName: booking.emergencyName || '',
-      emergencyPhone: booking.emergencyPhone || '',
-      address: booking.address || '',
-      specialRequests: booking.specialRequests || '',
-      note: booking.note || ''
-    });
-    setIsBookingModalOpen(true);
-    setActiveMenuId(null);
+    navigate('/reservation/edit/' + booking.id);
   };
 
   const handleFormChange = (field, value) => {
@@ -353,6 +310,8 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
           status: 'Booked',
           checkIn: checkInDate,
           checkOut: checkOutDate,
+          createdAt: new Date().toISOString().split('T')[0],
+          bookingDate: new Date().toISOString().split('T')[0],
           payment: form.paymentMethod || 'Paid',
           email: form.email || 'test@email.com',
           mobile: form.mobile || '1234567890',
@@ -430,7 +389,7 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
   };
 
   return (
-    <div className="w-full h-full flex flex-col pt-1">
+    <div className="w-full space-y-2.5 pb-3">
       <ReservationToolbar
         title={title}
         search={search}

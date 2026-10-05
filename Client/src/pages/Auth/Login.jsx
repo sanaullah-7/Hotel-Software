@@ -1,10 +1,26 @@
-import authBg from '../../assets/images/auth-bg.jpg';
-import authCardBg from '../../assets/images/authcard.jpg';
+import authBg from '../../assets/images/auth-bg.webp';
+import authCardBg from '../../assets/images/authcard.webp';
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton } from '@mui/material';
-import { Visibility, VisibilityOff, Email, Lock, Hotel } from '@mui/icons-material';
+import { Visibility, VisibilityOff, Email, Lock, Hotel, AccessTime, ArrowBack } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
+
+
+// Cross-port shared storage helper
+const getSharedReqs = () => {
+  try {
+    const match = document.cookie.match(new RegExp('(^| )hotel_registration_requests=([^;]+)'));
+    if (match) return JSON.parse(decodeURIComponent(match[2]));
+  } catch(e) {}
+  return JSON.parse(localStorage.getItem('hotel_registration_requests') || '[]');
+};
+
+const setSharedReqs = (reqs) => {
+  const val = JSON.stringify(reqs);
+  localStorage.setItem('hotel_registration_requests', val);
+  document.cookie = "hotel_registration_requests=" + encodeURIComponent(val) + "; path=/; max-age=31536000";
+};
 
 export default function Login() {
   const navigate = useNavigate();
@@ -13,6 +29,7 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [awaitingApproval, setAwaitingApproval] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -20,13 +37,39 @@ export default function Login() {
     }
   }, [isAuthenticated, navigate]);
 
+  
   const handleLogin = (e) => {
     e.preventDefault();
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
 
+    // Check hotel_registration_requests from localStorage
+    const reqs = getSharedReqs();
+    const userReq = reqs.find(r => r.managerEmail && r.managerEmail.toLowerCase() === cleanEmail && r.password === cleanPassword);
+
+    if (userReq) {
+      if (userReq.status === 'PENDING') {
+        setAwaitingApproval(true);
+        return;
+      } else if (userReq.status === 'APPROVED') {
+        setError('');
+        // Update hotelName for Sidebar
+        if (userReq.hotelName) localStorage.setItem('hotelName', userReq.hotelName);
+        if (userReq.managerName) localStorage.setItem('fullName', userReq.managerName);
+        
+        login({
+          email: userReq.managerEmail,
+          role: 'Admin',
+          name: userReq.managerName || 'Admin',
+        });
+        navigate('/dashboard');
+        return;
+      }
+    }
+
     if (cleanEmail === 'admin@hotel.com' && cleanPassword === 'admin123') {
       setError('');
+      localStorage.setItem('hotelName', 'Luxuria Hotel');
       login({
         email: 'admin@hotel.com',
         role: 'Admin',
@@ -37,6 +80,7 @@ export default function Login() {
       setError('Invalid email or password');
     }
   };
+
 
   return (
     <div className="h-screen w-full flex items-center justify-center relative overflow-hidden bg-gray-900">
@@ -79,8 +123,54 @@ export default function Login() {
         <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"></div>
       </div>
 
-      {/* Main Card */}
+      
+      {awaitingApproval ? (
+        <div className="z-10 flex flex-col items-center justify-center w-full max-w-md p-8 rounded-2xl relative" style={{ backgroundColor: '#1a2332' }}>
+          <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mb-6 shadow-lg">
+            <AccessTime sx={{ fontSize: 48, color: '#f97316' }} />
+          </div>
+          
+          <h2 className="text-3xl font-bold text-white mb-4 text-center">
+            Awaiting Admin<br/>Approval
+          </h2>
+          
+          <p className="text-slate-400 text-center mb-8 text-sm leading-relaxed px-4">
+            Your email has been verified. Your hotel account is now pending approval from the administrator. You will receive an email notification once approved.
+          </p>
+
+          <div className="bg-[#fff9ed] rounded-xl p-6 w-full mb-8 text-[#925f24]">
+            <h3 className="font-semibold text-lg mb-3">What happens next?</h3>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-start">
+                <span className="mr-2">&bull;</span>
+                Admin reviews your registration details
+              </li>
+              <li className="flex items-start">
+                <span className="mr-2">&bull;</span>
+                Approval usually takes 24-48 hours
+              </li>
+              <li className="flex items-start">
+                <span className="mr-2">&bull;</span>
+                You'll receive an email notification
+              </li>
+              <li className="flex items-start">
+                <span className="mr-2">&bull;</span>
+                Then you can log in to your dashboard
+              </li>
+            </ul>
+          </div>
+
+          <button 
+            onClick={() => setAwaitingApproval(false)}
+            className="flex items-center text-blue-500 hover:text-blue-400 font-medium transition-colors"
+          >
+            <ArrowBack sx={{ fontSize: 18, mr: 1 }} />
+            Back to Login
+          </button>
+        </div>
+      ) : (
       <div className="z-10 flex w-[95%] max-w-[1000px] h-[90vh] max-h-[700px] bg-black rounded-2xl shadow-2xl overflow-hidden border border-white/40 ring-1 ring-white/20">
+
       {/* Left Form Side */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 sm:px-12 md:px-16 lg:px-20 bg-[#EFF4F8] relative overflow-y-auto no-scrollbar py-4">
         <div className="absolute top-6 left-6 flex items-center gap-3">
@@ -246,6 +336,7 @@ export default function Login() {
         </div>
       </div>
           </div>
+      )}
     </div>
   );
 }

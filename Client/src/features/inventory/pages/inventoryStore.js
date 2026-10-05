@@ -1,4 +1,6 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
+import { getReservations } from '../../reservations/state/reservationStore.js';
+import { isCheckedIn } from '../../reservations/state/bookingRules.js';
 import {
   INVENTORY_CATEGORIES,
   INVENTORY_STATUSES,
@@ -318,12 +320,26 @@ export const getGuestCharges = () => {
   const data = localStorage.getItem(STORAGE_KEY_CHARGES);
   if (!data) {
     localStorage.setItem(STORAGE_KEY_CHARGES, JSON.stringify(INITIAL_GUEST_CHARGES));
-    return INITIAL_GUEST_CHARGES;
+    return INITIAL_GUEST_CHARGES.map((c) => ({
+      ...c,
+      bookingId: c.bookingId ?? null,
+      guestId: c.guestId ?? null
+    }));
   }
   try {
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((c) => ({
+      ...c,
+      bookingId: c.bookingId ?? null,
+      guestId: c.guestId ?? null
+    }));
   } catch {
-    return INITIAL_GUEST_CHARGES;
+    return INITIAL_GUEST_CHARGES.map((c) => ({
+      ...c,
+      bookingId: c.bookingId ?? null,
+      guestId: c.guestId ?? null
+    }));
   }
 };
 
@@ -334,6 +350,35 @@ export const saveGuestCharges = (charges) => {
 };
 
 export const addGuestCharge = (chargeData) => {
+  if (!chargeData || typeof chargeData !== 'object') {
+    throw new Error('Charge data is required.');
+  }
+
+  const bookingId = chargeData.bookingId;
+  if (!bookingId || typeof bookingId !== 'string' || !bookingId.trim()) {
+    throw new Error('A valid bookingId is required to create a guest charge.');
+  }
+
+  const allBookings = getReservations();
+  const booking = allBookings.find((b) => String(b.id) === String(bookingId.trim()));
+  if (!booking) {
+    throw new Error(`Reservation with ID "${bookingId}" was not found.`);
+  }
+
+  if (!isCheckedIn(booking)) {
+    throw new Error(`Guest charges can only be created for active 'Checked In' reservations. Current reservation status: '${booking.status || 'Unknown'}'.`);
+  }
+
+  if (chargeData.guestId !== undefined && chargeData.guestId !== null && String(chargeData.guestId).trim() !== '') {
+    if (booking.guestId && String(chargeData.guestId).trim() !== String(booking.guestId).trim()) {
+      throw new Error(`Guest ID mismatch: provided guestId "${chargeData.guestId}" does not match booking.guestId "${booking.guestId}".`);
+    }
+  }
+
+  const canonicalGuestId = booking.guestId || null;
+  const canonicalGuestName = booking.name || booking.guestName || chargeData.guestName || 'Guest';
+  const canonicalRoom = booking.roomNo || booking.roomNumber || (typeof booking.room === 'string' && booking.room.includes(' - ') ? booking.room.split(' - ')[0] : booking.room) || chargeData.roomNumber || '—';
+
   const charges = getGuestCharges();
   const quantity = Number(chargeData.quantity) || 1;
   const unitPrice = Number(chargeData.unitPrice) || 0;
@@ -342,18 +387,20 @@ export const addGuestCharge = (chargeData) => {
   const newCharge = {
     ...chargeData,
     id: `GC-${Math.floor(1000 + Math.random() * 9000)}`,
-    guestName: chargeData.guestName ? chargeData.guestName.trim() : 'Guest',
-    roomNumber: chargeData.roomNumber || '205',
+    bookingId: booking.id,
+    guestId: canonicalGuestId,
+    guestName: canonicalGuestName.trim(),
+    roomNumber: canonicalRoom,
     chargeType: chargeData.chargeType || 'Consumption',
     itemName: chargeData.itemName ? chargeData.itemName.trim() : 'Hotel Service / Item',
-    inventoryItemId: chargeData.inventoryItemId || null,
+    inventoryItemId: (chargeData.chargeType === 'Consumption' || chargeData.chargeType === 'Damage') ? chargeData.inventoryItemId || null : null,
     quantity: quantity,
     unitPrice: unitPrice,
     amount: amount,
     status: chargeData.status || 'Added to Folio',
     date: chargeData.date || 'Today',
     reportedDate: chargeData.reportedDate || new Date().toISOString().split('T')[0],
-    folioId: chargeData.folioId || `FOL-${chargeData.roomNumber || '205'}-${Math.floor(10 + Math.random() * 90)}`,
+    folioId: chargeData.folioId || `FOL-${canonicalRoom}-${Math.floor(10 + Math.random() * 90)}`,
     notes: chargeData.notes ? chargeData.notes.trim() : '',
     deductedFromStock: chargeData.chargeType === 'Consumption' || chargeData.chargeType === 'Damage'
   };
@@ -380,6 +427,13 @@ export const updateGuestCharge = (id, updates) => {
   const updatedCharges = charges.map(ch => {
     if (ch.id === id) {
       const merged = { ...ch, ...updates };
+      // Preserve immutability of bookingId and guestId once associated
+      if (ch.bookingId !== undefined && ch.bookingId !== null) {
+        merged.bookingId = ch.bookingId;
+      }
+      if (ch.guestId !== undefined && ch.guestId !== null) {
+        merged.guestId = ch.guestId;
+      }
       merged.quantity = Number(merged.quantity) || 1;
       merged.unitPrice = Number(merged.unitPrice) || 0;
       merged.amount = merged.amount !== undefined ? Number(merged.amount) : (merged.quantity * merged.unitPrice);

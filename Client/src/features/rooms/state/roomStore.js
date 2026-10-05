@@ -4,17 +4,79 @@ export const ROOM_UPDATED_EVENT = 'room_inventory_update';
 
 export const INITIAL_ROOMS = [];
 
+export const STANDARD_ROOM_TYPES = [
+  'Standard Room',
+  'Deluxe Room',
+  'Executive Room',
+  'Suite',
+  'Family Villa'
+];
+
+export function normalizeRoomType(type) {
+  const t = String(type || '').trim().toLowerCase();
+  if (t === 'delux' || t === 'deluxe' || t === 'deluxe room') return 'deluxe';
+  if (t === 'super delux' || t === 'super deluxe' || t === 'executive' || t === 'executive room') return 'super deluxe';
+  if (t === 'standard' || t === 'standard room' || t === 'single' || t === 'double') return 'standard';
+  if (t === 'suite') return 'suite';
+  if (t === 'vila' || t === 'villa' || t === 'family villa') return 'villa';
+  return t;
+}
+
+export function toStandardRoomType(type) {
+  const norm = normalizeRoomType(type);
+  if (norm === 'deluxe') return 'Deluxe Room';
+  if (norm === 'super deluxe') return 'Executive Room';
+  if (norm === 'standard') return 'Standard Room';
+  if (norm === 'suite') return 'Suite';
+  if (norm === 'villa') return 'Family Villa';
+  return type || 'Standard Room';
+}
+
+export function getAvailableRoomTypes() {
+  return [...STANDARD_ROOM_TYPES];
+}
+
 export function getRooms() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored !== null) {
-      const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed : [];
+      let parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        // Automatically align and ensure all room types are normalized to standard types
+        let updated = false;
+        if (!parsed.some((r) => String(r.roomNo) === '108')) {
+          const room108 = INITIAL_ROOMS.find((r) => String(r.roomNo) === '108');
+          if (room108) {
+            parsed = [...parsed, room108];
+            updated = true;
+          }
+        }
+        parsed = parsed.map((r) => {
+          const standardType = toStandardRoomType(r.roomType);
+          if (r.roomType !== standardType) {
+            updated = true;
+            return { ...r, roomType: standardType };
+          }
+          return r;
+        });
+        if (updated) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
+        }
+        return parsed;
+      }
+      return [];
     }
   } catch {
     return [];
   }
   return [];
+}
+
+export function getRoomsByRoomType(roomType) {
+  const rooms = getRooms();
+  if (!roomType || String(roomType).trim() === '') return rooms;
+  const target = normalizeRoomType(roomType);
+  return rooms.filter((room) => normalizeRoomType(room.roomType) === target);
 }
 
 export function getRoomById(id) {

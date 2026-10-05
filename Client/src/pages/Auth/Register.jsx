@@ -1,13 +1,31 @@
-import authBg from '../../assets/images/auth-bg.jpg';
-import authCardBg from '../../assets/images/authcard.jpg';
+import authBg from '../../assets/images/auth-bg.webp';
+import authCardBg from '../../assets/images/authcard.webp';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton } from '@mui/material';
+import { TextField, Checkbox, FormControlLabel, Button, InputAdornment, IconButton, Snackbar, Alert } from '@mui/material';
 import { Visibility, VisibilityOff, Email, Lock, Person, Business } from '@mui/icons-material';
+
+
+// Cross-port shared storage helper
+const getSharedReqs = () => {
+  try {
+    const match = document.cookie.match(new RegExp('(^| )hotel_registration_requests=([^;]+)'));
+    if (match) return JSON.parse(decodeURIComponent(match[2]));
+  } catch(e) {}
+  return JSON.parse(localStorage.getItem('hotel_registration_requests') || '[]');
+};
+
+const setSharedReqs = (reqs) => {
+  const val = JSON.stringify(reqs);
+  localStorage.setItem('hotel_registration_requests', val);
+  document.cookie = "hotel_registration_requests=" + encodeURIComponent(val) + "; path=/; max-age=31536000";
+};
 
 export default function Register() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [emailError, setEmailError] = useState('');
+  const [successMsg, setSuccessMsg] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -20,8 +38,19 @@ export default function Register() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  
   const handleRegister = (e) => {
     e.preventDefault();
+    setEmailError('');
+    
+    const existingReqs = getSharedReqs();
+    
+    // 1. Check if email already exists
+    if (existingReqs.some(req => req.managerEmail && req.managerEmail.toLowerCase() === formData.email.trim().toLowerCase())) {
+      setEmailError('Email already exists');
+      return;
+    }
+    
     if (formData.hotelName) {
       localStorage.setItem('hotelName', formData.hotelName);
     }
@@ -41,14 +70,46 @@ export default function Register() {
       password: formData.password
     }));
 
-    // Redirect to login page so user must sign in with created account
-    navigate('/login', { 
-      state: { 
-        message: 'Account created successfully! Please sign in with your credentials.', 
-        email: formData.email 
-      } 
-    });
+    // Create new registration request for superadmin approvals
+    const newReq = {
+      id: 'req-' + Date.now(),
+      hotelName: formData.hotelName,
+      managerName: formData.fullName,
+      managerEmail: formData.email,
+      password: formData.password,
+      status: 'PENDING',
+      registeredAt: new Date().toISOString().split('T')[0],
+      totalRooms: 100,
+      subscriptionPlan: 'STANDARD',
+      city: 'Unknown',
+      phone: 'Unknown'
+    };
+    existingReqs.push(newReq);
+    
+    try {
+      setSharedReqs(existingReqs);
+    } catch (err) {
+      console.warn("Storage quota exceeded, trying to free space...");
+      try {
+        setSharedReqs([newReq]);
+      } catch (err2) {
+        alert("Browser storage is full. Please clear your browser local storage.");
+        return;
+      }
+    }
+
+    setSuccessMsg(true);
+    setTimeout(() => {
+      navigate('/login', { 
+        state: { 
+          message: 'Account created successfully! Please sign in with your credentials.', 
+          email: formData.email,
+          registeredEmail: formData.email
+        } 
+      });
+    }, 2000);
   };
+
 
   return (
     <div className="h-screen w-full flex items-center justify-center relative overflow-hidden bg-gray-900">
@@ -153,10 +214,8 @@ export default function Register() {
                   }
                 }}
                 variant="outlined"
-                placeholder="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
+                placeholder="you@example.com"
+                name="email" value={formData.email} onChange={handleChange} error={!!emailError} helperText={emailError}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -303,8 +362,14 @@ export default function Register() {
             </Button>
           </form>
         </div>
-      </div>
-          </div>
+          {/* Success Toast */}
+      <Snackbar open={successMsg} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert severity="success" sx={{ width: '100%', mb: 2, fontSize: '15px' }} variant="filled">
+          Registration is pending, your request has been sent to the admin. After approval, you can login.
+        </Alert>
+      </Snackbar>
     </div>
+  </div>
+</div>
   );
 }

@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { Snackbar, Alert } from "@mui/material";
 
 // Import exact full table components from TodaysAttendance
@@ -14,7 +14,7 @@ export default function DashboardStaffAttendance() {
     <div className="flex flex-col gap-4">
       {/* Exact Full Attendance Table */}
       <div className="w-full flex flex-col">
-          <AttendanceTable {...attendanceState} />
+          <AttendanceTable {...attendanceState} isDashboard={true} hideScrollbar={true} />
       </div>
 
       {/* Attendance Modals and Toasts (needed for full functionality) */}

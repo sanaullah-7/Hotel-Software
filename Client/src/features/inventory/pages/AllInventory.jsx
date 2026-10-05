@@ -177,17 +177,17 @@ export default function AllInventory() {
   };
 
   return (
-    <div className="space-y-2 max-w-[1600px] mx-auto pb-2 animate-fade-in pt-1">
+    <div className="w-full space-y-2.5 pb-3 flex flex-col">
       {/* KPI SUMMARY CARDS */}
       <InventoryKpiCards metrics={metrics} />
 
       {/* FILTER & SEARCH TOOLBAR */}
-      <div className="bg-white p-2.5 rounded-lg shadow-xs border border-gray-100 space-y-2">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+      <div className="bg-white p-2 sm:p-2.5 rounded-lg shadow-xs border border-gray-100 space-y-2">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
           
           {/* Search Box */}
           <div className="relative w-full sm:w-64 shrink-0">
-            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" sx={{ fontSize: 16 }} />
+            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" sx={{ fontSize: 15 }} />
             <input 
               type="text" 
               placeholder="Search item, SKU, room, category..." 
@@ -196,7 +196,7 @@ export default function AllInventory() {
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full pl-8 pr-7 py-1 bg-white border border-gray-200 rounded-lg text-xs focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] placeholder-gray-400 text-gray-800"
+              className="w-full pl-8 pr-7 py-1 bg-white border border-gray-200 rounded-md text-xs focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)] placeholder:text-gray-400 text-gray-800"
             />
             {searchQuery && (
               <button 
@@ -204,20 +204,20 @@ export default function AllInventory() {
                   setSearchQuery('');
                   setCurrentPage(1);
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
               >
-                <Clear sx={{ fontSize: 14 }} />
+                <Clear sx={{ fontSize: 13 }} />
               </button>
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-2 flex-wrap">
+          <div className="flex items-center justify-end gap-1 sm:gap-1.5 flex-wrap">
             <button 
               onClick={() => setAddStockModalOpen(true)}
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer border border-gray-100 bg-gray-50/50" 
               title="Add Stock"
             >
-              <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+              <AddCircleOutlined sx={{ fontSize: 17 }} className="text-[var(--primary-main)]" />
             </button>
 
             <button 
@@ -225,27 +225,27 @@ export default function AllInventory() {
                 setPrefilledItemForIncident(null);
                 setIncidentModalOpen(true);
               }}
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" 
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer border border-gray-100 bg-gray-50/50" 
               title="Report Missing"
             >
-              <ReportProblem sx={{ fontSize: 18 }} className="text-[#ef4444]" />
+              <ReportProblem sx={{ fontSize: 16 }} className="text-[#ef4444]" />
             </button>
 
             <button 
               onClick={handleRefresh} 
               disabled={isRefreshing}
               title="Refresh Data & Reset Filters"
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer disabled:opacity-50"
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer disabled:opacity-50 border border-gray-100 bg-gray-50/50"
             >
-              <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+              <Refresh sx={{ fontSize: 16 }} className="text-[var(--primary-main)]" />
             </button>
 
             <button 
               onClick={handleExportCSV}
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer border border-gray-100 bg-gray-50/50" 
               title="Export CSV"
             >
-              <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
+              <TableChart sx={{ fontSize: 15 }} className="text-[#0ea5e9]" />
             </button>
           </div>
 

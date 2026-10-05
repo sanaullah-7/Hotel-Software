@@ -77,41 +77,108 @@ export default function GuestProfile() {
 
     if (!g) return;
 
+    const guestName = String(g.name || '').trim().toLowerCase();
+    const guestEmail = String(g.email || '').trim().toLowerCase();
+    const guestId = String(g.id || '').trim();
+
     // 1. Reservations
     const allRes = getReservations();
-    const guestRes = allRes.filter((r) => String(r.guestId || '') === String(g.id) || (!r.guestId && String(resolveGuestForBooking(r)?.id || '') === String(g.id)));
+    const guestRes = allRes.filter((r) => {
+      if (r.guestId && String(r.guestId).trim() === guestId) return true;
+      if (r.guestId && String(r.guestId).trim() !== guestId) return false;
+      const rEmail = String(r.email || r.guestEmail || '').trim().toLowerCase();
+      const rName = String(r.name || r.guestName || '').trim().toLowerCase();
+      if (guestEmail && rEmail && guestEmail === rEmail) return true;
+      if (guestName && rName && guestName === rName) return true;
+      return false;
+    });
     setReservations(guestRes);
 
     const guestBookingIds = new Set(
-      guestRes.map((r) => String(r.id))
+      guestRes.flatMap((r) => [String(r.id || ''), String(r.bookingId || ''), String(r.bookingRef || '')].filter(Boolean))
     );
-    const guestRooms = new Set(guestRes.map((r) => String(r.roomNo || r.roomNumber || r.room || '')));
 
     // 2. Invoices
     const allInv = getInvoices().map(getInvoiceWithFinancialState);
-    const guestInv = allInv.filter((inv) => guestBookingIds.has(String(inv.bookingId)));
+    const guestInv = allInv.filter((inv) => {
+      if (inv.guestId && String(inv.guestId).trim() === guestId) return true;
+      if (inv.guestId && String(inv.guestId).trim() !== guestId) return false;
+
+      const invEmail = String(inv.guestEmail || '').trim().toLowerCase();
+      const invName = String(inv.guestName || '').trim().toLowerCase();
+
+      // If invoice explicitly has a different guest email or name, reject immediately
+      if (guestEmail && invEmail && guestEmail !== invEmail) return false;
+      if (guestName && invName && guestName !== invName) return false;
+
+      // Positive match by email or name
+      if (guestEmail && invEmail && guestEmail === invEmail) return true;
+      if (guestName && invName && guestName === invName) return true;
+
+      // Positive match by bookingId ONLY IF invoice does not belong to a different guest
+      if (inv.bookingId && guestBookingIds.has(String(inv.bookingId))) {
+        if (!invName || invName === guestName) return true;
+      }
+
+      return false;
+    });
     setInvoices(guestInv);
 
     // 3. Folio Charges
     const allCharges = getGuestCharges();
-    const guestChargesList = allCharges.filter((c) =>
-      (g.name && c.guestName && c.guestName.toLowerCase() === g.name.toLowerCase()) ||
-      (c.roomNumber && guestRooms.has(String(c.roomNumber)))
-    );
+    const guestChargesList = allCharges.filter((c) => {
+      if (c.guestId && String(c.guestId).trim() === guestId) return true;
+      if (c.guestId && String(c.guestId).trim() !== guestId) return false;
+
+      const cName = String(c.guestName || '').trim().toLowerCase();
+      if (guestName && cName && guestName !== cName) return false;
+      if (guestName && cName && guestName === cName) return true;
+
+      if (c.bookingId && guestBookingIds.has(String(c.bookingId))) {
+        if (!cName || cName === guestName) return true;
+      }
+
+      return false;
+    });
     setCharges(guestChargesList);
 
     // 4. Payments
     const allPayments = getPayments();
-    const guestInvoiceIds = new Set(guestInv.map((inv) => String(inv.id)));
-    const guestPaymentsList = allPayments.filter((p) =>
-      guestInvoiceIds.has(String(p.invoiceId || p.invoiceNumber || '')) || guestBookingIds.has(String(p.bookingId))
+    const guestInvoiceIds = new Set(
+      guestInv.flatMap((inv) => [String(inv.id || ''), String(inv.invoiceNumber || '')].filter(Boolean))
     );
+    const guestPaymentsList = allPayments.filter((p) => {
+      if (p.guestId && String(p.guestId).trim() === guestId) return true;
+      if (p.guestId && String(p.guestId).trim() !== guestId) return false;
+
+      const pEmail = String(p.guestEmail || '').trim().toLowerCase();
+      const pName = String(p.guestName || '').trim().toLowerCase();
+
+      if (guestEmail && pEmail && guestEmail !== pEmail) return false;
+      if (guestName && pName && guestName !== pName) return false;
+
+      if (guestEmail && pEmail && guestEmail === pEmail) return true;
+      if (guestName && pName && guestName === pName) return true;
+
+      if (p.invoiceId && guestInvoiceIds.has(String(p.invoiceId))) return true;
+      if (p.invoiceNumber && guestInvoiceIds.has(String(p.invoiceNumber))) return true;
+
+      if (p.bookingId && guestBookingIds.has(String(p.bookingId))) {
+        if (!pName || pName === guestName) return true;
+      }
+
+      return false;
+    });
     setPayments(guestPaymentsList);
 
     // 5. Refunds
     const allRefunds = getRefunds();
-    const guestPaymentIds = new Set(guestPaymentsList.map((payment) => String(payment.id || payment.paymentId)));
-    const guestRefundsList = allRefunds.filter((refund) => guestPaymentIds.has(String(refund.paymentId)));
+    const guestPaymentIds = new Set(
+      guestPaymentsList.flatMap((payment) => [String(payment.id || ''), String(payment.paymentId || '')].filter(Boolean))
+    );
+    const guestRefundsList = allRefunds.filter((refund) =>
+      Boolean(refund.paymentId && guestPaymentIds.has(String(refund.paymentId)))
+    );
     setRefunds(guestRefundsList);
 
     // 6. Complaints
@@ -122,10 +189,13 @@ export default function GuestProfile() {
     } catch {
       storedComplaints = INITIAL_COMPLAINTS;
     }
-    const guestComplaintsList = storedComplaints.filter((c) =>
-      (g.name && c.guestName && c.guestName.toLowerCase() === g.name.toLowerCase()) ||
-      (c.roomNo && guestRooms.has(String(c.roomNo)))
-    );
+    const guestComplaintsList = storedComplaints.filter((c) => {
+      if (c.guestId && String(c.guestId).trim() === guestId) return true;
+      if (c.guestId && String(c.guestId).trim() !== guestId) return false;
+      const cName = String(c.guestName || '').trim().toLowerCase();
+      if (guestName && cName && guestName === cName) return true;
+      return false;
+    });
     setComplaints(guestComplaintsList);
 
     // 7. Documents & Registration Forms
@@ -136,10 +206,13 @@ export default function GuestProfile() {
     } catch {
       storedDocs = INITIAL_DOCS;
     }
-    const guestDocsList = storedDocs.filter((d) =>
-      (g.name && d.guest && d.guest.toLowerCase() === g.name.toLowerCase()) ||
-      (d.room && guestRooms.has(String(d.room)))
-    );
+    const guestDocsList = storedDocs.filter((d) => {
+      if (d.guestId && String(d.guestId).trim() === guestId) return true;
+      if (d.guestId && String(d.guestId).trim() !== guestId) return false;
+      const dName = String(d.guest || d.guestName || '').trim().toLowerCase();
+      if (guestName && dName && guestName === dName) return true;
+      return false;
+    });
     setDocuments(guestDocsList);
   }, [id]);
 
@@ -149,12 +222,18 @@ export default function GuestProfile() {
     window.addEventListener(GUESTS_UPDATED_EVENT, loadData);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, loadData);
     window.addEventListener('guest_charges_update', loadData);
+    window.addEventListener('invoices_update', loadData);
+    window.addEventListener('payments_update', loadData);
+    window.addEventListener('refunds_update', loadData);
     window.addEventListener('storage', loadData);
 
     return () => {
       window.removeEventListener(GUESTS_UPDATED_EVENT, loadData);
       window.removeEventListener(RESERVATIONS_UPDATED_EVENT, loadData);
       window.removeEventListener('guest_charges_update', loadData);
+      window.removeEventListener('invoices_update', loadData);
+      window.removeEventListener('payments_update', loadData);
+      window.removeEventListener('refunds_update', loadData);
       window.removeEventListener('storage', loadData);
     };
   }, [id, loadData]);

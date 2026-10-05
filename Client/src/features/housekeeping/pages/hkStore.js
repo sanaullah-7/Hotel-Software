@@ -25,7 +25,13 @@ export const getRooms = () => {
 };
 
 export const saveRooms = (rooms) => {
-  localStorage.setItem('hk_rooms', JSON.stringify(rooms));
+  const linked = rooms.map((room) => {
+    if (room.roomId || room.id === undefined || room.id === null) return room;
+    const canonicalRoom = getRoomByRoomNo(room.id);
+    if (!canonicalRoom) return room;
+    return { ...room, roomId: canonicalRoom.id };
+  });
+  localStorage.setItem('hk_rooms', JSON.stringify(linked));
   window.dispatchEvent(new Event('hk_update'));
     try { addAuditLog({ module: 'Housekeeping', action: 'Updated Record', description: 'INITIAL_ROOMS was called.', importance: 'Normal' }); } catch(e){}
 };

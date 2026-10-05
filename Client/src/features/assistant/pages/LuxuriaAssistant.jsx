@@ -157,41 +157,41 @@ export default function LuxuriaAssistant() {
  return (
  <div className="flex flex-col h-[calc(100vh-64px)] bg-[#f8fafc]">
  {/* Header */}
- <div className="flex items-center justify-between px-6 py-4 bg-white border-b border-gray-100 shadow-sm shrink-0">
- <div className="flex items-center gap-3">
- <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-dark)] flex items-center justify-center text-white shadow-md">
- <SparklesIcon sx={{ fontSize: 22 }} />
+ <div className="flex items-center justify-between px-4 py-2.5 bg-white border-b border-gray-100 shadow-xs shrink-0">
+ <div className="flex items-center gap-2.5">
+ <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--primary-light)] to-[var(--primary-dark)] flex items-center justify-center text-white shadow-xs">
+ <SparklesIcon sx={{ fontSize: 18 }} />
  </div>
  <div>
- <h2 className="text-lg font-bold text-gray-800 tracking-tight flex items-center gap-2">
+ <h2 className="text-sm font-bold text-gray-800 tracking-tight flex items-center gap-2">
  Luxuria Executive Assistant
  </h2>
- <p className="text-xs text-gray-500 font-medium">Operational intelligence, room inventory queries, and staff triage assistant</p>
+ <p className="text-[11px] text-gray-500 font-medium">Operational intelligence, room inventory queries, and staff triage assistant</p>
  </div>
  </div>
  
- <div className="flex items-center gap-3">
- <span className="px-3 py-1 bg-amber-100 text-amber-700 text-[11px] font-bold uppercase tracking-wider rounded-full">
+ <div className="flex items-center gap-2">
+ <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-wider rounded-full">
  Demo Mode
  </span>
  <button 
  onClick={handleClearChat}
- className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+ className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
  title="Clear Chat"
  >
- <DeleteIcon sx={{ fontSize: 20 }} />
+ <DeleteIcon sx={{ fontSize: 18 }} />
  </button>
  </div>
  </div>
 
  {/* Suggested Chips Area */}
- <div className="px-4 sm:px-6 py-3 bg-white border-b border-gray-100 flex items-center gap-2 shrink-0 overflow-x-auto min-w-0 hide-scrollbar">
- <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide mr-2">Suggested Inquiries:</span>
+ <div className="px-4 py-2 bg-white border-b border-gray-100 flex items-center gap-1.5 shrink-0 overflow-x-auto min-w-0 hide-scrollbar">
+ <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mr-1.5">Suggested:</span>
  {suggestedInquiries.map((chip) => (
  <button
  key={chip.id}
  onClick={() => handleSuggestionClick(chip.id)}
- className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-[var(--primary-light)] hover:bg-[#e5f4eb] text-gray-600 hover:text-[var(--primary-dark)] text-xs font-medium rounded-full transition-all cursor-pointer shadow-sm"
+ className="flex items-center gap-1 px-2.5 py-1 bg-white border border-gray-200 hover:border-[var(--primary-light)] hover:bg-[#e5f4eb] text-gray-600 hover:text-[var(--primary-dark)] text-[11px] font-medium rounded-full transition-all cursor-pointer shadow-xs"
  >
  {chip.icon && <span className="text-[var(--primary-light)]">{chip.icon}</span>}
  {chip.label}
@@ -200,35 +200,35 @@ export default function LuxuriaAssistant() {
  </div>
 
  {/* Chat Messages Area */}
- <div className="flex-1 overflow-y-auto p-6 space-y-6">
+ <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3">
  {messages.map((msg) => {
  const isAi = msg.sender ==='ai';
  return (
  <div key={msg.id} className={`flex ${isAi ?'justify-start' :'justify-end'}`}>
- <div className={`flex gap-3 max-w-[80%] ${isAi ?'flex-row' :'flex-row-reverse'}`}>
+ <div className={`flex gap-2 max-w-[80%] ${isAi ?'flex-row' :'flex-row-reverse'}`}>
  
  {/* Avatar */}
- <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-1 shadow-sm ${
+ <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5 shadow-xs ${
  isAi ?'bg-[#e5f4eb] text-[var(--primary-main)]' :'bg-gray-200 text-gray-600'
  }`}>
- {isAi ? <BotIcon sx={{ fontSize: 18 }} /> : <UserIcon sx={{ fontSize: 18 }} />}
+ {isAi ? <BotIcon sx={{ fontSize: 16 }} /> : <UserIcon sx={{ fontSize: 16 }} />}
  </div>
 
  {/* Message Bubble */}
  <div className="flex flex-col">
- <div className={`px-5 py-3.5 rounded-2xl shadow-sm text-[14.5px] leading-relaxed ${
+ <div className={`px-3.5 py-2 rounded-xl shadow-xs text-[12.5px] leading-relaxed ${
  isAi 
- ?'bg-white text-gray-700 border border-gray-100 rounded-tl-sm' 
- :'bg-[var(--primary-main)] text-white rounded-tr-sm'
+ ?'bg-white text-gray-700 border border-gray-100 rounded-tl-xs' 
+ :'bg-[var(--primary-main)] text-white rounded-tr-xs'
  }`}>
  {msg.text}
  </div>
  
  {/* Footer (Time & Status) */}
- <div className={`flex items-center gap-2 mt-1.5 px-1 ${isAi ?'justify-start' :'justify-end'}`}>
- <span className="text-[11px] text-gray-400 font-medium">{msg.timestamp}</span>
+ <div className={`flex items-center gap-1.5 mt-1 px-1 ${isAi ?'justify-start' :'justify-end'}`}>
+ <span className="text-[10px] text-gray-400 font-medium">{msg.timestamp}</span>
  {isAi && (
- <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-medium">
+ <span className="text-[9.5px] bg-amber-100 text-amber-700 px-1 py-0.2 rounded font-medium">
  Simulated Demo
  </span>
  )}
@@ -243,14 +243,14 @@ export default function LuxuriaAssistant() {
  {/* Typing Indicator */}
  {isTyping && (
  <div className="flex justify-start">
- <div className="flex gap-3 max-w-[80%]">
- <div className="w-8 h-8 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0 mt-1 shadow-sm">
- <BotIcon sx={{ fontSize: 18 }} />
+ <div className="flex gap-2 max-w-[80%]">
+ <div className="w-7 h-7 rounded-full bg-[#e5f4eb] text-[var(--primary-main)] flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+ <BotIcon sx={{ fontSize: 16 }} />
  </div>
- <div className="bg-white border border-gray-100 px-5 py-4 rounded-2xl rounded-tl-sm shadow-sm flex items-center gap-1.5">
- <div className="w-2 h-2 bg-[var(--primary-light)] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
- <div className="w-2 h-2 bg-[var(--primary-light)] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
- <div className="w-2 h-2 bg-[var(--primary-light)] rounded-full animate-bounce"></div>
+ <div className="bg-white border border-gray-100 px-3.5 py-2 rounded-xl rounded-tl-xs shadow-xs flex items-center gap-1.5">
+ <div className="w-1.5 h-1.5 bg-[var(--primary-light)] rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+ <div className="w-1.5 h-1.5 bg-[var(--primary-light)] rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+ <div className="w-1.5 h-1.5 bg-[var(--primary-light)] rounded-full animate-bounce"></div>
  </div>
  </div>
  </div>
@@ -259,24 +259,24 @@ export default function LuxuriaAssistant() {
  </div>
 
  {/* Input Area */}
- <div className="p-4 bg-white border-t border-gray-100 shrink-0">
+ <div className="p-2.5 bg-white border-t border-gray-100 shrink-0">
  <form 
  onSubmit={handleSend}
- className="max-w-5xl mx-auto flex items-center gap-3 bg-white border border-gray-300 rounded-full pl-6 pr-2 py-2 shadow-sm focus-within:border-[var(--primary-main)] focus-within:ring-2 focus-within:ring-[#dcefe5] transition-all"
+ className="max-w-5xl mx-auto flex items-center gap-2 bg-white border border-gray-300 rounded-full pl-4 pr-1 py-1 shadow-xs focus-within:border-[var(--primary-main)] focus-within:ring-1 focus-within:ring-[#dcefe5] transition-all"
  >
  <input 
  type="text" 
  value={inputValue}
  onChange={(e) => setInputValue(e.target.value)}
  placeholder="Ask a question about bookings, revenue, guests, or maintenance..."
- className="flex-1 bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400"
+ className="flex-1 bg-transparent border-none outline-none text-xs text-gray-700 placeholder-gray-400"
  />
  <button 
  type="submit"
  disabled={!inputValue.trim() || isTyping}
- className="bg-[var(--primary-main)] hover:bg-[var(--primary-dark)] text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-md"
+ className="bg-[var(--primary-main)] hover:bg-[var(--primary-dark)] text-white rounded-full w-7 h-7 flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-xs"
  >
- <SendIcon sx={{ fontSize: 18 }} />
+ <SendIcon sx={{ fontSize: 14 }} />
  </button>
  </form>
  </div>

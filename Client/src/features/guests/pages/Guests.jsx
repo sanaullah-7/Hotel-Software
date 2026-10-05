@@ -139,44 +139,44 @@ export default function Guests() {
   const filteredGuests = allGuests.filter(g => {
     const query = searchQuery.toLowerCase().trim();
     const matchesSearch = !query || 
-      (g.id && g.id.toLowerCase().includes(query)) ||
-      (g.name && g.name.toLowerCase().includes(query)) ||
+      g.name.toLowerCase().includes(query) ||
       (g.email && g.email.toLowerCase().includes(query)) ||
       (g.phone && g.phone.toLowerCase().includes(query)) ||
-      (g.city && g.city.toLowerCase().includes(query));
-    return matchesSearch && filterByDate(g);
+      (g.city && g.city.toLowerCase().includes(query)) ||
+      (g.id && String(g.id).toLowerCase().includes(query));
+
+    const matchesDate = filterByDate(g);
+    return matchesSearch && matchesDate;
   });
 
-  const totalPages = Math.ceil(filteredGuests.length / itemsPerPage) || 1;
+  const totalPages = Math.ceil(filteredGuests.length / itemsPerPage);
   const currentGuests = filteredGuests.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   const handleRefresh = () => {
+    setAllGuests(getGuests());
     setSearchQuery('');
     setDateFilter('Daily');
     setCustomStartDate('');
     setCustomEndDate('');
     setPage(1);
-    setAllGuests(getGuests());
   };
 
   const handleExportCSV = () => {
     const headers = ['Guest ID', 'Full Name', 'Email', 'Phone', 'City', 'Total Stays', 'Status'];
-    const rows = [headers.join(',')];
-    filteredGuests.forEach(g => {
-      rows.push([
-        `"${(g.id || '').replace(/"/g, '""')}"`,
-        `"${(g.name || '').replace(/"/g, '""')}"`,
-        `"${(g.email || '').replace(/"/g, '""')}"`,
-        `"${(g.phone || '').replace(/"/g, '""')}"`,
-        `"${(g.city || '').replace(/"/g, '""')}"`,
-        `"${g.totalStays ?? 0}"`,
-        `"${(g.status || '').replace(/"/g, '""')}"`
-      ].join(','));
-    });
-    const blob = new Blob([rows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const rows = filteredGuests.map(g => [
+      g.id,
+      `"${g.name.replace(/"/g, '""')}"`,
+      `"${g.email || ''}"`,
+      `"${g.phone || ''}"`,
+      `"${g.city || ''}"`,
+      g.totalStays || 0,
+      g.status
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'Guests.csv';
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'guests_export.csv');
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -211,27 +211,27 @@ export default function Guests() {
     '& .MuiOutlinedInput-root': {
       borderRadius: '8px',
       backgroundColor: '#ffffff',
-      fontSize: '13px',
+      fontSize: '11.5px',
       color: '#1f2937',
       '& fieldset': { borderColor: '#e2e8f0', borderWidth: '1px' },
       '&:hover fieldset': { borderColor: '#cbd5e1' },
       '&.Mui-focused fieldset': { borderColor: 'var(--primary-main)', borderWidth: '1.5px' },
     },
     '& .MuiInputLabel-root': {
-      fontSize: '13px',
+      fontSize: '12px',
       color: '#64748b',
       '&.Mui-focused': { color: 'var(--primary-main)' }
     }
   };
 
   return (
-    <div className="w-full flex flex-col pt-[2px] animate-fade-in pb-8">
+    <div className="w-full space-y-2.5 pb-3 flex flex-col">
       {/* MAIN CARD */}
-      <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5 flex-1 w-full overflow-hidden">
+      <div className="bg-white rounded-lg shadow-xs border border-gray-100 flex-1 flex flex-col overflow-hidden">
         {/* Card Header */}
-        <div className="p-2 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-4">
-            <h2 className="text-[16px] font-bold text-gray-700 whitespace-nowrap">
+        <div className="p-2 sm:p-2.5 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <h2 className="text-xs sm:text-sm font-bold text-gray-800 whitespace-nowrap">
               Guests
             </h2>
             
@@ -241,18 +241,20 @@ export default function Guests() {
               value={searchQuery}
               onChange={(value) => { setSearchQuery(value); setPage(1); }}
               iconPosition="left"
-              width="w-40 xl:w-56"
-              inputClassName="border-gray-200 bg-gray-50/50"
+              size="sm"
+              width="w-36 sm:w-48 xl:w-56"
+              inputClassName="border-gray-200 text-xs py-1"
             />
           </div>
           
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-1.5">
             {/* Date Filters with Custom Popup Wrapper */}
             <div className="relative shrink-0 flex items-center">
               <div className="flex bg-white border border-gray-200 rounded-lg overflow-hidden shadow-xs">
                 {['Daily', 'Weekly', 'Monthly', 'Yearly', 'Custom'].map(tab => (
                   <button
                     key={tab}
+                    type="button"
                     onClick={() => {
                       if (tab === 'Custom') {
                         if (dateFilter === 'Custom') {
@@ -267,7 +269,7 @@ export default function Guests() {
                       }
                       setPage(1);
                     }}
-                    className={`px-3 py-1.5 text-[12px] md:text-[13px] font-medium transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
+                    className={`px-2 py-1 text-[10px] sm:text-[10.5px] font-medium transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
                       dateFilter === tab 
                         ? 'bg-[#e5f4eb] text-[#1b7f43] font-bold' 
                         : 'text-gray-600 hover:bg-gray-50'
@@ -280,12 +282,12 @@ export default function Guests() {
 
               {/* Floating Custom Date Picker Popup */}
               {dateFilter === 'Custom' && isCustomPopupOpen && (
-                <div className="absolute right-0 top-[calc(100%+10px)] z-50 bg-white shadow-[0_10px_25px_rgba(0,0,0,0.1)] border border-gray-100 rounded-xl p-3 flex flex-col gap-2 min-w-[200px] animate-fade-in">
-                  <p className="text-[13px] font-bold text-gray-700">Custom Date Range</p>
+                <div className="absolute right-0 top-[calc(100%+8px)] z-50 bg-white shadow-lg border border-gray-100 rounded-xl p-2.5 flex flex-col gap-1.5 min-w-[200px] animate-fade-in">
+                  <p className="text-[11px] font-bold text-gray-700">Custom Date Range</p>
                   <div className="flex flex-col gap-1.5">
                     <input 
                       type="date" 
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded-md text-[13px] font-medium text-gray-600 focus:outline-none focus:border-[#1b7f43]"
+                      className="w-full px-2 py-1 border border-gray-200 rounded-md text-[10.5px] font-medium text-gray-600 focus:outline-none focus:border-[#1b7f43]"
                       value={customStartDate}
                       onChange={e => {
                         const val = e.target.value;
@@ -296,10 +298,10 @@ export default function Guests() {
                         }
                       }}
                     />
-                    <span className="text-gray-400 text-[11px] font-bold text-center">TO</span>
+                    <span className="text-gray-400 text-[9.5px] font-bold text-center">TO</span>
                     <input 
                       type="date" 
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded-md text-[13px] font-medium text-gray-600 focus:outline-none focus:border-[#1b7f43]"
+                      className="w-full px-2 py-1 border border-gray-200 rounded-md text-[10.5px] font-medium text-gray-600 focus:outline-none focus:border-[#1b7f43]"
                       value={customEndDate}
                       onChange={e => {
                         const val = e.target.value;
@@ -318,96 +320,106 @@ export default function Guests() {
             {/* Refresh Button */}
             <button 
               onClick={handleRefresh} 
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
               title="Refresh"
               aria-label="Refresh guests"
             >
-              <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+              <Refresh sx={{ fontSize: 18 }} className="text-[var(--primary-main)]" />
             </button>
 
             {/* CSV Export Icon Button */}
             <button 
               onClick={handleExportCSV} 
-              className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
+              className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" 
               title="Export CSV"
               aria-label="Export CSV"
             >
-              <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
+              <TableChart sx={{ fontSize: 16 }} className="text-[#0ea5e9]" />
             </button>
           </div>
         </div>
 
         {/* Table Content */}
-        <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50/50">
-              <tr>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Guest ID</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Full Name</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Email</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Phone</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">City</th>
-                <th className="py-4 px-4 text-[13px] font-bold text-gray-700 text-center">Total Stays</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Status</th>
-                <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Actions</th>
+        <div className="w-full flex-1 overflow-hidden">
+          <table className="w-full text-left border-collapse table-fixed">
+            <colgroup>
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '20%' }} />
+              <col style={{ width: '22%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '6%' }} />
+            </colgroup>
+            <thead>
+              <tr className="border-b border-gray-100 bg-slate-50/50">
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Guest ID</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Full Name</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Phone</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">City</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Total Stays</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-50">
               {currentGuests.map((guest) => (
                 <tr 
                   key={guest.id} 
                   onClick={() => navigate(`/guests/${guest.id}`)}
-                  className="hover:bg-gray-50/30 transition-colors cursor-pointer"
+                  className="hover:bg-gray-50/60 transition-colors cursor-pointer"
                   title="Click anywhere on the row to view Guest Profile"
                 >
-                  <td className="py-2 px-3 text-[13px] font-bold text-gray-900">{guest.id}</td>
-                  <td className="py-2 px-3">
-                    <div className="flex items-center">
-                      <img src={guest.avatar} alt={guest.name} className="w-8 h-8 rounded-full object-cover mr-3 bg-gray-200 shrink-0" />
+                  <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-900 truncate">{guest.id}</td>
+                  <td className="py-1.5 px-1.5">
+                    <div className="flex items-center min-w-0">
+                      <img src={guest.avatar} alt={guest.name} className="w-5.5 h-5.5 rounded-full object-cover mr-1.5 bg-gray-200 shrink-0 border border-gray-200" />
                       <Link 
                         to={`/guests/${guest.id}`} 
                         onClick={(e) => e.stopPropagation()}
-                        className="text-[12px] font-bold text-gray-800 hover:text-[#1b7f43] hover:underline transition-colors" 
+                        className="text-[11px] font-bold text-gray-800 hover:text-[#1b7f43] hover:underline transition-colors truncate" 
                         title="View Guest Profile"
                       >
                         {guest.name}
                       </Link>
                     </div>
                   </td>
-                  <td className="py-2 px-3">
-                    <div className="flex items-center text-[12px] text-gray-600">
-                      <EmailOutlined className="text-red-500 mr-2 shrink-0" sx={{ fontSize: 16 }} />
-                      <span className="truncate max-w-[180px]">{guest.email}</span>
+                  <td className="py-1.5 px-1.5">
+                    <div className="flex items-center text-[11px] text-gray-600 min-w-0">
+                      <EmailOutlined className="text-rose-500 mr-1 shrink-0" sx={{ fontSize: 13 }} />
+                      <span className="truncate" title={guest.email}>{guest.email}</span>
                     </div>
                   </td>
-                  <td className="py-2 px-3">
-                    <div className="flex items-center text-[12px] text-gray-600 whitespace-nowrap">
-                      <PhoneOutlined className="text-green-500 mr-2 shrink-0" sx={{ fontSize: 16 }} />
+                  <td className="py-1.5 px-1.5">
+                    <div className="flex items-center text-[10.5px] text-gray-600 whitespace-nowrap">
+                      <PhoneOutlined className="text-emerald-600 mr-1 shrink-0" sx={{ fontSize: 13 }} />
                       {guest.phone}
                     </div>
                   </td>
-                  <td className="py-2 px-3 text-[12px] text-gray-600 whitespace-nowrap">{guest.city}</td>
-                  <td className="py-2 px-3 text-[12px] text-gray-600 text-center">{guest.totalStays}</td>
-                  <td className="py-2 px-3 whitespace-nowrap">
-                    <span className="px-3 py-1 text-[11px] font-bold rounded-md bg-[#e5f4eb] text-[#1b7f43]">
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 truncate">{guest.city}</td>
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 text-center font-semibold">{guest.totalStays}</td>
+                  <td className="py-1.5 px-1.5 whitespace-nowrap">
+                    <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded bg-[#e5f4eb] text-[#1b7f43]">
                       {guest.status}
                     </span>
                   </td>
-                  <td className="py-2 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                  <td className="py-1.5 px-1.5 text-center" onClick={(e) => e.stopPropagation()}>
                     <button 
                       onClick={() => openEditModal(guest)} 
-                      className="text-[var(--primary-main)] hover:text-green-700 transition-colors p-1.5 rounded-lg hover:bg-[#e5f4eb] cursor-pointer"
+                      className="text-[var(--primary-main)] hover:text-green-700 transition-colors p-0.5 rounded-md hover:bg-[#e5f4eb] cursor-pointer"
                       title="Edit Guest"
                       aria-label="Edit guest"
                     >
-                      <EditOutlined fontSize="small" sx={{ fontSize: 18 }} />
+                      <EditOutlined fontSize="small" sx={{ fontSize: 15 }} />
                     </button>
                   </td>
                 </tr>
               ))}
               {currentGuests.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="text-center py-10 text-gray-500 text-[14px]">No guests found.</td>
+                  <td colSpan="8" className="text-center py-6 text-gray-500 text-xs">No guests found.</td>
                 </tr>
               )}
             </tbody>
@@ -415,16 +427,16 @@ export default function Guests() {
         </div>
 
         {/* Pagination Controls */}
-        <div className="p-4 border-t border-gray-100 flex items-center justify-end space-x-6 text-gray-500 text-[13px]">
-          <div className="flex items-center">
-            <span className="mr-2 font-medium">Items per page:</span>
+        <div className="flex items-center justify-end gap-3 sm:gap-4 px-3 py-1.5 sm:py-2 border-t border-gray-100 bg-white text-xs text-gray-500">
+          <div className="flex items-center gap-1.5">
+            <span>Items per page:</span>
             <select 
               value={itemsPerPage}
               onChange={(e) => {
                 setItemsPerPage(Number(e.target.value));
                 setPage(1);
               }}
-              className="border border-gray-200 rounded px-2 py-1 outline-none font-medium text-gray-700 bg-white cursor-pointer"
+              className="border border-gray-200 rounded px-1.5 py-0.5 outline-none text-xs text-gray-700 bg-white cursor-pointer focus:border-[var(--primary-main)]"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -432,25 +444,25 @@ export default function Guests() {
               <option value={50}>50</option>
             </select>
           </div>
-          <span className="font-medium">
+          <span>
             {filteredGuests.length === 0 ? '0 of 0' : `${(page - 1) * itemsPerPage + 1} - ${Math.min(page * itemsPerPage, filteredGuests.length)} of ${filteredGuests.length}`}
           </span>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-0.5">
             <button 
-              onClick={() => setPage(p => Math.max(1, p - 1))}
+              onClick={() => setPage(p => Math.max(1, p - 1))} 
               disabled={page === 1}
               aria-label="Previous page"
-              className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
+              className="p-1 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
-              <ChevronLeft fontSize="small" />
+              <ChevronLeft sx={{ fontSize: 17 }} />
             </button>
             <button 
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))} 
               disabled={page === totalPages || totalPages === 0}
               aria-label="Next page"
-              className="p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-50 cursor-pointer"
+              className="p-1 rounded hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
-              <ChevronRight fontSize="small" />
+              <ChevronRight sx={{ fontSize: 17 }} />
             </button>
           </div>
         </div>
@@ -458,19 +470,19 @@ export default function Guests() {
 
       {/* Edit Guest Modal */}
       {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsEditModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[600px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="bg-[var(--primary-main)] px-5 py-4 flex items-center justify-between">
-              <h2 className="text-[16px] font-bold text-white">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsEditModalOpen(false)}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[500px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-[var(--primary-main)] px-4 py-2.5 flex items-center justify-between">
+              <h2 className="text-sm font-bold text-white">
                 Edit Guest: {editingGuest?.name}
               </h2>
               <button onClick={() => setIsEditModalOpen(false)} aria-label="Close" className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
-                <Close sx={{ fontSize: 18 }} />
+                <Close sx={{ fontSize: 16 }} />
               </button>
             </div>
             
-            <form onSubmit={handleSaveEdit} className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <form onSubmit={handleSaveEdit} className="p-4 sm:p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
                 <TextField 
                   required 
                   label="Full Name" 
@@ -482,7 +494,7 @@ export default function Guests() {
                 />
                 <TextField 
                   required 
-                  type="email"
+                  type="email" 
                   label="Email" 
                   value={editForm.email} 
                   onChange={e => setEditForm({...editForm, email: e.target.value})} 
@@ -528,11 +540,11 @@ export default function Guests() {
                 </FormControl>
               </div>
 
-              <div className="flex items-center justify-end gap-3 mt-8">
-                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-5 py-2 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13.5px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
+              <div className="flex items-center justify-end gap-2.5 mt-5">
+                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-4 py-1.5 rounded-lg border border-transparent bg-rose-50 text-rose-600 font-semibold text-xs hover:bg-rose-100 transition-colors cursor-pointer shadow-xs">
                   Cancel
                 </button>
-                <button type="submit" className="px-5 py-2 rounded-full border border-green-200 bg-green-50 text-[var(--primary-main)] font-bold text-[13.5px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm">
+                <button type="submit" className="px-4 py-1.5 rounded-lg border border-green-200 bg-green-50 text-[var(--primary-main)] font-semibold text-xs hover:bg-green-100 transition-colors cursor-pointer shadow-xs">
                   Save Changes
                 </button>
               </div>

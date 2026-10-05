@@ -1,4 +1,4 @@
-﻿import React from'react';
+import React from'react';
 import {
  HomeOutlined as HomeIcon,
  Payments as RevenueIcon,
@@ -72,50 +72,50 @@ export default function ExpenseVsRevenueTab() {
  <div className="w-full space-y-2 pb-0 font-sans">
  
 
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1 mb-2">
- {/* Card 1: TOTAL REVENUE (YTD) */}
- <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
- <div>
- <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$1,842,500</div>
- <div className="text-[13px] text-gray-500 font-medium">Total Revenue (YTD)</div>
- </div>
- <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
- <RevenueIcon sx={{ fontSize: 18 }} />
- </div>
- </div>
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 mt-1 mb-2">
+  {/* Card 1: TOTAL REVENUE (YTD) */}
+  <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between">
+  <div>
+  <div className="text-xl font-bold text-gray-900 leading-none mb-1">$1,842,500</div>
+  <div className="text-[11.5px] text-gray-500 font-medium">Total Revenue (YTD)</div>
+  </div>
+  <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600 shrink-0">
+  <RevenueIcon sx={{ fontSize: 16 }} />
+  </div>
+  </div>
 
- {/* Card 2: TOTAL EXPENSES (YTD) */}
- <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
- <div>
- <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$642,800</div>
- <div className="text-[13px] text-gray-500 font-medium">Total Expenses (YTD)</div>
- </div>
- <div className="w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-600">
- <ExpenseIcon sx={{ fontSize: 18 }} />
- </div>
- </div>
+  {/* Card 2: TOTAL EXPENSES (YTD) */}
+  <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between">
+  <div>
+  <div className="text-xl font-bold text-gray-900 leading-none mb-1">$642,800</div>
+  <div className="text-[11.5px] text-gray-500 font-medium">Total Expenses (YTD)</div>
+  </div>
+  <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-red-50 text-red-600 shrink-0">
+  <ExpenseIcon sx={{ fontSize: 16 }} />
+  </div>
+  </div>
 
- {/* Card 3: NET PROFIT */}
- <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
- <div>
- <div className="text-2xl font-bold text-gray-900 leading-none mb-1">$1,199,700</div>
- <div className="text-[13px] text-gray-500 font-medium">Net Profit</div>
- </div>
- <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
- <ProfitIcon sx={{ fontSize: 18 }} />
- </div>
- </div>
+  {/* Card 3: NET PROFIT */}
+  <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between">
+  <div>
+  <div className="text-xl font-bold text-gray-900 leading-none mb-1">$1,199,700</div>
+  <div className="text-[11.5px] text-gray-500 font-medium">Net Profit</div>
+  </div>
+  <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-green-50 text-green-600 shrink-0">
+  <ProfitIcon sx={{ fontSize: 16 }} />
+  </div>
+  </div>
 
- {/* Card 4: OPERATING MARGIN */}
- <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
- <div>
- <div className="text-2xl font-bold text-gray-900 leading-none mb-1">24.5%</div>
- <div className="text-[13px] text-gray-500 font-medium">Operating Margin</div>
- </div>
- <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
- <MarginIcon sx={{ fontSize: 18 }} />
- </div>
- </div>
+  {/* Card 4: OPERATING MARGIN */}
+  <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between">
+  <div>
+  <div className="text-xl font-bold text-gray-900 leading-none mb-1">24.5%</div>
+  <div className="text-[11.5px] text-gray-500 font-medium">Operating Margin</div>
+  </div>
+  <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-purple-50 text-purple-600 shrink-0">
+  <MarginIcon sx={{ fontSize: 16 }} />
+  </div>
+  </div>
  </div>
 
  {/* 3. Revenue Trend (Dual Area Spline Chart) */}

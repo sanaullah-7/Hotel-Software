@@ -16,6 +16,9 @@ export default function AddReservation() {
  selectedFile,
  fileInputRef,
  handleFileChange,
+ guestProfileImage,
+ profileImageInputRef,
+ handleProfileImageChange,
  handleGuestSelect,
  handleChange,
  handleSave
@@ -47,6 +50,33 @@ export default function AddReservation() {
  <div className="flex items-center gap-2">
  <Person sx={{ fontSize: 22, color:'#1b7f43' }} />
  <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Guest Information</h3>
+ </div>
+
+ {/* Upload Profile Field */}
+ <div className="flex items-center justify-center">
+   <div 
+     className="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 cursor-pointer overflow-hidden relative group"
+     onClick={() => profileImageInputRef.current?.click()}
+   >
+     {guestProfileImage ? (
+       <img src={guestProfileImage} alt="Profile" className="w-full h-full object-cover" />
+     ) : (
+       <Person className="text-gray-400" />
+     )}
+     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+       <span className="text-[10px] text-white font-medium text-center leading-tight">Upload</span>
+     </div>
+   </div>
+   <div className="text-xs text-gray-500 hidden sm:block">
+     Upload<br/>Profile
+   </div>
+   <input 
+     type="file" 
+     accept="image/*" 
+     className="hidden" 
+     ref={profileImageInputRef} 
+     onChange={handleProfileImageChange} 
+   />
  </div>
  
  {/* Auto-fill Dropdown */}
