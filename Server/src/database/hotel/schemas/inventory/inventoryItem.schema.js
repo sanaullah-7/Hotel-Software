@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
 const inventoryItemSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     sku: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       uppercase: true,
     },
@@ -93,5 +97,7 @@ const inventoryItemSchema = new mongoose.Schema(
 inventoryItemSchema.index({ category: 1 });
 inventoryItemSchema.index({ status: 1 });
 inventoryItemSchema.index({ location_type: 1, room_number: 1 });
+
+inventoryItemSchema.index({ hotelId: 1, sku: 1 }, { unique: true });
 
 export default inventoryItemSchema;

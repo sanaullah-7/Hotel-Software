@@ -57,7 +57,7 @@ export default function ReservationViewModal({
     <div className="flex items-center justify-between w-full pr-3">
       <div className="flex items-center gap-4">
         <img
-          src={booking.avatar}
+          src={booking.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(booking.name || booking.id || 'guest')}`}
           alt="Avatar"
           className="w-12 h-12 rounded-full border-2 border-white shadow-sm object-cover"
         />

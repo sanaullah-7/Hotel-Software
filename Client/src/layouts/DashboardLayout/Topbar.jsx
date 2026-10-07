@@ -23,13 +23,13 @@ import CommandPalette from './CommandPalette';
 
 const Topbar = ({ onMobileNavToggle }) => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   // State for profile menu
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const isProfileMenuOpen = Boolean(profileAnchorEl);
 
-  const [profileName, setProfileName] = useState(localStorage.getItem('fullName') || 'Admin');
-  const [profileLogo, setProfileLogo] = useState(localStorage.getItem('ownerLogo') || null);
+  const [profileName, setProfileName] = useState(user?.fullName || user?.email || 'Admin');
+  const [profileLogo, setProfileLogo] = useState(null);
 
   // Command Palette State
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -37,8 +37,8 @@ const Topbar = ({ onMobileNavToggle }) => {
 
   useEffect(() => {
     const handleStorage = () => {
-      setProfileName(localStorage.getItem('fullName') || 'Admin');
-      setProfileLogo(localStorage.getItem('ownerLogo') || null);
+      setProfileName(user?.fullName || user?.email || 'Admin');
+      setProfileLogo(null);
     };
 
     const handleKeyDown = (e) => {

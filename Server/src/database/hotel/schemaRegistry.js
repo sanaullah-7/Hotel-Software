@@ -142,3 +142,11 @@ export const SCHEMAS = {
   FileRecord: fileRecordSchema,
   AuditLog: auditLogSchema,
 };
+
+// Every hotel-owned collection needs an efficient ownership filter, including
+// collections without a natural unique business key.
+for (const schema of Object.values(SCHEMAS)) {
+  if (!schema.indexes().some(([keys]) => Object.keys(keys)[0] === 'hotelId')) {
+    schema.index({ hotelId: 1 });
+  }
+}

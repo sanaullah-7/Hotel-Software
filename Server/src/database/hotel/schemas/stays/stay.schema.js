@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
 const staySchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     stay_ref: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     reservation_id: {
@@ -49,5 +53,7 @@ const staySchema = new mongoose.Schema(
 staySchema.index({ reservation_id: 1 });
 staySchema.index({ primary_guest_id: 1 });
 staySchema.index({ status: 1 });
+
+staySchema.index({ hotelId: 1, stay_ref: 1 }, { unique: true });
 
 export default staySchema;

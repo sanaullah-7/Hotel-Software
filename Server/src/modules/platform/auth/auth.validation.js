@@ -2,6 +2,16 @@
 // Client ne jo data bheja hai, kya woh hamare rules ke according hai?
 import Joi from "joi";
 
+const normalizePakistaniPhone = (value, helpers) => {
+  const compact = value.replace(/[\s()-]/g, "");
+  let normalized = compact;
+  if (compact.startsWith("+92")) normalized = `0${compact.slice(3)}`;
+  else if (compact.startsWith("0092")) normalized = `0${compact.slice(4)}`;
+  else if (compact.startsWith("92")) normalized = `0${compact.slice(2)}`;
+  if (!/^03[0-9]{9}$/.test(normalized)) return helpers.error("phone.invalid");
+  return normalized;
+};
+
 //  Ye schema registration request ke data ko validate karta hai.
 export const registerSchema = Joi.object({//Joi.object():"Main ek object ke rules define kar raha hoon."
   // User ka full name
@@ -20,12 +30,12 @@ export const registerSchema = Joi.object({//Joi.object():"Main ek object ke rule
   }),
 
   // Matlab Pakistani number ka specific pattern require kar rahe ho.
-  phone: Joi.string()
-  // "Phone number exactly mere defined pattern ke according hona chahiye."
-    .pattern(/^03[0-9]{9}$/)//03 + 9 digits
+  phone: Joi.string().trim()
+    .custom(normalizePakistaniPhone, "Pakistani phone normalization")
     .messages({
-      "string.pattern.base":
+      "phone.invalid":
         "Phone must be a valid Pakistani number (03XXXXXXXXX)",
+      "string.empty": "Phone cannot be empty",
     }),
 
   // Password

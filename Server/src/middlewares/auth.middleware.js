@@ -44,6 +44,7 @@ const authMiddleware = async (req, res, next) => {
       id: account._id,
       role: account.role,
       email: account.email,
+      fullName: account.fullName,
       hotelId: account.hotelId,
       fullName: account.fullName,
       phone: account.phone,

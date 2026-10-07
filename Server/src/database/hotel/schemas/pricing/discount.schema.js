@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 
 const discountSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     code: {
       type: String,
       required: true,
@@ -63,5 +68,7 @@ const discountSchema = new mongoose.Schema(
 );
 
 discountSchema.index({ code: 1 }, { unique: true });
+
+discountSchema.index({ hotelId: 1, code: 1 }, { unique: true });
 
 export default discountSchema;

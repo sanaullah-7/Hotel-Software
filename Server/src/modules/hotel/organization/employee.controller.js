@@ -8,11 +8,9 @@ import { parsePagination, objectIdQuery, asString } from "../../../utils/query.j
 
 const EMPLOYEE_STATUSES = ["ACTIVE", "ON_LEAVE", "TERMINATED"];
 
-// Cross-tenant protection: the reference must exist in THIS tenant's database
-// (the model is bound to the authenticated hotel's connection).
 const assertDepartmentInTenant = async (hotelContext, departmentId) => {
   const Department = await getModel(hotelContext, "Department");
-  const dept = await Department.findById(departmentId);
+  const dept = await Department.findOne({ _id: departmentId, hotelId: hotelContext });
   if (!dept) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Referenced department does not exist in this hotel");
   }
@@ -21,15 +19,21 @@ const assertDepartmentInTenant = async (hotelContext, departmentId) => {
 export const createEmployee = asyncHandler(async (req, res) => {
   const Employee = await getModel(req.hotelContext, "Employee");
 
-  const existing = await Employee.findOne({ employee_ref: req.body.employee_ref });
+  const existing = await Employee.findOne({
+    hotelId: req.hotelContext,
+    employee_ref: req.body.employee_ref,
+  });
   if (existing) {
     throw new ApiError(HTTP_STATUS.CONFLICT, "Employee with this ID already exists");
   }
 
   await assertDepartmentInTenant(req.hotelContext, req.body.department_id);
 
-  const employee = await Employee.create(req.body);
-  const populated = await Employee.findById(employee._id).populate('department_id');
+  const employee = await Employee.create({ ...req.body, hotelId: req.hotelContext });
+  const populated = await Employee.findOne({
+    _id: employee._id,
+    hotelId: req.hotelContext,
+  }).populate("department_id");
   res.status(HTTP_STATUS.CREATED).json(new ApiResponse(HTTP_STATUS.CREATED, populated, "Employee created successfully"));
 });
 
@@ -37,7 +41,7 @@ export const getEmployees = asyncHandler(async (req, res) => {
   const Employee = await getModel(req.hotelContext, "Employee");
   const { page, limit, skip } = parsePagination(req.query);
 
-  const query = {};
+  const query = { hotelId: req.hotelContext };
   const status = asString(req.query.status);
   if (status) {
     if (!EMPLOYEE_STATUSES.includes(status)) {
@@ -61,10 +65,16 @@ export const getEmployeeById = asyncHandler(async (req, res) => {
   const Employee = await getModel(req.hotelContext, "Employee");
   let employee = null;
   if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-    employee = await Employee.findById(req.params.id).populate('department_id');
+    employee = await Employee.findOne({
+      _id: req.params.id,
+      hotelId: req.hotelContext,
+    }).populate("department_id");
   }
   if (!employee) {
-    employee = await Employee.findOne({ employee_ref: req.params.id }).populate('department_id');
+    employee = await Employee.findOne({
+      employee_ref: req.params.id,
+      hotelId: req.hotelContext,
+    }).populate("department_id");
   }
 
   if (!employee) {
@@ -79,10 +89,16 @@ export const updateEmployee = asyncHandler(async (req, res) => {
 
   let employeeDoc = null;
   if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-    employeeDoc = await Employee.findById(req.params.id);
+    employeeDoc = await Employee.findOne({
+      _id: req.params.id,
+      hotelId: req.hotelContext,
+    });
   }
   if (!employeeDoc) {
-    employeeDoc = await Employee.findOne({ employee_ref: req.params.id });
+    employeeDoc = await Employee.findOne({
+      employee_ref: req.params.id,
+      hotelId: req.hotelContext,
+    });
   }
 
   if (!employeeDoc) {
@@ -98,6 +114,7 @@ export const updateEmployee = asyncHandler(async (req, res) => {
   if (req.body.employee_ref) {
     const existing = await Employee.findOne({
       employee_ref: req.body.employee_ref,
+      hotelId: req.hotelContext,
       _id: { $ne: targetId }
     });
     if (existing) {
@@ -105,8 +122,8 @@ export const updateEmployee = asyncHandler(async (req, res) => {
     }
   }
 
-  const employee = await Employee.findByIdAndUpdate(
-    targetId,
+  const employee = await Employee.findOneAndUpdate(
+    { _id: targetId, hotelId: req.hotelContext },
     req.body,
     { returnDocument: "after", runValidators: true }
   ).populate('department_id');
@@ -119,15 +136,18 @@ export const deleteEmployee = asyncHandler(async (req, res) => {
   const Employee = await getModel(req.hotelContext, "Employee");
   let targetId = req.params.id;
   if (!mongoose.Types.ObjectId.isValid(targetId)) {
-    const doc = await Employee.findOne({ employee_ref: targetId });
+    const doc = await Employee.findOne({
+      employee_ref: targetId,
+      hotelId: req.hotelContext,
+    });
     if (doc) targetId = doc._id;
   }
   if (!mongoose.Types.ObjectId.isValid(targetId)) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Employee not found");
   }
 
-  const employee = await Employee.findByIdAndUpdate(
-    targetId,
+  const employee = await Employee.findOneAndUpdate(
+    { _id: targetId, hotelId: req.hotelContext },
     { status: "TERMINATED" },
     { returnDocument: "after", runValidators: true }
   );

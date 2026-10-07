@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
 const maintenanceTicketSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     ticket_ref: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     title: {
@@ -58,5 +62,7 @@ const maintenanceTicketSchema = new mongoose.Schema(
 // Indexes
 maintenanceTicketSchema.index({ room_id: 1 });
 maintenanceTicketSchema.index({ status: 1 });
+
+maintenanceTicketSchema.index({ hotelId: 1, ticket_ref: 1 }, { unique: true });
 
 export default maintenanceTicketSchema;

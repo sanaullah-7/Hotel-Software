@@ -2,13 +2,18 @@ import mongoose from 'mongoose';
 
 const hotelProfileSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+      unique: true,
+    },
     // Singleton guard: a constant, immutable, UNIQUE key so the database itself guarantees that
     // a tenant can never hold more than one profile document (even under concurrent first access).
     _singleton: {
       type: String,
       default: 'main',
       immutable: true,
-      unique: true,
       select: false,
     },
     property_name: {

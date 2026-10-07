@@ -7,8 +7,7 @@ import Hotel from "../database/platform/models/hotel.model.js";
  * Resolves the tenant (hotel) context for the request.
  * STRICTLY derived from the authenticated account (req.user), never from request body/query.
  * PLATFORM_ADMIN may only target a hotel through the route param, which is validated.
- * The hotel must exist in the platform DB and be active; this also guarantees a tenant
- * database can never be created/addressed for an arbitrary id.
+ * The hotel must exist in the shared database and be active.
  */
 const hotelContext = async (req, res, next) => {
   if (req.hotelContextVerified && req.hotelContext) return next();
@@ -38,7 +37,7 @@ const hotelContext = async (req, res, next) => {
     if (hotel && hotel.status !== "active") {
       return next(new ApiError(403, "Hotel is not active"));
     }
-    if (!hotel && req.user.role === ROLES.PLATFORM_ADMIN) {
+    if (!hotel) {
       return next(new ApiError(403, "Hotel does not exist or is not provisioned"));
     }
 

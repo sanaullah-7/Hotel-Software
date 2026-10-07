@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 
 const fileRecordSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     file_name: {
       type: String,
       required: true,

@@ -3,13 +3,14 @@ import ApiResponse from "../../../utils/apiResponse.js";
 import { getModel } from "../../../database/hotel/modelFactory.js";
 import { HTTP_STATUS } from "../../../constants/httpStatusCodes.js";
 
-// Singleton: exactly one policies document per tenant (unique `_singleton` index).
+// Exactly one policies document per hotel (unique compound index on hotelId).
 const getOrCreatePolicies = async (hotelContext) => {
   const HotelPolicies = await getModel(hotelContext, "HotelPolicies");
-  const existing = await HotelPolicies.findOne();
+  const existing = await HotelPolicies.findOne({ hotelId: hotelContext });
   if (existing) return existing;
   try {
     return await HotelPolicies.create({
+      hotelId: hotelContext,
       check_in_time: "14:00",
       check_out_time: "11:00",
       early_checkin_policy: "Allowed subject to availability",
@@ -22,7 +23,7 @@ const getOrCreatePolicies = async (hotelContext) => {
       payment_methods_accepted: ["Credit Card", "Cash"]
     });
   } catch (err) {
-    if (err.code === 11000) return HotelPolicies.findOne();
+    if (err.code === 11000) return HotelPolicies.findOne({ hotelId: hotelContext });
     throw err;
   }
 };
@@ -36,7 +37,14 @@ export const updateHotelPolicies = asyncHandler(async (req, res) => {
   const HotelPolicies = await getModel(req.hotelContext, "HotelPolicies");
   const policies = await getOrCreatePolicies(req.hotelContext);
 
-  const updated = await HotelPolicies.findByIdAndUpdate(policies._id, req.body, { returnDocument: "after", runValidators: true });
+  const updateData = { ...req.body };
+  delete updateData.hotelId;
+
+  const updated = await HotelPolicies.findOneAndUpdate(
+    { _id: policies._id, hotelId: req.hotelContext },
+    updateData,
+    { returnDocument: "after", runValidators: true }
+  );
 
   res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, updated, "Hotel policies updated successfully"));
 });

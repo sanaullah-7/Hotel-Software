@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
 const paymentSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     payment_ref: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     invoice_id: {
@@ -62,5 +66,7 @@ paymentSchema.index({ invoice_id: 1 });
 paymentSchema.index({ folio_id: 1 });
 paymentSchema.index({ guest_id: 1 });
 paymentSchema.index({ date: -1 });
+
+paymentSchema.index({ hotelId: 1, payment_ref: 1 }, { unique: true });
 
 export default paymentSchema;

@@ -1,7 +1,8 @@
-import mongoose from 'mongoose';
+﻿import mongoose from 'mongoose';
 
 const operationsAlertSchema = new mongoose.Schema(
   {
+    hotelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hotel', required: true },
     alert_ref: {
       type: String,
       required: true,
@@ -95,7 +96,7 @@ const operationsAlertSchema = new mongoose.Schema(
 );
 
 // Indexes
-operationsAlertSchema.index({ alert_ref: 1 }, { unique: true });
+operationsAlertSchema.index({ hotelId: 1, alert_ref: 1 }, { unique: true });
 operationsAlertSchema.index({ department: 1 });
 operationsAlertSchema.index({ type: 1 });
 operationsAlertSchema.index({ is_active: 1 });

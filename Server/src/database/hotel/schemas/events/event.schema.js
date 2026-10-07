@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
 const eventSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     event_ref: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     name: {
@@ -59,5 +63,7 @@ const eventSchema = new mongoose.Schema(
 eventSchema.index({ event_ref: 1 });
 eventSchema.index({ start_date: 1 });
 eventSchema.index({ status: 1 });
+
+eventSchema.index({ hotelId: 1, event_ref: 1 }, { unique: true });
 
 export default eventSchema;

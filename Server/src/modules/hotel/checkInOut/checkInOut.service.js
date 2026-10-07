@@ -10,13 +10,13 @@ const generateStayRef = () => {
   return `STY-${Date.now().toString().slice(-6)}${randHex}`;
 };
 
-export const checkIn = async (tenantConn, checkInData) => {
-  const Reservation = await getModel(tenantConn, "Reservation");
-  const ReservationRoom = await getModel(tenantConn, "ReservationRoom");
-  const Guest = await getModel(tenantConn, "Guest");
-  const Room = await getModel(tenantConn, "Room");
-  const Stay = await getModel(tenantConn, "Stay");
-  const StayRoom = await getModel(tenantConn, "StayRoom");
+export const checkIn = async (hotelContext, checkInData) => {
+  const Reservation = await getModel(hotelContext, "Reservation");
+  const ReservationRoom = await getModel(hotelContext, "ReservationRoom");
+  const Guest = await getModel(hotelContext, "Guest");
+  const Room = await getModel(hotelContext, "Room");
+  const Stay = await getModel(hotelContext, "Stay");
+  const StayRoom = await getModel(hotelContext, "StayRoom");
 
   const { reservation_id, room_id, primary_guest_id, total_guests = 1, notes } = checkInData;
 
@@ -25,7 +25,7 @@ export const checkIn = async (tenantConn, checkInData) => {
   }
 
   // 1. Cross-tenant & existence check for Reservation
-  const reservation = await Reservation.findById(reservation_id);
+  const reservation = await Reservation.findOne({ _id: reservation_id, hotelId: hotelContext });
   if (!reservation) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Reservation not found in this hotel");
   }
@@ -40,7 +40,7 @@ export const checkIn = async (tenantConn, checkInData) => {
 
   // 2. Guest verification
   const targetGuestId = primary_guest_id || reservation.primary_guest_id;
-  const guest = await Guest.findById(targetGuestId);
+  const guest = await Guest.findOne({ _id: targetGuestId, hotelId: hotelContext });
   if (!guest) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Primary guest not found in this hotel");
   }
@@ -48,7 +48,7 @@ export const checkIn = async (tenantConn, checkInData) => {
   // 3. Room assignment verification
   let targetRoomId = room_id;
   if (!targetRoomId) {
-    const resRoom = await ReservationRoom.findOne({ reservation_id: reservation._id });
+    const resRoom = await ReservationRoom.findOne({ reservation_id: reservation._id, hotelId: hotelContext });
     if (resRoom && resRoom.room_id) {
       targetRoomId = resRoom.room_id;
     }
@@ -62,7 +62,7 @@ export const checkIn = async (tenantConn, checkInData) => {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Room ID format");
   }
 
-  const room = await Room.findById(targetRoomId);
+  const room = await Room.findOne({ _id: targetRoomId, hotelId: hotelContext });
   if (!room) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Room not found in this hotel");
   }
@@ -74,45 +74,59 @@ export const checkIn = async (tenantConn, checkInData) => {
   const stay_ref = generateStayRef();
   const checkInTime = new Date();
 
-  // 4. Perform check-in state transitions
-  const stay = await Stay.create({
-    stay_ref,
-    reservation_id: reservation._id,
-    primary_guest_id: guest._id,
-    status: "CHECKED_IN",
-    actual_check_in: checkInTime,
-    total_guests,
-    notes,
-  });
+  // Compare-and-set claims serialize concurrent requests on standalone MongoDB too.
+  const originalReservationStatus = reservation.status;
+  const originalRoomStatus = room.status;
+  const claimedReservation = await Reservation.findOneAndUpdate(
+    { _id: reservation._id, hotelId: hotelContext, status: originalReservationStatus },
+    { $set: { status: 'IN_HOUSE' } },
+    { returnDocument: 'after' }
+  );
+  if (!claimedReservation) {
+    throw new ApiError(HTTP_STATUS.CONFLICT, 'Reservation changed during check-in; please refresh');
+  }
+  let claimedRoom;
+  let stay;
+  try {
+    claimedRoom = await Room.findOneAndUpdate(
+      { _id: room._id, hotelId: hotelContext, status: originalRoomStatus },
+      { $set: { status: 'OCCUPIED' } },
+      { returnDocument: 'after' }
+    );
+    if (!claimedRoom) {
+      throw new ApiError(HTTP_STATUS.CONFLICT, 'Room is no longer available for check-in');
+    }
+    stay = await Stay.create({
+      hotelId: hotelContext, stay_ref, reservation_id: reservation._id,
+      primary_guest_id: guest._id, status: 'CHECKED_IN', actual_check_in: checkInTime,
+      total_guests, notes,
+    });
+    const stayRoom = await StayRoom.create({
+      hotelId: hotelContext, stay_id: stay._id, room_id: room._id, guest_id: guest._id,
+      check_in_time: checkInTime, status: 'OCCUPIED',
+    });
+    return { stay, stayRoom, room: claimedRoom, reservation: claimedReservation };
+  } catch (error) {
+    if (stay) {
+      await StayRoom.deleteMany({ hotelId: hotelContext, stay_id: stay._id });
+      await Stay.deleteOne({ hotelId: hotelContext, _id: stay._id });
+    }
+    if (claimedRoom) {
+      await Room.updateOne({ _id: room._id, hotelId: hotelContext, status: 'OCCUPIED' },
+        { $set: { status: originalRoomStatus } });
+    }
+    await Reservation.updateOne({ _id: reservation._id, hotelId: hotelContext, status: 'IN_HOUSE' },
+      { $set: { status: originalReservationStatus } });
+    throw error;
+  }
 
-  const stayRoom = await StayRoom.create({
-    stay_id: stay._id,
-    room_id: room._id,
-    guest_id: guest._id,
-    check_in_time: checkInTime,
-    status: "OCCUPIED",
-  });
-
-  // Update room and reservation statuses
-  room.status = "OCCUPIED";
-  await room.save();
-
-  reservation.status = "IN_HOUSE";
-  await reservation.save();
-
-  return {
-    stay,
-    stayRoom,
-    room,
-    reservation,
-  };
 };
 
-export const checkOut = async (tenantConn, checkOutData) => {
-  const Reservation = await getModel(tenantConn, "Reservation");
-  const Room = await getModel(tenantConn, "Room");
-  const Stay = await getModel(tenantConn, "Stay");
-  const StayRoom = await getModel(tenantConn, "StayRoom");
+export const checkOut = async (hotelContext, checkOutData) => {
+  const Reservation = await getModel(hotelContext, "Reservation");
+  const Room = await getModel(hotelContext, "Room");
+  const Stay = await getModel(hotelContext, "Stay");
+  const StayRoom = await getModel(hotelContext, "StayRoom");
 
   const { stay_id, reservation_id, notes } = checkOutData;
 
@@ -121,12 +135,12 @@ export const checkOut = async (tenantConn, checkOutData) => {
     if (!mongoose.Types.ObjectId.isValid(stay_id)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Stay ID format");
     }
-    stay = await Stay.findById(stay_id);
+    stay = await Stay.findOne({ _id: stay_id, hotelId: hotelContext });
   } else if (reservation_id) {
     if (!mongoose.Types.ObjectId.isValid(reservation_id)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Reservation ID format");
     }
-    stay = await Stay.findOne({ reservation_id, status: "CHECKED_IN" });
+    stay = await Stay.findOne({ reservation_id, hotelId: hotelContext, status: "CHECKED_IN" });
   }
 
   if (!stay) {
@@ -145,14 +159,14 @@ export const checkOut = async (tenantConn, checkOutData) => {
   if (notes) stay.notes = (stay.notes ? `${stay.notes}; ` : "") + notes;
   await stay.save();
 
-  const stayRooms = await StayRoom.find({ stay_id: stay._id, status: "OCCUPIED" });
+  const stayRooms = await StayRoom.find({ stay_id: stay._id, hotelId: hotelContext, status: "OCCUPIED" });
   for (const sr of stayRooms) {
     sr.status = "VACATED";
     sr.check_out_time = checkOutTime;
     await sr.save();
 
     // Mark room as available and dirty for housekeeping
-    const room = await Room.findById(sr.room_id);
+    const room = await Room.findOne({ _id: sr.room_id, hotelId: hotelContext });
     if (room) {
       room.status = "AVAILABLE";
       room.housekeeping_status = "DIRTY";
@@ -161,7 +175,7 @@ export const checkOut = async (tenantConn, checkOutData) => {
   }
 
   // 2. Update reservation status
-  const reservation = await Reservation.findById(stay.reservation_id);
+  const reservation = await Reservation.findOne({ _id: stay.reservation_id, hotelId: hotelContext });
   if (reservation) {
     reservation.status = "CHECKED_OUT";
     await reservation.save();
@@ -173,10 +187,10 @@ export const checkOut = async (tenantConn, checkOutData) => {
   };
 };
 
-export const getStays = async (tenantConn, query = {}) => {
-  const Stay = await getModel(tenantConn, "Stay");
+export const getStays = async (hotelContext, query = {}) => {
+  const Stay = await getModel(hotelContext, "Stay");
 
-  const filter = {};
+  const filter = { hotelId: hotelContext };
   const status = asString(query.status);
   if (status) {
     filter.status = status.toUpperCase();
@@ -207,15 +221,15 @@ export const getStays = async (tenantConn, query = {}) => {
   };
 };
 
-export const getStayById = async (tenantConn, stayId) => {
+export const getStayById = async (hotelContext, stayId) => {
   if (!mongoose.Types.ObjectId.isValid(stayId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Stay ID format");
   }
 
-  const Stay = await getModel(tenantConn, "Stay");
-  const StayRoom = await getModel(tenantConn, "StayRoom");
+  const Stay = await getModel(hotelContext, "Stay");
+  const StayRoom = await getModel(hotelContext, "StayRoom");
 
-  const stay = await Stay.findById(stayId)
+  const stay = await Stay.findOne({ _id: stayId, hotelId: hotelContext })
     .populate("primary_guest_id", "first_name last_name email phone guest_ref")
     .populate("reservation_id", "booking_ref expected_check_in expected_check_out");
 
@@ -223,7 +237,7 @@ export const getStayById = async (tenantConn, stayId) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Stay record not found");
   }
 
-  const rooms = await StayRoom.find({ stay_id: stay._id }).populate("room_id", "room_number status floor housekeeping_status");
+  const rooms = await StayRoom.find({ stay_id: stay._id, hotelId: hotelContext }).populate("room_id", "room_number status floor housekeeping_status");
 
   return {
     ...stay.toObject(),

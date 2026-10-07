@@ -259,7 +259,11 @@ export default function ReservationTable({
                 >
                 <td className="py-1.5 px-1.5 whitespace-nowrap">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <img src={booking.avatar} alt="Avatar" className="w-6 h-6 rounded-full object-cover shadow-2xs shrink-0" />
+                    <img
+                      src={booking.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(booking.name || booking.id || 'guest')}`}
+                      alt="Avatar"
+                      className="w-6 h-6 rounded-full object-cover shadow-2xs shrink-0"
+                    />
                     {resolveGuestForBooking(booking) ? (
                       <Link
                         to={`/guests/${resolveGuestForBooking(booking).id}`}

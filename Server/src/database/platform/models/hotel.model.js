@@ -27,11 +27,6 @@ const hotelSchema = new mongoose.Schema(
       enum: ["active", "suspended"],
       default: "active",
     },
-    tenant_db_name: {
-      type: String,
-      required: true,
-      unique: true,
-    },
   },
   { timestamps: true }
 );

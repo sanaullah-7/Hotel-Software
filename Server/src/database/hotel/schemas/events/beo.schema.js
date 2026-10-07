@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
 const beoSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     beo_ref: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     event_id: {
@@ -43,7 +47,7 @@ const beoSchema = new mongoose.Schema(
 );
 
 // Indexes
-beoSchema.index({ beo_ref: 1 });
 beoSchema.index({ event_id: 1 });
+beoSchema.index({ hotelId: 1, beo_ref: 1 }, { unique: true });
 
 export default beoSchema;

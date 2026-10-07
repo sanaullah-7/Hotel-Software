@@ -2,12 +2,17 @@ import mongoose from 'mongoose';
 
 const hotelPoliciesSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+      unique: true,
+    },
     // Singleton guard (see hotelProfile.schema.js)
     _singleton: {
       type: String,
       default: 'main',
       immutable: true,
-      unique: true,
       select: false,
     },
     check_in_time: {

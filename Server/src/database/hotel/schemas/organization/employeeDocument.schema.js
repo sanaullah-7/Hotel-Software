@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 
 const employeeDocumentSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     employee_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Employee',

@@ -17,10 +17,14 @@ const roomAmenitySchema = new mongoose.Schema(
 
 const roomSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     room_number: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     room_type_id: {
@@ -71,5 +75,7 @@ roomSchema.pre('save', function () {
     }
   }
 });
+
+roomSchema.index({ hotelId: 1, room_number: 1 }, { unique: true });
 
 export default roomSchema;

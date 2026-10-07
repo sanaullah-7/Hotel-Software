@@ -8,11 +8,6 @@ import crypto from "crypto";
 const IDENTITY_FIELDS = ["passport_number", "national_id"];
 const isEmpty = (v) => v === undefined || v === null || (typeof v === "string" && v.trim() === "");
 
-/**
- * Identity documents sit behind a SPARSE unique index. Sparse only skips documents where the
- * field is ABSENT - an empty string or explicit null WOULD be indexed and the second guest with
- * "" would collide. So empty identity values are always stored as ABSENT.
- */
 const splitIdentity = (data) => {
   const set = { ...data };
   const unset = [];
@@ -41,10 +36,12 @@ const duplicateMessage = (err) => {
   return "Duplicate guest already exists";
 };
 
-export const createGuest = async (tenantConn, guestData) => {
-  const Guest = await getModel(tenantConn, "Guest");
+export const createGuest = async (hotelContext, guestData) => {
+  const Guest = await getModel(hotelContext, "Guest");
 
   const { set: data } = splitIdentity(stripProtected(guestData));
+  data.hotelId = hotelContext;
+
   if (typeof data.date_of_birth === "string" && data.date_of_birth === "") delete data.date_of_birth;
   if (data.date_of_birth === null) delete data.date_of_birth;
   for (const f of ["email", "phone", "address", "city", "country", "nationality", "notes"]) {
@@ -56,13 +53,13 @@ export const createGuest = async (tenantConn, guestData) => {
     data.guest_ref = `GST-${Date.now().toString().slice(-6)}${randomHex}`;
   }
 
-  // Friendly pre-checks. The UNIQUE indexes are the real (race-proof) guarantee below.
+  // Pre-checks scoped to hotel
   const dupChecks = [];
   if (data.guest_ref) dupChecks.push({ guest_ref: data.guest_ref });
   if (data.passport_number) dupChecks.push({ passport_number: data.passport_number.toUpperCase() });
   if (data.national_id) dupChecks.push({ national_id: data.national_id.toUpperCase() });
   if (dupChecks.length) {
-    const existing = await Guest.findOne({ $or: dupChecks });
+    const existing = await Guest.findOne({ $or: dupChecks, hotelId: hotelContext });
     if (existing) {
       if (data.passport_number && existing.passport_number === data.passport_number.toUpperCase()) {
         throw new ApiError(HTTP_STATUS.CONFLICT, "Guest with this passport number already exists in this hotel");
@@ -84,10 +81,10 @@ export const createGuest = async (tenantConn, guestData) => {
   }
 };
 
-export const getGuests = async (tenantConn, query = {}) => {
-  const Guest = await getModel(tenantConn, "Guest");
+export const getGuests = async (hotelContext, query = {}) => {
+  const Guest = await getModel(hotelContext, "Guest");
 
-  const filter = {};
+  const filter = { hotelId: hotelContext };
   const search = asString(query.search);
   if (search) {
     const searchRegex = new RegExp(escapeRegex(search.slice(0, 100)), "i");
@@ -121,13 +118,13 @@ export const getGuests = async (tenantConn, query = {}) => {
   };
 };
 
-export const getGuestById = async (tenantConn, guestId) => {
+export const getGuestById = async (hotelContext, guestId) => {
   if (!mongoose.Types.ObjectId.isValid(guestId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Guest ID format");
   }
 
-  const Guest = await getModel(tenantConn, "Guest");
-  const guest = await Guest.findById(guestId);
+  const Guest = await getModel(hotelContext, "Guest");
+  const guest = await Guest.findOne({ _id: guestId, hotelId: hotelContext });
 
   if (!guest) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found");
@@ -136,19 +133,18 @@ export const getGuestById = async (tenantConn, guestId) => {
   return guest;
 };
 
-export const updateGuest = async (tenantConn, guestId, updateData) => {
+export const updateGuest = async (hotelContext, guestId, updateData) => {
   if (!mongoose.Types.ObjectId.isValid(guestId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Guest ID format");
   }
 
-  const Guest = await getModel(tenantConn, "Guest");
+  const Guest = await getModel(hotelContext, "Guest");
 
   // guest_ref is immutable; protected fields are stripped.
   const cleaned = stripProtected(updateData);
   delete cleaned.guest_ref;
   const { set, unset } = splitIdentity(cleaned);
 
-  // Empty optional values clear the field instead of storing "" / null.
   for (const f of ["email", "phone", "address", "city", "country", "nationality", "notes", "date_of_birth"]) {
     if (f in set && (set[f] === null || set[f] === "")) {
       delete set[f];
@@ -161,12 +157,15 @@ export const updateGuest = async (tenantConn, guestId, updateData) => {
   if (unset.length) update.$unset = Object.fromEntries(unset.map((f) => [f, ""]));
 
   if (!update.$set && !update.$unset) {
-    // Nothing applicable to change: just return the current document (or 404).
-    return getGuestById(tenantConn, guestId);
+    return getGuestById(hotelContext, guestId);
   }
 
   try {
-    const guest = await Guest.findByIdAndUpdate(guestId, update, { returnDocument: "after", runValidators: true });
+    const guest = await Guest.findOneAndUpdate(
+      { _id: guestId, hotelId: hotelContext },
+      update,
+      { returnDocument: "after", runValidators: true }
+    );
     if (!guest) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found");
     }
@@ -179,31 +178,27 @@ export const updateGuest = async (tenantConn, guestId, updateData) => {
   }
 };
 
-/**
- * Delete rule: a guest that is referenced by ANY reservation, reservation group or stay is NEVER
- * hard-deleted (historical integrity). Otherwise the guest and its identity documents are removed.
- */
-export const deleteGuest = async (tenantConn, guestId) => {
+export const deleteGuest = async (hotelContext, guestId) => {
   if (!mongoose.Types.ObjectId.isValid(guestId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Guest ID format");
   }
 
-  const Guest = await getModel(tenantConn, "Guest");
-  const guest = await Guest.findById(guestId);
+  const Guest = await getModel(hotelContext, "Guest");
+  const guest = await Guest.findOne({ _id: guestId, hotelId: hotelContext });
 
   if (!guest) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found");
   }
 
-  const Reservation = await getModel(tenantConn, "Reservation");
-  const ReservationGroup = await getModel(tenantConn, "ReservationGroup");
-  const Stay = await getModel(tenantConn, "Stay");
-  const GuestDocument = await getModel(tenantConn, "GuestDocument");
+  const Reservation = await getModel(hotelContext, "Reservation");
+  const ReservationGroup = await getModel(hotelContext, "ReservationGroup");
+  const Stay = await getModel(hotelContext, "Stay");
+  const GuestDocument = await getModel(hotelContext, "GuestDocument");
 
   const [reservations, groups, stays] = await Promise.all([
-    Reservation.countDocuments({ primary_guest_id: guest._id }),
-    ReservationGroup.countDocuments({ guest_id: guest._id }),
-    Stay.countDocuments({ primary_guest_id: guest._id }),
+    Reservation.countDocuments({ primary_guest_id: guest._id, hotelId: hotelContext }),
+    ReservationGroup.countDocuments({ guest_id: guest._id, hotelId: hotelContext }),
+    Stay.countDocuments({ primary_guest_id: guest._id, hotelId: hotelContext }),
   ]);
   if (reservations > 0 || groups > 0 || stays > 0) {
     throw new ApiError(
@@ -212,8 +207,8 @@ export const deleteGuest = async (tenantConn, guestId) => {
     );
   }
 
-  await GuestDocument.deleteMany({ guest_id: guest._id });
-  await Guest.deleteOne({ _id: guest._id });
+  await GuestDocument.deleteMany({ guest_id: guest._id, hotelId: hotelContext });
+  await Guest.deleteOne({ _id: guest._id, hotelId: hotelContext });
   return true;
 };
 

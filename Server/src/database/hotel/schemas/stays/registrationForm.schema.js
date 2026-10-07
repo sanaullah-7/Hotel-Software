@@ -1,12 +1,12 @@
-import mongoose from 'mongoose';
+﻿import mongoose from 'mongoose';
 
 const registrationFormSchema = new mongoose.Schema(
   {
+    hotelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hotel', required: true },
     form_no: {
       type: String,
       required: true,
       trim: true,
-      unique: true,
     },
     guest_name: {
       type: String,
@@ -107,7 +107,7 @@ const registrationFormSchema = new mongoose.Schema(
   }
 );
 
-registrationFormSchema.index({ form_no: 1 }, { unique: true });
+registrationFormSchema.index({ hotelId: 1, form_no: 1 }, { unique: true });
 registrationFormSchema.index({ guest_name: 1 });
 registrationFormSchema.index({ id_number: 1 });
 

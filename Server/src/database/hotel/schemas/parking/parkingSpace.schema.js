@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
 const parkingSpaceSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     space_number: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     location: {
@@ -35,5 +39,7 @@ const parkingSpaceSchema = new mongoose.Schema(
 
 // Indexes
 parkingSpaceSchema.index({ status: 1 });
+
+parkingSpaceSchema.index({ hotelId: 1, space_number: 1 }, { unique: true });
 
 export default parkingSpaceSchema;

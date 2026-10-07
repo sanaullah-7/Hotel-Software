@@ -5,7 +5,7 @@ import ApiError from "../../../utils/apiError.js";
 import logger from "../../../config/logger.js";
 import { ROLES } from "../../../constants/roles.js";
 import { getModel } from "../../../database/hotel/modelFactory.js";
-import { dropHotelDatabase } from "../../../database/connectionManager.js";
+import { deleteHotelDocuments } from "../../../database/connectionManager.js";
 
 /**
  * Onboards a new hotel for an existing user.
@@ -13,12 +13,12 @@ import { dropHotelDatabase } from "../../../database/connectionManager.js";
  * Order of operations (each step is compensated if a later one fails):
  *   1. ATOMICALLY claim the account  (hotelId: null -> new hotelId, role -> HOTEL_ADMIN)
  *      Only ONE concurrent request can win this compare-and-set, so a losing request never
- *      creates a Hotel or a tenant database at all.
- *   2. Create the platform Hotel record
- *   3. Provision the tenant DB + seed HotelProfile
+ *      creates a Hotel or hotel-owned documents at all.
+ *   2. Create the Hotel record in the shared database
+ *   3. Seed the hotel-owned HotelProfile
  *
  * On any failure after step 1 everything is rolled back:
- *   Hotel record deleted, tenant DB dropped, account restored to its original hotelId/role.
+ *   Hotel and owned documents deleted, account restored to its original hotelId/role.
  */
 export const onboardHotel = async (user, data) => {
   const account = await Account.findById(user.id);
@@ -34,7 +34,6 @@ export const onboardHotel = async (user, data) => {
 
   const originalRole = account.role;
   const hotelId = new mongoose.Types.ObjectId();
-  const tenant_db_name = `hotel_${hotelId.toString()}`;
 
   // 1. Atomic claim (compare-and-set)
   const claimed = await Account.findOneAndUpdate(
@@ -56,13 +55,13 @@ export const onboardHotel = async (user, data) => {
       address: data.address,
       city: data.city,
       status: "active",
-      tenant_db_name,
     });
     hotelCreated = true;
 
-    // 3. Provision tenant DB & seed HotelProfile
+    // 3. Provision tenant profile & seed HotelProfile
     const HotelProfile = await getModel(hotelId.toString(), "HotelProfile");
     await HotelProfile.create({
+      hotelId,
       property_name: data.property_name,
       legal_name: data.property_name,
       email: account.email || "info@hotel.com",
@@ -87,7 +86,7 @@ export const onboardHotel = async (user, data) => {
     if (hotelCreated) {
       await Hotel.deleteOne({ _id: hotelId }).catch((e) => logger.error("Rollback: hotel delete failed", e));
     }
-    await dropHotelDatabase(hotelId.toString()).catch((e) => logger.error("Rollback: tenant DB drop failed", e));
+    await deleteHotelDocuments(hotelId.toString()).catch((e) => logger.error("Rollback: hotel document cleanup failed", e));
     // Only restore if the account still points at OUR hotel (never clobber a different state).
     await Account.updateOne(
       { _id: account._id, hotelId },

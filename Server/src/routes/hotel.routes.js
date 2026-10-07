@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Registers hotel PMS business domain modules.
  * Endpoints remain identical to preserve existing API behavior.
  */
@@ -26,6 +26,7 @@ import restaurantRoutes from "../modules/hotel/restaurant/restaurant.routes.js";
 import parkingRoutes from "../modules/hotel/parking/parking.routes.js";
 import pricingRoutes from "../modules/hotel/pricing/pricing.routes.js";
 import registrationFormRoutes from "../modules/hotel/registrationForms/registrationForm.routes.js";
+import dataRoutes from "../modules/hotel/data/data.routes.js";
 
 export const hotelPmsRouter = Router();
 
@@ -52,6 +53,7 @@ hotelPmsRouter.use("/hotel", restaurantRoutes); // Restaurant & POS
 hotelPmsRouter.use("/hotel", parkingRoutes); // Car Parking
 hotelPmsRouter.use("/hotel", pricingRoutes); // Rates & Pricing (Rate Plans, Discounts, Taxes, Fees)
 hotelPmsRouter.use("/hotel", registrationFormRoutes); // Registration Forms
+hotelPmsRouter.use("/hotel", dataRoutes); // Remaining tenant-scoped resources
 
 export default hotelPmsRouter;
 

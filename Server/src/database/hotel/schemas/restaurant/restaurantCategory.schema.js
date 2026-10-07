@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
 const restaurantCategorySchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     description: {
@@ -30,5 +34,7 @@ const restaurantCategorySchema = new mongoose.Schema(
 // Note: name has unique: true which creates a unique index.
 restaurantCategorySchema.index({ display_order: 1 });
 restaurantCategorySchema.index({ status: 1 });
+
+restaurantCategorySchema.index({ hotelId: 1, name: 1 }, { unique: true });
 
 export default restaurantCategorySchema;

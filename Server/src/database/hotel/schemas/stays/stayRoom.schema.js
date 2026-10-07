@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 
 const stayRoomSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     stay_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Stay',

@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 
 const payrollItemSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     run_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'PayrollRun',

@@ -10,11 +10,11 @@ const generatePaymentRef = () => {
   return `PAY-${Date.now().toString().slice(-6)}${randHex}`;
 };
 
-export const createPayment = async (tenantConn, paymentData) => {
-  const Folio = await getModel(tenantConn, "Folio");
-  const Guest = await getModel(tenantConn, "Guest");
-  const Invoice = await getModel(tenantConn, "Invoice");
-  const Payment = await getModel(tenantConn, "Payment");
+export const createPayment = async (hotelContext, paymentData) => {
+  const Folio = await getModel(hotelContext, "Folio");
+  const Guest = await getModel(hotelContext, "Guest");
+  const Invoice = await getModel(hotelContext, "Invoice");
+  const Payment = await getModel(hotelContext, "Payment");
 
   let { invoice_id, folio_id, guest_id, amount, payment_method, transaction_id } = paymentData;
 
@@ -23,7 +23,7 @@ export const createPayment = async (tenantConn, paymentData) => {
     if (!mongoose.Types.ObjectId.isValid(invoice_id)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Invoice ID format");
     }
-    const checkInvoice = await Invoice.findById(invoice_id);
+    const checkInvoice = await Invoice.findOne({ _id: invoice_id, hotelId: hotelContext });
     if (!checkInvoice) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, "Invoice not found in this hotel");
     }
@@ -44,6 +44,7 @@ export const createPayment = async (tenantConn, paymentData) => {
     invoice = await Invoice.findOneAndUpdate(
       {
         _id: checkInvoice._id,
+        hotelId: hotelContext,
         status: { $ne: "PAID" },
         $expr: {
           $lte: [{ $add: ["$amount_paid", amount] }, "$total_amount"],
@@ -72,7 +73,7 @@ export const createPayment = async (tenantConn, paymentData) => {
   if (!folio_id || !mongoose.Types.ObjectId.isValid(folio_id)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Folio ID format");
   }
-  const folio = await Folio.findById(folio_id);
+  const folio = await Folio.findOne({ _id: folio_id, hotelId: hotelContext });
   if (!folio) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Folio not found in this hotel");
   }
@@ -80,7 +81,7 @@ export const createPayment = async (tenantConn, paymentData) => {
   if (!guest_id || !mongoose.Types.ObjectId.isValid(guest_id)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Guest ID format");
   }
-  const guest = await Guest.findById(guest_id);
+  const guest = await Guest.findOne({ _id: guest_id, hotelId: hotelContext });
   if (!guest) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found in this hotel");
   }
@@ -88,6 +89,7 @@ export const createPayment = async (tenantConn, paymentData) => {
   const payment_ref = generatePaymentRef();
 
   const payment = await Payment.create({
+    hotelId: hotelContext,
     payment_ref,
     invoice_id: invoice ? invoice._id : null,
     folio_id: folio._id,
@@ -101,15 +103,15 @@ export const createPayment = async (tenantConn, paymentData) => {
   });
 
   // Update folio balance atomically
-  await Folio.findByIdAndUpdate(folio._id, { $inc: { balance: -amount } });
+  await Folio.findOneAndUpdate({ _id: folio._id, hotelId: hotelContext }, { $inc: { balance: -amount } });
 
   return payment;
 };
 
-export const getPayments = async (tenantConn, query = {}) => {
-  const Payment = await getModel(tenantConn, "Payment");
+export const getPayments = async (hotelContext, query = {}) => {
+  const Payment = await getModel(hotelContext, "Payment");
 
-  const filter = {};
+  const filter = { hotelId: hotelContext };
   const guestId = asString(query.guest_id);
   if (guestId) {
     if (!mongoose.Types.ObjectId.isValid(guestId)) {
@@ -156,13 +158,13 @@ export const getPayments = async (tenantConn, query = {}) => {
   };
 };
 
-export const getPaymentById = async (tenantConn, paymentId) => {
+export const getPaymentById = async (hotelContext, paymentId) => {
   if (!mongoose.Types.ObjectId.isValid(paymentId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Payment ID format");
   }
 
-  const Payment = await getModel(tenantConn, "Payment");
-  const payment = await Payment.findById(paymentId)
+  const Payment = await getModel(hotelContext, "Payment");
+  const payment = await Payment.findOne({ _id: paymentId, hotelId: hotelContext })
     .populate("guest_id", "first_name last_name email phone guest_ref")
     .populate("invoice_id", "invoice_number total_amount amount_paid status")
     .populate({

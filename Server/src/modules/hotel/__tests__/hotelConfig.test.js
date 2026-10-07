@@ -5,6 +5,7 @@ import { connectPlatformDB } from '../../../database/platform/platformConnection
 import { getHotelConnection } from '../../../database/connectionManager.js';
 import mongoose from 'mongoose';
 import Account from '../../../database/platform/models/account.model.js';
+import Hotel from '../../../database/platform/models/hotel.model.js';
 import { ROLES } from '../../../constants/roles.js';
 import { getModel } from '../../../database/hotel/modelFactory.js';
 import crypto from 'crypto';
@@ -34,6 +35,9 @@ describe('Phase 2: Hotel Configuration', () => {
       { email },
       { role: ROLES.HOTEL_ADMIN, hotelId: hotelId }
     );
+
+    const owner = await Account.findOne({ email });
+    await Hotel.create({ _id: hotelId, ownerId: owner._id, property_name: 'Fixture Hotel', address: '123 Test Street', city: 'Karachi' });
 
     const loginRes = await request(app).post('/api/v1/auth/login').send({
       email,

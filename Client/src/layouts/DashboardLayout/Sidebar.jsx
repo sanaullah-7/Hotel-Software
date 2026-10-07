@@ -39,18 +39,20 @@ import {
 } from './sidebarConfig';
 import { DropdownSection } from './components/DropdownSection';
 import { NavGroupHeader } from './components/NavGroupHeader';
+import { settingsService } from '../../services/dataService.js';
 
 export default function Sidebar({ mobileOpen = false, onMobileClose }) {
-  const [hotelNameState, setHotelNameState] = useState(localStorage.getItem('hotelName') || null);
-  const [hotelLogoState, setHotelLogoState] = useState(localStorage.getItem('hotelLogo') || null);
+  const [hotelNameState, setHotelNameState] = useState('Hotel Management');
+  const [hotelLogoState, setHotelLogoState] = useState(null);
 
   useEffect(() => {
-    const handleStorage = () => {
-      setHotelNameState(localStorage.getItem('hotelName') || null);
-      setHotelLogoState(localStorage.getItem('hotelLogo') || null);
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    let active = true;
+    settingsService.getProfile().then(({ data }) => {
+      if (!active) return;
+      setHotelNameState(data?.property_name || 'Hotel Management');
+      setHotelLogoState(data?.logo_url || null);
+    }).catch(() => {});
+    return () => { active = false; };
   }, []);
   const location = useLocation();
   const pathname = location.pathname;

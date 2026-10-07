@@ -166,9 +166,9 @@ describe("Phase 5: Guest Management & Tenant Isolation", () => {
       await GuestModel.createIndexes();
       const indexes = await GuestModel.collection.getIndexes();
 
-      expect(indexes).toHaveProperty("passport_number_1");
-      expect(indexes).toHaveProperty("national_id_1");
-      expect(indexes).toHaveProperty("guest_ref_1");
+      expect(indexes).toHaveProperty("hotelId_1_passport_number_1");
+      expect(indexes).toHaveProperty("hotelId_1_national_id_1");
+      expect(indexes).toHaveProperty("hotelId_1_guest_ref_1");
     });
 
     it("should reject duplicate passport number in the same hotel tenant", async () => {
@@ -263,11 +263,11 @@ describe("Phase 5: Guest Management & Tenant Isolation", () => {
 
       // Verify guest is saved in Hotel A, not Hotel B
       const GuestModelA = await getModel(hotelA, "Guest");
-      const foundInA = await GuestModelA.findById(guestId);
+      const foundInA = await GuestModelA.findOne({ _id: guestId, hotelId: hotelA });
       expect(foundInA).not.toBeNull();
 
       const GuestModelB = await getModel(hotelB, "Guest");
-      const foundInB = await GuestModelB.findById(guestId);
+      const foundInB = await GuestModelB.findOne({ _id: guestId, hotelId: hotelB });
       expect(foundInB).toBeNull();
     });
   });

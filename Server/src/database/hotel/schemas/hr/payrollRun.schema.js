@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
 const payrollRunSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     run_ref: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     period_start: {
@@ -45,5 +49,7 @@ const payrollRunSchema = new mongoose.Schema(
 // Indexes
 payrollRunSchema.index({ period_start: 1, period_end: 1 });
 payrollRunSchema.index({ status: 1 });
+
+payrollRunSchema.index({ hotelId: 1, run_ref: 1 }, { unique: true });
 
 export default payrollRunSchema;

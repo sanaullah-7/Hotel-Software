@@ -10,10 +10,10 @@ const generateTicketRef = () => {
   return `TICK-${Date.now().toString().slice(-6)}${randHex}`;
 };
 
-export const createTicket = async (tenantConn, ticketData) => {
-  const Room = await getModel(tenantConn, "Room");
-  const Employee = await getModel(tenantConn, "Employee");
-  const MaintenanceTicket = await getModel(tenantConn, "MaintenanceTicket");
+export const createTicket = async (hotelContext, ticketData) => {
+  const Room = await getModel(hotelContext, "Room");
+  const Employee = await getModel(hotelContext, "Employee");
+  const MaintenanceTicket = await getModel(hotelContext, "MaintenanceTicket");
 
   const { title, description, room_id, location_details, priority = "MEDIUM", assigned_to } = ticketData;
 
@@ -22,7 +22,7 @@ export const createTicket = async (tenantConn, ticketData) => {
     if (!mongoose.Types.ObjectId.isValid(room_id)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Room ID format");
     }
-    room = await Room.findById(room_id);
+    room = await Room.findOne({ _id: room_id, hotelId: hotelContext });
     if (!room) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, "Room not found in this hotel");
     }
@@ -33,7 +33,7 @@ export const createTicket = async (tenantConn, ticketData) => {
     if (!mongoose.Types.ObjectId.isValid(assigned_to)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Employee ID format");
     }
-    employee = await Employee.findById(assigned_to);
+    employee = await Employee.findOne({ _id: assigned_to, hotelId: hotelContext });
     if (!employee) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, "Employee not found in this hotel");
     }
@@ -42,6 +42,7 @@ export const createTicket = async (tenantConn, ticketData) => {
   const ticket_ref = generateTicketRef();
 
   const ticket = await MaintenanceTicket.create({
+    hotelId: hotelContext,
     ticket_ref,
     title,
     description,
@@ -60,10 +61,10 @@ export const createTicket = async (tenantConn, ticketData) => {
   return ticket;
 };
 
-export const getTickets = async (tenantConn, query = {}) => {
-  const MaintenanceTicket = await getModel(tenantConn, "MaintenanceTicket");
+export const getTickets = async (hotelContext, query = {}) => {
+  const MaintenanceTicket = await getModel(hotelContext, "MaintenanceTicket");
 
-  const filter = {};
+  const filter = { hotelId: hotelContext };
   const status = asString(query.status);
   if (status) filter.status = status.toUpperCase();
 
@@ -92,17 +93,26 @@ export const getTickets = async (tenantConn, query = {}) => {
   };
 };
 
-export const updateTicket = async (tenantConn, ticketId, updateData) => {
+export const updateTicket = async (hotelContext, ticketId, updateData) => {
   if (!mongoose.Types.ObjectId.isValid(ticketId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid MaintenanceTicket ID format");
   }
 
-  const MaintenanceTicket = await getModel(tenantConn, "MaintenanceTicket");
-  const Room = await getModel(tenantConn, "Room");
+  const MaintenanceTicket = await getModel(hotelContext, "MaintenanceTicket");
+  const Room = await getModel(hotelContext, "Room");
 
-  const ticket = await MaintenanceTicket.findById(ticketId);
+  const ticket = await MaintenanceTicket.findOne({ _id: ticketId, hotelId: hotelContext });
   if (!ticket) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Maintenance ticket not found");
+  }
+
+  // Validate all references before any status change can modify the room.
+  if (updateData.assigned_to) {
+    const Employee = await getModel(hotelContext, 'Employee');
+    if (!mongoose.Types.ObjectId.isValid(updateData.assigned_to) ||
+        !await Employee.exists({ _id: updateData.assigned_to, hotelId: hotelContext })) {
+      throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Employee not found in this hotel');
+    }
   }
 
   if (updateData.status) {
@@ -110,7 +120,7 @@ export const updateTicket = async (tenantConn, ticketId, updateData) => {
     if (["RESOLVED", "CLOSED"].includes(updateData.status)) {
       ticket.resolved_at = new Date();
       if (ticket.room_id) {
-        const room = await Room.findById(ticket.room_id);
+        const room = await Room.findOne({ _id: ticket.room_id, hotelId: hotelContext });
         if (room && room.status === "MAINTENANCE") {
           room.status = "AVAILABLE";
           await room.save();
@@ -127,7 +137,7 @@ export const updateTicket = async (tenantConn, ticketId, updateData) => {
   }
 
   await ticket.save();
-  return MaintenanceTicket.findById(ticketId)
+  return MaintenanceTicket.findOne({ _id: ticketId, hotelId: hotelContext })
     .populate("room_id", "room_number status floor")
     .populate("assigned_to", "first_name last_name employee_ref");
 };

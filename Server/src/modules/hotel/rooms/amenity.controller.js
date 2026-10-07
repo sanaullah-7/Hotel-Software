@@ -5,24 +5,24 @@ import { HTTP_STATUS } from "../../../constants/httpStatusCodes.js";
 import ApiError from "../../../utils/apiError.js";
 import { asString } from "../../../utils/query.js";
 
-// Uniqueness: the UNIQUE index on `name` is the final guarantee (E11000 -> 409).
+// Uniqueness: the UNIQUE index on `hotelId + name` is the final guarantee (E11000 -> 409).
 export const createAmenity = asyncHandler(async (req, res) => {
   const Amenity = await getModel(req.hotelContext, "Amenity");
 
-  const existing = await Amenity.findOne({ name: req.body.name });
+  const existing = await Amenity.findOne({ name: req.body.name, hotelId: req.hotelContext });
   if (existing) {
     throw new ApiError(HTTP_STATUS.CONFLICT, "Amenity with this name already exists");
   }
 
-  const amenity = await Amenity.create(req.body);
+  const amenityData = { ...req.body, hotelId: req.hotelContext };
+  const amenity = await Amenity.create(amenityData);
   res.status(HTTP_STATUS.CREATED).json(new ApiResponse(HTTP_STATUS.CREATED, amenity, "Amenity created successfully"));
 });
 
 export const getAmenities = asyncHandler(async (req, res) => {
   const Amenity = await getModel(req.hotelContext, "Amenity");
 
-  // Filter query optionally by category (coerced to string: no operator injection)
-  const query = {};
+  const query = { hotelId: req.hotelContext };
   const category = asString(req.query.category);
   if (category) {
     query.category = category;
@@ -34,7 +34,7 @@ export const getAmenities = asyncHandler(async (req, res) => {
 
 export const getAmenityById = asyncHandler(async (req, res) => {
   const Amenity = await getModel(req.hotelContext, "Amenity");
-  const amenity = await Amenity.findById(req.params.id);
+  const amenity = await Amenity.findOne({ _id: req.params.id, hotelId: req.hotelContext });
 
   if (!amenity) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Amenity not found");
@@ -45,7 +45,14 @@ export const getAmenityById = asyncHandler(async (req, res) => {
 
 export const updateAmenity = asyncHandler(async (req, res) => {
   const Amenity = await getModel(req.hotelContext, "Amenity");
-  const amenity = await Amenity.findByIdAndUpdate(req.params.id, req.body, { returnDocument: "after", runValidators: true });
+  const updateData = { ...req.body };
+  delete updateData.hotelId;
+
+  const amenity = await Amenity.findOneAndUpdate(
+    { _id: req.params.id, hotelId: req.hotelContext },
+    updateData,
+    { returnDocument: "after", runValidators: true }
+  );
 
   if (!amenity) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Amenity not found");
@@ -61,20 +68,20 @@ export const deleteAmenity = asyncHandler(async (req, res) => {
   const RoomType = await getModel(req.hotelContext, "RoomType");
   const Room = await getModel(req.hotelContext, "Room");
 
-  const amenity = await Amenity.findById(req.params.id);
+  const amenity = await Amenity.findOne({ _id: req.params.id, hotelId: req.hotelContext });
   if (!amenity) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Amenity not found");
   }
 
   const [rtRefs, roomRefs] = await Promise.all([
-    RoomType.countDocuments({ "amenities.amenity_id": amenity._id }),
-    Room.countDocuments({ "extra_amenities.amenity_id": amenity._id }),
+    RoomType.countDocuments({ "amenities.amenity_id": amenity._id, hotelId: req.hotelContext }),
+    Room.countDocuments({ "extra_amenities.amenity_id": amenity._id, hotelId: req.hotelContext }),
   ]);
   if (rtRefs > 0 || roomRefs > 0) {
     throw new ApiError(HTTP_STATUS.CONFLICT, "Amenity is in use by room types or rooms and cannot be deleted");
   }
 
-  await Amenity.deleteOne({ _id: amenity._id });
+  await Amenity.deleteOne({ _id: amenity._id, hotelId: req.hotelContext });
 
   res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, null, "Amenity deleted successfully"));
 });

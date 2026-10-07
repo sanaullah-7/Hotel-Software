@@ -2,10 +2,14 @@ import mongoose from 'mongoose';
 
 const reservationSchema = new mongoose.Schema(
   {
+    hotelId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Hotel',
+      required: true,
+    },
     booking_ref: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
     group_id: {
@@ -58,5 +62,7 @@ reservationSchema.index({ primary_guest_id: 1 });
 reservationSchema.index({ group_id: 1 });
 reservationSchema.index({ status: 1 });
 reservationSchema.index({ expected_check_in: 1 });
+
+reservationSchema.index({ hotelId: 1, booking_ref: 1 }, { unique: true });
 
 export default reservationSchema;

@@ -7,10 +7,10 @@ export default defineConfig(({ mode }) => {
     test: {
       testTimeout: 60000,
       hookTimeout: 60000,
+      globalSetup: ['./vitest.globalSetup.js'],
       env: {
         ...env,
-        PLATFORM_MONGO_URI: 'mongodb://localhost:27017/test_platform',
-        MONGODB_HOTEL_BASE_URI: 'mongodb://localhost:27017/test_hotel_',
+        MONGODB_URI: 'mongodb://localhost:27017/test_explore_pakistan',
         JWT_ACCESS_SECRET: 'test',
         JWT_REFRESH_SECRET: 'test'
       }

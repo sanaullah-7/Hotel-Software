@@ -1,7 +1,17 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
 import { getRoomByRoomNo } from '../../rooms/state/roomStore.js';
-export const INITIAL_ROOMS = [];
-export const INITIAL_STAFF = [];
+export const INITIAL_ROOMS = [
+  { id: '101', roomId: 'R-101', roomNo: '101', guest: 'Alice Wonderland', status: 'Dirty', cleaningType: 'Full Clean', priority: 'High', assignee: 'Bob Builder' },
+  { id: '102', roomId: 'R-102', roomNo: '102', guest: 'Sarah Smith', status: 'Clean / Ready', cleaningType: 'Daily', priority: 'Normal', assignee: 'Ava Staff' },
+  { id: '105', roomId: 'R-105', roomNo: '105', guest: 'Smita Parikh', status: 'Cleaning', cleaningType: 'Deep Clean', priority: 'High', assignee: 'Frank Miller' },
+  { id: '108', roomId: 'R-108', roomNo: '108', guest: 'Guest 108', status: 'Dirty', cleaningType: 'Full Clean', priority: 'Normal', assignee: 'Dina House' },
+];
+export const INITIAL_STAFF = [
+  { id: 'staff-1', name: 'Bob Builder', role: 'Housekeeper' },
+  { id: 'staff-2', name: 'Ava Staff', role: 'Housekeeper' },
+  { id: 'staff-3', name: 'Frank Miller', role: 'Supervisor' },
+  { id: 'staff-4', name: 'Dina House', role: 'Housekeeper' },
+];
 
 export const getRooms = () => {
   let rooms;
