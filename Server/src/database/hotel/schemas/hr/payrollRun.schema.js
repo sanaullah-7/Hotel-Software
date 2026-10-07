@@ -43,7 +43,7 @@ const payrollRunSchema = new mongoose.Schema(
 );
 
 // Indexes
-payrollRunSchema.index({ run_ref: 1 });
 payrollRunSchema.index({ period_start: 1, period_end: 1 });
+payrollRunSchema.index({ status: 1 });
 
 export default payrollRunSchema;

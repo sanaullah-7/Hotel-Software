@@ -6,13 +6,24 @@ import Topbar from './Topbar';
 
 export default function DashboardLayout({ children }) {
   const location = useLocation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Auto-close mobile drawer on route navigation
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[var(--bg-default)]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[var(--primary-main)] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-gray-500">Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;

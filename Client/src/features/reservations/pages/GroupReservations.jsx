@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
-import { Popover } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Popover, CircularProgress, Alert } from '@mui/material';
 import {
   Search, AddCircleOutlined, Refresh,
   TableChart, PictureAsPdf
 } from '@mui/icons-material';
 
-import { initialGroups } from '../data/groupReservationsDemoData';
+import reservationService from '../../../services/reservationService';
+import {
+  toFrontendGroupReservation,
+  toBackendGroupReservationPayload
+} from '../adapters/reservationAdapter';
 import GroupReservationsTable from '../components/GroupReservationsTable';
 import GroupReservationModal from '../components/GroupReservationModal';
 
 export default function GroupReservations() {
-  const [groups, setGroups] = useState(initialGroups);
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   
   // Date filter state
@@ -22,9 +28,10 @@ export default function GroupReservations() {
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [groupToDelete, setGroupToDelete] = useState(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [groupToCancel, setGroupToCancel] = useState(null);
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingGroup, setViewingGroup] = useState(null);
@@ -35,6 +42,25 @@ export default function GroupReservations() {
     checkIn: '', checkOut: '', rooms: 0, guests: 0,
     roomTypes: '', status: 'Pending', totalPrice: 0, specialRequests: ''
   });
+
+  const fetchGroups = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await reservationService.getGroupReservations();
+      const rawList = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      setGroups(rawList.map(toFrontendGroupReservation));
+    } catch (err) {
+      console.error('Failed to fetch group reservations:', err);
+      setError(err?.message || 'Failed to load group reservations');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
 
   const getRecordDate = (res) => {
     const str = res.checkIn;
@@ -53,7 +79,7 @@ export default function GroupReservations() {
     return isNaN(d.getTime()) ? null : d;
   };
 
-  const maxDatasetTime = Math.max(...groups.map(r => getRecordDate(r)?.getTime() || 0));
+  const maxDatasetTime = Math.max(...(groups.map(r => getRecordDate(r)?.getTime() || 0)), 0);
   const anchorDate = new Date(maxDatasetTime > 0 ? maxDatasetTime : Date.now());
 
   const filterByDate = (res) => {
@@ -115,7 +141,7 @@ export default function GroupReservations() {
     setDateFilter('Daily');
     setCustomStartDate('');
     setCustomEndDate('');
-    setGroups(initialGroups);
+    fetchGroups();
   };
 
   const filteredGroups = groups.filter(g => {
@@ -241,29 +267,56 @@ export default function GroupReservations() {
     setIsViewModalOpen(true);
   };
 
-  const handleSaveModal = (e) => {
+  const handleSaveModal = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      setGroups(groups.map(g => g.id === editingId ? { ...g, ...form } : g));
-    } else {
-      setGroups([...groups, { ...form, id: groups.length + 1 }]);
+    try {
+      setSubmitting(true);
+      setError(null);
+      const payload = toBackendGroupReservationPayload(form);
+      if (editingId) {
+        await reservationService.updateGroupReservation(editingId, payload);
+      } else {
+        await reservationService.createGroupReservation(payload);
+      }
+      setIsModalOpen(false);
+      await fetchGroups();
+    } catch (err) {
+      console.error('Failed to save group reservation:', err);
+      setError(err?.message || 'Failed to save group reservation');
+    } finally {
+      setSubmitting(false);
     }
-    setIsModalOpen(false);
   };
 
-  const confirmDelete = (group) => {
-    setGroupToDelete(group);
-    setIsDeleteModalOpen(true);
+  const confirmCancel = (group) => {
+    setGroupToCancel(group);
+    setIsCancelModalOpen(true);
   };
 
-  const handleDelete = () => {
-    setGroups(groups.filter(g => g.id !== groupToDelete.id));
-    setIsDeleteModalOpen(false);
-    setGroupToDelete(null);
+  const handleCancelGroup = async () => {
+    if (!groupToCancel?.id) return;
+    try {
+      setSubmitting(true);
+      setError(null);
+      await reservationService.cancelGroupReservation(groupToCancel.id, 'Cancelled via Group Reservations console');
+      setIsCancelModalOpen(false);
+      setGroupToCancel(null);
+      await fetchGroups();
+    } catch (err) {
+      console.error('Failed to cancel group reservation:', err);
+      setError(err?.message || 'Failed to cancel group reservation');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div className="w-full space-y-2.5 pb-3">
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 1 }}>
+          {error}
+        </Alert>
+      )}
       {/* Top Header */}
       <div className="bg-white rounded-lg p-2 sm:p-2.5 flex flex-col xl:flex-row xl:items-center justify-between border border-gray-100 shadow-xs gap-2.5">
         <div className="flex flex-wrap items-center gap-2.5">
@@ -354,12 +407,18 @@ export default function GroupReservations() {
       </div>
 
       {/* Table Section */}
-      <GroupReservationsTable
-        filteredGroups={filteredGroups}
-        openViewModal={openViewModal}
-        openEditModal={openEditModal}
-        confirmDelete={confirmDelete}
-      />
+      {loading ? (
+        <div className="bg-white rounded-lg border border-gray-200/80 p-8 flex justify-center items-center">
+          <CircularProgress size={28} sx={{ color: 'var(--primary-main)' }} />
+        </div>
+      ) : (
+        <GroupReservationsTable
+          filteredGroups={filteredGroups}
+          openViewModal={openViewModal}
+          openEditModal={openEditModal}
+          confirmCancel={confirmCancel}
+        />
+      )}
 
       {/* Modals */}
       <GroupReservationModal
@@ -369,10 +428,10 @@ export default function GroupReservations() {
         setForm={setForm}
         setIsModalOpen={setIsModalOpen}
         handleSaveModal={handleSaveModal}
-        isDeleteModalOpen={isDeleteModalOpen}
-        groupToDelete={groupToDelete}
-        setIsDeleteModalOpen={setIsDeleteModalOpen}
-        handleDelete={handleDelete}
+        isCancelModalOpen={isCancelModalOpen}
+        groupToCancel={groupToCancel}
+        setIsCancelModalOpen={setIsCancelModalOpen}
+        handleCancelGroup={handleCancelGroup}
         isViewModalOpen={isViewModalOpen}
         viewingGroup={viewingGroup}
         setIsViewModalOpen={setIsViewModalOpen}

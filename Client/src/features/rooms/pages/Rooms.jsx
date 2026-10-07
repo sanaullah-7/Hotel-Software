@@ -4,16 +4,20 @@ import {
   AddCircleOutlined, PhoneOutlined, Inventory2, FormatListBulleted, GridView 
 } from '@mui/icons-material';
 import { 
-  TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment 
+  TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, Alert, CircularProgress, Snackbar
 } from '@mui/material';
-import { useEffect, useState } from 'react';
-import { getRooms, addRoom, updateRoom, deleteRoom, ROOM_UPDATED_EVENT } from '../state/roomStore';
+import { useEffect, useState, useCallback } from 'react';
+import roomService from '../../../services/roomService';
+import { toFrontendRoom, toBackendRoomPayload, toFrontendRoomType } from '../adapters/roomAdapter';
+import { syncRoomsFromBackend, getRooms as getCachedRooms, ROOM_UPDATED_EVENT } from '../state/roomStore';
 import RoomInventoryModal from '../../inventory/pages/components/RoomInventoryModal';
 import { getInventoryItems } from '../../inventory/pages/inventoryStore';
 import SearchInput from '../../../components/common/SearchInput';
 
 export default function Rooms() {
-  const [rooms, setRooms] = useState(getRooms());
+  const [rooms, setRooms] = useState(() => getCachedRooms() || []);
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState('table');
@@ -24,34 +28,71 @@ export default function Rooms() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [roomToDelete, setRoomToDelete] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Notification state
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
 
   // Pagination
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [form, setForm] = useState({
-    roomNo: '', roomType: 'Delux', acNonAc: 'AC', meal: 'All', capacity: '', status: 'Open', rent: '', mobile: ''
+    roomNo: '', 
+    roomTypeId: '', 
+    roomType: '', 
+    floor: '1', 
+    acNonAc: 'AC', 
+    meal: 'All', 
+    capacity: '', 
+    status: 'Open', 
+    housekeepingStatus: 'Clean',
+    rent: '', 
+    mobile: ''
   });
 
-  useEffect(() => {
-    const syncRooms = () => setRooms(getRooms());
-    window.addEventListener(ROOM_UPDATED_EVENT, syncRooms);
-    window.addEventListener('storage', syncRooms);
-    return () => {
-      window.removeEventListener(ROOM_UPDATED_EVENT, syncRooms);
-      window.removeEventListener('storage', syncRooms);
-    };
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [roomsRes, typesRes] = await Promise.all([
+        roomService.getRooms().catch(err => ({ data: [] })),
+        roomService.getRoomTypes().catch(err => ({ data: [] }))
+      ]);
+
+      const rawRooms = Array.isArray(roomsRes?.data) ? roomsRes.data : [];
+      const adaptedRooms = rawRooms.map(toFrontendRoom);
+      setRooms(adaptedRooms);
+      syncRoomsFromBackend(adaptedRooms);
+
+      const rawTypes = Array.isArray(typesRes?.data) ? typesRes.data : [];
+      const adaptedTypes = rawTypes.map(toFrontendRoomType);
+      setRoomTypes(adaptedTypes);
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: err.message || 'Failed to load rooms from backend',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Derived state
   const filteredRooms = rooms.filter(r => {
-    const matchesSearch = r.roomNo.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          r.roomType.toLowerCase().includes(searchTerm.toLowerCase());
+    const roomNoStr = String(r.roomNo || '');
+    const roomTypeStr = String(r.roomType || '');
+    const matchesSearch = roomNoStr.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          roomTypeStr.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All' || 
                           r.status === statusFilter ||
-                          (statusFilter === 'Open' && (r.status === 'Open' || r.status === 'Available')) ||
-                          (statusFilter === 'Booked' && (r.status === 'Booked' || r.status === 'Occupied')) ||
-                          (statusFilter === 'Inactive' && (r.status === 'Inactive' || r.status === 'Maintenance' || r.status === 'Out of Order'));
+                          (statusFilter === 'Open' && (r.status === 'Open' || r.status === 'Available' || r.rawStatus === 'AVAILABLE')) ||
+                          (statusFilter === 'Booked' && (r.status === 'Booked' || r.status === 'Occupied' || r.rawStatus === 'OCCUPIED')) ||
+                          (statusFilter === 'Inactive' && (r.status === 'Inactive' || r.status === 'Maintenance' || r.rawStatus === 'MAINTENANCE' || r.rawStatus === 'OUT_OF_ORDER' || r.rawStatus === 'CLEANING'));
     return matchesSearch && matchesStatus;
   });
   
@@ -60,24 +101,87 @@ export default function Rooms() {
 
   const handleOpenNew = () => {
     setEditingId(null);
-    setForm({ roomNo: '', roomType: 'Delux', acNonAc: 'AC', meal: 'All', capacity: '', status: 'Open', rent: '', mobile: '' });
+    const defaultTypeId = roomTypes[0]?._id || roomTypes[0]?.id || '';
+    const defaultType = roomTypes[0] || null;
+    setForm({ 
+      roomNo: '', 
+      roomTypeId: defaultTypeId, 
+      roomType: defaultType?.name || '', 
+      floor: '1',
+      acNonAc: 'AC', 
+      meal: 'All', 
+      capacity: defaultType?.capacity || 2, 
+      status: 'Open', 
+      housekeepingStatus: 'Clean',
+      rent: defaultType?.rent || 0, 
+      mobile: '' 
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (room) => {
-    setEditingId(room.id);
-    setForm({ ...room });
+    setEditingId(room._id || room.id);
+    setForm({
+      ...room,
+      roomTypeId: room.roomTypeId || room.room_type_id || '',
+      floor: room.floor || '1',
+      status: room.status || 'Open',
+      housekeepingStatus: room.housekeepingStatus || 'Clean',
+    });
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleRoomTypeChange = (e) => {
+    const selectedId = e.target.value;
+    const foundType = roomTypes.find(t => (t._id || t.id) === selectedId);
+    setForm(prev => ({
+      ...prev,
+      roomTypeId: selectedId,
+      roomType: foundType?.name || prev.roomType,
+      rent: foundType?.rent !== undefined ? foundType.rent : prev.rent,
+      capacity: foundType?.capacity !== undefined ? foundType.capacity : prev.capacity
+    }));
+  };
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      updateRoom(editingId, form);
-    } else {
-      addRoom({ ...form, roomImage: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop' });
+    if (!form.roomNo.trim()) {
+      setNotification({ open: true, message: 'Room number is required', severity: 'error' });
+      return;
     }
-    setIsModalOpen(false);
+    if (!form.roomTypeId) {
+      setNotification({ open: true, message: 'Please select a valid Room Type. If none exist, create one in Room Types first.', severity: 'error' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload = toBackendRoomPayload(form);
+      if (editingId) {
+        const res = await roomService.updateRoom(editingId, payload);
+        const updated = toFrontendRoom(res.data);
+        const updatedList = rooms.map(r => ((r._id === editingId || r.id === editingId) ? updated : r));
+        setRooms(updatedList);
+        syncRoomsFromBackend(updatedList);
+        setNotification({ open: true, message: 'Room updated successfully', severity: 'success' });
+      } else {
+        const res = await roomService.createRoom(payload);
+        const created = toFrontendRoom(res.data);
+        const updatedList = [created, ...rooms];
+        setRooms(updatedList);
+        syncRoomsFromBackend(updatedList);
+        setNotification({ open: true, message: 'Room created successfully', severity: 'success' });
+      }
+      setIsModalOpen(false);
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: err.message || (err.status === 409 ? 'A room with this number already exists' : 'Failed to save room'),
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleOpenDelete = (room) => {
@@ -85,17 +189,41 @@ export default function Rooms() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleDelete = () => {
-    deleteRoom(roomToDelete.id);
-    setIsDeleteModalOpen(false);
-    setRoomToDelete(null);
+  const handleDelete = async () => {
+    if (!roomToDelete) return;
+    setIsSubmitting(true);
+    try {
+      const targetId = roomToDelete._id || roomToDelete.id;
+      await roomService.deleteRoom(targetId);
+      const updatedList = rooms.filter(r => r._id !== targetId && r.id !== targetId);
+      setRooms(updatedList);
+      syncRoomsFromBackend(updatedList);
+      setNotification({ open: true, message: 'Room deleted successfully', severity: 'success' });
+      setIsDeleteModalOpen(false);
+      setRoomToDelete(null);
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: err.status === 409 
+          ? 'Occupied rooms cannot be deleted from inventory.' 
+          : (err.message || 'Failed to delete room'),
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusStyles = (status) => {
     switch (status) {
-      case 'Booked': return 'bg-[#eff6ff] text-[#3b82f6]';
-      case 'Open': return 'bg-[#ecfdf5] text-[#10b981]';
-      case 'Inactive': return 'bg-[#fff7ed] text-[#f97316]';
+      case 'Booked':
+      case 'OCCUPIED': return 'bg-[#eff6ff] text-[#3b82f6]';
+      case 'Open':
+      case 'AVAILABLE': return 'bg-[#ecfdf5] text-[#10b981]';
+      case 'Inactive':
+      case 'MAINTENANCE':
+      case 'CLEANING':
+      case 'OUT_OF_ORDER': return 'bg-[#fff7ed] text-[#f97316]';
       default: return 'bg-gray-100 text-gray-600';
     }
   };
@@ -116,7 +244,7 @@ export default function Rooms() {
     const headers = ['Room No', 'Room Type', 'AC/Non AC', 'Meal', 'Bed Capacity', 'Status', 'Rent', 'Mobile'];
     const csvRows = [headers.join(',')];
     rooms.forEach(room => {
-      csvRows.push([room.roomNo, room.roomType, room.acNonAc, room.meal, room.bedCapacity, room.status, room.rent, room.mobile].join(','));
+      csvRows.push([room.roomNo, room.roomType, room.acNonAc, room.meal, room.capacity, room.status, room.rent, room.mobile].join(','));
     });
     const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -136,13 +264,24 @@ export default function Rooms() {
     const doc = new jsPDF();
     doc.text('AllRooms', 14, 15);
     const tableColumn = ['Room No', 'Room Type', 'AC/Non AC', 'Meal', 'Bed Capacity', 'Status', 'Rent', 'Mobile'];
-    const tableRows = rooms.map(room => [room.roomNo, room.roomType, room.acNonAc, room.meal, room.bedCapacity, room.status, room.rent, room.mobile]);
+    const tableRows = rooms.map(room => [room.roomNo, room.roomType, room.acNonAc, room.meal, room.capacity, room.status, room.rent, room.mobile]);
     autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
     doc.save('AllRooms.pdf');
   };
 
   return (
     <div className="w-full space-y-2.5 pb-3 flex flex-col">
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={4000} 
+        onClose={() => setNotification(n => ({ ...n, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert severity={notification.severity} onClose={() => setNotification(n => ({ ...n, open: false }))}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
+
       <div className="bg-white rounded-lg shadow-xs border border-gray-100 flex-1 flex flex-col overflow-hidden">
         
         {/* Header Bar */}
@@ -193,12 +332,12 @@ export default function Rooms() {
               <AddCircleOutlined sx={{ fontSize: 18 }} className="text-[#1b7f43]" />
             </button>
             <button 
-              onClick={() => { setRooms(getRooms()); setSearchTerm(''); setStatusFilter('All'); }}
+              onClick={loadData} 
               className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
               title="Refresh"
               aria-label="Refresh rooms"
             >
-              <Refresh sx={{ fontSize: 18 }} className="text-[var(--primary-main)]" />
+              <Refresh sx={{ fontSize: 18 }} className={`text-[var(--primary-main)] ${loading ? 'animate-spin' : ''}`} />
             </button>
             <div className="flex items-center rounded-lg border border-gray-200 p-0.5" aria-label="Room view selector">
               <button
@@ -239,7 +378,15 @@ export default function Rooms() {
           </div>
         </div>
 
-        {viewMode === 'cards' && (
+        {/* Loading Indicator */}
+        {loading && (
+          <div className="flex items-center justify-center py-10">
+            <CircularProgress size={28} sx={{ color: 'var(--primary-main)' }} />
+          </div>
+        )}
+
+        {/* Card View */}
+        {!loading && viewMode === 'cards' && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 p-2.5">
             {currentRooms.map((room) => (
               <article key={room.id} className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-xs hover:shadow-md transition-shadow">
@@ -253,11 +400,11 @@ export default function Rooms() {
                     <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${getStatusStyles(room.status)}`}>{room.status}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-y-0.5 text-[10.5px] text-gray-600">
-                    <span>{room.acNonAc}</span><span>{room.capacity} Guests</span>
-                    <span>{room.meal} meal</span><span className="font-semibold text-gray-800">${room.rent}/night</span>
+                    <span>Floor {room.floor}</span><span>{room.capacity} Guests</span>
+                    <span>{room.housekeepingStatus}</span><span className="font-semibold text-gray-800">${room.rent}/night</span>
                   </div>
                   <div className="flex items-center justify-between border-t border-gray-100 pt-1.5 mt-1">
-                    <span className="flex items-center gap-1 text-[10px] text-gray-500"><PhoneOutlined sx={{ fontSize: 11 }} />{room.mobile}</span>
+                    <span className="flex items-center gap-1 text-[10px] text-gray-500"><PhoneOutlined sx={{ fontSize: 11 }} />{room.mobile || '—'}</span>
                     <div className="flex gap-0.5">
                       <button onClick={() => setSelectedRoomForStock(room.roomNo)} className="text-[#1b7f43] hover:bg-[#e5f4eb] p-1 rounded cursor-pointer" title="View room stock" aria-label="View room stock"><Inventory2 sx={{ fontSize: 14 }} /></button>
                       <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded cursor-pointer" title="Edit room" aria-label="Edit room"><EditOutlined sx={{ fontSize: 14 }} /></button>
@@ -272,7 +419,7 @@ export default function Rooms() {
         )}
 
         {/* Table view */}
-        {viewMode === 'table' && (
+        {!loading && viewMode === 'table' && (
           <div className="flex-1 overflow-hidden">
             <table className="w-full text-left border-collapse table-fixed">
               <colgroup>
@@ -290,8 +437,8 @@ export default function Rooms() {
                 <tr className="border-b border-gray-100 bg-slate-50/50">
                   <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Room No</th>
                   <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Room Type</th>
-                  <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">AC/Non AC</th>
-                  <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Meal</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Floor</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Housekeeping</th>
                   <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Bed Capacity</th>
                   <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Status</th>
                   <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Rent</th>
@@ -309,8 +456,8 @@ export default function Rooms() {
                       </div>
                     </td>
                     <td className="py-1.5 px-1.5 text-[11px] text-gray-600 truncate">{room.roomType}</td>
-                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600">{room.acNonAc}</td>
-                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600">{room.meal}</td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600">{room.floor || '1'}</td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600">{room.housekeepingStatus}</td>
                     <td className="py-1.5 px-1.5 text-[11px] text-gray-600">{room.capacity}</td>
                     <td className="py-1.5 px-1.5">
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap ${getStatusStyles(room.status)}`}>
@@ -320,7 +467,7 @@ export default function Rooms() {
                     <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-700">${room.rent}</td>
                     <td className="py-1.5 px-1.5">
                       <span className="flex items-center gap-1 text-[10.5px] text-gray-600 truncate">
-                        <PhoneOutlined className="text-[#10b981] shrink-0" sx={{ fontSize: 12 }} /> {room.mobile}
+                        <PhoneOutlined className="text-[#10b981] shrink-0" sx={{ fontSize: 12 }} /> {room.mobile || '—'}
                       </span>
                     </td>
                     <td className="py-1.5 px-1.5 text-center">
@@ -363,7 +510,7 @@ export default function Rooms() {
             </select>
           </div>
           <span>
-            {Math.min((page - 1) * itemsPerPage + 1, filteredRooms.length)} - {Math.min(page * itemsPerPage, filteredRooms.length)} of {filteredRooms.length}
+            {filteredRooms.length > 0 ? Math.min((page - 1) * itemsPerPage + 1, filteredRooms.length) : 0} - {Math.min(page * itemsPerPage, filteredRooms.length)} of {filteredRooms.length}
           </span>
           <div className="flex items-center gap-0.5">
             <button 
@@ -417,20 +564,25 @@ export default function Rooms() {
                   fullWidth
                 />
 
-                <FormControl size="small" fullWidth sx={muiInputSx}>
+                <FormControl size="small" fullWidth sx={muiInputSx} required>
                   <InputLabel id="room-form-room-type-label">Select Room Type*</InputLabel>
                   <Select
                     labelId="room-form-room-type-label"
                     id="room-form-room-type-select"
-                    value={form.roomType}
+                    value={form.roomTypeId || ''}
                     label="Select Room Type*"
-                    onChange={e => setForm({...form, roomType: e.target.value})}
+                    onChange={handleRoomTypeChange}
                   >
-                    <MenuItem value="Single">Single</MenuItem>
-                    <MenuItem value="Double">Double</MenuItem>
-                    <MenuItem value="Delux">Delux</MenuItem>
-                    <MenuItem value="Super Delux">Super Delux</MenuItem>
-                    <MenuItem value="Vila">Vila</MenuItem>
+                    {roomTypes.map((type) => (
+                      <MenuItem key={type._id || type.id} value={type._id || type.id}>
+                        {type.name} ({type.code}) — ${type.rent}
+                      </MenuItem>
+                    ))}
+                    {roomTypes.length === 0 && (
+                      <MenuItem disabled value="">
+                        No Room Types configured. Please add one in Room Types first.
+                      </MenuItem>
+                    )}
                   </Select>
                 </FormControl>
 
@@ -439,7 +591,7 @@ export default function Rooms() {
                   <Select
                     labelId="room-form-ac-label"
                     id="room-form-ac-select"
-                    value={form.acNonAc}
+                    value={form.acNonAc || 'AC'}
                     label="AC/Non AC*"
                     onChange={e => setForm({...form, acNonAc: e.target.value})}
                   >
@@ -453,7 +605,7 @@ export default function Rooms() {
                   <Select
                     labelId="room-form-meal-label"
                     id="room-form-meal-select"
-                    value={form.meal}
+                    value={form.meal || 'All'}
                     label="Select Meal*"
                     onChange={e => setForm({...form, meal: e.target.value})}
                   >
@@ -462,6 +614,31 @@ export default function Rooms() {
                     <MenuItem value="Lunch">Lunch</MenuItem>
                     <MenuItem value="Dinner">Dinner</MenuItem>
                     <MenuItem value="All">All</MenuItem>
+                  </Select>
+                </FormControl>
+
+                <TextField 
+                  id="room-form-floor"
+                  label="Floor" 
+                  value={form.floor} 
+                  onChange={e => setForm({...form, floor: e.target.value})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth
+                />
+
+                <FormControl size="small" fullWidth sx={muiInputSx}>
+                  <InputLabel id="room-form-status-label">Status*</InputLabel>
+                  <Select
+                    labelId="room-form-status-label"
+                    id="room-form-status-select"
+                    value={form.status}
+                    label="Status*"
+                    onChange={e => setForm({...form, status: e.target.value})}
+                  >
+                    <MenuItem value="Open">Available (Open)</MenuItem>
+                    <MenuItem value="Booked">Occupied (Booked)</MenuItem>
+                    <MenuItem value="Inactive">Maintenance / Cleaning (Inactive)</MenuItem>
                   </Select>
                 </FormControl>
 
@@ -476,24 +653,8 @@ export default function Rooms() {
                   fullWidth 
                 />
 
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel id="room-form-status-label">Status*</InputLabel>
-                  <Select
-                    labelId="room-form-status-label"
-                    id="room-form-status-select"
-                    value={form.status}
-                    label="Status*"
-                    onChange={e => setForm({...form, status: e.target.value})}
-                  >
-                    <MenuItem value="Open">Open</MenuItem>
-                    <MenuItem value="Booked">Booked</MenuItem>
-                    <MenuItem value="Inactive">Inactive</MenuItem>
-                  </Select>
-                </FormControl>
-
                 <TextField 
                   id="room-form-rent"
-                  required
                   type="number"
                   label="Rent" 
                   value={form.rent} 
@@ -508,7 +669,6 @@ export default function Rooms() {
 
                 <TextField 
                   id="room-form-mobile"
-                  required
                   label="Mobile*" 
                   value={form.mobile} 
                   onChange={e => setForm({...form, mobile: e.target.value})} 
@@ -519,13 +679,23 @@ export default function Rooms() {
                     endAdornment: <InputAdornment position="end"><span className="text-gray-700 text-xs">📞</span></InputAdornment>
                   }}
                 />
+
               </div>
               
               <div className="flex items-center gap-2.5 mt-5">
-                <button type="submit" className="px-4 py-1.5 rounded-lg border border-green-200 bg-green-50 text-[var(--primary-main)] font-semibold text-xs hover:bg-green-100 transition-colors cursor-pointer shadow-xs">
-                  Save
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="px-4 py-1.5 rounded-lg border border-green-200 bg-green-50 text-[var(--primary-main)] font-semibold text-xs hover:bg-green-100 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save'}
                 </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-1.5 rounded-lg border border-transparent bg-rose-50 text-rose-600 font-semibold text-xs hover:bg-rose-100 transition-colors cursor-pointer shadow-xs">
+                <button 
+                  type="button" 
+                  onClick={() => setIsModalOpen(false)} 
+                  disabled={isSubmitting}
+                  className="px-4 py-1.5 rounded-lg border border-transparent bg-rose-50 text-rose-600 font-semibold text-xs hover:bg-rose-100 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                >
                   Cancel
                 </button>
               </div>
@@ -542,14 +712,22 @@ export default function Rooms() {
             
             <div className="space-y-1.5 mb-5 text-xs text-gray-600">
               <p><span className="font-medium text-gray-700">Room No:</span> {roomToDelete.roomNo}</p>
-              <p><span className="font-medium text-gray-700">Mobile:</span> {roomToDelete.mobile}</p>
+              <p><span className="font-medium text-gray-700">Type:</span> {roomToDelete.roomType}</p>
             </div>
             
             <div className="flex justify-center gap-2.5">
-              <button onClick={handleDelete} className="px-4 py-1.5 rounded-lg bg-orange-600 text-white font-semibold text-xs hover:bg-orange-700 transition-colors cursor-pointer shadow-xs">
-                Delete
+              <button 
+                onClick={handleDelete} 
+                disabled={isSubmitting}
+                className="px-4 py-1.5 rounded-lg bg-orange-600 text-white font-semibold text-xs hover:bg-orange-700 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              >
+                {isSubmitting ? 'Deleting...' : 'Delete'}
               </button>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white font-semibold text-xs hover:bg-emerald-800 transition-colors cursor-pointer shadow-xs">
+              <button 
+                onClick={() => setIsDeleteModalOpen(false)} 
+                disabled={isSubmitting}
+                className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white font-semibold text-xs hover:bg-emerald-800 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              >
                 Cancel
               </button>
             </div>

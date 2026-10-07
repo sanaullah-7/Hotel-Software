@@ -25,7 +25,7 @@ The application is a single-page React hotel management dashboard (PMS — Prope
 7. **Inventory & Asset Management:** Linen/supplies stock levels, consumable replenishment, missing/damaged item incident reporting (`hotel_inventory_incidents_v2`), guest damage charge generation.
 8. **Parking Operations:** Vehicle parking assignments, spot allocations (`hotel_car_parking_spaces_v1`), hourly/daily parking fees, and vehicle registration (`hotel_car_parking_records_v1`).
 9. **Staff & HR Operations:** Employee roster (`luxuria_staff_data`), department allocation, attendance tracking, shift scheduling, and salary management.
-10. **Front Office / Concierge:** Guest complaints handling (`hotel_complaints`), digital guest registration cards (`hotel_registration_forms`), concierge tasks.
+10. **Front Office / Operations:** Operations Alerts (`operationsAlertService` / MongoDB), Check-In / Out (`stayService` / MongoDB), Guest Complaints (`complaintService` / MongoDB), and legacy prototype digital guest registration cards (`hotel_registration_forms`).
 11. **Food & Beverage / Restaurant (In-Memory Demo):** Table reservations, F&B menu orders, room delivery billing.
 12. **Events & Banquets (In-Memory Demo):** Banquet hall bookings, corporate/social event schedules, caterer assignments.
 13. **Reporting & Analytics:** Revenue reports, occupancy rates, ADR (Average Daily Rate), RevPAR, housekeeping efficiency, financial reconciliations, CSV/PDF export.
@@ -144,7 +144,7 @@ Application Root (/)
 | `/occupancy` | `Occupancy.jsx` | `DashboardLayout` | Visual occupancy heatmaps, percentage calculations, occupied vs available breakdown. | Reads: `hotel_reservations`, `hotel_room_inventory_v1` | Consumes: `RESERVATIONS_UPDATED_EVENT`, `ROOMS_UPDATED_EVENT` | Room, Reservation |
 | `/housekeeping` | `Housekeeping.jsx` | `DashboardLayout` | Housekeeping operations: Room clean status, task assignment, staff roster, lost & found logs. | Reads/Writes: `hk_rooms`, `hk_staff`, `hk_tasks`, `hk_lost_found`, `hotel_room_inventory_v1` | Emits/Consumes: `HOUSEKEEPING_UPDATED_EVENT`, `ROOMS_UPDATED_EVENT` | Room, HKTask, HKStaff, LostFound |
 | `/guests` | `Guests.jsx` | `DashboardLayout` | Searchable guest registry directory, VIP status flags, phone, email, total visits. | Reads/Writes: `hotel_guests_v1` | Emits/Consumes: `GUESTS_UPDATED_EVENT` | Guest |
-| `/guests/:guestId` | `GuestProfile.jsx` | `DashboardLayout` | Complete 360-degree guest dossier: personal data, stay history, invoices, folio charges, payments, docs, complaints. | Reads/Writes: `hotel_guests_v1`, `hotel_reservations`, `hm_invoices_v2`, `hotel_guest_charges_v2`, `hm_payments_v2`, `hotel_complaints`, `hotel_registration_forms` | Emits/Consumes: `GUESTS_UPDATED_EVENT`, `INVOICES_UPDATED_EVENT`, `PAYMENTS_UPDATED_EVENT`, `CHARGES_UPDATED_EVENT` | Guest, Reservation, Invoice, GuestCharge, Payment, Document, Complaint |
+| `/guests/:guestId` | `GuestProfile.jsx` | `DashboardLayout` | Complete 360-degree guest dossier: personal data, stay history, invoices, folio charges, payments, docs, complaints. | Reads/Writes: `hotel_guests_v1`, `hotel_reservations`, `hm_invoices_v2`, `hotel_guest_charges_v2`, `hm_payments_v2`, `complaintService` (backend API), `hotel_registration_forms` | Emits/Consumes: `GUESTS_UPDATED_EVENT`, `INVOICES_UPDATED_EVENT`, `PAYMENTS_UPDATED_EVENT`, `CHARGES_UPDATED_EVENT` | Guest, Reservation, Invoice, GuestCharge, Payment, Document, Complaint |
 | `/billing` | `Billing.jsx` | `DashboardLayout` | Master invoices table: invoice ID, booking ID, guest name, total, paid, balance, status badge, pay button. | Reads/Writes: `hm_invoices_v2`, `hm_payments_v2`, `hotel_reservations` | Emits/Consumes: `INVOICES_UPDATED_EVENT`, `PAYMENTS_UPDATED_EVENT` | Invoice, Reservation, Guest, Payment |
 | `/billing/invoices/:invoiceId`| `InvoiceDetail.jsx` | `DashboardLayout` | Formal printable invoice view with itemized room charges, folio add-ons, payments breakdown, balance, and action buttons. | Reads/Writes: `hm_invoices_v2`, `hm_payments_v2`, `hotel_reservations`, `hotel_guest_charges_v2`, `hotel_profile` | Emits/Consumes: `INVOICES_UPDATED_EVENT`, `PAYMENTS_UPDATED_EVENT` | Invoice, Payment, GuestCharge, Reservation |
 | `/billing/payments` | `Payments.jsx` | `DashboardLayout` | Comprehensive transaction log of all payments made, payment method filters, receipt view. | Reads: `hm_payments_v2`, `hm_invoices_v2`, `hotel_reservations` | Consumes: `PAYMENTS_UPDATED_EVENT` | Payment, Invoice, Reservation, Guest |
@@ -178,7 +178,7 @@ Application Root (/)
 | **Guests** | Create Guest | `AddGuestModal.jsx`, `AddReservation.jsx` | Enter name, email, phone, ID number, nationality | `hotel_guests_v1` | `hotel_guests_v1` | Guest | Active |
 | **Guests** | View Guest Dossier | `GuestProfile.jsx` | View unified profile, history, billing, charges, files | `hotel_guests_v1`, `hotel_reservations`, `hm_invoices_v2`, `hotel_guest_charges_v2`, `hm_payments_v2` | None | Guest, Reservation, Invoice, Charge, Payment | Active |
 | **Guests** | Upload Guest Document | `AddDocumentModal.jsx` | Attach ID scan / passport metadata to guest | `hotel_registration_forms` | `hotel_registration_forms` | Guest, Document | Active |
-| **Guests** | Log Guest Complaint | `AddComplaintModal.jsx` | Record guest complaint ticket & priority | `hotel_complaints` | `hotel_complaints` | Guest, Complaint | Active |
+| **Guests** | Log Guest Complaint | `AddComplaintModal.jsx` | Record guest complaint ticket & priority | `complaintService` (`/api/v1/hotel/complaints`) | `complaintService` (`/api/v1/hotel/complaints`) | Guest, Complaint | Backend Authoritative |
 | **Billing** | Generate Invoice | `paymentBillingStore.js` | Auto-generated upon reservation or check-in | `hotel_reservations`, `hotel_room_inventory_v1` | `hm_invoices_v2` | Invoice, Reservation, Guest | Active |
 | **Billing** | Record Payment | `RecordPaymentModal.jsx`, `Billing.jsx` | Select payment method, enter amount, submit | `hm_invoices_v2`, `hm_payments_v2` | `hm_payments_v2`, `hm_invoices_v2`, `hotel_audit_log_v1` | Payment, Invoice, Reservation | Active |
 | **Billing** | Process Refund | `RefundModal.jsx`, `Refunds.jsx` | Select payment, enter refund amount & reason | `hm_payments_v2`, `hm_invoices_v2`, `hm_refunds_v2` | `hm_refunds_v2`, `hm_payments_v2`, `hm_invoices_v2`, `hotel_audit_log_v1` | Refund, Payment, Invoice | Active |
@@ -217,7 +217,7 @@ Application Root (/)
 | **ParkingSpace** | `P-xxx` | `hotel_car_parking_spaces_v1` | None | None | `ParkingRecord.spaceId` |
 | **ParkingRecord** | `PR-xxxx` | `hotel_car_parking_records_v1` | ParkingSpace | `spaceId`, `bookingId`, `guestId` | None |
 | **StaffMember** | `STF-xxxx` | `luxuria_staff_data` | None | None | `HKTask.staffId`, `AuditLog.userId` |
-| **Complaint** | `CMP-xxxx` | `hotel_complaints` | Guest | `guestId`, `bookingId`, `roomId` | None |
+| **Complaint** | `CMP-xxxx` | Backend Database (`/api/v1/hotel/complaints`) | Guest | `guestId`, `bookingId`, `roomId` | None |
 | **RegistrationForm** | `REG-xxxx` | `hotel_registration_forms` | Guest | `guestId`, `bookingId` | None |
 | **AuditLog** | `AUD-xxxx` | `hotel_audit_log_v1` | System | `entityId` | None |
 | **RatePlan** | `RP-xxxx` | `hotel_rates_plans_v2` | None | None | `Reservation.ratePlanId` |
@@ -479,7 +479,7 @@ sequenceDiagram
 | `hotel_discounts_v2` | Discount | `ratesPricingStore.js` | `RatesPricing.jsx`, `AddReservation.jsx` | Array of Discount promo objects | No | Yes |
 | `hotel_taxes_v2` | Tax | `ratesPricingStore.js` | `RatesPricing.jsx`, `paymentBillingStore.js` | Array of Tax definition objects | No | Yes |
 | `hotel_fees_v2` | Fee | `ratesPricingStore.js` | `RatesPricing.jsx` | Array of Additional Fee definitions | No | Yes |
-| `hotel_complaints` | Complaint | `complaintStore.js` | `GuestProfile.jsx`, `Complaints.jsx` | Array of Complaint ticket objects | No | Yes |
+| `hotel_complaints` (Deprecated) | Complaint | Migrated to `complaintService.js` | `GuestProfile.jsx`, `GuestComplaint.jsx` | Backend MongoDB Complaint Collection | Yes | No (Removed in Phase 5) |
 | `hotel_registration_forms` | RegistrationForm | `registrationStore.js` | `GuestProfile.jsx`, `RegistrationCard.jsx` | Array of Guest Registration doc objects | No | Yes |
 | `hotel_audit_log_v1` | AuditLog | `auditStore.js`, `reservationLifecycle.js` | `AuditLogs.jsx` | Array of Audit log events | No | Yes |
 | `hotel_profile` | HotelProfile | `Settings.jsx` | `Settings.jsx`, `InvoiceDetail.jsx`, `Header.jsx` | Singleton JSON Object (Hotel Info) | No | Yes |
@@ -1206,7 +1206,7 @@ Client/
 4. **Guest Profile 360 Aggregation:**
    - **File:** [`GuestProfile.jsx`](file:///d:/bootcamp/HotelManagement/Client/src/features/guests/pages/GuestProfile.jsx)
    - **Functions:** `loadGuestData()`
-   - **Evidence:** Queries `hotel_guests_v1`, `hotel_reservations`, `hm_invoices_v2`, `hotel_guest_charges_v2`, `hotel_complaints`, and `hotel_registration_forms` by `guestId`.
+   - **Evidence:** Queries `hotel_guests_v1`, `hotel_reservations`, `hm_invoices_v2`, `hotel_guest_charges_v2`, backend `complaintService` (migrated in Phase 5), and `hotel_registration_forms` by `guestId`.
 
 ---
 

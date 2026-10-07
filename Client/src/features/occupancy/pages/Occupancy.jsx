@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Bed as BedIcon,
   CheckCircle as CheckCircleIcon,
@@ -12,7 +12,8 @@ import {
   Visibility as VisibilityIcon,
   Build as BuildIcon,
   EventBusy as EventBusyIcon,
-  Block as BlockIcon
+  Block as BlockIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 import { 
   Box, 
@@ -22,29 +23,15 @@ import {
   FormControl, 
   Select, 
   InputLabel,
-  Button
+  Button,
+  CircularProgress
 } from '@mui/material';
 import CreateGuestModal from '../components/CreateGuestModal';
 import GuestDetailsModal from '../components/GuestDetailsModal';
-import { getRoomByRoomNo } from '../../rooms/state/roomStore';
-import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../../reservations/state/reservationStore';
-import { checkInBooking, checkOutBooking, OCCUPANCY_UPDATED_EVENT } from '../../reservations/state/reservationLifecycle';
+import occupancyService from '../../../services/occupancyService';
+import stayService from '../../../services/stayService';
+import { toBackendCheckInPayload, toBackendCheckOutPayload } from '../../front-office/adapters/stayAdapter';
 import { resolveBookingReference } from '../../reservations/state/bookingRules';
-
-const initialRooms = [
-  { number: 101, type: 'Super Deluxe', floor: 1, status: 'OCCUPIED', statusColor: '#ef4444', bed: 'King Bed', adults: 2, children: 2, maxOccupancy: 4, price: 320, housekeeping: 'Clean', housekeepingColor: '#1b7f43', amenities: ['wifi', 'ac', 'bar'], guest: { name: 'John Doe', vip: true, id: 'AB123CD456', checkIn: 'Aug 1', checkOut: 'Aug 7' }, note: 'VIP guest, prefers sea view rooms' },
-  { number: 102, type: 'Deluxe', floor: 1, status: 'AVAILABLE', statusColor: '#1b7f43', bed: 'Queen Bed', adults: 2, children: 0, maxOccupancy: 3, price: 280, housekeeping: 'Clean', housekeepingColor: '#1b7f43', amenities: ['wifi', 'ac', 'bar'], guest: null },
-  { number: 103, type: 'Standard', floor: 1, status: 'CLEANING', statusColor: '#3b82f6', bed: 'Double Bed', adults: 1, children: 0, maxOccupancy: 2, price: 180, housekeeping: 'Dirty', housekeepingColor: '#ef4444', amenities: ['wifi', 'ac'], guest: null, note: 'Recently checked out, requires housekeeping' },
-  { number: 104, type: 'Deluxe', floor: 1, status: 'RESERVED', statusColor: '#f97316', bed: 'King Bed', adults: 2, children: 0, maxOccupancy: 3, price: 300, housekeeping: 'Clean', housekeepingColor: '#1b7f43', amenities: ['wifi', 'ac', 'bar'], guest: { name: 'Jane Smith', vip: false, id: 'XY789YZ012', checkIn: null, checkOut: null } },
-  { number: 105, type: 'Suite', floor: 1, status: 'MAINTENANCE', statusColor: '#8b5cf6', bed: 'King Bed', adults: 2, children: 1, maxOccupancy: 4, price: 450, housekeeping: 'Out of Order', housekeepingColor: '#6b7280', amenities: ['wifi', 'ac', 'bar', 'safe', 'gym', 'elevator'], guest: null },
-  { number: 106, type: 'Suite', floor: 1, status: 'BOOKED', statusColor: '#f59e0b', bed: 'Queen Bed', adults: 2, children: 2, maxOccupancy: 4, price: 420, housekeeping: 'Clean', housekeepingColor: '#1b7f43', amenities: ['wifi', 'ac', 'bar'], guest: { name: 'Emily Brown', vip: false, id: 'EM456BR789', checkIn: null, checkOut: null } },
-];
-
-const attachCanonicalRoomIds = (rooms) => rooms.map((room) => {
-  if (room.roomId !== undefined && room.roomId !== null && room.roomId !== '') return room;
-  const canonicalRoom = getRoomByRoomNo(room.number ?? room.roomNo ?? room.id);
-  return canonicalRoom ? { ...room, roomId: canonicalRoom.id } : room;
-});
 
 const statusIcon = { 
   OCCUPIED: <PersonIcon sx={{ fontSize: 14 }} />, 
@@ -118,39 +105,15 @@ const BED_SIZE_OPTIONS = ['All Beds', 'King Bed', 'Queen Bed', 'Double Bed', 'Si
 const HOUSEKEEPING_OPTIONS = ['All Status', 'Clean', 'Dirty', 'Inspected', 'Out of Order'];
 
 export default function Occupancy() {
-  const [rooms, setRooms] = useState(() => {
-    const savedRooms = localStorage.getItem('hotel_rooms');
-    if (savedRooms) {
-      try {
-        const parsedRooms = JSON.parse(savedRooms);
-        return Array.isArray(parsedRooms) ? attachCanonicalRoomIds(parsedRooms) : attachCanonicalRoomIds(initialRooms);
-      } catch (e) {
-        console.error('Error parsing rooms from local storage', e);
-      }
-    }
-    return attachCanonicalRoomIds(initialRooms);
-  });
+  const [rooms, setRooms] = useState([]);
+  const [rawReservations, setRawReservations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lifecycleError, setLifecycleError] = useState('');
 
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [lifecycleError, setLifecycleError] = useState('');
-
-  useEffect(() => {
-    const sync = () => {
-      try {
-        const stored = JSON.parse(localStorage.getItem('hotel_rooms') || '[]');
-        if (Array.isArray(stored)) setRooms(attachCanonicalRoomIds(stored));
-      } catch { /* Keep the last readable occupancy view. */ }
-    };
-    window.addEventListener(OCCUPANCY_UPDATED_EVENT, sync);
-    window.addEventListener(RESERVATIONS_UPDATED_EVENT, sync);
-    window.addEventListener('storage', sync);
-    return () => {
-      window.removeEventListener(OCCUPANCY_UPDATED_EVENT, sync);
-      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, sync);
-      window.removeEventListener('storage', sync);
-    };
-  }, []);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -162,42 +125,127 @@ export default function Occupancy() {
   const [checkInDate, setCheckInDate] = useState('');
   const [checkOutDate, setCheckOutDate] = useState('');
 
-  const openModal = (room) => { setSelectedRoom(room); setModalOpen(true); };
-  const closeModal = () => { setModalOpen(false); setSelectedRoom(null); };
+  const loadOccupancyData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await occupancyService.getOccupancyData();
+      setRooms(result.rooms || []);
+      setRawReservations(result.rawReservations || []);
+    } catch (err) {
+      setError(err?.message || err?.data?.message || 'Failed to load occupancy data from server.');
+      setRooms([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
-  const openDetailsModal = (room) => { setSelectedRoom(room); setDetailsModalOpen(true); };
-  const closeDetailsModal = () => { setDetailsModalOpen(false); setSelectedRoom(null); };
+  useEffect(() => {
+    loadOccupancyData();
+  }, [loadOccupancyData]);
+
+  const openModal = (room) => { 
+    setSelectedRoom(room); 
+    setModalOpen(true); 
+  };
+  const closeModal = () => { 
+    setModalOpen(false); 
+    setSelectedRoom(null); 
+  };
+
+  const openDetailsModal = (room) => { 
+    setSelectedRoom(room); 
+    setDetailsModalOpen(true); 
+  };
+  const closeDetailsModal = () => { 
+    setDetailsModalOpen(false); 
+    setSelectedRoom(null); 
+  };
 
   const handleEditGuest = () => setLifecycleError('Guest and stay details must be changed on the canonical reservation.');
 
-  const handleSaveGuest = (updatedGuestData) => {
+  const handleSaveGuest = async (updatedGuestData) => {
     if (!selectedRoom) return;
-    const booking = resolveBookingReference(updatedGuestData.bookingRef, getReservations());
-    if (!booking || String(booking.roomId) !== String(selectedRoom.roomId)) {
+    setLifecycleError('');
+
+    // Match booking by reference or ID in raw backend reservations
+    const booking = resolveBookingReference(updatedGuestData.bookingRef, rawReservations);
+    
+    // Validate that booking belongs to or is assignable to selectedRoom
+    const selectedRoomId = String(selectedRoom.id || selectedRoom.roomId || '');
+    let bookingRoomId = '';
+    if (booking) {
+      if (Array.isArray(booking.rooms) && booking.rooms.length > 0) {
+        const firstR = booking.rooms[0];
+        bookingRoomId = String(firstR.room_id?._id || firstR.room_id || firstR.roomId || '');
+      } else {
+        bookingRoomId = String(booking.roomId || booking.room_id || '');
+      }
+    }
+
+    if (!booking) {
       setLifecycleError('Enter the exact reference for a canonical booking assigned to this room.');
       return;
     }
+
+    if (bookingRoomId && selectedRoomId && bookingRoomId !== selectedRoomId) {
+      setLifecycleError('Enter the exact reference for a canonical booking assigned to this room.');
+      return;
+    }
+
     try {
-      checkInBooking(booking.id);
+      const payload = toBackendCheckInPayload({
+        reservationId: booking._id || booking.id,
+        roomId: selectedRoomId || bookingRoomId,
+        primary_guest_id: booking.primary_guest_id?._id || booking.primary_guest_id || updatedGuestData.guestId || null,
+        totalGuests: Number(updatedGuestData.adults || booking.adults || 1),
+        notes: updatedGuestData.specialRequests || '',
+      });
+
+      await stayService.checkIn(payload);
       setLifecycleError('');
       setModalOpen(false);
       setSelectedRoom(null);
-    } catch (error) { setLifecycleError(error.message); }
+      await loadOccupancyData();
+    } catch (error) {
+      const msg = error?.message || error?.data?.message || 'Check-in failed. Please try again.';
+      setLifecycleError(msg);
+      setModalOpen(false);
+      setSelectedRoom(null);
+    }
   };
 
-  const handleCheckoutGuest = () => {
+  const handleCheckoutGuest = async () => {
     if (!selectedRoom) return;
-    if (!selectedRoom.bookingId) {
+    setLifecycleError('');
+
+    const stayId = selectedRoom.stayId;
+    const reservationId = selectedRoom.reservationId;
+
+    if (!stayId && !reservationId && !selectedRoom.bookingId) {
       setLifecycleError('This occupancy has no safe canonical booking link and was preserved. Check out from Front Office only after linking it safely.');
+      setDetailsModalOpen(false);
+      setSelectedRoom(null);
       return;
     }
+
     try {
-      checkOutBooking(selectedRoom.bookingId);
+      const payload = toBackendCheckOutPayload({
+        stayId: stayId || '',
+        reservationId: reservationId || '',
+      });
+
+      await stayService.checkOut(payload);
       setLifecycleError('');
       setDetailsModalOpen(false);
       setSelectedRoom(null);
-    } catch (error) { setLifecycleError(error.message); }
+      await loadOccupancyData();
+    } catch (error) {
+      const msg = error?.message || error?.data?.message || 'Check-out failed. Please try again.';
+      setLifecycleError(msg);
+      setDetailsModalOpen(false);
+      setSelectedRoom(null);
+    }
   };
 
   const handleClear = () => {
@@ -217,9 +265,10 @@ export default function Occupancy() {
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
         const matchesSearch = 
-          room.number.toString().includes(query) ||
-          room.type.toLowerCase().includes(query) ||
-          (room.guest && room.guest.name.toLowerCase().includes(query));
+          (room.number != null && room.number.toString().includes(query)) ||
+          (room.roomNo != null && room.roomNo.toLowerCase().includes(query)) ||
+          (room.type != null && room.type.toLowerCase().includes(query)) ||
+          (room.guest && room.guest.name && room.guest.name.toLowerCase().includes(query));
         if (!matchesSearch) return false;
       }
       // Status
@@ -236,12 +285,39 @@ export default function Occupancy() {
       // Housekeeping
       if (hkFilter !== 'All Status' && room.housekeeping !== hkFilter) return false;
 
+      // Check-in date filter
+      if (checkInDate && room.guest?.checkIn && room.guest.checkIn < checkInDate) {
+        return false;
+      }
+      // Check-out date filter
+      if (checkOutDate && room.guest?.checkOut && room.guest.checkOut > checkOutDate) {
+        return false;
+      }
+
       return true;
     });
-  }, [rooms, searchQuery, statusFilter, typeFilter, floorFilter, bedFilter, hkFilter]);
+  }, [rooms, searchQuery, statusFilter, typeFilter, floorFilter, bedFilter, hkFilter, checkInDate, checkOutDate]);
+
+  const totalRoomsCount = rooms.length;
+  const availableRoomsCount = rooms.filter(r => r.status === 'AVAILABLE').length;
+  const occupiedRoomsCount = rooms.filter(r => r.status === 'OCCUPIED').length;
+  const occupancyRate = totalRoomsCount > 0 ? Math.round((occupiedRoomsCount / totalRoomsCount) * 100) : 0;
 
   return (
     <div className="animate-fade-in space-y-2.5 pb-3">
+      {/* ERROR ALERTS */}
+      {error && (
+        <div role="alert" className="rounded border border-red-200 bg-red-50 p-2.5 text-xs text-red-700 flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={loadOccupancyData}
+            className="inline-flex items-center gap-1 px-2.5 py-1 bg-red-600 text-white font-medium rounded hover:bg-red-700 transition-colors cursor-pointer text-[11px]"
+          >
+            <RefreshIcon sx={{ fontSize: 13 }} /> Retry
+          </button>
+        </div>
+      )}
+
       {lifecycleError && (
         <div role="alert" className="mb-2 rounded border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-700">
           {lifecycleError}
@@ -252,7 +328,7 @@ export default function Occupancy() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-0.5">
         <div className="bg-white p-2.5 sm:p-3 rounded-[6px] shadow-xs border border-gray-100 flex items-center justify-between">
           <div>
-            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{rooms.length}</div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{totalRoomsCount}</div>
             <div className="text-xs text-gray-500 font-medium">Total Rooms</div>
           </div>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600">
@@ -262,7 +338,7 @@ export default function Occupancy() {
         
         <div className="bg-white p-2.5 sm:p-3 rounded-[6px] shadow-xs border border-gray-100 flex items-center justify-between">
           <div>
-            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{rooms.filter(r => r.status === 'AVAILABLE').length}</div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{availableRoomsCount}</div>
             <div className="text-xs text-gray-500 font-medium">Available</div>
           </div>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-green-50 text-green-600">
@@ -272,7 +348,7 @@ export default function Occupancy() {
         
         <div className="bg-white p-2.5 sm:p-3 rounded-[6px] shadow-xs border border-gray-100 flex items-center justify-between">
           <div>
-            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{rooms.filter(r => r.status === 'OCCUPIED').length}</div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{occupiedRoomsCount}</div>
             <div className="text-xs text-gray-500 font-medium">Occupied</div>
           </div>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-red-50 text-red-600">
@@ -282,7 +358,7 @@ export default function Occupancy() {
         
         <div className="bg-white p-2.5 sm:p-3 rounded-[6px] shadow-xs border border-gray-100 flex items-center justify-between">
           <div>
-            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{Math.round((rooms.filter(r => r.status === 'OCCUPIED').length / rooms.length) * 100)}%</div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{occupancyRate}%</div>
             <div className="text-xs text-gray-500 font-medium">Occupancy Rate</div>
           </div>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-purple-50 text-purple-600">
@@ -415,146 +491,153 @@ export default function Occupancy() {
 
         {/* Table */}
         <div className="w-full overflow-hidden">
-          <table className="w-full table-fixed text-left border-collapse">
-            <colgroup>
-              <col className="w-[6%]" />
-              <col className="w-[15%]" />
-              <col className="w-[11%]" />
-              <col className="w-[14%]" />
-              <col className="w-[10%]" />
-              <col className="w-[11%]" />
-              <col className="w-[11%]" />
-              <col className="w-[12%]" />
-              <col className="w-[10%]" />
-            </colgroup>
-            <thead>
-              <tr className="border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none bg-slate-50/50">
-                <th className="py-2 px-1.5 truncate">Room</th>
-                <th className="py-2 px-1.5 truncate">Type & Floor</th>
-                <th className="py-2 px-1.5 truncate">Bed</th>
-                <th className="py-2 px-1.5 truncate">Occupancy</th>
-                <th className="py-2 px-1.5 truncate">Price</th>
-                <th className="py-2 px-1.5 truncate">Status</th>
-                <th className="py-2 px-1.5 truncate">Housekeeping</th>
-                <th className="py-2 px-1.5 truncate">Guest</th>
-                <th className="py-2 px-1 text-center whitespace-nowrap">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 text-[11px]">
-              {filteredRooms.map(room => (
-                <tr
-                  key={room.number}
-                  className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
-                  onClick={() => room.guest ? openDetailsModal(room) : openModal(room)}
-                >
-                  {/* Room Number */}
-                  <td className="py-1.5 px-1.5 whitespace-nowrap">
-                    <span className="inline-block px-1.5 py-0.5 bg-gray-100 rounded text-[10.5px] font-bold text-gray-800 border border-gray-200/60 font-mono">
-                      {room.number}
-                    </span>
-                  </td>
-
-                  {/* Type & Floor */}
-                  <td className="py-1.5 px-1.5">
-                    <div className="text-[11px] font-bold text-gray-800 leading-tight truncate" title={room.type}>
-                      {room.type}
-                    </div>
-                    <div className="text-[9.5px] text-gray-400 font-normal leading-tight">
-                      Floor {room.floor}
-                    </div>
-                  </td>
-
-                  {/* Bed */}
-                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 truncate" title={room.bed}>
-                    {room.bed}
-                  </td>
-
-                  {/* Occupancy */}
-                  <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600">
-                    <div className="flex items-center gap-1 min-w-0" title={`${room.adults} Adult${room.adults !== 1 ? 's' : ''}${room.children > 0 ? `, ${room.children} Child` : ''}`}>
-                      <PersonIcon sx={{ fontSize: 13, color: '#9ca3af' }} className="shrink-0" />
-                      <span className="truncate">
-                        {room.adults} Adult{room.adults !== 1 ? 's' : ''}{room.children > 0 ? `, ${room.children} Ch` : ''}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+              <CircularProgress size={24} sx={{ color: '#1b7f43', mb: 1.5 }} />
+              <span className="text-xs">Loading occupancy data from server...</span>
+            </div>
+          ) : (
+            <table className="w-full table-fixed text-left border-collapse">
+              <colgroup>
+                <col className="w-[6%]" />
+                <col className="w-[15%]" />
+                <col className="w-[11%]" />
+                <col className="w-[14%]" />
+                <col className="w-[10%]" />
+                <col className="w-[11%]" />
+                <col className="w-[11%]" />
+                <col className="w-[12%]" />
+                <col className="w-[10%]" />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none bg-slate-50/50">
+                  <th className="py-2 px-1.5 truncate">Room</th>
+                  <th className="py-2 px-1.5 truncate">Type & Floor</th>
+                  <th className="py-2 px-1.5 truncate">Bed</th>
+                  <th className="py-2 px-1.5 truncate">Occupancy</th>
+                  <th className="py-2 px-1.5 truncate">Price</th>
+                  <th className="py-2 px-1.5 truncate">Status</th>
+                  <th className="py-2 px-1.5 truncate">Housekeeping</th>
+                  <th className="py-2 px-1.5 truncate">Guest</th>
+                  <th className="py-2 px-1 text-center whitespace-nowrap">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50 text-[11px]">
+                {filteredRooms.map(room => (
+                  <tr
+                    key={room.id || room.number}
+                    className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
+                    onClick={() => room.guest ? openDetailsModal(room) : openModal(room)}
+                  >
+                    {/* Room Number */}
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
+                      <span className="inline-block px-1.5 py-0.5 bg-gray-100 rounded text-[10.5px] font-bold text-gray-800 border border-gray-200/60 font-mono">
+                        {room.number || room.roomNo}
                       </span>
-                    </div>
-                  </td>
+                    </td>
 
-                  {/* Price */}
-                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
-                    <span className="font-bold text-gray-800">${room.price}</span>
-                    <span className="text-[9.5px] text-gray-400 font-normal">/nt</span>
-                  </td>
-
-                  {/* Status */}
-                  <td className="py-1.5 px-1.5 whitespace-nowrap">
-                    <span
-                      className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] whitespace-nowrap shrink-0 border"
-                      style={{
-                        backgroundColor: room.status === 'AVAILABLE' ? '#dcfce7' : room.status === 'OCCUPIED' ? '#fee2e2' : room.status === 'CLEANING' ? '#dbeafe' : room.status === 'RESERVED' ? '#fef3c7' : '#f1f5f9',
-                        color: room.status === 'AVAILABLE' ? '#16a34a' : room.status === 'OCCUPIED' ? '#dc2626' : room.status === 'CLEANING' ? '#2563eb' : room.status === 'RESERVED' ? '#d97706' : '#475569',
-                        borderColor: room.status === 'AVAILABLE' ? '#bbf7d0' : room.status === 'OCCUPIED' ? '#fecaca' : room.status === 'CLEANING' ? '#bfdbfe' : room.status === 'RESERVED' ? '#fde68a' : '#e2e8f0'
-                      }}
-                    >
-                      {statusIcon[room.status.toUpperCase()] && (
-                        <span className="shrink-0 flex items-center">{statusIcon[room.status.toUpperCase()]}</span>
-                      )}
-                      <span>{room.status}</span>
-                    </span>
-                  </td>
-
-                  {/* Housekeeping */}
-                  <td className="py-1.5 px-1.5 text-[10.5px] whitespace-nowrap" style={{ color: room.housekeepingColor }}>
-                    <div className="flex items-center gap-1 font-semibold truncate" title={room.housekeeping}>
-                      <CleaningServicesIcon sx={{ fontSize: 12 }} className="shrink-0" />
-                      <span className="truncate">{room.housekeeping}</span>
-                    </div>
-                  </td>
-
-                  {/* Guest */}
-                  <td className="py-1.5 px-1.5">
-                    {room.guest ? (
-                      <div className="flex items-center gap-1 font-semibold text-gray-800 text-[11px] min-w-0" title={room.guest.name}>
-                        <PersonIcon sx={{ fontSize: 13, color: '#9ca3af' }} className="shrink-0" />
-                        <span className="truncate">{room.guest.name}</span>
+                    {/* Type & Floor */}
+                    <td className="py-1.5 px-1.5">
+                      <div className="text-[11px] font-bold text-gray-800 leading-tight truncate" title={room.type}>
+                        {room.type}
                       </div>
-                    ) : (
-                      <span className="text-[10.5px] text-gray-400 italic whitespace-nowrap">No Guest</span>
-                    )}
-                  </td>
+                      <div className="text-[9.5px] text-gray-400 font-normal leading-tight">
+                        Floor {room.floor}
+                      </div>
+                    </td>
 
-                  {/* Actions */}
-                  <td className="py-1.5 px-1 text-center" onClick={(e) => e.stopPropagation()}>
-                    <div className="flex items-center justify-center">
+                    {/* Bed */}
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 truncate" title={room.bed}>
+                      {room.bed}
+                    </td>
+
+                    {/* Occupancy */}
+                    <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600">
+                      <div className="flex items-center gap-1 min-w-0" title={`${room.adults} Adult${room.adults !== 1 ? 's' : ''}${room.children > 0 ? `, ${room.children} Child` : ''}`}>
+                        <PersonIcon sx={{ fontSize: 13, color: '#9ca3af' }} className="shrink-0" />
+                        <span className="truncate">
+                          {room.adults} Adult{room.adults !== 1 ? 's' : ''}{room.children > 0 ? `, ${room.children} Ch` : ''}
+                        </span>
+                      </div>
+                    </td>
+
+                    {/* Price */}
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
+                      <span className="font-bold text-gray-800">${room.price}</span>
+                      <span className="text-[9.5px] text-gray-400 font-normal">/nt</span>
+                    </td>
+
+                    {/* Status */}
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
+                      <span
+                        className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded-[4px] whitespace-nowrap shrink-0 border"
+                        style={{
+                          backgroundColor: room.status === 'AVAILABLE' ? '#dcfce7' : room.status === 'OCCUPIED' ? '#fee2e2' : room.status === 'CLEANING' ? '#dbeafe' : room.status === 'RESERVED' ? '#fef3c7' : '#f1f5f9',
+                          color: room.status === 'AVAILABLE' ? '#16a34a' : room.status === 'OCCUPIED' ? '#dc2626' : room.status === 'CLEANING' ? '#2563eb' : room.status === 'RESERVED' ? '#d97706' : '#475569',
+                          borderColor: room.status === 'AVAILABLE' ? '#bbf7d0' : room.status === 'OCCUPIED' ? '#fecaca' : room.status === 'CLEANING' ? '#bfdbfe' : room.status === 'RESERVED' ? '#fde68a' : '#e2e8f0'
+                        }}
+                      >
+                        {statusIcon[room.status.toUpperCase()] && (
+                          <span className="shrink-0 flex items-center">{statusIcon[room.status.toUpperCase()]}</span>
+                        )}
+                        <span>{room.status}</span>
+                      </span>
+                    </td>
+
+                    {/* Housekeeping */}
+                    <td className="py-1.5 px-1.5 text-[10.5px] whitespace-nowrap" style={{ color: room.housekeepingColor }}>
+                      <div className="flex items-center gap-1 font-semibold truncate" title={room.housekeeping}>
+                        <CleaningServicesIcon sx={{ fontSize: 12 }} className="shrink-0" />
+                        <span className="truncate">{room.housekeeping}</span>
+                      </div>
+                    </td>
+
+                    {/* Guest */}
+                    <td className="py-1.5 px-1.5">
                       {room.guest ? (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); openDetailsModal(room); }}
-                          className="inline-flex items-center justify-center gap-1 text-white text-[10px] font-semibold px-2 py-0.5 rounded-[4px] transition-all cursor-pointer shadow-2xs whitespace-nowrap"
-                          style={{ backgroundColor: '#1b7f43' }}
-                        >
-                          <VisibilityIcon sx={{ fontSize: 12 }} /> Details
-                        </button>
+                        <div className="flex items-center gap-1 font-semibold text-gray-800 text-[11px] min-w-0" title={room.guest.name}>
+                          <PersonIcon sx={{ fontSize: 13, color: '#9ca3af' }} className="shrink-0" />
+                          <span className="truncate">{room.guest.name}</span>
+                        </div>
                       ) : (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); openModal(room); }}
-                          className="inline-flex items-center justify-center gap-1 text-white text-[10px] font-semibold px-2 py-0.5 rounded-[4px] transition-all cursor-pointer shadow-2xs whitespace-nowrap"
-                          style={{ backgroundColor: '#1f3a4a' }}
-                        >
-                          <PersonAddIcon sx={{ fontSize: 12 }} /> Add Guest
-                        </button>
+                        <span className="text-[10.5px] text-gray-400 italic whitespace-nowrap">No Guest</span>
                       )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filteredRooms.length === 0 && (
-                <tr>
-                  <td colSpan={9} className="py-7 text-center text-gray-400 text-xs">
-                    No rooms found matching criteria.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    </td>
+
+                    {/* Actions */}
+                    <td className="py-1.5 px-1 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-center">
+                        {room.guest ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openDetailsModal(room); }}
+                            className="inline-flex items-center justify-center gap-1 text-white text-[10px] font-semibold px-2 py-0.5 rounded-[4px] transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+                            style={{ backgroundColor: '#1b7f43' }}
+                          >
+                            <VisibilityIcon sx={{ fontSize: 12 }} /> Details
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); openModal(room); }}
+                            className="inline-flex items-center justify-center gap-1 text-white text-[10px] font-semibold px-2 py-0.5 rounded-[4px] transition-all cursor-pointer shadow-2xs whitespace-nowrap"
+                            style={{ backgroundColor: '#1f3a4a' }}
+                          >
+                            <PersonAddIcon sx={{ fontSize: 12 }} /> Add Guest
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filteredRooms.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="py-7 text-center text-gray-400 text-xs">
+                      No rooms found matching criteria.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
         
         {/* Footer Pagination */}

@@ -1,134 +1,16 @@
 import { FilterList, AddCircleOutlined, TableChart, PictureAsPdf, Assignment, CheckCircle, Cancel, Star } from '@mui/icons-material';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import RefreshButton from '../../../components/common/RefreshButton';
-
-import { TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, TablePagination, Box, Typography } from '@mui/material';
-
-const initialInspections = [
-  {
-    id: 1,
-    roomNo: '101',
-    roomType: 'Deluxe',
-    inspector: 'John Smith',
-    status: 'Passed',
-    inspectionDate: '2026-02-02',
-    score: 95,
-    comments: 'Room is in excellent condition.'
-  },
-  {
-    id: 2,
-    roomNo: '102',
-    roomType: 'Deluxe',
-    inspector: 'Jane Doe',
-    status: 'Failed',
-    inspectionDate: '2026-02-01',
-    score: 65,
-    comments: 'Dust found under the bed.'
-  },
-  {
-    id: 3,
-    roomNo: '201',
-    roomType: 'Suite',
-    inspector: 'Mike Ross',
-    status: 'Pending',
-    inspectionDate: '2026-02-02',
-    score: 0,
-    comments: 'Scheduled for afternoon.'
-  },
-  {
-    id: 4,
-    roomNo: '205',
-    roomType: 'Standard',
-    inspector: 'Sarah Connor',
-    status: 'Pending',
-    inspectionDate: '2026-02-03',
-    score: 0,
-    comments: 'Awaiting inspector availability.'
-  },
-  {
-    id: 5,
-    roomNo: '305',
-    roomType: 'Suite',
-    inspector: 'John Smith',
-    status: 'Passed',
-    inspectionDate: '2026-02-04',
-    score: 98,
-    comments: 'Perfect condition.'
-  },
-  {
-    id: 6,
-    roomNo: '110',
-    roomType: 'Deluxe',
-    inspector: 'Jane Doe',
-    status: 'Failed',
-    inspectionDate: '2026-02-03',
-    score: 55,
-    comments: 'Carpet needs vacuuming.'
-  },
-  {
-    id: 7,
-    roomNo: '402',
-    roomType: 'Standard',
-    inspector: 'Mike Ross',
-    status: 'Pending',
-    inspectionDate: '2026-02-05',
-    score: 0,
-    comments: 'Scheduled for tomorrow morning.'
-  },
-  {
-    id: 8,
-    roomNo: '215',
-    roomType: 'Suite',
-    inspector: 'Sarah Connor',
-    status: 'Passed',
-    inspectionDate: '2026-02-01',
-    score: 92,
-    comments: 'Very clean, all amenities present.'
-  },
-  {
-    id: 9,
-    roomNo: '501',
-    roomType: 'Penthouse',
-    inspector: 'John Smith',
-    status: 'Pending',
-    inspectionDate: '2026-02-06',
-    score: 0,
-    comments: 'VIP arrival tomorrow.'
-  },
-  {
-    id: 10,
-    roomNo: '105',
-    roomType: 'Deluxe',
-    inspector: 'Jane Doe',
-    status: 'Passed',
-    inspectionDate: '2026-02-02',
-    score: 96,
-    comments: 'Immaculate condition.'
-  },
-  {
-    id: 11,
-    roomNo: '312',
-    roomType: 'Standard',
-    inspector: 'Sarah Connor',
-    status: 'Failed',
-    inspectionDate: '2026-02-04',
-    score: 45,
-    comments: 'AC not working, bathroom lights.'
-  },
-  {
-    id: 12,
-    roomNo: '418',
-    roomType: 'Suite',
-    inspector: 'Mike Ross',
-    status: 'Passed',
-    inspectionDate: '2026-02-01',
-    score: 90,
-    comments: 'Passed with minor marks.'
-  }
-];
+import { TextField, FormControl, InputLabel, Select, MenuItem, TablePagination, Box, Typography } from '@mui/material';
+import inspectionService from '../../../services/inspectionService';
+import opsService from '../../../services/opsService';
+import inspectionChecklistAdapter from '../adapters/inspectionChecklistAdapter';
 
 export default function InspectionChecklist() {
-  const [inspections, setInspections] = useState(initialInspections);
+  const [inspections, setInspections] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -137,6 +19,8 @@ export default function InspectionChecklist() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [recordToDelete, setRecordToDelete] = useState(null);
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     roomNo: '',
@@ -145,15 +29,43 @@ export default function InspectionChecklist() {
     inspectionDate: '',
     status: 'Pending',
     score: 0,
-    comments: ''
+    comments: '',
+    roomId: null,
+    taskId: null,
+    inspectorId: null,
   });
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [res, empRes] = await Promise.all([
+        inspectionService.getInspections({ limit: 200 }),
+        opsService.getEmployees({ limit: 100 }).catch(() => ({ data: [] })),
+      ]);
+      const rawInspections = res.data?.inspections || res.data || [];
+      const adapted = inspectionChecklistAdapter.toFrontendInspectionList(rawInspections);
+      setInspections(adapted);
+      const rawEmps = empRes.data?.employees || empRes.data || [];
+      setEmployees(rawEmps);
+    } catch (err) {
+      console.error('[InspectionChecklist] Load error:', err);
+      setError(err.message || 'Failed to load inspections');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Derived Summary Stats
   const totalInspections = inspections.length;
   const passedCount = inspections.filter(t => t.status === 'Passed').length;
   const failedCount = inspections.filter(t => t.status === 'Failed').length;
   const pendingCount = inspections.filter(t => t.status === 'Pending').length;
-  const avgScore = totalInspections ? Math.round(inspections.reduce((acc, curr) => acc + curr.score, 0) / totalInspections) : 0;
+  const avgScore = totalInspections ? Math.round(inspections.reduce((acc, curr) => acc + (Number(curr.score) || 0), 0) / totalInspections) : 0;
 
   const filteredInspections = inspections.filter(item => 
     (item.roomNo || '').toString().toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -203,6 +115,7 @@ export default function InspectionChecklist() {
   const handleRefresh = () => {
     setSearchTerm('');
     setPage(0);
+    loadData();
     setVisibleColumns({
       'Room No': true,
       'Room Type': true,
@@ -297,24 +210,56 @@ export default function InspectionChecklist() {
 
   const handleOpenNew = () => {
     setEditingId(null);
-    setForm({ roomNo: '', roomType: 'Deluxe', inspector: '', inspectionDate: '', status: 'Pending', score: 0, comments: '' });
+    setForm({
+      roomNo: '',
+      roomType: 'Deluxe',
+      inspector: '',
+      inspectionDate: new Date().toISOString().slice(0, 10),
+      status: 'Pending',
+      score: 0,
+      comments: '',
+      roomId: null,
+      taskId: null,
+      inspectorId: null,
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (record) => {
     setEditingId(record.id);
-    setForm({ ...record });
+    setForm({
+      roomNo: record.roomNo,
+      roomType: record.roomType,
+      inspector: record.inspector,
+      inspectionDate: record.inspectionDate || '',
+      status: record.status,
+      score: record.score,
+      comments: record.comments,
+      roomId: record.roomId || null,
+      taskId: record.taskId || null,
+      inspectorId: record.inspectorId || null,
+    });
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      setInspections(paginatedInspections.map(t => t.id === editingId ? { ...t, ...form } : t));
-    } else {
-      setInspections([...inspections, { ...form, id: Date.now() }]);
+    setFormSubmitting(true);
+    try {
+      const payload = inspectionChecklistAdapter.toBackendPayload(form);
+      if (editingId) {
+        await inspectionService.updateInspection(editingId, payload);
+      } else {
+        await inspectionService.createInspection(payload);
+      }
+      setIsModalOpen(false);
+      await loadData();
+    } catch (err) {
+      console.error('[InspectionChecklist] Save error:', err);
+      alert(err.message || 'Failed to save inspection');
+    } finally {
+      setFormSubmitting(false);
     }
-    setIsModalOpen(false);
   };
 
   const handleOpenDelete = (record) => {
@@ -322,10 +267,20 @@ export default function InspectionChecklist() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleDelete = () => {
-    setInspections(inspections.filter(t => t.id !== recordToDelete.id));
-    setIsDeleteModalOpen(false);
-    setRecordToDelete(null);
+  const handleDelete = async () => {
+    if (!recordToDelete) return;
+    setDeleting(true);
+    try {
+      await inspectionService.deleteInspection(recordToDelete.id);
+      setIsDeleteModalOpen(false);
+      setRecordToDelete(null);
+      await loadData();
+    } catch (err) {
+      console.error('[InspectionChecklist] Delete error:', err);
+      alert(err.message || 'Failed to delete inspection');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const getStatusStyles = (status) => {
@@ -405,6 +360,19 @@ export default function InspectionChecklist() {
         </div>
       </div>
 
+      {/* Error Alert */}
+      {error && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg text-xs flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={loadData}
+            className="font-semibold underline hover:text-rose-900 cursor-pointer text-xs ml-3"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Table Section */}
       <div className="bg-white rounded-lg shadow-xs border border-gray-100 flex-1 flex flex-col overflow-hidden">
         {/* Table Header with Title & Button */}
@@ -483,7 +451,13 @@ export default function InspectionChecklist() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filteredInspections.length === 0 ? (
+              {loading && inspections.length === 0 ? (
+                <tr>
+                  <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="py-6 text-center text-gray-500 text-[11.5px]">
+                    Loading inspections...
+                  </td>
+                </tr>
+              ) : filteredInspections.length === 0 ? (
                 <tr>
                   <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="py-6 text-center text-gray-500 text-[11.5px]">
                     No inspections recorded.
@@ -538,15 +512,15 @@ export default function InspectionChecklist() {
         />
       </div>
 
-      {/* Add / Edit Task Modal */}
+      {/* Add / Edit Inspection Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsModalOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => !formSubmitting && setIsModalOpen(false)}>
           <div className="bg-white rounded-lg shadow-xl w-full max-w-[540px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="bg-[var(--primary-main)] px-3.5 py-2 flex items-center justify-between">
               <h2 className="text-white text-xs sm:text-sm font-semibold">
                 {editingId ? `Edit Inspection: Room ${form.roomNo}` : 'New Inspection'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center text-[11px] font-bold">
+              <button disabled={formSubmitting} onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center text-[11px] font-bold">
                 X
               </button>
             </div>
@@ -577,15 +551,54 @@ export default function InspectionChecklist() {
                   </Select>
                 </FormControl>
 
-                <TextField 
-                  required 
-                  label="Inspector Name*" 
-                  value={form.inspector} 
-                  onChange={e => setForm({...form, inspector: e.target.value})} 
-                  sx={muiInputSx} 
-                  size="small" 
-                  fullWidth
-                />
+                <div className="flex flex-col gap-1.5">
+                  {employees.length > 0 && (
+                    <FormControl size="small" fullWidth sx={muiInputSx}>
+                      <InputLabel>Staff Inspector</InputLabel>
+                      <Select
+                        value={form.inspectorId || ''}
+                        label="Staff Inspector"
+                        onChange={e => {
+                          const empId = e.target.value;
+                          const emp = employees.find(ep => (ep._id || ep.id) === empId);
+                          setForm({
+                            ...form,
+                            inspectorId: empId,
+                            inspector: emp ? `${emp.first_name} ${emp.last_name}` : form.inspector,
+                          });
+                        }}
+                      >
+                        <MenuItem value=""><em>Select Staff Inspector</em></MenuItem>
+                        {employees.map(emp => (
+                          <MenuItem key={emp._id || emp.id} value={emp._id || emp.id}>
+                            {emp.first_name} {emp.last_name} ({emp.employee_ref || 'Staff'})
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  )}
+                  <TextField 
+                    required 
+                    label="Inspector Name*" 
+                    value={form.inspector} 
+                    onChange={e => {
+                      const val = e.target.value;
+                      const matched = employees.find(emp => 
+                        `${emp.first_name} ${emp.last_name}`.toLowerCase() === val.trim().toLowerCase() ||
+                        emp.first_name?.toLowerCase() === val.trim().toLowerCase()
+                      );
+                      setForm({
+                        ...form,
+                        inspector: val,
+                        inspectorId: matched ? (matched._id || matched.id) : form.inspectorId,
+                      });
+                    }} 
+                    sx={muiInputSx} 
+                    size="small" 
+                    fullWidth
+                    placeholder="Enter or select staff name"
+                  />
+                </div>
                 <Box>
                   <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5, fontSize: '10.5px' }}>
                     Inspection Date*
@@ -642,11 +655,11 @@ export default function InspectionChecklist() {
               </div>
               
               <div className="flex items-center justify-end gap-2 mt-4 pt-2 border-t border-gray-100">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-3.5 py-1 text-xs font-semibold text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer">
+                <button type="button" disabled={formSubmitting} onClick={() => setIsModalOpen(false)} className="px-3.5 py-1 text-xs font-semibold text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer disabled:opacity-50">
                   Cancel
                 </button>
-                <button type="submit" className="px-3.5 py-1 text-xs font-semibold text-white bg-[var(--primary-main)] hover:bg-[#156334] rounded-md transition-colors cursor-pointer shadow-xs">
-                  Save
+                <button type="submit" disabled={formSubmitting} className="px-3.5 py-1 text-xs font-semibold text-white bg-[var(--primary-main)] hover:bg-[#156334] rounded-md transition-colors cursor-pointer shadow-xs disabled:opacity-50">
+                  {formSubmitting ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>
@@ -656,11 +669,11 @@ export default function InspectionChecklist() {
 
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && recordToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => !deleting && setIsDeleteModalOpen(false)}>
           <div className="bg-white rounded-lg shadow-xl w-full max-w-[340px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="bg-[var(--primary-main)] px-3.5 py-2 flex items-center justify-between">
               <h2 className="text-white text-xs sm:text-sm font-semibold">Confirm Delete?</h2>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center text-[11px] font-bold">
+              <button disabled={deleting} onClick={() => setIsDeleteModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center text-[11px] font-bold">
                 X
               </button>
             </div>
@@ -671,11 +684,11 @@ export default function InspectionChecklist() {
               </p>
               
               <div className="flex justify-end gap-2 mt-4 pt-2 border-t border-gray-100">
-                <button onClick={() => setIsDeleteModalOpen(false)} className="px-3.5 py-1 text-xs font-semibold text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer">
+                <button disabled={deleting} onClick={() => setIsDeleteModalOpen(false)} className="px-3.5 py-1 text-xs font-semibold text-gray-600 hover:text-gray-800 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors cursor-pointer disabled:opacity-50">
                   Cancel
                 </button>
-                <button onClick={handleDelete} className="px-3.5 py-1 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors cursor-pointer shadow-xs">
-                  Delete
+                <button disabled={deleting} onClick={handleDelete} className="px-3.5 py-1 text-xs font-semibold text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors cursor-pointer shadow-xs disabled:opacity-50">
+                  {deleting ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>

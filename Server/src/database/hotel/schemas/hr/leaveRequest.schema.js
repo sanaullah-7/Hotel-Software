@@ -9,7 +9,7 @@ const leaveRequestSchema = new mongoose.Schema(
     },
     leave_type: {
       type: String,
-      enum: ['SICK', 'CASUAL', 'ANNUAL', 'MATERNITY', 'UNPAID', 'OTHER'],
+      enum: ['SICK', 'CASUAL', 'ANNUAL', 'MATERNITY', 'UNPAID', 'SPECIAL', 'PERSONAL', 'OTHER'],
       required: true,
     },
     start_date: {
@@ -20,9 +20,14 @@ const leaveRequestSchema = new mongoose.Schema(
       type: Date,
       required: true,
     },
+    days: {
+      type: Number,
+      min: 1,
+    },
     reason: {
       type: String,
       required: true,
+      trim: true,
     },
     status: {
       type: String,
@@ -36,6 +41,7 @@ const leaveRequestSchema = new mongoose.Schema(
     },
     manager_comments: {
       type: String,
+      trim: true,
     },
   },
   {
@@ -46,5 +52,6 @@ const leaveRequestSchema = new mongoose.Schema(
 // Indexes
 leaveRequestSchema.index({ employee_id: 1 });
 leaveRequestSchema.index({ status: 1 });
+leaveRequestSchema.index({ start_date: 1, end_date: 1 });
 
 export default leaveRequestSchema;

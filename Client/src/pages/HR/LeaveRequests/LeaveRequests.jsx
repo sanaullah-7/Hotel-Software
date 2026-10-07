@@ -1,22 +1,28 @@
-import React, { useState, useMemo } from 'react';
-import { Snackbar, Alert } from '@mui/material';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Snackbar, Alert, CircularProgress, Button } from '@mui/material';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import PendingActionsOutlinedIcon from '@mui/icons-material/PendingActionsOutlined';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import GroupOutlinedIcon from '@mui/icons-material/GroupOutlined';
 import DateRangeIcon from '@mui/icons-material/DateRange';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 import MetricCards from '../components/MetricCards';
-import { initialLeaveRequests } from '../../../features/staff/data/leaveDemoData';
 import { LeaveRequestsTable } from '../../../features/staff/components/leave/LeaveRequestsTable';
 import { ApplyLeaveModal } from '../../../features/staff/components/leave/ApplyLeaveModal';
+import staffService from '../../../features/staff/services/staffService';
+import staffAdapter from '../../../features/staff/adapters/staffAdapter';
 
 import '../../../features/assigned-ui/formStyles.css';
 import '../../../features/assigned-ui/toolbarStyles.css';
 
 export default function LeaveRequests() {
-  const [data, setData] = useState(initialLeaveRequests);
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+  const [employees, setEmployees] = useState([]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
@@ -46,14 +52,19 @@ export default function LeaveRequests() {
   // Modal Dialog state (Add / Edit)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [modalError, setModalError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [modalForm, setModalForm] = useState({
+    employee_id: '',
     name: '',
-    department: 'HR',
+    department: '',
+    designation: '',
     leaveType: 'Special Leave',
     status: 'Pending',
     from: new Date().toISOString().split('T')[0],
     to: new Date().toISOString().split('T')[0],
     days: 1,
+    approved_by: '',
     approvedBy: '',
     reason: ''
   });
@@ -61,14 +72,49 @@ export default function LeaveRequests() {
   // Toast notification
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
+  // Authoritative Backend Data Fetch
+  const loadLeaveRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      setFetchError(null);
+      const res = await staffService.getLeaveRequests({ limit: 200 });
+      const rawList = res?.data || [];
+      const adapted = staffAdapter.toLeaveListUI(rawList);
+      setData(adapted);
+    } catch (err) {
+      console.error('Failed to load leave requests from server:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to load leave requests';
+      setFetchError(errMsg);
+      setData([]); // CRITICAL: NEVER fall back to mock data
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadEmployees = useCallback(async () => {
+    try {
+      const res = await staffService.getEmployees({ limit: 100 });
+      const rawList = res?.data || [];
+      const adapted = staffAdapter.toListUI(rawList);
+      setEmployees(adapted);
+    } catch (err) {
+      console.error('Failed to load employees for leave modal:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLeaveRequests();
+    loadEmployees();
+  }, [loadLeaveRequests, loadEmployees]);
+
   // Handle Search & Filtering
   const filteredData = useMemo(() => {
     return data.filter((item) => {
       const matchSearch =
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.leaveType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.department || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.leaveType || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (item.status || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (item.approvedBy && item.approvedBy.toLowerCase().includes(searchTerm.toLowerCase()));
       return matchSearch;
     });
@@ -96,25 +142,47 @@ export default function LeaveRequests() {
   };
 
   // Bulk Delete
-  const handleBulkDelete = () => {
-    setData((prev) => prev.filter((item) => !selectedIds.includes(item.id)));
-    setSelectedIds([]);
-    setSnackbar({ open: true, message: 'Selected leave requests removed', severity: 'info' });
+  const handleBulkDelete = async () => {
+    try {
+      await Promise.all(selectedIds.map(id => staffService.deleteLeaveRequest(id)));
+      setSelectedIds([]);
+      setSnackbar({ open: true, message: 'Selected leave requests removed', severity: 'info' });
+      loadLeaveRequests();
+    } catch (err) {
+      console.error('Failed to bulk delete leave requests:', err);
+      setSnackbar({
+        open: true,
+        message: err?.response?.data?.message || 'Failed to delete selected requests',
+        severity: 'error'
+      });
+      loadLeaveRequests();
+    }
   };
 
   // Single Delete
-  const handleDeleteRow = (id) => {
-    setData((prev) => prev.filter((item) => item.id !== id));
-    setSelectedIds((prev) => prev.filter((item) => item !== id));
-    setSnackbar({ open: true, message: 'Leave request deleted successfully', severity: 'info' });
+  const handleDeleteRow = async (id) => {
+    try {
+      await staffService.deleteLeaveRequest(id);
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
+      setSnackbar({ open: true, message: 'Leave request deleted successfully', severity: 'info' });
+      loadLeaveRequests();
+    } catch (err) {
+      console.error('Failed to delete leave request:', err);
+      setSnackbar({
+        open: true,
+        message: err?.response?.data?.message || 'Failed to delete leave request',
+        severity: 'error'
+      });
+    }
   };
 
   // Refresh
   const handleRefresh = () => {
-    setData(initialLeaveRequests);
     setSelectedIds([]);
     setSearchTerm('');
     setPage(0);
+    loadLeaveRequests();
+    loadEmployees();
     setSnackbar({ open: true, message: 'Data refreshed successfully', severity: 'success' });
   };
 
@@ -187,14 +255,19 @@ export default function LeaveRequests() {
   // Modal Open for Add
   const handleOpenAddModal = () => {
     setEditingItem(null);
+    setModalError(null);
+    const firstEmp = employees[0] || {};
     setModalForm({
-      name: '',
-      department: 'HR',
+      employee_id: firstEmp.id || '',
+      name: firstEmp.name || '',
+      department: firstEmp.department || 'General',
+      designation: firstEmp.designation || 'Staff',
       leaveType: 'Special Leave',
       status: 'Pending',
       from: new Date().toISOString().split('T')[0],
       to: new Date().toISOString().split('T')[0],
       days: 1,
+      approved_by: '',
       approvedBy: '',
       reason: ''
     });
@@ -204,14 +277,18 @@ export default function LeaveRequests() {
   // Modal Open for Edit
   const handleOpenEditModal = (item) => {
     setEditingItem(item);
+    setModalError(null);
     setModalForm({
-      name: item.name,
-      department: item.department,
-      leaveType: item.leaveType,
-      status: item.status,
-      from: item.from,
-      to: item.to,
-      days: item.days,
+      employee_id: item.employeeId || '',
+      name: item.name || '',
+      department: item.department || '',
+      designation: item.designation || '',
+      leaveType: item.leaveType || 'Special Leave',
+      status: item.status || 'Pending',
+      from: item.from || '',
+      to: item.to || '',
+      days: item.days || 1,
+      approved_by: item.approvedById || '',
       approvedBy: item.approvedBy === '-' ? '' : item.approvedBy,
       reason: item.reason || ''
     });
@@ -219,47 +296,40 @@ export default function LeaveRequests() {
   };
 
   // Modal Save
-  const handleSaveModal = (e) => {
+  const handleSaveModal = async (e) => {
     e.preventDefault();
-    if (!modalForm.name.trim()) {
-      setSnackbar({ open: true, message: 'Employee Name is required', severity: 'error' });
+    if (!modalForm.employee_id && !modalForm.name?.trim()) {
+      setSnackbar({ open: true, message: 'Please select an employee', severity: 'error' });
+      return;
+    }
+    if (!modalForm.reason?.trim()) {
+      setSnackbar({ open: true, message: 'Reason is required', severity: 'error' });
       return;
     }
 
-    if (editingItem) {
-      setData((prev) =>
-        prev.map((item) =>
-          item.id === editingItem.id
-            ? {
-                ...item,
-                ...modalForm,
-                approvedBy: modalForm.status === 'Approved' ? modalForm.approvedBy || 'Admin' : '-'
-              }
-            : item
-        )
-      );
-      setSnackbar({ open: true, message: 'Leave request updated successfully', severity: 'success' });
-    } else {
-      const newItem = {
-        id: Date.now(),
-        empId: `EMP${Math.floor(100 + Math.random() * 900)}`,
-        name: modalForm.name,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${modalForm.name}`,
-        department: modalForm.department,
-        designation: 'Staff',
-        leaveType: modalForm.leaveType,
-        status: modalForm.status,
-        from: modalForm.from,
-        to: modalForm.to,
-        days: modalForm.days || 1,
-        approvedBy: modalForm.status === 'Approved' ? modalForm.approvedBy || 'Admin' : '-',
-        reason: modalForm.reason
-      };
-      setData((prev) => [newItem, ...prev]);
-      setSnackbar({ open: true, message: 'New leave request created!', severity: 'success' });
-    }
+    try {
+      setIsSubmitting(true);
+      setModalError(null);
+      const payload = staffAdapter.toLeaveBackendPayload(modalForm);
 
-    setIsModalOpen(false);
+      if (editingItem) {
+        await staffService.updateLeaveRequest(editingItem.id, payload);
+        setSnackbar({ open: true, message: 'Leave request updated successfully', severity: 'success' });
+      } else {
+        await staffService.createLeaveRequest(payload);
+        setSnackbar({ open: true, message: 'New leave request created!', severity: 'success' });
+      }
+
+      setIsModalOpen(false);
+      loadLeaveRequests();
+    } catch (err) {
+      console.error('Failed to save leave request:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to save leave request';
+      setModalError(errMsg);
+      setSnackbar({ open: true, message: errMsg, severity: 'error' });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Toggle column
@@ -346,30 +416,52 @@ export default function LeaveRequests() {
     <div className="animate-fade-in">
       <MetricCards cards={leaveStats} compactSubtext />
 
-      <LeaveRequestsTable
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        setPage={setPage}
-        selectedIds={selectedIds}
-        handleBulkDelete={handleBulkDelete}
-        filterAnchorEl={filterAnchorEl}
-        setFilterAnchorEl={setFilterAnchorEl}
-        handleOpenAddModal={handleOpenAddModal}
-        handleRefresh={handleRefresh}
-        handleExportExcel={handleExportExcel}
-        handleExportPdf={handleExportPdf}
-        visibleColumns={visibleColumns}
-        paginatedData={paginatedData}
-        handleSelectAll={handleSelectAll}
-        handleSelectRow={handleSelectRow}
-        handleOpenEditModal={handleOpenEditModal}
-        handleDeleteRow={handleDeleteRow}
-        rowsPerPage={rowsPerPage}
-        setRowsPerPage={setRowsPerPage}
-        page={page}
-        filteredData={filteredData}
-        toggleColumn={toggleColumn}
-      />
+      {fetchError && (
+        <div className="my-3">
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={loadLeaveRequests} startIcon={<RefreshIcon />}>
+                Retry
+              </Button>
+            }
+          >
+            {fetchError}
+          </Alert>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="bg-white rounded-[6px] border border-gray-100 p-8 flex flex-col items-center justify-center gap-3 text-gray-500 mt-1.5">
+          <CircularProgress size={32} sx={{ color: '#5d5fef' }} />
+          <span className="text-sm">Loading leave requests from server...</span>
+        </div>
+      ) : (
+        <LeaveRequestsTable
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          setPage={setPage}
+          selectedIds={selectedIds}
+          handleBulkDelete={handleBulkDelete}
+          filterAnchorEl={filterAnchorEl}
+          setFilterAnchorEl={setFilterAnchorEl}
+          handleOpenAddModal={handleOpenAddModal}
+          handleRefresh={handleRefresh}
+          handleExportExcel={handleExportExcel}
+          handleExportPdf={handleExportPdf}
+          visibleColumns={visibleColumns}
+          paginatedData={paginatedData}
+          handleSelectAll={handleSelectAll}
+          handleSelectRow={handleSelectRow}
+          handleOpenEditModal={handleOpenEditModal}
+          handleDeleteRow={handleDeleteRow}
+          rowsPerPage={rowsPerPage}
+          setRowsPerPage={setRowsPerPage}
+          page={page}
+          filteredData={filteredData}
+          toggleColumn={toggleColumn}
+        />
+      )}
 
       <ApplyLeaveModal
         isOpen={isModalOpen}
@@ -378,6 +470,9 @@ export default function LeaveRequests() {
         modalForm={modalForm}
         setModalForm={setModalForm}
         handleSaveModal={handleSaveModal}
+        employees={employees}
+        isSubmitting={isSubmitting}
+        error={modalError}
       />
 
       <Snackbar

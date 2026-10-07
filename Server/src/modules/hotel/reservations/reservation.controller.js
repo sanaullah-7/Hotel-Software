@@ -55,3 +55,55 @@ export const cancelReservation = asyncHandler(async (req, res) => {
     .status(HTTP_STATUS.OK)
     .json(new ApiResponse(HTTP_STATUS.OK, reservation, "Reservation cancelled successfully"));
 });
+
+export const getGroupReservations = asyncHandler(async (req, res) => {
+  const groups = await reservationService.getGroupReservations(req.hotelContext, req.query);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, groups, "Group reservations retrieved successfully"));
+});
+
+export const getGroupReservationById = asyncHandler(async (req, res) => {
+  const group = await reservationService.getGroupReservationById(req.hotelContext, req.params.id);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, group, "Group reservation retrieved successfully"));
+});
+
+export const createGroupReservation = asyncHandler(async (req, res) => {
+  const group = await reservationService.createGroupReservation(req.hotelContext, req.body);
+  res
+    .status(HTTP_STATUS.CREATED)
+    .json(new ApiResponse(HTTP_STATUS.CREATED, group, "Group reservation created successfully"));
+});
+
+export const updateGroupReservation = asyncHandler(async (req, res) => {
+  const group = await reservationService.updateGroupReservation(req.hotelContext, req.params.id, req.body);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, group, "Group reservation updated successfully"));
+});
+
+export const cancelGroupReservation = asyncHandler(async (req, res) => {
+  const group = await reservationService.cancelGroupReservation(
+    req.hotelContext,
+    req.params.id,
+    req.body?.cancellation_reason
+  );
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, group, "Group reservation cancelled successfully"));
+});
+
+export const deleteGroupReservation = asyncHandler(async (req, res) => {
+  const group = await reservationService.cancelGroupReservation(
+    req.hotelContext,
+    req.params.id,
+    req.body?.cancellation_reason
+  );
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, group, "Group reservation cancelled successfully"));
+});
+
+

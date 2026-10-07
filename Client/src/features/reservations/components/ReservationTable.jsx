@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { CircularProgress } from '@mui/material';
 import {
   CalendarTodayOutlined,
   PhoneOutlined,
@@ -38,6 +39,7 @@ export const paymentStyles = {
 
 export default function ReservationTable({
   bookings = [],
+  loading = false,
   activeMenuId,
   onToggleMenu,
   onCloseMenu,
@@ -213,8 +215,8 @@ export default function ReservationTable({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200/80 shadow-xs flex-1 flex flex-col overflow-hidden">
-      <div className="w-full overflow-hidden min-w-0">
+    <div className="bg-white rounded-lg border border-gray-200/80 shadow-xs flex-1 flex flex-col">
+      <div className="w-full min-w-0 min-h-[220px]">
         <table className="w-full text-left table-fixed border-collapse">
           <colgroup><col style={{ width: '14%' }} /><col style={{ width: '9%' }} /><col style={{ width: '11%' }} /><col style={{ width: '8%' }} /><col style={{ width: '11%' }} /><col style={{ width: '11%' }} /><col style={{ width: '9%' }} /><col style={{ width: '7%' }} /><col style={{ width: '12%' }} /><col style={{ width: '8%' }} /></colgroup>
           <thead>
@@ -232,13 +234,29 @@ export default function ReservationTable({
             </tr>
           </thead>
           <tbody>
-            {currentBookings.map((booking) => (
-              <tr
-                key={booking.id}
-                onClick={() => onRowClick(booking)}
-                className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer"
-                title="Click anywhere to view Guest Profile"
-              >
+            {loading ? (
+              <tr>
+                <td colSpan={10} className="py-12 text-center text-xs text-gray-500">
+                  <div className="flex flex-col items-center justify-center gap-2.5">
+                    <CircularProgress size={26} sx={{ color: '#1b7f43' }} />
+                    <span className="text-xs text-gray-500 font-medium">Loading reservations...</span>
+                  </div>
+                </td>
+              </tr>
+            ) : currentBookings.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="py-8 text-center text-xs text-gray-400">
+                  No reservations found
+                </td>
+              </tr>
+            ) : (
+              currentBookings.map((booking) => (
+                <tr
+                  key={booking.id}
+                  onClick={() => onRowClick(booking)}
+                  className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer"
+                  title="Click anywhere to view Guest Profile"
+                >
                 <td className="py-1.5 px-1.5 whitespace-nowrap">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <img src={booking.avatar} alt="Avatar" className="w-6 h-6 rounded-full object-cover shadow-2xs shrink-0" />
@@ -314,91 +332,76 @@ export default function ReservationTable({
                     {booking.mobile}
                   </div>
                 </td>
-                <td className="py-1.5 px-1.5 relative text-center whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    id={`reservation-actions-trigger-${booking.id}`}
-                    onClick={(e) => onToggleMenu(e, booking.id)}
-                    onKeyDown={(e) => handleTriggerKeyDown(e, booking.id)}
-                    aria-label="More actions"
-                    aria-haspopup="menu"
-                    aria-expanded={activeMenuId === booking.id}
-                    aria-controls={activeMenuId === booking.id ? `reservation-actions-menu-${booking.id}` : undefined}
-                    className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors cursor-pointer"
-                  >
-                    <MoreHoriz sx={{ fontSize: 17 }} />
-                  </button>
-                  {activeMenuId === booking.id && (
-                    <div
-                      ref={menuRef}
-                      id={`reservation-actions-menu-${booking.id}`}
-                      role="menu"
-                      aria-labelledby={`reservation-actions-trigger-${booking.id}`}
-                      onKeyDown={(e) => handleMenuKeyDown(e, booking.id)}
-                      className="absolute right-2 top-8 bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] rounded-md border border-gray-100 z-50 py-2 w-44 animate-fade-in text-left"
+                <td className={`py-1.5 px-1.5 text-center whitespace-nowrap ${activeMenuId === booking.id ? 'relative z-50' : 'relative z-10'}`} onClick={(e) => e.stopPropagation()}>
+                  <div className="relative inline-block text-center">
+                    <button
+                      id={`reservation-actions-trigger-${booking.id}`}
+                      onClick={(e) => onToggleMenu(e, booking.id)}
+                      onKeyDown={(e) => handleTriggerKeyDown(e, booking.id)}
+                      aria-label="More actions"
+                      aria-haspopup="menu"
+                      aria-expanded={activeMenuId === booking.id}
+                      aria-controls={activeMenuId === booking.id ? `reservation-actions-menu-${booking.id}` : undefined}
+                      className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors cursor-pointer"
                     >
-                      {(() => {
-                        const status = normalizeBookingStatus(booking.status);
-                        const canCancel = ['Booked', 'Pending'].includes(status);
-                        const canCheckout = status === 'Checked In';
-                        const isCheckedIn = status === 'Checked In';
-                        return <>
-                      <button
-                        role="menuitem"
-                        tabIndex={-1}
-                        onClick={() => { if (typeof onCloseMenu === 'function') onCloseMenu(); onOpenViewModal(booking); }}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
+                      <MoreHoriz sx={{ fontSize: 17 }} />
+                    </button>
+                    {activeMenuId === booking.id && (
+                      <div
+                        ref={menuRef}
+                        id={`reservation-actions-menu-${booking.id}`}
+                        role="menu"
+                        aria-labelledby={`reservation-actions-trigger-${booking.id}`}
+                        onKeyDown={(e) => handleMenuKeyDown(e, booking.id)}
+                        className="absolute right-0 top-full mt-1 bg-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.2),0_8px_10px_-6px_rgba(0,0,0,0.1)] rounded-md border border-gray-100 z-50 py-2 w-44 animate-fade-in text-left"
                       >
-                        <SubjectOutlined className="text-[#10b981]" sx={{ fontSize: 18 }} /> View Booking
-                      </button>
-                      <button
-                        role="menuitem"
-                        tabIndex={-1}
-                        onClick={() => { if (typeof onCloseMenu === 'function') onCloseMenu(); onOpenEditModal(booking); }}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
-                      >
-                        <EditOutlined className="text-[#6366f1]" sx={{ fontSize: 18 }} /> Edit Booking
-                      </button>
-                      <button
-                        role="menuitem"
-                        tabIndex={-1}
-                        onClick={() => { if (typeof onCloseMenu === 'function') onCloseMenu(); onConfirmDelete(booking); }}
-                        disabled={isCheckedIn}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
-                      >
-                        <DeleteOutlined className="text-[#ef4444]" sx={{ fontSize: 18 }} /> Delete Booking
-                      </button>
-                      <button
-                        role="menuitem"
-                        tabIndex={-1}
-                        onClick={() => { if (typeof onCloseMenu === 'function') onCloseMenu(); onCheckout(booking.id); }}
-                        disabled={!canCheckout}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
-                      >
-                        <LogoutOutlined className="text-[#64748b]" sx={{ fontSize: 18 }} /> Check Out
-                      </button>
-                      <button
-                        role="menuitem"
-                        tabIndex={-1}
-                        onClick={() => { if (typeof onCloseMenu === 'function') onCloseMenu(); onConfirmCancel(booking); }}
-                        disabled={!canCancel}
-                        className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors"
-                      >
-                        <CancelOutlined className="text-[#64748b]" sx={{ fontSize: 18 }} /> Cancel Booking
-                      </button>
-                        </>;
-                      })()}
-                    </div>
-                  )}
+                        {(() => {
+                          const status = normalizeBookingStatus(booking.status);
+                          const canCancel = ['Booked', 'Pending'].includes(status);
+                          const canCheckout = status === 'Checked In';
+                          return <>
+                            <button
+                              role="menuitem"
+                              tabIndex={-1}
+                              onClick={() => { if (typeof onCloseMenu === 'function') onCloseMenu(); onOpenViewModal(booking); }}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors cursor-pointer"
+                            >
+                              <SubjectOutlined className="text-[#10b981]" sx={{ fontSize: 18 }} /> View Booking
+                            </button>
+                            <button
+                              role="menuitem"
+                              tabIndex={-1}
+                              onClick={() => { if (typeof onCloseMenu === 'function') onCloseMenu(); onOpenEditModal(booking); }}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors cursor-pointer"
+                            >
+                              <EditOutlined className="text-[#6366f1]" sx={{ fontSize: 18 }} /> Edit Booking
+                            </button>
+                            <button
+                              role="menuitem"
+                              tabIndex={-1}
+                              onClick={() => { if (typeof onCloseMenu === 'function') onCloseMenu(); onCheckout(booking.id); }}
+                              disabled={!canCheckout}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                            >
+                              <LogoutOutlined className="text-[#64748b]" sx={{ fontSize: 18 }} /> Check Out
+                            </button>
+                            <button
+                              role="menuitem"
+                              tabIndex={-1}
+                              onClick={() => { if (typeof onCloseMenu === 'function') onCloseMenu(); onConfirmCancel(booking); }}
+                              disabled={!canCancel}
+                              className="w-full text-left px-4 py-2 hover:bg-gray-50 flex items-center gap-3 text-[13px] text-[#1e293b] font-medium transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                            >
+                              <CancelOutlined className="text-[#64748b]" sx={{ fontSize: 18 }} /> Cancel Booking
+                            </button>
+                          </>;
+                        })()}
+                      </div>
+                    )}
+                  </div>
                 </td>
-              </tr>
-            ))}
-            {bookings.length === 0 && (
-              <tr>
-                <td colSpan={10} className="py-8 text-center text-gray-400 text-[14px]">
-                  No bookings found.
-                </td>
-              </tr>
-            )}
+          </tr>
+        )))}
           </tbody>
         </table>
       </div>

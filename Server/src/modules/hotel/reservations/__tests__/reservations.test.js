@@ -288,4 +288,278 @@ describe("Phase 6: Reservations & Availability Management", () => {
       expect(res.body.data.status).toBe("CANCELLED");
     });
   });
+
+  describe("Group Reservations Lifecycle & Multi-Tenancy", () => {
+    let groupIdA;
+
+    it("should create a group reservation successfully in Hotel A", async () => {
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations/groups")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          name: "Acme Annual Summit",
+          contact_person: "Alice Walker",
+          email: "alice@acme.com",
+          phone: "1234567890",
+          expected_check_in: "2026-12-01T00:00:00.000Z",
+          expected_check_out: "2026-12-05T00:00:00.000Z",
+          rooms_count: 5,
+          total_guests: 10,
+          room_types: "Standard",
+          status: "CONFIRMED",
+          total_price: 2500,
+          billing_instructions: "Master folio to company",
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.name).toBe("Acme Annual Summit");
+      expect(res.body.data.contact_person).toBe("Alice Walker");
+      expect(res.body.data.rooms_count).toBe(5);
+      expect(res.body.data.total_price).toBe(2500);
+      groupIdA = res.body.data._id;
+    });
+
+    it("should reject group reservation with missing required fields", async () => {
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations/groups")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          name: "Incomplete Group",
+        });
+
+      expect(res.status).toBe(400);
+      expect(res.body.success).toBe(false);
+    });
+
+    it("should list group reservations and isolate across hotels", async () => {
+      const resA = await request(app)
+        .get("/api/v1/hotel/reservations/groups")
+        .set("Authorization", `Bearer ${adminTokenA}`);
+
+      expect(resA.status).toBe(200);
+      expect(resA.body.data.length).toBeGreaterThanOrEqual(1);
+      expect(resA.body.data.some((g) => g._id === groupIdA)).toBe(true);
+
+      // Hotel B should not see Hotel A's group reservation
+      const resB = await request(app)
+        .get("/api/v1/hotel/reservations/groups")
+        .set("Authorization", `Bearer ${adminTokenB}`);
+
+      expect(resB.status).toBe(200);
+      expect(resB.body.data.some((g) => g._id === groupIdA)).toBe(false);
+    });
+
+    it("should retrieve a group reservation by ID", async () => {
+      const res = await request(app)
+        .get(`/api/v1/hotel/reservations/groups/${groupIdA}`)
+        .set("Authorization", `Bearer ${adminTokenA}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.data._id).toBe(groupIdA);
+      expect(res.body.data.name).toBe("Acme Annual Summit");
+    });
+
+    it("should prevent cross-hotel access to group reservation by ID", async () => {
+      const res = await request(app)
+        .get(`/api/v1/hotel/reservations/groups/${groupIdA}`)
+        .set("Authorization", `Bearer ${adminTokenB}`);
+
+      expect(res.status).toBe(404);
+    });
+
+    it("should update a group reservation successfully", async () => {
+      const res = await request(app)
+        .put(`/api/v1/hotel/reservations/groups/${groupIdA}`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          contact_person: "Alice Walker-Smith",
+          total_price: 2800,
+          rooms_count: 6,
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.contact_person).toBe("Alice Walker-Smith");
+      expect(res.body.data.total_price).toBe(2800);
+      expect(res.body.data.rooms_count).toBe(6);
+    });
+
+    it("should reject cancelling group reservation with invalid token or cross-hotel access", async () => {
+      // 1. Unauthorized
+      const unauthRes = await request(app)
+        .post(`/api/v1/hotel/reservations/groups/${groupIdA}/cancel`)
+        .send({ cancellation_reason: "Test unauth" });
+      expect(unauthRes.status).toBe(401);
+
+      // 2. Cross-hotel access
+      const crossRes = await request(app)
+        .post(`/api/v1/hotel/reservations/groups/${groupIdA}/cancel`)
+        .set("Authorization", `Bearer ${adminTokenB}`)
+        .send({ cancellation_reason: "Cross hotel attempt" });
+      expect(crossRes.status).toBe(404);
+    });
+
+    it("should cancel a group reservation successfully and retain the document with CANCELLED status", async () => {
+      const res = await request(app)
+        .post(`/api/v1/hotel/reservations/groups/${groupIdA}/cancel`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({ cancellation_reason: "Corporate event postponed" });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.status).toBe("CANCELLED");
+      expect(res.body.data.cancellation_reason).toBe("Corporate event postponed");
+
+      // Confirm document is retained with 200 OK
+      const getRes = await request(app)
+        .get(`/api/v1/hotel/reservations/groups/${groupIdA}`)
+        .set("Authorization", `Bearer ${adminTokenA}`);
+
+      expect(getRes.status).toBe(200);
+      expect(getRes.body.data._id).toBe(groupIdA);
+      expect(getRes.body.data.status).toBe("CANCELLED");
+      expect(getRes.body.data.group_ref).toBeDefined();
+      expect(getRes.body.data.name).toBe("Acme Annual Summit");
+      expect(getRes.body.data.contact_person).toBe("Alice Walker-Smith");
+      expect(getRes.body.data.total_price).toBe(2800);
+      expect(getRes.body.data.rooms_count).toBe(6);
+    });
+
+    it("should reject cancelling an already cancelled group reservation", async () => {
+      const res = await request(app)
+        .post(`/api/v1/hotel/reservations/groups/${groupIdA}/cancel`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({ cancellation_reason: "Double cancel attempt" });
+
+      expect(res.status).toBe(409);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error?.message || res.body.message).toContain("already cancelled");
+    });
+
+    it("should cancel child reservations and release room inventory when group is cancelled", async () => {
+      // 1. Create a new group
+      const groupRes = await request(app)
+        .post("/api/v1/hotel/reservations/groups")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          name: "Cascade Group Test",
+          contact_person: "Bob Smith",
+          email: "bob@cascade.com",
+          phone: "9876543210",
+          expected_check_in: "2026-12-10T00:00:00.000Z",
+          expected_check_out: "2026-12-15T00:00:00.000Z",
+          rooms_count: 1,
+          total_guests: 2,
+          room_types: "Standard",
+          status: "CONFIRMED",
+          total_price: 1000,
+        });
+      expect(groupRes.status).toBe(201);
+      const childGroupId = groupRes.body.data._id;
+
+      // 2. Create a child reservation assigned to roomA
+      const childRes = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          group_id: childGroupId,
+          primary_guest_id: guestA._id,
+          room_type_id: roomTypeA._id,
+          room_id: roomA._id,
+          expected_check_in: "2026-12-10T14:00:00.000Z",
+          expected_check_out: "2026-12-15T10:00:00.000Z",
+          adults: 2,
+          children: 0,
+        });
+      expect(childRes.status).toBe(201);
+      const childResId = childRes.body.data.reservation._id;
+      expect(childRes.body.data.reservation.status).toBe("CONFIRMED");
+
+      // Verify roomA has active booking
+      const roomCheckBefore = await request(app)
+        .get("/api/v1/hotel/reservations/availability")
+        .query({ check_in: "2026-12-10", check_out: "2026-12-15", room_type_id: roomTypeA._id })
+        .set("Authorization", `Bearer ${adminTokenA}`);
+      expect(roomCheckBefore.body.data[0].available_rooms).toBe(0);
+
+      // 3. Cancel the group
+      const cancelGroupRes = await request(app)
+        .post(`/api/v1/hotel/reservations/groups/${childGroupId}/cancel`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({ cancellation_reason: "Group trip called off" });
+      expect(cancelGroupRes.status).toBe(200);
+      expect(cancelGroupRes.body.data.status).toBe("CANCELLED");
+
+      // 4. Verify child reservation status is CANCELLED
+      const childCheckAfter = await request(app)
+        .get(`/api/v1/hotel/reservations/${childResId}`)
+        .set("Authorization", `Bearer ${adminTokenA}`);
+      expect(childCheckAfter.status).toBe(200);
+      expect(childCheckAfter.body.data.status).toBe("CANCELLED");
+
+      // 5. Verify room availability was released
+      const roomCheckAfter = await request(app)
+        .get("/api/v1/hotel/reservations/availability")
+        .query({ check_in: "2026-12-10", check_out: "2026-12-15", room_type_id: roomTypeA._id })
+        .set("Authorization", `Bearer ${adminTokenA}`);
+      expect(roomCheckAfter.body.data[0].available_rooms).toBe(1);
+    });
+
+    it("should reject group cancellation if a child reservation is in active IN_HOUSE stay", async () => {
+      // 1. Create a new group
+      const groupRes = await request(app)
+        .post("/api/v1/hotel/reservations/groups")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          name: "In-House Guard Group",
+          contact_person: "Charlie Brown",
+          email: "charlie@guard.com",
+          phone: "5551234567",
+          expected_check_in: "2026-12-20T00:00:00.000Z",
+          expected_check_out: "2026-12-25T00:00:00.000Z",
+          rooms_count: 1,
+          total_guests: 1,
+          status: "CONFIRMED",
+          total_price: 500,
+        });
+      const inHouseGroupId = groupRes.body.data._id;
+
+      // 2. Create child reservation
+      const childRes = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          group_id: inHouseGroupId,
+          primary_guest_id: guestA._id,
+          room_type_id: roomTypeA._id,
+          room_id: roomA._id,
+          expected_check_in: "2026-12-20T14:00:00.000Z",
+          expected_check_out: "2026-12-25T10:00:00.000Z",
+          adults: 1,
+        });
+      const childResId = childRes.body.data.reservation._id;
+
+      // 3. Update child reservation status to IN_HOUSE (simulating check-in)
+      await request(app)
+        .put(`/api/v1/hotel/reservations/${childResId}`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({ status: "IN_HOUSE" });
+
+      // 4. Attempt to cancel the group - must be rejected
+      const cancelAttempt = await request(app)
+        .post(`/api/v1/hotel/reservations/groups/${inHouseGroupId}/cancel`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({ cancellation_reason: "Attempted cancellation during stay" });
+
+      expect(cancelAttempt.status).toBe(400);
+      expect(cancelAttempt.body.success).toBe(false);
+      expect(cancelAttempt.body.error?.message || cancelAttempt.body.message).toContain("in-house");
+
+      // 5. Confirm group status remains unchanged (CONFIRMED)
+      const groupCheck = await request(app)
+        .get(`/api/v1/hotel/reservations/groups/${inHouseGroupId}`)
+        .set("Authorization", `Bearer ${adminTokenA}`);
+      expect(groupCheck.body.data.status).toBe("CONFIRMED");
+    });
+  });
 });

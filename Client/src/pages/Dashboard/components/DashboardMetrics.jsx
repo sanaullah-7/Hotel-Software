@@ -12,7 +12,6 @@ import { normalizeBookingStatus, parseStayDate } from '../../../features/reserva
 import {
   getInvoices,
   getPayments,
-  getInvoiceFinancialState,
   INVOICES_UPDATED_EVENT,
   PAYMENTS_UPDATED_EVENT,
   REFUNDS_UPDATED_EVENT
@@ -48,12 +47,11 @@ function isToday(dateValue) {
   return false;
 }
 
-/** Sum invoiced revenue for verified invoices attributable to today. */
+/** Sum invoiced revenue attributable to today. */
 function computeRevenueToday(invoices) {
   let total = 0;
   for (const inv of invoices) {
-    const state = getInvoiceFinancialState(inv.id || inv.invoiceNumber);
-    if (state.integrity !== 'verified') continue;
+    if (inv.financialIntegrity && inv.financialIntegrity !== 'verified') continue;
     const invDateStr = inv.date || inv.issueDate || inv.createdAt || inv.invoiceDate || '';
     if (invDateStr && isToday(invDateStr)) {
       total += Number(inv.totalAmount || 0);

@@ -18,6 +18,10 @@ export default function RequestsComplaintsTab({
   guest,
   complaints = [],
   currentRoom,
+  isLoading = false,
+  error = null,
+  onRetry,
+  availableRooms = [],
   onComplaintAdded,
   onComplaintStatusUpdate
 }) {
@@ -33,9 +37,10 @@ export default function RequestsComplaintsTab({
     const matchesSearch =
       !searchQuery ||
       String(c.description || '').toLowerCase().includes(q) ||
-      String(c.type || '').toLowerCase().includes(q) ||
-      String(c.roomNo || '').toLowerCase().includes(q) ||
-      String(c.id || '').toLowerCase().includes(q);
+      String(c.type || c.category || '').toLowerCase().includes(q) ||
+      String(c.roomNo || c.roomNumber || '').toLowerCase().includes(q) ||
+      String(c.id || '').toLowerCase().includes(q) ||
+      String(c.complaint_ref || '').toLowerCase().includes(q);
 
     const matchesStatus =
       statusFilter === 'All' ||
@@ -51,6 +56,7 @@ export default function RequestsComplaintsTab({
     switch (priority) {
       case 'High':
       case 'Urgent':
+      case 'Critical':
         return <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-rose-50 text-rose-700 border border-rose-200">{priority}</span>;
       case 'Medium':
         return <span className="px-2 py-0.5 rounded text-[10.5px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Medium</span>;
@@ -68,6 +74,7 @@ export default function RequestsComplaintsTab({
           </span>
         );
       case 'In Progress':
+      case 'Investigating':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
             <PendingActions sx={{ fontSize: 13 }} /> In Progress
@@ -159,56 +166,80 @@ export default function RequestsComplaintsTab({
               </tr>
             </thead>
             <tbody className="text-xs text-gray-700">
-              {currentItems.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50/30 transition">
-                  <td className="py-2 px-3 font-mono font-bold text-gray-900">
-                    #{c.id}
+              {isLoading ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-gray-500 text-xs">
+                    <div className="w-5 h-5 border-2 border-[#1b7f43] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="font-semibold text-gray-600">Loading complaints...</p>
                   </td>
-                  <td className="py-2 px-3 text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <CalendarTodayOutlined sx={{ fontSize: 13 }} className="text-gray-400" />
-                      {c.date || 'Today'}
-                    </div>
-                  </td>
-                  <td className="py-2 px-3 font-semibold text-gray-800">
-                    {c.type || 'General'}
-                  </td>
-                  <td className="py-2 px-3 font-medium text-gray-600">
-                    <div className="flex items-center gap-1">
-                      <MeetingRoomOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
-                      Room {c.roomNo || 'N/A'}
-                    </div>
-                  </td>
-                  <td className="py-2 px-3 max-w-xs text-gray-700">
-                    <p className="line-clamp-2">{c.description}</p>
-                  </td>
-                  <td className="py-2 px-3">
-                    {getPriorityBadge(c.priority)}
-                  </td>
-                  <td className="py-2 px-3 text-center">
-                    {getStatusBadge(c.status)}
-                  </td>
-                  <td className="py-2 px-3 text-center">
-                    {c.status !== 'Resolved' ? (
+                </tr>
+              ) : error ? (
+                <tr>
+                  <td colSpan={8} className="py-12 text-center text-rose-600 text-xs">
+                    <Warning sx={{ fontSize: 32 }} className="text-rose-400 mb-2 mx-auto" />
+                    <p className="font-semibold">{error}</p>
+                    {onRetry && (
                       <button
-                        onClick={() => {
-                          if (onComplaintStatusUpdate) {
-                            onComplaintStatusUpdate(c.id, 'Resolved');
-                          }
-                        }}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#e5f4eb] hover:bg-[#d5eee0] text-[#1b7f43] rounded-lg text-[11px] font-bold transition cursor-pointer"
-                        title="Mark as Resolved"
+                        onClick={onRetry}
+                        className="mt-3 px-3 py-1.5 bg-[#1b7f43] text-white rounded-lg text-xs font-semibold hover:brightness-105 transition cursor-pointer"
                       >
-                        <DoneAll sx={{ fontSize: 14 }} /> Mark Resolved
+                        Retry
                       </button>
-                    ) : (
-                      <span className="text-[11px] text-gray-400 font-medium">Completed</span>
                     )}
                   </td>
                 </tr>
-              ))}
+              ) : (
+                currentItems.map((c) => (
+                  <tr key={c.id || c._id} className="hover:bg-gray-50/30 transition">
+                    <td className="py-2 px-3 font-mono font-bold text-gray-900">
+                      #{c.complaint_ref || c.id}
+                    </td>
+                    <td className="py-2 px-3 text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <CalendarTodayOutlined sx={{ fontSize: 13 }} className="text-gray-400" />
+                        {c.date || 'Today'}
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 font-semibold text-gray-800">
+                      {c.type || c.category || 'General'}
+                    </td>
+                    <td className="py-2 px-3 font-medium text-gray-600">
+                      <div className="flex items-center gap-1">
+                        <MeetingRoomOutlined sx={{ fontSize: 14 }} className="text-gray-400" />
+                        Room {c.roomNo || 'N/A'}
+                      </div>
+                    </td>
+                    <td className="py-2 px-3 max-w-xs text-gray-700">
+                      <p className="line-clamp-2">{c.description}</p>
+                    </td>
+                    <td className="py-2 px-3">
+                      {getPriorityBadge(c.priority || c.severity)}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {getStatusBadge(c.status)}
+                    </td>
+                    <td className="py-2 px-3 text-center">
+                      {c.status !== 'Resolved' ? (
+                        <button
+                          onClick={() => {
+                            if (onComplaintStatusUpdate) {
+                              onComplaintStatusUpdate(c.id || c._id, 'Resolved');
+                            }
+                          }}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#e5f4eb] hover:bg-[#d5eee0] text-[#1b7f43] rounded-lg text-[11px] font-bold transition cursor-pointer"
+                          title="Mark as Resolved"
+                        >
+                          <DoneAll sx={{ fontSize: 14 }} /> Mark Resolved
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-gray-400 font-medium">Completed</span>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
 
-              {currentItems.length === 0 && (
+              {!isLoading && !error && currentItems.length === 0 && (
                 <tr>
                   <td colSpan={8} className="py-12 text-center text-gray-400 text-xs">
                     <ReportProblemOutlined sx={{ fontSize: 36 }} className="text-gray-300 mb-2" />
@@ -226,7 +257,7 @@ export default function RequestsComplaintsTab({
         </div>
 
         {/* Pagination Bar */}
-        {filtered.length > itemsPerPage && (
+        {!isLoading && !error && filtered.length > itemsPerPage && (
           <div className="p-3.5 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
             <span>
               Showing {(page - 1) * itemsPerPage + 1} to {Math.min(page * itemsPerPage, filtered.length)} of {filtered.length} tickets
@@ -263,8 +294,9 @@ export default function RequestsComplaintsTab({
           onClose={() => setIsAddModalOpen(false)}
           guest={guest}
           defaultRoom={currentRoom}
-          onSave={(newComplaint) => {
-            if (onComplaintAdded) onComplaintAdded(newComplaint);
+          availableRooms={availableRooms}
+          onSave={async (newComplaint) => {
+            if (onComplaintAdded) await onComplaintAdded(newComplaint);
           }}
         />
       )}

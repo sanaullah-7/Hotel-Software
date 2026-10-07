@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { CircularProgress, Alert } from '@mui/material';
+import reservationService from '../../../services/reservationService';
+import stayService from '../../../services/stayService';
+import { toFrontendReservation, toBackendReservationPayload } from '../adapters/reservationAdapter';
 import {
   getReservations,
+  syncReservationsFromBackend,
   saveReservations,
   RESERVATIONS_UPDATED_EVENT
 } from '../state/reservationStore';
@@ -15,22 +20,19 @@ import {
 import { addGuest, findGuestByExactIdentity, resolveGuestForBooking } from '../../guests/state/guestStore';
 import { getRoomByRoomNo } from '../../rooms/state/roomStore';
 import { isRoomBlockingBooking, normalizeBookingStatus, validateStayDates } from '../state/bookingRules';
-import { cancelBooking, saveBookingsWithRoomState, validateBookingRequest, checkOutBooking } from '../state/reservationLifecycle';
 
 import ReservationToolbar from '../components/ReservationToolbar';
 import ReservationTable from '../components/ReservationTable';
 import ReservationViewModal from '../components/ReservationViewModal';
 import ReservationFormModal from '../components/ReservationFormModal';
-import ReservationDeleteModal from '../components/ReservationDeleteModal';
 import ReservationCancelModal from '../components/ReservationCancelModal';
 import { addAuditLog } from '../../audit/state/auditStore.js';
 
-
-const initialBookings = [];
-
 export default function AllBookings({ title = 'All Booking', showDateFilter = false }) {
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState(() => getReservations(initialBookings));
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('Daily');
   const [customStartDate, setCustomStartDate] = useState('');
@@ -42,9 +44,6 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
 
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [bookingToDelete, setBookingToDelete] = useState(null);
 
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [bookingToCancel, setBookingToCancel] = useState(null);
@@ -82,32 +81,55 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
 
   const isFormValid = (form.firstName || '').trim() !== '';
 
-  useEffect(() => {
-    const syncReservations = () => setBookings(getReservations(initialBookings));
-    window.addEventListener('storage', syncReservations);
-    window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
-    // Job 23: refresh list on any canonical financial mutation so payment column stays current
-    window.addEventListener(INVOICES_UPDATED_EVENT, syncReservations);
-    window.addEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
-    window.addEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
-    return () => {
-      window.removeEventListener('storage', syncReservations);
-      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
-      window.removeEventListener(INVOICES_UPDATED_EVENT, syncReservations);
-      window.removeEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
-      window.removeEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
-    };
+  const loadReservations = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await reservationService.getReservations();
+      const rawReservations = Array.isArray(response?.data?.reservations)
+        ? response.data.reservations
+        : Array.isArray(response?.data)
+          ? response.data
+          : Array.isArray(response?.reservations)
+            ? response.reservations
+            : (Array.isArray(response) ? response : []);
+
+      const adapted = rawReservations.map(toFrontendReservation).filter(Boolean);
+      setBookings(adapted);
+      syncReservationsFromBackend(rawReservations);
+    } catch (err) {
+      setError(err?.message || 'Failed to load reservations from server.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  const persistBookings = (nextBookings, roomIds = []) => {
+  useEffect(() => {
+    loadReservations();
+  }, [loadReservations]);
+
+  useEffect(() => {
+    const handleFinancialUpdate = () => {
+      loadReservations();
+    };
+    window.addEventListener(INVOICES_UPDATED_EVENT, handleFinancialUpdate);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, handleFinancialUpdate);
+    window.addEventListener(REFUNDS_UPDATED_EVENT, handleFinancialUpdate);
+    return () => {
+      window.removeEventListener(INVOICES_UPDATED_EVENT, handleFinancialUpdate);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, handleFinancialUpdate);
+      window.removeEventListener(REFUNDS_UPDATED_EVENT, handleFinancialUpdate);
+    };
+  }, [loadReservations]);
+
+  const persistBookings = (nextBookings) => {
     setBookings(nextBookings);
-    if (roomIds.length) saveBookingsWithRoomState(nextBookings, roomIds);
-    else saveReservations(nextBookings);
+    saveReservations(nextBookings);
   };
 
   const handleRefresh = () => {
     setSearch('');
-    setBookings(getReservations(initialBookings));
+    loadReservations();
   };
 
   // Filter Bookings
@@ -228,132 +250,32 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSaveBooking = () => {
+  const handleSaveBooking = async () => {
     try {
       if (!isFormValid) {
         alert('Please fill out First Name.');
         return;
       }
 
-      const requestedCheckIn = form.checkIn;
-      const requestedCheckOut = form.checkOut;
-      const editingBooking = editingId ? bookings.find((booking) => booking.id === editingId) : null;
-      const room = form.roomNo ? getRoomByRoomNo(form.roomNo) : null;
-      if (form.roomNo && !room) throw new Error(`Room ${form.roomNo} does not identify exactly one canonical room.`);
-      if (!editingBooking || isRoomBlockingBooking(editingBooking)) {
-        validateBookingRequest({ roomId: room?.id, checkIn: requestedCheckIn, checkOut: requestedCheckOut, bookings, excludeBookingId: editingId });
-      } else {
-        validateStayDates(requestedCheckIn, requestedCheckOut);
-      }
-
-      let checkInDate = form.checkIn || new Date().toLocaleDateString();
-      let checkOutDate = form.checkOut || new Date().toLocaleDateString();
-      try {
-        if (form.checkIn && form.checkIn.includes('-')) {
-          checkInDate = new Date(form.checkIn).toLocaleDateString();
-        }
-        if (form.checkOut && form.checkOut.includes('-')) {
-          checkOutDate = new Date(form.checkOut).toLocaleDateString();
-        }
-      } catch (e) {}
-
       const fullName = `${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Guest';
+      const guest = findGuestByExactIdentity(fullName, form.email) || addGuest({ name: fullName, email: form.email || '', phone: form.mobile || '', city: form.city || '' });
+      const room = form.roomNo ? getRoomByRoomNo(form.roomNo) : null;
+
+      const payload = toBackendReservationPayload({
+        ...form,
+        guestId: guest?._id || guest?.id,
+        roomId: room?._id || room?.id,
+      }, { isCreate: !editingId, isUpdate: !!editingId });
 
       if (editingId) {
-        const oldBooking = bookings.find((booking) => booking.id === editingId);
-        const updatedBookings = bookings.map((b) =>
-            b.id === editingId
-              ? {
-                  ...b,
-                  name: fullName,
-                  package: form.package || 'All inclusive',
-                  roomType: form.roomType || 'Delux',
-                  roomNo: form.roomNo || b.roomNo || b.room,
-                  roomId: room?.id,
-                  payment: form.paymentMethod || 'Paid',
-                  status: b.status || 'Booked',
-                  checkIn: checkInDate,
-                  checkOut: checkOutDate,
-                  email: form.email || 'test@email.com',
-                  mobile: form.mobile || '1234567890',
-                  gender: form.gender,
-                  city: form.city,
-                  passport: form.passport,
-                  nationality: form.nationality,
-                  totalPerson: form.totalPerson,
-                  numRooms: form.numRooms,
-                  arrivalTime: form.arrivalTime,
-                  purpose: form.purpose,
-                  discountCode: form.discountCode,
-                  bookingRef: form.bookingRef,
-                  emergencyName: form.emergencyName,
-                  emergencyPhone: form.emergencyPhone,
-                  address: form.address,
-                  specialRequests: form.specialRequests,
-                  note: form.note
-                }
-              : b
-          );
-        persistBookings(updatedBookings, [oldBooking?.roomId, room?.id].filter((roomId) => roomId !== undefined && roomId !== null));
+        await reservationService.updateReservation(editingId, payload);
       } else {
-        const newId = bookings.length ? Math.max(...bookings.map((b) => b.id)) + 1 : 1;
-        const fullName = `${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Guest';
-        const guest = findGuestByExactIdentity(fullName, form.email) || addGuest({ name: fullName, email: form.email || '', phone: form.mobile || '', city: form.city || '' });
-        const newBooking = {
-          id: newId,
-          guestId: guest.id,
-          roomId: room?.id,
-          name: fullName,
-          avatar: `https://i.pravatar.cc/150?img=${Math.floor(Math.random() * 70) + 1}`,
-          package: form.package || 'All inclusive',
-          roomType: form.roomType || 'Delux',
-          status: 'Booked',
-          checkIn: checkInDate,
-          checkOut: checkOutDate,
-          createdAt: new Date().toISOString().split('T')[0],
-          bookingDate: new Date().toISOString().split('T')[0],
-          payment: form.paymentMethod || 'Paid',
-          email: form.email || 'test@email.com',
-          mobile: form.mobile || '1234567890',
-          gender: form.gender,
-          city: form.city,
-          passport: form.passport,
-          nationality: form.nationality,
-          totalPerson: form.totalPerson,
-          numRooms: form.numRooms,
-          arrivalTime: form.arrivalTime,
-          purpose: form.purpose,
-          discountCode: form.discountCode,
-          bookingRef: form.bookingRef,
-          emergencyName: form.emergencyName,
-          emergencyPhone: form.emergencyPhone,
-          address: form.address,
-          specialRequests: form.specialRequests,
-          note: form.note
-        };
-        persistBookings([newBooking, ...bookings], room ? [room.id] : []);
+        await reservationService.createReservation(payload);
       }
+      await loadReservations();
       setIsBookingModalOpen(false);
     } catch (err) {
-      alert('Error saving booking: ' + err.message);
-    }
-  };
-
-  const confirmDelete = (booking) => {
-    setBookingToDelete(booking);
-    setIsDeleteModalOpen(true);
-    setActiveMenuId(null);
-  };
-
-  const handleDelete = () => {
-    if (bookingToDelete) {
-      if (normalizeBookingStatus(bookingToDelete.status) === 'Checked In') {
-        alert('Check out this booking before deleting it.');
-        return;
-      }
-      persistBookings(bookings.filter((b) => b.id !== bookingToDelete.id), bookingToDelete.roomId ? [bookingToDelete.roomId] : []);
-      setIsDeleteModalOpen(false);
-      setBookingToDelete(null);
+      alert('Error saving booking: ' + (err?.message || 'Failed to save booking.'));
     }
   };
 
@@ -363,23 +285,64 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
     setActiveMenuId(null);
   };
 
-  const handleCancelBooking = () => {
+  const handleCancelBooking = async () => {
     if (bookingToCancel) {
       try {
-        const updated = cancelBooking(bookingToCancel.id, bookings);
-        setBookings((current) => current.map((booking) => String(booking.id) === String(updated.id) ? updated : booking));
+        const canonicalId = bookingToCancel._id || bookingToCancel.canonicalBookingId || bookingToCancel.id;
+        const res = await reservationService.cancelReservation(canonicalId, "Cancelled by user");
+        const updatedBackend = res?.data?.reservation || res?.data || res;
+        const adapted = toFrontendReservation(updatedBackend) || { ...bookingToCancel, status: 'Cancelled' };
+
+        // Synchronize compatibility store
+        const currentStored = getReservations([]);
+        const updatedList = currentStored.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        );
+        syncReservationsFromBackend(updatedList);
+        setBookings(updatedList);
+
         setIsCancelModalOpen(false);
         setBookingToCancel(null);
-      } catch (error) { alert(error.message); }
+      } catch (error) {
+        alert(error?.message || 'Failed to cancel reservation');
+      }
     }
   };
 
-  const handleCheckout = (id) => {
+  const handleCheckout = async (id) => {
     try {
-      const updated = checkOutBooking(id);
-      setBookings((current) => current.map((booking) => String(booking.id) === String(updated.id) ? updated : booking));
+      const booking = bookings.find((b) => String(b.id) === String(id) || String(b._id) === String(id));
+      if (!booking) throw new Error('Booking not found');
+      if (normalizeBookingStatus(booking.status) !== 'Checked In') {
+        throw new Error('Only a checked-in booking can be checked out.');
+      }
+      const canonicalId = booking._id || booking.canonicalBookingId || booking.id || id;
+      const payload = {
+        reservation_id: canonicalId,
+        notes: 'Checked out from All Reservations'
+      };
+      if (booking.stayId && /^[0-9a-fA-F]{24}$/.test(String(booking.stayId).trim())) {
+        payload.stay_id = String(booking.stayId).trim();
+      }
+      const res = await stayService.checkOut(payload);
+      const updatedBackend = res?.data?.reservation || res?.reservation;
+      if (updatedBackend) {
+        const adapted = toFrontendReservation(updatedBackend);
+        setBookings((current) => current.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        ));
+        const currentStored = getReservations([]);
+        const updatedList = currentStored.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        );
+        syncReservationsFromBackend(updatedList);
+      } else {
+        await loadReservations();
+      }
       setActiveMenuId(null);
-    } catch (error) { alert(error.message); }
+    } catch (error) {
+      alert(error?.message || 'Check-out failed');
+    }
   };
 
   const handleRowClick = (booking) => {
@@ -407,15 +370,21 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
         onExportPDF={handleExportPDF}
       />
 
+      {error && (
+        <Alert severity="error" className="shadow-xs text-xs" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
       <ReservationTable
         bookings={filteredBookings}
+        loading={loading}
         activeMenuId={activeMenuId}
         onToggleMenu={toggleMenu}
         onCloseMenu={() => setActiveMenuId(null)}
         onRowClick={handleRowClick}
         onOpenViewModal={openViewModal}
         onOpenEditModal={openEditModal}
-        onConfirmDelete={confirmDelete}
         onConfirmCancel={confirmCancel}
         onCheckout={handleCheckout}
       />
@@ -434,13 +403,6 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
         onFormChange={handleFormChange}
         onClose={() => setIsBookingModalOpen(false)}
         onSave={handleSaveBooking}
-      />
-
-      <ReservationDeleteModal
-        open={isDeleteModalOpen}
-        booking={bookingToDelete}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onDelete={handleDelete}
       />
 
       <ReservationCancelModal

@@ -308,6 +308,7 @@ export const LeaveRequestsTable = ({
                         <div className="flex items-center justify-end gap-0.5">
                           <Tooltip title="Edit">
                             <IconButton
+                              aria-label="Edit leave request"
                               size="small"
                               onClick={() => handleOpenEditModal(row)}
                               sx={{ color: '#3b82f6', '&:hover': { backgroundColor: '#eff6ff' }, padding: '3px' }}
@@ -317,6 +318,7 @@ export const LeaveRequestsTable = ({
                           </Tooltip>
                           <Tooltip title="Delete">
                             <IconButton
+                              aria-label="Delete leave request"
                               size="small"
                               onClick={() => handleDeleteRow(row.id)}
                               sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fef2f2' }, padding: '3px' }}

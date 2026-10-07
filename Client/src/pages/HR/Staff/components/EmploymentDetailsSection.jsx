@@ -25,7 +25,8 @@ export default function EmploymentDetailsSection({
   formErrors,
   onChange,
   joiningFocused,
-  setJoiningFocused
+  setJoiningFocused,
+  departments = []
 }) {
   return (
     <>
@@ -99,16 +100,17 @@ export default function EmploymentDetailsSection({
             <MenuItem value="" disabled className="text-gray-400">
               Select Department
             </MenuItem>
-            <MenuItem value="Management">Management</MenuItem>
-            <MenuItem value="Front Office">Front Office</MenuItem>
-            <MenuItem value="Housekeeping">Housekeeping</MenuItem>
-            <MenuItem value="Food & Beverage">Food & Beverage</MenuItem>
-            <MenuItem value="Kitchen">Kitchen</MenuItem>
-            <MenuItem value="Security">Security</MenuItem>
-            <MenuItem value="Maintenance">Maintenance</MenuItem>
-            <MenuItem value="Accounts & Finance">Accounts & Finance</MenuItem>
-            <MenuItem value="Human Resources">Human Resources</MenuItem>
-            <MenuItem value="Spa & Wellness">Spa & Wellness</MenuItem>
+            {departments && departments.length > 0 ? (
+              departments.map((dept) => (
+                <MenuItem key={dept._id} value={dept._id}>
+                  {dept.name} {dept.code ? `(${dept.code})` : ''}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem value="" disabled>
+                No departments available
+              </MenuItem>
+            )}
           </TextField>
         </div>
 

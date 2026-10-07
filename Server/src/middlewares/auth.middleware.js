@@ -45,6 +45,8 @@ const authMiddleware = async (req, res, next) => {
       role: account.role,
       email: account.email,
       hotelId: account.hotelId,
+      fullName: account.fullName,
+      phone: account.phone,
     };
     req.authVerified = true;
     next();

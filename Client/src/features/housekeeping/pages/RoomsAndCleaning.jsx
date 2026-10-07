@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FormControl, InputLabel, Select, MenuItem, TextField, Box, Typography } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FormControl, InputLabel, Select, MenuItem, TextField, CircularProgress, Alert } from '@mui/material';
 import RefreshButton from '../../../components/common/RefreshButton';
 import {
   Search, AddCircleOutlined,
@@ -7,8 +7,14 @@ import {
   MeetingRoomOutlined, CleaningServicesOutlined, 
   EventOutlined, AccessTimeOutlined, PersonOutlined, FlagOutlined
 } from '@mui/icons-material';
-import { getRooms, saveRooms } from './hkStore';
-import { getRoomByRoomNo } from '../../rooms/state/roomStore';
+import { saveRooms } from './hkStore';
+import opsService from '../../../services/opsService';
+import roomService from '../../../services/roomService';
+import {
+  toFrontendTask,
+  toFrontendTaskList,
+  toBackendTaskPayload
+} from '../adapters/housekeepingAdapter';
 
 const statusStyles = {
   'Scheduled': 'bg-blue-50 text-blue-500',
@@ -31,87 +37,47 @@ const priorityStyles = {
   'Low': 'bg-green-100 text-green-600'
 };
 
-function mapCanonicalToRecord(r) {
-  const roomNo = String(r.roomNo || r.id || '');
-  const guestName = r.guestName !== undefined ? r.guestName : (r.guest && r.guest !== '-' ? r.guest : '');
-  const assignedStaff = r.assignedStaff !== undefined ? r.assignedStaff : (r.assignee && r.assignee !== '-' ? r.assignee : '');
-  const completionTime = r.completionTime !== undefined ? r.completionTime : (r.completed && r.completed !== '-' ? r.completed : '');
-  const scheduledTime = r.scheduledTime !== undefined ? r.scheduledTime : (r.started && r.started !== '-' ? r.started : '');
-
-  let cleaningStatus = r.cleaningStatus;
-  if (!cleaningStatus) {
-    if (r.status === 'Clean / Ready') cleaningStatus = 'Completed';
-    else if (r.status === 'Cleaning') cleaningStatus = 'In Progress';
-    else cleaningStatus = 'Scheduled';
+/**
+ * Temporary downstream compatibility bridge for Cleaning Schedule.
+ * Room Cleaning is strictly backend-authoritative and does not read from hk_rooms.
+ */
+function syncCleaningScheduleBridge(frontendRecords) {
+  try {
+    const bridgeRooms = frontendRecords.map(r => ({
+      id: r.roomNo || r.id,
+      roomId: r.roomId,
+      roomNo: r.roomNo,
+      guest: r.guestName || '-',
+      cleaningStatus: r.cleaningStatus,
+      status: r.cleaningStatus === 'Completed' ? 'Clean / Ready' : (r.cleaningStatus === 'In Progress' ? 'Cleaning' : (r.assignedStaff ? 'Assigned' : 'Dirty')),
+      priority: r.priority || 'Standard',
+      cleaningType: r.cleaningType || 'Full Clean',
+      taskType: r.cleaningType || 'Full Clean',
+      assignee: r.assignedStaff || '-',
+      assignedStaff: r.assignedStaff || '',
+      startTime: r.scheduledTime || '09:00',
+      endTime: r.completionTime || '10:00',
+      started: r.scheduledTime || '09:00',
+      completed: r.completionTime || '-',
+      notes: r.notes || '',
+      floor: r.floor || '1',
+      lastCleanedDate: r.lastCleanedDate || '',
+      frequency: 'Daily'
+    }));
+    saveRooms(bridgeRooms);
+  } catch (err) {
+    console.warn('[HK Bridge] Could not sync to Cleaning Schedule bridge:', err);
   }
-
-  let priority = r.priority || 'Standard';
-  if (priority === 'Normal') priority = 'Standard';
-
-  const todayDate = new Date().toISOString().split('T')[0];
-
-  return {
-    ...r,
-    id: r.id || roomNo,
-    roomNo,
-    guestName,
-    cleaningStatus,
-    scheduledDate: r.scheduledDate || todayDate,
-    scheduledTime: scheduledTime || '09:00',
-    assignedStaff,
-    completionTime,
-    notes: r.notes || '',
-    priority,
-    cleaningType: r.cleaningType && r.cleaningType !== '-' ? r.cleaningType : 'Full Clean',
-    lastCleanedDate: r.lastCleanedDate || (r.status === 'Clean / Ready' ? 'Today' : ''),
-    floor: r.floor || (roomNo.length >= 3 ? roomNo[0] : '1'),
-    frequency: r.frequency || 'Daily'
-  };
-}
-
-function mapFormToCanonical(form, existingRecord = {}) {
-  const roomNo = String(form.roomNo || existingRecord.roomNo || existingRecord.id || '').trim();
-  const canonicalRoom = getRoomByRoomNo(roomNo);
-  const roomId = existingRecord.roomId || (canonicalRoom ? canonicalRoom.id : undefined);
-
-  let status = existingRecord.status;
-  if (form.cleaningStatus === 'Completed') {
-    status = 'Clean / Ready';
-  } else if (form.cleaningStatus === 'In Progress') {
-    status = 'Cleaning';
-  } else if (form.cleaningStatus === 'Scheduled') {
-    status = form.assignedStaff && form.assignedStaff.trim() ? 'Assigned' : 'Dirty';
-  } else if (!status) {
-    status = 'Dirty';
-  }
-
-  return {
-    ...existingRecord,
-    id: roomNo,
-    roomId,
-    roomNo,
-    guestName: form.guestName || '',
-    guest: form.guestName && form.guestName.trim() ? form.guestName : (existingRecord.guest || '-'),
-    cleaningStatus: form.cleaningStatus || 'Scheduled',
-    status,
-    priority: form.priority || 'Standard',
-    cleaningType: form.cleaningType || 'Full Clean',
-    assignedStaff: form.assignedStaff || '',
-    assignee: form.assignedStaff && form.assignedStaff.trim() ? form.assignedStaff : (existingRecord.assignee || '-'),
-    scheduledDate: form.scheduledDate || '',
-    scheduledTime: form.scheduledTime || '',
-    started: form.scheduledTime && form.scheduledTime.trim() ? form.scheduledTime : (existingRecord.started || '-'),
-    completionTime: form.completionTime || '',
-    completed: form.completionTime && form.completionTime.trim() ? form.completionTime : (existingRecord.completed || '-'),
-    notes: form.notes || '',
-    floor: form.floor || existingRecord.floor || (roomNo.length >= 3 ? roomNo[0] : '1'),
-    lastCleanedDate: existingRecord.lastCleanedDate || (form.cleaningStatus === 'Completed' ? new Date().toLocaleDateString() : ''),
-    frequency: existingRecord.frequency || 'Daily'
-  };
 }
 
 export default function RoomsAndCleaning() {
-  const [records, setRecords] = useState(() => getRooms().map(mapCanonicalToRecord));
+  const [records, setRecords] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState(null);
   const [search, setSearch] = useState('');
   
   // Columns state
@@ -144,22 +110,58 @@ export default function RoomsAndCleaning() {
     setIsViewModalOpen(true);
   };
 
-  useEffect(() => {
-    const syncData = () => {
-      setRecords(getRooms().map(mapCanonicalToRecord));
-    };
-    window.addEventListener('storage', syncData);
-    window.addEventListener('hk_update', syncData);
-    return () => {
-      window.removeEventListener('storage', syncData);
-      window.removeEventListener('hk_update', syncData);
-    };
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Parallel fetch tasks, rooms, and employees
+      const [tasksRes, roomsRes, employeesRes] = await Promise.all([
+        opsService.getHousekeepingTasks({ limit: 100 }),
+        roomService.getRooms({ limit: 100 }).catch(err => {
+          console.warn('[RoomCleaning] Failed to fetch rooms:', err);
+          return { data: [] };
+        }),
+        opsService.getEmployees({ limit: 100 }).catch(err => {
+          console.warn('[RoomCleaning] Failed to fetch employees:', err);
+          return { data: [] };
+        })
+      ]);
+
+      const loadedTasks = Array.isArray(tasksRes.data)
+        ? tasksRes.data
+        : (tasksRes.data?.tasks || []);
+
+      const loadedRooms = Array.isArray(roomsRes.data)
+        ? roomsRes.data
+        : (roomsRes.data?.rooms || []);
+
+      const loadedEmployees = Array.isArray(employeesRes.data)
+        ? employeesRes.data
+        : (employeesRes.data?.employees || []);
+
+      setRooms(loadedRooms);
+      setEmployees(loadedEmployees);
+
+      const frontendRecords = toFrontendTaskList(loadedTasks, loadedRooms, loadedEmployees);
+      setRecords(frontendRecords);
+
+      // Downstream bridge sync for Cleaning Schedule
+      syncCleaningScheduleBridge(frontendRecords);
+    } catch (err) {
+      console.error('[RoomCleaning] Load error:', err);
+      setError(err?.response?.data?.message || err?.message || 'Failed to load housekeeping tasks');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleRefresh = () => {
     setSearch('');
-    setRecords(getRooms().map(mapCanonicalToRecord));
-    
+    loadData();
     setVisibleColumns({
       Room: true, Guest: true,
       'Cleaning Type': true, Status: true, Priority: true,
@@ -260,8 +262,10 @@ export default function RoomsAndCleaning() {
 
   const openNewModal = () => {
     setEditingId(null);
+    setFormError(null);
+    const todayDate = new Date().toISOString().split('T')[0];
     setForm({
-      roomNo: '', guestName: '', scheduledDate: '', scheduledTime: '',
+      roomNo: '', guestName: '', scheduledDate: todayDate, scheduledTime: '09:00',
       assignedStaff: '', completionTime: '', cleaningStatus: 'Scheduled',
       priority: 'Standard', notes: '', cleaningType: 'Full Clean'
     });
@@ -270,6 +274,7 @@ export default function RoomsAndCleaning() {
 
   const openEditModal = (record) => {
     setEditingId(record.id);
+    setFormError(null);
     setForm({
       roomNo: record.roomNo,
       guestName: record.guestName,
@@ -285,28 +290,55 @@ export default function RoomsAndCleaning() {
     setIsModalOpen(true);
   };
 
-  const handleSaveModal = (e) => {
+  const handleSaveModal = async (e) => {
     e.preventDefault();
-    const currentCanonicalRooms = getRooms();
-    if (editingId) {
-      const existing = currentCanonicalRooms.find(r => (r.id === editingId || r.roomNo === editingId));
-      const updated = currentCanonicalRooms.map(r =>
-        (r.id === editingId || r.roomNo === editingId) ? mapFormToCanonical(form, existing || r) : r
-      );
-      saveRooms(updated);
-      setRecords(getRooms().map(mapCanonicalToRecord));
-    } else {
-      const newRecord = mapFormToCanonical(form, {
-        id: form.roomNo,
-        roomNo: form.roomNo,
-        floor: form.roomNo ? form.roomNo[0] : '1',
-        lastCleanedDate: form.cleaningStatus === 'Completed' ? new Date().toLocaleDateString() : '',
-        frequency: 'Daily'
+    setFormError(null);
+    setSubmitting(true);
+
+    try {
+      const existing = editingId ? records.find(r => r.id === editingId) : null;
+      const payload = toBackendTaskPayload(form, {
+        rooms,
+        employees,
+        existingTask: existing?.rawBackend || existing
       });
-      saveRooms([...currentCanonicalRooms, newRecord]);
-      setRecords(getRooms().map(mapCanonicalToRecord));
+
+      let updatedTask;
+      if (editingId) {
+        const res = await opsService.updateHousekeepingTask(editingId, payload);
+        updatedTask = res.data;
+        const frontendRecord = toFrontendTask(updatedTask, 
+          rooms.reduce((acc, r) => ({ ...acc, [r._id]: r }), {}),
+          employees.reduce((acc, emp) => ({ ...acc, [emp._id]: emp }), {})
+        );
+
+        setRecords(prev => {
+          const next = prev.map(r => r.id === editingId ? frontendRecord : r);
+          syncCleaningScheduleBridge(next);
+          return next;
+        });
+      } else {
+        const res = await opsService.createHousekeepingTask(payload);
+        updatedTask = res.data;
+        const frontendRecord = toFrontendTask(updatedTask,
+          rooms.reduce((acc, r) => ({ ...acc, [r._id]: r }), {}),
+          employees.reduce((acc, emp) => ({ ...acc, [emp._id]: emp }), {})
+        );
+
+        setRecords(prev => {
+          const next = [frontendRecord, ...prev];
+          syncCleaningScheduleBridge(next);
+          return next;
+        });
+      }
+
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('[RoomCleaning] Save error:', err);
+      setFormError(err?.response?.data?.message || err?.message || 'Failed to save housekeeping task');
+    } finally {
+      setSubmitting(false);
     }
-    setIsModalOpen(false);
   };
 
   const confirmDelete = (record) => {
@@ -314,13 +346,24 @@ export default function RoomsAndCleaning() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleDelete = () => {
-    const currentCanonicalRooms = getRooms();
-    const updated = currentCanonicalRooms.filter(r => r.id !== recordToDelete.id && r.roomNo !== recordToDelete.roomNo);
-    saveRooms(updated);
-    setRecords(getRooms().map(mapCanonicalToRecord));
-    setIsDeleteModalOpen(false);
-    setRecordToDelete(null);
+  const handleDelete = async () => {
+    if (!recordToDelete) return;
+    setSubmitting(true);
+    try {
+      await opsService.deleteHousekeepingTask(recordToDelete.id);
+      setRecords(prev => {
+        const next = prev.filter(r => r.id !== recordToDelete.id);
+        syncCleaningScheduleBridge(next);
+        return next;
+      });
+      setIsDeleteModalOpen(false);
+      setRecordToDelete(null);
+    } catch (err) {
+      console.error('[RoomCleaning] Delete error:', err);
+      alert(err?.response?.data?.message || err?.message || 'Failed to delete task');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const muiInputSx = {
@@ -374,6 +417,16 @@ export default function RoomsAndCleaning() {
           </div>
         </div>
 
+        {/* Global Error Banner */}
+        {error && (
+          <div className="p-3 bg-rose-50 border-b border-rose-100 flex items-center justify-between text-xs text-rose-700">
+            <span>{error}</span>
+            <button onClick={loadData} className="font-semibold underline cursor-pointer ml-3">
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Table Section */}
         <div className="w-full overflow-hidden">
           <table className="table-fixed w-full text-left border-collapse">
@@ -404,7 +457,16 @@ export default function RoomsAndCleaning() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filteredRecords.map((record) => (
+              {loading ? (
+                <tr>
+                  <td colSpan="10" className="py-8 text-center text-gray-500 text-xs">
+                    <div className="flex items-center justify-center gap-2">
+                      <CircularProgress size={16} sx={{ color: '#1b7f43' }} />
+                      <span>Loading housekeeping tasks...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredRecords.map((record) => (
                 <tr 
                   key={record.id} 
                   onClick={() => openViewModal(record)} 
@@ -454,7 +516,7 @@ export default function RoomsAndCleaning() {
                   </td>
                 </tr>
               ))}
-              {filteredRecords.length === 0 && (
+              {!loading && filteredRecords.length === 0 && (
                 <tr>
                   <td colSpan="10" className="py-8 text-center text-gray-400 text-xs">
                     No records found.
@@ -476,21 +538,36 @@ export default function RoomsAndCleaning() {
 
       {/* Edit/New Booking Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsModalOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => !submitting && setIsModalOpen(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-[580px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="bg-[#1b7f43] px-4 py-2.5 flex items-center justify-between text-white">
               <h2 className="text-sm font-bold">
                 {editingId ? `Edit Room #${form.roomNo}` : 'New Room Cleaning Record'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center">
+              <button disabled={submitting} onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center">
                 <Close sx={{ fontSize: 17 }} />
               </button>
             </div>
             
             <form onSubmit={handleSaveModal} className="p-4 sm:p-5 overflow-y-auto max-h-[80vh]">
+              {formError && (
+                <Alert severity="error" sx={{ mb: 2, fontSize: '12px' }}>
+                  {formError}
+                </Alert>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                
-                <TextField required label="Room No*" name="roomNo" value={form.roomNo} onChange={(e)=>setForm({...form, roomNo: e.target.value})} sx={muiInputSx} size="small" fullWidth />
+                <TextField 
+                  required 
+                  label="Room No*" 
+                  name="roomNo" 
+                  value={form.roomNo} 
+                  onChange={(e)=>setForm({...form, roomNo: e.target.value})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                  helperText={rooms.length > 0 && !rooms.some(r => String(r.room_number) === String(form.roomNo)) && form.roomNo ? "Room must match existing hotel room" : ""}
+                />
                 <TextField required label="Guest Name*" name="guestName" value={form.guestName} onChange={(e)=>setForm({...form, guestName: e.target.value})} sx={muiInputSx} size="small" fullWidth />
                 
                 <TextField
@@ -519,8 +596,19 @@ export default function RoomsAndCleaning() {
                   InputLabelProps={{ shrink: true }}
                 />
 
-                <TextField required label="Assigned Staff*" name="assignedStaff" value={form.assignedStaff} onChange={(e)=>setForm({...form, assignedStaff: e.target.value})} sx={muiInputSx} size="small" fullWidth />
+                <TextField label="Assigned Staff" name="assignedStaff" value={form.assignedStaff} onChange={(e)=>setForm({...form, assignedStaff: e.target.value})} sx={muiInputSx} size="small" fullWidth />
                 <TextField type="time" label="Completion Time" name="completionTime" value={form.completionTime} onChange={(e)=>setForm({...form, completionTime: e.target.value})} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
+
+                <FormControl size="small" fullWidth sx={muiInputSx}>
+                  <InputLabel>Cleaning Type</InputLabel>
+                  <Select name="cleaningType" value={form.cleaningType} label="Cleaning Type" onChange={(e)=>setForm({...form, cleaningType: e.target.value})}>
+                    <MenuItem value="Full Clean">Full Clean</MenuItem>
+                    <MenuItem value="Quick Clean">Quick Clean</MenuItem>
+                    <MenuItem value="Turn Down">Turn Down</MenuItem>
+                    <MenuItem value="Deep Clean">Deep Clean</MenuItem>
+                    <MenuItem value="Inspection">Inspection</MenuItem>
+                  </Select>
+                </FormControl>
 
                 <FormControl size="small" fullWidth sx={muiInputSx}>
                   <InputLabel>Cleaning Status*</InputLabel>
@@ -546,11 +634,12 @@ export default function RoomsAndCleaning() {
               </div>
               
               <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-gray-100">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer">
+                <button type="button" disabled={submitting} onClick={() => setIsModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-1.5 rounded-lg bg-[#1b7f43] text-white font-semibold text-xs hover:bg-[#166534] transition-colors cursor-pointer shadow-xs">
-                  Save
+                <button type="submit" disabled={submitting} className="px-4 py-1.5 rounded-lg bg-[#1b7f43] text-white font-semibold text-xs hover:bg-[#166534] transition-colors cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5">
+                  {submitting && <CircularProgress size={12} color="inherit" />}
+                  <span>Save</span>
                 </button>
               </div>
             </form>
@@ -560,21 +649,22 @@ export default function RoomsAndCleaning() {
 
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && recordToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => !submitting && setIsDeleteModalOpen(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-[340px] p-5 text-center" onClick={e => e.stopPropagation()}>
             <h3 className="text-base font-bold text-gray-800 mb-3 text-left">Are you sure?</h3>
             <div className="text-left space-y-2 mb-5 bg-slate-50 p-3 rounded-lg text-xs">
               <p className="text-gray-700 grid grid-cols-[100px_1fr]"><span className="font-semibold text-gray-500">Room No:</span> <span className="font-bold text-gray-900">{recordToDelete.roomNo}</span></p>
-              <p className="text-gray-700 grid grid-cols-[100px_1fr]"><span className="font-semibold text-gray-500">Assign Staff:</span> <span>{recordToDelete.assignedStaff}</span></p>
+              <p className="text-gray-700 grid grid-cols-[100px_1fr]"><span className="font-semibold text-gray-500">Assign Staff:</span> <span>{recordToDelete.assignedStaff || '-'}</span></p>
               <p className="text-gray-700 grid grid-cols-[100px_1fr]"><span className="font-semibold text-gray-500">Cleaning Type:</span> <span>{recordToDelete.cleaningType}</span></p>
             </div>
             
             <div className="flex justify-end gap-2">
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer">
+              <button disabled={submitting} onClick={() => setIsDeleteModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50">
                 Cancel
               </button>
-              <button onClick={handleDelete} className="px-3.5 py-1.5 rounded-lg bg-rose-600 text-white font-semibold text-xs hover:bg-rose-700 transition-colors cursor-pointer">
-                Delete
+              <button disabled={submitting} onClick={handleDelete} className="px-3.5 py-1.5 rounded-lg bg-rose-600 text-white font-semibold text-xs hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                {submitting && <CircularProgress size={12} color="inherit" />}
+                <span>Delete</span>
               </button>
             </div>
           </div>
@@ -599,14 +689,14 @@ export default function RoomsAndCleaning() {
               <div className="flex items-center gap-1.5">
                 <button 
                   onClick={() => { setIsViewModalOpen(false); openEditModal(viewRecord); }} 
-                  className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                  className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
                   title="Edit"
                 >
                   <EditOutlined sx={{ fontSize: 15 }} />
                 </button>
                 <button 
                   onClick={() => setIsViewModalOpen(false)} 
-                  className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+                  className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
                   title="Close"
                 >
                   <Close sx={{ fontSize: 16 }} />
@@ -635,7 +725,7 @@ export default function RoomsAndCleaning() {
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</p>
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${statusStyles[viewRecord.cleaningStatus]}`}>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${statusStyles[viewRecord.cleaningStatus] || 'bg-gray-100 text-gray-700'}`}>
                       {viewRecord.cleaningStatus}
                     </span>
                   </div>
@@ -681,7 +771,7 @@ export default function RoomsAndCleaning() {
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Priority</p>
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${priorityStyles[viewRecord.priority]}`}>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${priorityStyles[viewRecord.priority] || 'bg-blue-50 text-blue-600'}`}>
                       {viewRecord.priority}
                     </span>
                   </div>

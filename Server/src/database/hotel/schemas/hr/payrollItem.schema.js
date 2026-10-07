@@ -41,7 +41,8 @@ const payrollItemSchema = new mongoose.Schema(
 );
 
 // Indexes
-payrollItemSchema.index({ run_id: 1 });
+payrollItemSchema.index({ run_id: 1, employee_id: 1 }, { unique: true });
 payrollItemSchema.index({ employee_id: 1 });
+payrollItemSchema.index({ status: 1 });
 
 export default payrollItemSchema;

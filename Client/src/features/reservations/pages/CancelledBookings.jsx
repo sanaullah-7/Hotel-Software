@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FormControl, InputLabel, Select, MenuItem, TextField, Typography, Box } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, TextField, Typography, Box, Alert, CircularProgress } from '@mui/material';
 import {
   Search, AddCircleOutlined, Refresh,
   TableChart, PictureAsPdf, Close,
@@ -14,9 +14,12 @@ import {
 import {
   getReservations,
   saveReservations,
+  syncReservationsFromBackend,
   RESERVATIONS_UPDATED_EVENT
 } from '../state/reservationStore';
 import { normalizeBookingStatus } from '../state/bookingRules';
+import { toFrontendReservation } from '../adapters/reservationAdapter';
+import reservationService from '../../../services/reservationService';
 import { toStandardRoomType } from '../../rooms/state/roomStore';
 
 const statusStyles = {
@@ -54,13 +57,15 @@ function mapCanonicalToCancelledRow(booking) {
     cancellationFee: booking.cancellationFee !== undefined && booking.cancellationFee !== null ? String(booking.cancellationFee) : '',
     email: booking.email || '',
     mobile: booking.mobile || '',
-    reason: booking.reason || '',
+    reason: booking.reason || booking.cancellationReason || booking.cancellation_reason || '',
     avatar: booking.avatar || 'https://i.pravatar.cc/150'
   };
 }
 
 export default function CancelledBookings() {
   const [canonicalBookings, setCanonicalBookings] = useState(() => getReservations());
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   
   // Modals state
@@ -80,8 +85,38 @@ export default function CancelledBookings() {
     email: '', mobile: '', reason: '', cancellationFee: ''
   });
 
+  const loadCancelledBookings = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await reservationService.getReservations({ status: 'CANCELLED' });
+      const items = Array.isArray(res?.data?.reservations)
+        ? res.data.reservations
+        : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.reservations)
+            ? res.reservations
+            : (Array.isArray(res) ? res : []);
+      if (Array.isArray(items)) {
+        const adapted = items.map(toFrontendReservation).filter(Boolean);
+        setCanonicalBookings(adapted);
+        syncReservationsFromBackend(items);
+      }
+    } catch (err) {
+      setError(err?.message || 'Failed to load cancelled bookings.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const syncReservations = () => setCanonicalBookings(getReservations());
+    loadCancelledBookings();
+    const syncReservations = () => {
+      const stored = getReservations([]);
+      if (Array.isArray(stored)) {
+        setCanonicalBookings(stored);
+      }
+    };
     window.addEventListener('storage', syncReservations);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
     return () => {
@@ -91,7 +126,7 @@ export default function CancelledBookings() {
   }, []);
 
   const cancelledBookings = canonicalBookings
-    .filter((b) => normalizeBookingStatus(b.status) === 'Cancelled')
+    .filter((b) => (b.rawStatus ? b.rawStatus === 'CANCELLED' : normalizeBookingStatus(b.status) === 'Cancelled'))
     .map(mapCanonicalToCancelledRow);
 
   const filteredBookings = cancelledBookings.filter((b) => {
@@ -104,7 +139,7 @@ export default function CancelledBookings() {
 
   const handleRefresh = () => {
     setSearch('');
-    setCanonicalBookings(getReservations());
+    loadCancelledBookings();
   };
 
   const handleExportCSV = () => {
@@ -323,6 +358,21 @@ export default function CancelledBookings() {
           </button>
         </div>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <Alert
+          severity="error"
+          className="mb-2"
+          action={
+            <button onClick={loadCancelledBookings} className="text-xs underline font-semibold cursor-pointer">
+              Retry
+            </button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
 
       {/* Table Section */}
       <div className="bg-white rounded-lg border border-gray-200/80 shadow-xs flex-1 flex flex-col overflow-hidden">

@@ -7,6 +7,7 @@ const restaurantMenuItemSchema = new mongoose.Schema(
       required: true,
       unique: true,
       trim: true,
+      uppercase: true,
     },
     category_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -20,6 +21,7 @@ const restaurantMenuItemSchema = new mongoose.Schema(
     },
     description: {
       type: String,
+      trim: true,
     },
     price: {
       type: Number,
@@ -35,7 +37,13 @@ const restaurantMenuItemSchema = new mongoose.Schema(
       default: true,
     },
     dietary_flags: {
-      type: [String], // e.g., ['VEGAN', 'GLUTEN_FREE', 'HALAL']
+      type: [String], // e.g., ['VEG', 'NON_VEG', 'VEGAN', 'GLUTEN_FREE', 'HALAL']
+      default: [],
+    },
+    status: {
+      type: String,
+      enum: ['ACTIVE', 'INACTIVE'],
+      default: 'ACTIVE',
     },
   },
   {
@@ -44,7 +52,9 @@ const restaurantMenuItemSchema = new mongoose.Schema(
 );
 
 // Indexes
-restaurantMenuItemSchema.index({ sku: 1 });
+// Note: sku has unique: true which creates a unique index.
 restaurantMenuItemSchema.index({ category_id: 1 });
+restaurantMenuItemSchema.index({ is_available: 1 });
+restaurantMenuItemSchema.index({ category_id: 1, is_available: 1 });
 
 export default restaurantMenuItemSchema;

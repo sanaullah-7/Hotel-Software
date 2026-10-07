@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import {
   INITIAL_ROOMS,
@@ -12,6 +12,8 @@ import ReservationFormModal from '../features/reservations/components/Reservatio
 import AddReservation from '../features/reservations/pages/AddReservation';
 import { getReservations } from '../features/reservations/state/reservationStore';
 import { checkInBooking } from '../features/reservations/state/reservationLifecycle';
+import reservationService from '../services/reservationService';
+import guestService from '../services/guestService';
 
 describe('Cascading Room Type -> Room Number Selection', () => {
   beforeEach(() => {
@@ -135,7 +137,61 @@ describe('Cascading Room Type -> Room Number Selection', () => {
       fireEvent.click(screen.getByRole('button', { name: '[108]' }));
     });
 
-    it('persists canonical roomId and room snapshots on submission and allows downstream check-in', () => {
+    it('persists canonical roomId and room snapshots on submission and allows downstream check-in', async () => {
+      const canonicalRoom102 = getRooms().find((r) => String(r.roomNo) === '102');
+      expect(canonicalRoom102).toBeDefined();
+
+      vi.spyOn(guestService, 'getGuests').mockResolvedValue({
+        data: [{
+          _id: '67a1b2c3d4e5f67890123457',
+          first_name: 'Alice',
+          last_name: 'Smith',
+          email: 'alice.smith@example.com',
+        }],
+      });
+
+      vi.spyOn(guestService, 'createGuest').mockResolvedValue({
+        data: {
+          _id: '67a1b2c3d4e5f67890123457',
+          first_name: 'Alice',
+          last_name: 'Smith',
+          email: 'alice.smith@example.com',
+        },
+      });
+
+      vi.spyOn(reservationService, 'createReservation').mockResolvedValue({
+        statusCode: 201,
+        data: {
+          reservation: {
+            _id: '67a1b2c3d4e5f67890123456',
+            booking_ref: 'BK-2026-102',
+            status: 'CONFIRMED',
+            expected_check_in: '2026-09-11T00:00:00.000Z',
+            expected_check_out: '2026-09-16T00:00:00.000Z',
+            adults: 2,
+            children: 0,
+            primary_guest_id: {
+              _id: '67a1b2c3d4e5f67890123457',
+              first_name: 'Alice',
+              last_name: 'Smith',
+              email: 'alice.smith@example.com',
+            },
+            rooms: [
+              {
+                room_id: {
+                  _id: canonicalRoom102.id,
+                  room_number: canonicalRoom102.roomNo,
+                },
+                room_type_id: {
+                  _id: canonicalRoom102.roomTypeId || '67a1b2c3d4e5f67890123459',
+                  name: canonicalRoom102.roomType,
+                },
+              },
+            ],
+          },
+        },
+      });
+
       render(
         <MemoryRouter>
           <AddReservation />
@@ -149,9 +205,6 @@ describe('Cascading Room Type -> Room Number Selection', () => {
       fireEvent.click(deluxeOption);
 
       // 2. Select canonical room 102
-      const canonicalRoom102 = getRooms().find((r) => String(r.roomNo) === '102');
-      expect(canonicalRoom102).toBeDefined();
-
       const badge102 = screen.getByRole('button', { name: '[102]' });
       fireEvent.click(badge102);
 
@@ -163,12 +216,17 @@ describe('Cascading Room Type -> Room Number Selection', () => {
 
       // 4. Submit form
       const saveButton = screen.getByRole('button', { name: /Save Booking/i });
-      fireEvent.click(saveButton);
+      fireEvent.submit(saveButton.closest('form'));
 
       // 5. Read resulting hotel_reservations record
+      await waitFor(() => {
+        const reservations = getReservations();
+        const savedBooking = reservations.find((b) => b.email === 'alice.smith@example.com');
+        expect(savedBooking).toBeDefined();
+      });
+
       const reservations = getReservations();
       const savedBooking = reservations.find((b) => b.email === 'alice.smith@example.com');
-      expect(savedBooking).toBeDefined();
 
       // 6. Verify canonical roomId and room snapshots
       expect(savedBooking.roomId).toBe(canonicalRoom102.id);

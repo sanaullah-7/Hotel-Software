@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Close, CloudUpload, DeleteOutlined, ImageOutlined } from '@mui/icons-material';
 import useModalFocus from '../../../components/common/useModalFocus';
 import { getRooms, getRoomsByRoomType, getAvailableRoomTypes, normalizeRoomType } from '../../rooms/state/roomStore.js';
-import { getAvailableRooms } from '../state/reservationLifecycle.js';
+import reservationService from '../../../services/reservationService.js';
 
 export default function ReservationFormModal({
   open,
@@ -16,7 +16,41 @@ export default function ReservationFormModal({
   const { dialogRef, titleId } = useModalFocus({ open, onClose });
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [backendAvailability, setBackendAvailability] = useState(null);
   const availableRoomTypes = getAvailableRoomTypes();
+
+  useEffect(() => {
+    if (!form.checkIn || !form.checkOut) {
+      setBackendAvailability(null);
+      return;
+    }
+    const checkIn = new Date(form.checkIn);
+    const checkOut = new Date(form.checkOut);
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime()) || checkOut <= checkIn) {
+      setBackendAvailability(null);
+      return;
+    }
+
+    let isMounted = true;
+    reservationService.checkAvailability({
+      check_in: checkIn.toISOString(),
+      check_out: checkOut.toISOString(),
+    })
+      .then((res) => {
+        if (!isMounted) return;
+        const list = Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.availability)
+            ? res.data.availability
+            : (Array.isArray(res) ? res : []);
+        setBackendAvailability(list);
+      })
+      .catch(() => {
+        if (isMounted) setBackendAvailability([]);
+      });
+
+    return () => { isMounted = false; };
+  }, [form.checkIn, form.checkOut]);
 
   if (!open) return null;
 
@@ -30,7 +64,29 @@ export default function ReservationFormModal({
 
   const allRooms = getRooms();
   const selectedType = form.roomType || '';
-  const availableRoomsList = getAvailableRooms(form.checkIn, form.checkOut, editingId);
+
+  const isRoomAvailableByBackend = (room) => {
+    if (backendAvailability === null) {
+      return true;
+    }
+    if (!backendAvailability || backendAvailability.length === 0) {
+      return false;
+    }
+    const matchedType = backendAvailability.find((item) => {
+      const typeIdMatch = room.roomTypeId && String(item.room_type_id) === String(room.roomTypeId);
+      const typeNameMatch = room.roomType && String(item.room_type_name).toLowerCase() === String(room.roomType).toLowerCase();
+      const typeCodeMatch = room.roomType && item.room_type_code && String(item.room_type_code).toLowerCase() === String(room.roomType).toLowerCase();
+      return typeIdMatch || typeNameMatch || typeCodeMatch;
+    });
+    return Boolean(matchedType && matchedType.is_available && (matchedType.available_rooms > 0));
+  };
+
+  const availableRoomsList = allRooms.filter((room) => {
+    const roomStatus = String(room.status || '').toLowerCase();
+    if (['inactive', 'maintenance', 'out of order'].includes(roomStatus)) return false;
+    return isRoomAvailableByBackend(room);
+  });
+
   const filteredRooms = selectedType
     ? availableRoomsList.filter((r) => normalizeRoomType(r.roomType) === normalizeRoomType(selectedType))
     : availableRoomsList;

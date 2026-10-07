@@ -1,16 +1,17 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api/v1";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api/v1";
 
 export class ApiError extends Error {
-  constructor(status, message, data = null) {
+  constructor(status, message, data = null, errors = []) {
     super(message);
     this.status = status;
     this.data = data;
+    this.errors = errors;
   }
 }
 
 export const getToken = () => {
   try {
-    const token = localStorage.getItem("accessToken") || localStorage.getItem("token");
+    const token = localStorage.getItem("accessToken");
     if (token) return token;
     const userStr = localStorage.getItem("user");
     if (userStr) {
@@ -23,7 +24,27 @@ export const getToken = () => {
   return null;
 };
 
-export const apiRequest = async (endpoint, options = {}) => {
+export const setToken = (token) => {
+  if (token) {
+    localStorage.setItem("accessToken", token);
+  } else {
+    localStorage.removeItem("accessToken");
+  }
+};
+
+let isRefreshing = false;
+let refreshSubscribers = [];
+
+const subscribeTokenRefresh = (cb) => {
+  refreshSubscribers.push(cb);
+};
+
+const onRefreshed = (token) => {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+};
+
+export const apiRequest = async (endpoint, options = {}, isRetry = false) => {
   const token = getToken();
   const headers = {
     "Content-Type": "application/json",
@@ -37,6 +58,7 @@ export const apiRequest = async (endpoint, options = {}) => {
   const config = {
     method: options.method || "GET",
     headers,
+    credentials: "include", // Essential for HTTP-only cookies (refreshToken)
     ...options,
   };
 
@@ -44,7 +66,9 @@ export const apiRequest = async (endpoint, options = {}) => {
     config.body = JSON.stringify(options.body);
   }
 
-  const url = endpoint.startsWith("http") ? endpoint : `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
+  const url = endpoint.startsWith("http")
+    ? endpoint
+    : `${API_BASE_URL}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
   try {
     const response = await fetch(url, config);
@@ -59,13 +83,53 @@ export const apiRequest = async (endpoint, options = {}) => {
     }
 
     if (!response.ok) {
-      const errorMessage = data?.error?.message || data?.message || `HTTP Error ${response.status}`;
-      if (response.status === 401) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("user");
-        localStorage.removeItem("isAuthenticated");
+      // Check if this is an expired token (401) on an authenticated route
+      const isAuthRoute = endpoint.includes("/auth/login") || endpoint.includes("/auth/register") || endpoint.includes("/auth/refresh");
+      
+      if (response.status === 401 && !isAuthRoute && !isRetry) {
+        if (!isRefreshing) {
+          isRefreshing = true;
+          try {
+            const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+            });
+            const refreshData = await refreshRes.json();
+            if (refreshRes.ok && refreshData?.data?.accessToken) {
+              const newToken = refreshData.data.accessToken;
+              setToken(newToken);
+              isRefreshing = false;
+              onRefreshed(newToken);
+              return apiRequest(endpoint, options, true);
+            } else {
+              isRefreshing = false;
+              setToken(null);
+              localStorage.removeItem("user");
+              localStorage.removeItem("isAuthenticated");
+            }
+          } catch {
+            isRefreshing = false;
+            setToken(null);
+            localStorage.removeItem("user");
+            localStorage.removeItem("isAuthenticated");
+          }
+        } else {
+          // Wait for the in-flight refresh to finish
+          return new Promise((resolve) => {
+            subscribeTokenRefresh(() => {
+              resolve(apiRequest(endpoint, options, true));
+            });
+          });
+        }
       }
-      throw new ApiError(response.status, errorMessage, data);
+
+      const rawErrors = Array.isArray(data?.errors) ? data.errors : [];
+      const errorMessage = rawErrors.length > 0
+        ? rawErrors.join(", ")
+        : (data?.message || data?.error?.message || `HTTP Error ${response.status}`);
+
+      throw new ApiError(response.status, errorMessage, data, rawErrors);
     }
 
     return data;

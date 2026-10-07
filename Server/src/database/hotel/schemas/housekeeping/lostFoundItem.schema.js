@@ -11,18 +11,29 @@ const lostFoundItemSchema = new mongoose.Schema(
     item_type: {
       type: String,
       required: true,
+      trim: true,
+    },
+    item_name: {
+      type: String,
+      trim: true,
     },
     description: {
       type: String,
       required: true,
+      trim: true,
     },
     found_location: {
       type: String, // e.g., 'Room 101', 'Lobby'
       required: true,
+      trim: true,
     },
     found_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Employee',
+    },
+    finder_name: {
+      type: String,
+      trim: true,
     },
     found_date: {
       type: Date,
@@ -37,9 +48,14 @@ const lostFoundItemSchema = new mongoose.Schema(
     },
     claimed_by: {
       type: String, // Guest name or details
+      trim: true,
     },
     claimed_date: {
       type: Date,
+    },
+    is_deleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -48,7 +64,8 @@ const lostFoundItemSchema = new mongoose.Schema(
 );
 
 // Indexes
-lostFoundItemSchema.index({ reference_number: 1 });
 lostFoundItemSchema.index({ status: 1 });
+lostFoundItemSchema.index({ is_deleted: 1 });
+lostFoundItemSchema.index({ found_date: -1 });
 
 export default lostFoundItemSchema;

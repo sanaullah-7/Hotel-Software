@@ -18,6 +18,7 @@ import CheckCircle from "@mui/icons-material/CheckCircle";
 import { Popover, Checkbox, FormControlLabel, FormGroup } from '@mui/material';
 import {
   CATEGORIES,
+  getCategories, subscribeCategories,
   getMenuItems, subscribeMenuItems,
   addMenuItem, updateMenuItem, deleteMenuItem, toggleMenuItemAvailability,
 } from '../restaurantStore';
@@ -101,6 +102,7 @@ const ROWS_PER_PAGE_OPTIONS = [5, 10, 25, 100];
 ══════════════════════════════════════════════════════════ */
 export default function MenuTab() {
   const [items, setItems] = useState(getMenuItems());
+  const [categories, setCategories] = useState(getCategories());
   const [search, setSearch] = useState('');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState('all');
   const [dietaryFilter, setDietaryFilter] = useState('all'); // all | Veg | Non-Veg
@@ -134,7 +136,12 @@ export default function MenuTab() {
 
   // Subscribe to store changes
   useEffect(() => {
-    return subscribeMenuItems(() => setItems(getMenuItems()));
+    const unsubItems = subscribeMenuItems(() => setItems(getMenuItems()));
+    const unsubCats = subscribeCategories(() => setCategories(getCategories()));
+    return () => {
+      unsubItems();
+      unsubCats();
+    };
   }, []);
 
   // Reset page on filter change
@@ -143,7 +150,9 @@ export default function MenuTab() {
   // ── Filtered items ────────────────────────────────────────
   const filtered = useMemo(() => {
     return items.filter(item => {
-      const matchCat = activeCategoryFilter === 'all' || item.categoryId === activeCategoryFilter;
+      const matchCat = activeCategoryFilter === 'all' ||
+        item.categoryId === activeCategoryFilter ||
+        categories.some(c => (c.id === activeCategoryFilter || c._id === activeCategoryFilter) && (c.id === item.categoryId || c._id === item.categoryId));
       const matchDiet = dietaryFilter === 'all' || item.dietary === dietaryFilter;
       const q = search.toLowerCase().trim();
       const matchSearch = !q ||
@@ -151,7 +160,7 @@ export default function MenuTab() {
         (item.description || '').toLowerCase().includes(q);
       return matchCat && matchDiet && matchSearch;
     });
-  }, [items, activeCategoryFilter, dietaryFilter, search]);
+  }, [items, categories, activeCategoryFilter, dietaryFilter, search]);
 
   // Pagination
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
@@ -211,7 +220,7 @@ export default function MenuTab() {
     const headers = ['ID', 'Name', 'Category', 'Price (PKR)', 'Dietary', 'Availability', 'Last Updated', 'Description'];
     const rows = filtered.map(item => [
       item.id, `"${item.name}"`,
-      CATEGORIES.find(c => c.id === item.categoryId)?.label || item.categoryId,
+      categories.find(c => c.id === item.categoryId || c._id === item.categoryId)?.label || item.categoryId,
       item.price,
       item.dietary,
       item.availability,
@@ -367,15 +376,15 @@ export default function MenuTab() {
           >
             All Categories
           </button>
-          {CATEGORIES.map(cat => (
+          {categories.map(cat => (
             <button
-              key={cat.id}
-              onClick={() => setActiveCategoryFilter(cat.id)}
+              key={cat.id || cat._id}
+              onClick={() => setActiveCategoryFilter(cat.id || cat._id)}
               className={`px-2.5 py-0.5 rounded-md text-[11px] font-semibold border transition-colors cursor-pointer whitespace-nowrap ${
-                activeCategoryFilter === cat.id ? 'bg-[var(--primary-main)] text-white border-[var(--primary-main)]' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                activeCategoryFilter === (cat.id || cat._id) ? 'bg-[var(--primary-main)] text-white border-[var(--primary-main)]' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
               }`}
             >
-              {cat.label}
+              {cat.label || cat.name}
             </button>
           ))}
         </div>
@@ -431,7 +440,7 @@ export default function MenuTab() {
               ) : (
                 paginatedItems.map((item, idx) => {
                   const isSelected = selectedIds.has(item.id);
-                  const cat = CATEGORIES.find(c => c.id === item.categoryId);
+                  const cat = categories.find(c => c.id === item.categoryId || c._id === item.categoryId);
                   return (
                     <tr
                       key={item.id}
@@ -592,6 +601,7 @@ export default function MenuTab() {
         onClose={() => { setModalOpen(false); setEditingItem(null); }}
         onSave={handleSave}
         initialData={editingItem}
+        categories={categories}
       />
 
       <DeleteConfirmModal

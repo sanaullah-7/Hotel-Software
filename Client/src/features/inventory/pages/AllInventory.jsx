@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, Clear, Visibility, MeetingRoom, ReportProblem, Delete,
-  AddCircleOutlined, Refresh, TableChart
+  AddCircleOutlined, Refresh, TableChart, ErrorOutlineOutlined
 } from '@mui/icons-material';
 import { 
-  Menu, MenuItem, FormControl, InputLabel, Select, Snackbar, Alert 
+  Menu, MenuItem, FormControl, InputLabel, Select, Snackbar, Alert, CircularProgress 
 } from '@mui/material';
+import inventoryService from '../../../services/inventoryService';
 import { 
-  getInventoryItems, deleteInventoryItem, computeInventoryMetrics, 
+  adaptInventoryItemToUI, 
+  computeInventoryMetrics 
+} from '../adapters/inventoryAdapter';
+import { 
   INVENTORY_CATEGORIES, INVENTORY_STATUSES, ROOM_NUMBERS 
 } from './inventoryStore';
 import RoomInventoryModal from './components/RoomInventoryModal';
@@ -42,7 +46,10 @@ export default function AllInventory() {
   const navigate = useNavigate();
 
   // State
-  const [items, setItems] = useState(getInventoryItems());
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRoom, setSelectedRoom] = useState('All');
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
@@ -51,6 +58,8 @@ export default function AllInventory() {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshToastOpen, setRefreshToastOpen] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState('');
+  const [feedbackSeverity, setFeedbackSeverity] = useState('success');
 
   // Modal states
   const [selectedRoomForModal, setSelectedRoomForModal] = useState(null);
@@ -67,41 +76,57 @@ export default function AllInventory() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const fetchInventory = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) setIsRefreshing(true);
+    else setLoading(true);
+    setError(null);
+
+    try {
+      const response = await inventoryService.getInventoryItems({ limit: 500 });
+      const rawItems = response?.data || [];
+      const adapted = rawItems.map(adaptInventoryItemToUI).filter(Boolean);
+      setItems(adapted);
+    } catch (err) {
+      console.error('Failed to load inventory:', err);
+      setError(err?.message || 'Failed to load inventory records. Please check your backend connection.');
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInventory();
+  }, [fetchInventory]);
+
   const reloadData = () => {
-    setItems([...getInventoryItems()]);
+    fetchInventory(false);
   };
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    const freshItems = getInventoryItems();
-    setItems([...freshItems]);
     setSearchQuery('');
     setSelectedRoom('All');
     setSelectedCategory('All Categories');
     setSelectedStatus('All Statuses');
     setSelectedLocationType('All');
     setCurrentPage(1);
-    setRefreshToastOpen(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 450);
+    fetchInventory(true).then(() => {
+      setFeedbackMessage('Inventory stock & filters refreshed.');
+      setFeedbackSeverity('success');
+      setRefreshToastOpen(true);
+    });
   };
-
-  useEffect(() => {
-    window.addEventListener('inventory_update', reloadData);
-    return () => window.removeEventListener('inventory_update', reloadData);
-  }, []);
 
   const metrics = computeInventoryMetrics(items);
 
   // Multi-parameter filtering
   const filteredItems = items.filter(item => {
     const matchesSearch = 
-      item.itemName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.sku.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.itemName && item.itemName.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.sku && item.sku.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (item.roomNumber && item.roomNumber.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      item.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase());
+      (item.location && item.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesRoom = 
       selectedRoom === 'All' ||
@@ -119,7 +144,7 @@ export default function AllInventory() {
     return matchesSearch && matchesRoom && matchesCategory && matchesStatus && matchesLocationType;
   });
 
-  const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredItems.length / itemsPerPage) || 1;
   const paginatedItems = filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleResetFilters = () => {
@@ -148,16 +173,32 @@ export default function AllInventory() {
     setActiveMenuRowId(null);
   };
 
+  const handleDeleteItem = async (item) => {
+    if (window.confirm(`Deactivate "${item.itemName}" from active inventory records?`)) {
+      try {
+        await inventoryService.deactivateInventoryItem(item.id);
+        setFeedbackMessage(`Item "${item.itemName}" deactivated.`);
+        setFeedbackSeverity('success');
+        setRefreshToastOpen(true);
+        reloadData();
+      } catch (err) {
+        setFeedbackMessage(err?.message || 'Failed to deactivate item.');
+        setFeedbackSeverity('error');
+        setRefreshToastOpen(true);
+      }
+    }
+  };
+
   const handleExportCSV = () => {
     const headers = ['ID','SKU','Item Name','Category','Location Type','Room / Area','Location Detail','Quantity','Unit Price ($)','Total Value ($)','Condition','Status','Last Updated'];
     const rows = filteredItems.map(i => [
       i.id,
       i.sku,
-      `"${i.itemName.replace(/"/g, '""')}"`,
+      `"${(i.itemName || '').replace(/"/g, '""')}"`,
       i.category,
       i.locationType,
       i.roomNumber || '-',
-      `"${i.location.replace(/"/g, '""')}"`,
+      `"${(i.location || '').replace(/"/g, '""')}"`,
       i.quantity,
       i.unitPrice,
       i.totalValue,
@@ -347,19 +388,43 @@ export default function AllInventory() {
         </div>
       </div>
 
-      {/* INVENTORY DATA TABLE */}
-      <InventoryTable
-        filteredItems={filteredItems}
-        paginatedItems={paginatedItems}
-        selectedRoom={selectedRoom}
-        setSelectedRoomForModal={setSelectedRoomForModal}
-        setSelectedItemForDetail={setSelectedItemForDetail}
-        handleMenuClick={handleMenuClick}
-        currentPage={currentPage}
-        setCurrentPage={setCurrentPage}
-        totalPages={totalPages}
-        itemsPerPage={itemsPerPage}
-      />
+      {/* ERROR STATE */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ErrorOutlineOutlined className="text-red-500" />
+            <span className="text-xs font-semibold">{error}</span>
+          </div>
+          <button
+            onClick={() => fetchInventory(false)}
+            className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition"
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
+      {/* LOADING STATE */}
+      {loading ? (
+        <div className="bg-white p-12 rounded-xl border border-gray-100 flex flex-col items-center justify-center space-y-3">
+          <CircularProgress size={32} sx={{ color: 'var(--primary-main)' }} />
+          <span className="text-xs font-medium text-gray-500">Loading inventory records...</span>
+        </div>
+      ) : (
+        /* INVENTORY DATA TABLE */
+        <InventoryTable
+          filteredItems={filteredItems}
+          paginatedItems={paginatedItems}
+          selectedRoom={selectedRoom}
+          setSelectedRoomForModal={setSelectedRoomForModal}
+          setSelectedItemForDetail={setSelectedItemForDetail}
+          handleMenuClick={handleMenuClick}
+          currentPage={currentPage}
+          setCurrentPage={setCurrentPage}
+          totalPages={totalPages}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
 
       {/* CONTEXT ACTION MENU */}
       <Menu
@@ -386,14 +451,14 @@ export default function AllInventory() {
               <Visibility sx={{ fontSize: 16, mr: 1.5, color: '#2563eb' }} /> View Details
             </MenuItem>,
 
-            item.locationType === 'Room' && item.roomNumber && item.roomNumber !== '-' ? (
+            item.locationType === 'Room' && item.roomNumber && item.roomNumber !== '-' && item.roomNumber !== '—' ? (
               <MenuItem 
                 key="room" 
                 onClick={() => {
                   handleMenuClose();
                   setSelectedRoomForModal(item.roomNumber);
                 }} 
-                sx={{ fontSize: '12.5px', fontWeight: 600, color: '#374151' }}
+                sx={{ fontSize: '12.5px', fontWeight: 600, color: '#1b7f43' }}
               >
                 <MeetingRoom sx={{ fontSize: 16, mr: 1.5, color: '#1b7f43' }} /> Room {item.roomNumber} Stock
               </MenuItem>
@@ -415,10 +480,7 @@ export default function AllInventory() {
               key="delete" 
               onClick={() => {
                 handleMenuClose();
-                if (window.confirm(`Delete "${item.itemName}" from inventory records?`)) {
-                  deleteInventoryItem(item.id);
-                  reloadData();
-                }
+                handleDeleteItem(item);
               }} 
               sx={{ fontSize: '12.5px', fontWeight: 600, color: '#ef4444' }}
             >
@@ -472,12 +534,12 @@ export default function AllInventory() {
       {/* REFRESH NOTIFICATION SNACKBAR */}
       <Snackbar
         open={refreshToastOpen}
-        autoHideDuration={1800}
+        autoHideDuration={2500}
         onClose={() => setRefreshToastOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert severity="success" sx={{ width: '100%', borderRadius: '12px', fontWeight: 'bold' }}>
-          Inventory stock & filters refreshed.
+        <Alert severity={feedbackSeverity} sx={{ width: '100%', borderRadius: '12px', fontWeight: 'bold' }}>
+          {feedbackMessage}
         </Alert>
       </Snackbar>
 

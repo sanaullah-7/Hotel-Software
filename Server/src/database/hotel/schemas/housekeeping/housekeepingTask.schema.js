@@ -23,18 +23,28 @@ const housekeepingTaskSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['PENDING', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'VERIFIED'],
+      enum: ['PENDING', 'ASSIGNED', 'IN_PROGRESS', 'COMPLETED', 'VERIFIED', 'CANCELLED'],
       default: 'PENDING',
       required: true,
     },
     notes: {
       type: String,
     },
+    scheduled_at: {
+      type: Date,
+    },
+    scheduled_end_at: {
+      type: Date,
+    },
     started_at: {
       type: Date,
     },
     completed_at: {
       type: Date,
+    },
+    is_deleted: {
+      type: Boolean,
+      default: false,
     },
   },
   {
@@ -46,5 +56,7 @@ const housekeepingTaskSchema = new mongoose.Schema(
 housekeepingTaskSchema.index({ room_id: 1 });
 housekeepingTaskSchema.index({ assigned_to: 1 });
 housekeepingTaskSchema.index({ status: 1 });
+housekeepingTaskSchema.index({ scheduled_at: 1 });
+housekeepingTaskSchema.index({ is_deleted: 1 });
 
 export default housekeepingTaskSchema;

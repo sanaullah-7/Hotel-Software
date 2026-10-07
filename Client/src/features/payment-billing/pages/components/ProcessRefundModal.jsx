@@ -15,7 +15,6 @@ import {
   Close as CloseIcon,
   ReceiptLong as ReceiptIcon,
 } from '@mui/icons-material';
-import { getPayments, getRefunds } from '../paymentBillingStore.js';
 
 const REFUND_REASONS = [
   'Booking Cancellation',
@@ -36,40 +35,16 @@ const REFUND_METHODS = [
 ];
 
 function ProcessRefundInnerForm({ payment, payments = [], onSave, onClose }) {
-  const [refreshTick, setRefreshTick] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch canonical store data to prevent stale state issues
-  const allPayments = useMemo(() => {
-    if (refreshTick < 0) return payments;
-    try {
-      const storePayments = getPayments();
-      if (Array.isArray(storePayments) && storePayments.length > 0) return storePayments;
-    } catch {}
-    return payments;
-  }, [payments, refreshTick]);
-
-  const allRefunds = useMemo(() => {
-    if (refreshTick < 0) return [];
-    try {
-      return getRefunds();
-    } catch {
-      return [];
-    }
-  }, [refreshTick]);
+  const allPayments = payments;
 
   const getPaymentRefundable = useCallback((p) => {
     if (!p) return 0;
-    const paymentId = String(p.id || p.paymentId);
-    const linkedRefunds = allRefunds.filter(
-      (r) => String(r.paymentId) === paymentId && String(r.status || '').toLowerCase() === 'completed'
-    );
-    const completedRefundTotal = linkedRefunds.reduce(
-      (sum, r) => sum + Number(r.amount ?? r.refundAmount ?? 0),
-      0
-    );
-    return Math.max(0, Number((Number(p.amount || 0) - completedRefundTotal).toFixed(2)));
-  }, [allRefunds]);
+    const paymentAmount = Number(p.amount || 0);
+    const refunded = Number(p.refundedAmount || 0);
+    return Math.max(0, Number((paymentAmount - refunded).toFixed(2)));
+  }, []);
 
   const eligiblePayments = useMemo(() => {
     return allPayments.filter((p) => {
@@ -80,8 +55,14 @@ function ProcessRefundInnerForm({ payment, payments = [], onSave, onClose }) {
   }, [allPayments, getPaymentRefundable]);
 
   const [selectedPaymentId, setSelectedPaymentId] = useState(
-    payment ? (payment.id || payment.paymentId) : (eligiblePayments[0]?.id || '')
+    payment ? (payment.id || payment.paymentId) : (eligiblePayments[0]?.id || eligiblePayments[0]?.paymentId || '')
   );
+
+  useEffect(() => {
+    if (!payment && !selectedPaymentId && eligiblePayments.length > 0) {
+      setSelectedPaymentId(eligiblePayments[0]?.id || eligiblePayments[0]?.paymentId || '');
+    }
+  }, [payment, selectedPaymentId, eligiblePayments]);
 
   const currentPayment = useMemo(() => {
     if (payment) {
@@ -100,14 +81,11 @@ function ProcessRefundInnerForm({ payment, payments = [], onSave, onClose }) {
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
 
-  const [hasInitializedAmount, setHasInitializedAmount] = useState(() => maxRefundable > 0);
-
   useEffect(() => {
-    if (!hasInitializedAmount && maxRefundable > 0) {
+    if (maxRefundable > 0 && (amount === '' || !amount)) {
       setAmount(maxRefundable);
-      setHasInitializedAmount(true);
     }
-  }, [maxRefundable, hasInitializedAmount]);
+  }, [maxRefundable, amount]);
 
   const numAmount = parseFloat(amount) || 0;
   const remainingPaidAfterRefund = Math.max(0, Number((maxRefundable - numAmount).toFixed(2)));
@@ -154,7 +132,6 @@ function ProcessRefundInnerForm({ payment, payments = [], onSave, onClose }) {
       });
     } catch (err) {
       setError(err.message || 'Failed to process refund.');
-      setRefreshTick((t) => t + 1);
     } finally {
       setIsSubmitting(false);
     }

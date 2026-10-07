@@ -1,18 +1,28 @@
 import React from 'react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import Login from '../pages/Auth/Login';
+import Register from '../pages/Auth/Register';
 import DashboardLayout from '../layouts/DashboardLayout/DashboardLayout';
-import Dashboard from '../pages/Dashboard/Dashboard';
 
 describe('Frontend Authentication Flow', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.restoreAllMocks();
   });
 
-  it('renders login page correctly with demo credentials message', () => {
+  it('renders login page correctly', () => {
+    // Mock /auth/me to return 401 unauthenticated
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      headers: { get: () => 'application/json' },
+      json: async () => ({ success: false, message: 'No token provided' }),
+      text: async () => 'No token provided',
+    });
+
     const { getByText, getByPlaceholderText } = render(
       <AuthProvider>
         <MemoryRouter initialEntries={['/login']}>
@@ -23,11 +33,39 @@ describe('Frontend Authentication Flow', () => {
 
     expect(getByText('Welcome back')).toBeTruthy();
     expect(getByPlaceholderText('you@example.com')).toBeTruthy();
-    expect(getByText('Demo credentials')).toBeTruthy();
   });
 
-  it('authenticates successfully with valid credentials and sets localStorage', async () => {
-    let currentPath = '/login';
+  it('authenticates successfully with valid credentials and receives backend session', async () => {
+    global.fetch = vi.fn().mockImplementation(async (url) => {
+      if (url.includes('/auth/login')) {
+        return {
+          ok: true,
+          status: 200,
+          headers: { get: () => 'application/json' },
+          json: async () => ({
+            success: true,
+            message: 'Login successful',
+            data: {
+              account: {
+                _id: '6ac379208ccaa4a7bf182701',
+                email: 'admin@hotel.com',
+                fullName: 'Hotel Admin',
+                role: 'HOTEL_ADMIN',
+                hotelId: '6ac379208ccaa4a7bf182702',
+              },
+              accessToken: 'mock-jwt-access-token',
+            },
+          }),
+        };
+      }
+      return {
+        ok: false,
+        status: 401,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ success: false, message: 'Unauthorized' }),
+      };
+    });
+
     const LocationTracker = () => {
       const { user } = useAuth();
       return <div data-testid="auth-user">{user?.email || 'none'}</div>;
@@ -49,18 +87,25 @@ describe('Frontend Authentication Flow', () => {
     const submitBtn = getByText('Sign In', { selector: 'button' });
 
     fireEvent.change(emailInput, { target: { value: 'admin@hotel.com' } });
-    fireEvent.change(passwordInput, { target: { value: 'admin123' } });
+    fireEvent.change(passwordInput, { target: { value: 'password123' } });
     fireEvent.click(submitBtn);
 
     await waitFor(() => {
-      expect(localStorage.getItem('isAuthenticated')).toBe('true');
-      expect(localStorage.getItem('user')).toContain('admin@hotel.com');
+      expect(localStorage.getItem('accessToken')).toBe('mock-jwt-access-token');
       expect(getByTestId('auth-user').textContent).toBe('admin@hotel.com');
     });
   });
 
-  it('fails authentication with invalid credentials and does not set localStorage', async () => {
-    const { getByPlaceholderText, getByText } = render(
+  it('fails authentication with invalid credentials and displays error', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      headers: { get: () => 'application/json' },
+      json: async () => ({ success: false, message: 'Invalid email or password' }),
+      text: async () => 'Invalid email or password',
+    });
+
+    const { getByPlaceholderText, getByText, getAllByText } = render(
       <AuthProvider>
         <MemoryRouter initialEntries={['/login']}>
           <Routes>
@@ -79,11 +124,20 @@ describe('Frontend Authentication Flow', () => {
     fireEvent.change(passwordInput, { target: { value: 'wrongpass' } });
     fireEvent.click(submitBtn);
 
-    expect(localStorage.getItem('isAuthenticated')).toBeNull();
-    expect(localStorage.getItem('user')).toBeNull();
+    await waitFor(() => {
+      expect(getAllByText('Invalid email or password').length).toBeGreaterThan(0);
+      expect(localStorage.getItem('accessToken')).toBeNull();
+    });
   });
 
-  it('redirects unauthenticated user from protected dashboard to login', () => {
+  it('redirects unauthenticated user from protected dashboard to login', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 401,
+      headers: { get: () => 'application/json' },
+      json: async () => ({ success: false, message: 'Unauthorized' }),
+    });
+
     const { getByText, queryByText } = render(
       <AuthProvider>
         <MemoryRouter initialEntries={['/dashboard']}>
@@ -102,13 +156,40 @@ describe('Frontend Authentication Flow', () => {
       </AuthProvider>
     );
 
-    expect(getByText('Login Page Redirected')).toBeTruthy();
-    expect(queryByText('Secret Dashboard Content')).toBeNull();
+    await waitFor(() => {
+      expect(getByText('Login Page Redirected')).toBeTruthy();
+      expect(queryByText('Secret Dashboard Content')).toBeNull();
+    });
   });
 
-  it('allows authenticated user to view protected dashboard and persists on reload', () => {
-    localStorage.setItem('isAuthenticated', 'true');
-    localStorage.setItem('user', JSON.stringify({ email: 'admin@hotel.com', role: 'Admin' }));
+  it('verifies session with /auth/me on startup and allows access to protected dashboard', async () => {
+    localStorage.setItem('accessToken', 'valid-test-token');
+
+    global.fetch = vi.fn().mockImplementation(async (url) => {
+      if (url.includes('/auth/me')) {
+        return {
+          ok: true,
+          status: 200,
+          headers: { get: () => 'application/json' },
+          json: async () => ({
+            success: true,
+            data: {
+              id: '6ac379208ccaa4a7bf182701',
+              email: 'verified@hotel.com',
+              fullName: 'Verified Manager',
+              role: 'HOTEL_ADMIN',
+              hotelId: '6ac379208ccaa4a7bf182702',
+            },
+          }),
+        };
+      }
+      return {
+        ok: false,
+        status: 401,
+        headers: { get: () => 'application/json' },
+        json: async () => ({ success: false }),
+      };
+    });
 
     const { getByText } = render(
       <AuthProvider>
@@ -128,6 +209,8 @@ describe('Frontend Authentication Flow', () => {
       </AuthProvider>
     );
 
-    expect(getByText('Dashboard Content Loaded')).toBeTruthy();
+    await waitFor(() => {
+      expect(getByText('Dashboard Content Loaded')).toBeTruthy();
+    });
   });
 });

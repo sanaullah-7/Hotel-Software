@@ -36,13 +36,11 @@ export function dispatchFinancialEvent(eventName, detail = {}) {
   }
 }
 
-// Invoices CRUD
 export const getInvoices = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.INVOICES);
     if (raw === null) {
-      localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(INITIAL_INVOICES));
-      return INITIAL_INVOICES;
+      return [];
     }
     const invoices = JSON.parse(raw);
     if (!Array.isArray(invoices)) return [];
@@ -73,6 +71,12 @@ export const saveInvoices = (invoices, options = {}) => {
       count: Array.isArray(invoices) ? invoices.length : 0,
       ...options?.detail,
     });
+  }
+};
+
+export const syncInvoicesFromBackend = (invoices) => {
+  if (Array.isArray(invoices)) {
+    saveInvoices(invoices, { action: 'sync_backend', silent: true });
   }
 };
 
@@ -371,13 +375,11 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
   };
 };
 
-// Payments CRUD
 export const getPayments = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
     if (raw === null) {
-      localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(INITIAL_PAYMENTS));
-      return INITIAL_PAYMENTS;
+      return [];
     }
     const payments = JSON.parse(raw);
     if (!Array.isArray(payments)) return [];
@@ -411,6 +413,12 @@ export const savePayments = (payments, options = {}) => {
   }
 };
 
+export const syncPaymentsFromBackend = (payments) => {
+  if (Array.isArray(payments)) {
+    savePayments(payments, { action: 'sync_backend', silent: true });
+  }
+};
+
 export const deletePayment = (paymentId) => {
   const payments = getPayments();
   const updated = payments.filter((p) => p.id !== paymentId && p.paymentId !== paymentId);
@@ -418,13 +426,11 @@ export const deletePayment = (paymentId) => {
   return updated;
 };
 
-// Refunds CRUD
 export const getRefunds = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.REFUNDS);
     if (raw === null) {
-      localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(INITIAL_REFUNDS));
-      return INITIAL_REFUNDS;
+      return [];
     }
     const refunds = JSON.parse(raw);
     return Array.isArray(refunds) ? refunds : [];
@@ -442,6 +448,12 @@ export const saveRefunds = (refunds, options = {}) => {
       count: Array.isArray(refunds) ? refunds.length : 0,
       ...options?.detail,
     });
+  }
+};
+
+export const syncRefundsFromBackend = (refunds) => {
+  if (Array.isArray(refunds)) {
+    saveRefunds(refunds, { action: 'sync_backend', silent: true });
   }
 };
 
@@ -1292,7 +1304,6 @@ export const resetPaymentBillingStore = () => {
   dispatchFinancialEvent(REFUNDS_UPDATED_EVENT, { domain: 'refunds', action: 'reset' });
 };
 
-// Calculate outstanding dues / balance for a booking from centralized billing data
 export const getBookingDues = (booking) => {
   if (!booking) return null;
   try {

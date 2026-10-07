@@ -457,8 +457,22 @@ export function CheckInActionModal({ guest, onClose, onComplete }) {
   const [idVerification, setIdVerification] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
   const [roomKey, setRoomKey] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [modalError, setModalError] = useState('');
 
-  const isReady = idVerification && paymentStatus && roomKey.trim();
+  const isReady = idVerification && paymentStatus && roomKey.trim() && !submitting;
+
+  const handleComplete = async () => {
+    if (!isReady) return;
+    setSubmitting(true);
+    setModalError('');
+    try {
+      await onComplete(guest, { idVerification, paymentStatus, roomKey });
+    } catch (err) {
+      setModalError(err?.message || 'Check-in failed. Please check room availability.');
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div
@@ -482,13 +496,20 @@ export function CheckInActionModal({ guest, onClose, onComplete }) {
 
         {/* Body */}
         <div className="p-5 space-y-4 overflow-y-auto">
+          {/* Modal Error Banner */}
+          {modalError && (
+            <div role="alert" className="rounded border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
+              {modalError}
+            </div>
+          )}
+
           {/* Welcome Box */}
           <div className="bg-[#f8f9fc] border border-emerald-100 rounded-lg p-4 flex flex-col">
             <h3 className="text-[var(--primary-main)] text-[14px] font-bold mb-1">
               Welcome, {guest.name}
             </h3>
             <span className="text-gray-500 text-[12px] font-medium leading-relaxed">
-              Booking ID: {guest.id}
+              Booking ID: {guest.bookingId || guest.id}
             </span>
             <span className="text-gray-500 text-[12px] font-medium leading-relaxed">
               Room {guest.room} ({guest.roomType})
@@ -507,8 +528,9 @@ export function CheckInActionModal({ guest, onClose, onComplete }) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <FormControl fullWidth size="small">
-                <InputLabel>ID Verification*</InputLabel>
+                <InputLabel id="id-verification-label">ID Verification*</InputLabel>
                 <MuiSelect
+                  labelId="id-verification-label"
                   label="ID Verification*"
                   value={idVerification}
                   onChange={(e) => setIdVerification(e.target.value)}
@@ -520,8 +542,9 @@ export function CheckInActionModal({ guest, onClose, onComplete }) {
                 </MuiSelect>
               </FormControl>
               <FormControl fullWidth size="small">
-                <InputLabel>Payment Status*</InputLabel>
+                <InputLabel id="payment-status-label">Payment Status*</InputLabel>
                 <MuiSelect
+                  labelId="payment-status-label"
                   label="Payment Status*"
                   value={paymentStatus}
                   onChange={(e) => setPaymentStatus(e.target.value)}
@@ -557,16 +580,17 @@ export function CheckInActionModal({ guest, onClose, onComplete }) {
         {/* Footer */}
         <div className="px-5 py-4 pb-5 flex items-center justify-start gap-3 shrink-0 rounded-b-xl">
           <button
-            onClick={() => onComplete(guest.id)}
+            onClick={handleComplete}
             disabled={!isReady}
             className="px-5 py-2 rounded-full bg-[#e2e8f0] text-gray-400 text-[13px] font-bold disabled:opacity-70 transition-colors"
             style={isReady ? { backgroundColor: 'var(--primary-main)', color: 'white' } : {}}
           >
-            Complete Check-in
+            {submitting ? 'Checking In...' : 'Complete Check-in'}
           </button>
           <button
             onClick={onClose}
-            className="px-6 py-2 rounded-full border border-gray-200 text-red-500 text-[13px] font-bold hover:bg-gray-50 transition-colors cursor-pointer bg-white"
+            disabled={submitting}
+            className="px-6 py-2 rounded-full border border-gray-200 text-red-500 text-[13px] font-bold hover:bg-gray-50 transition-colors cursor-pointer bg-white disabled:opacity-50"
           >
             Cancel
           </button>
@@ -579,8 +603,22 @@ export function CheckInActionModal({ guest, onClose, onComplete }) {
 export function CheckOutActionModal({ guest, onClose, onComplete }) {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [roomInspection, setRoomInspection] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [modalError, setModalError] = useState('');
 
-  const isReady = paymentMethod && roomInspection;
+  const isReady = paymentMethod && roomInspection && !submitting;
+
+  const handleComplete = async () => {
+    if (!isReady) return;
+    setSubmitting(true);
+    setModalError('');
+    try {
+      await onComplete(guest, { paymentMethod, roomInspection });
+    } catch (err) {
+      setModalError(err?.message || 'Check-out failed. Please try again.');
+      setSubmitting(false);
+    }
+  };
 
   return (
     <div
@@ -604,13 +642,20 @@ export function CheckOutActionModal({ guest, onClose, onComplete }) {
 
         {/* Body */}
         <div className="p-5 space-y-4 overflow-y-auto">
+          {/* Modal Error Banner */}
+          {modalError && (
+            <div role="alert" className="rounded border border-red-200 bg-red-50 p-2.5 text-xs text-red-700">
+              {modalError}
+            </div>
+          )}
+
           {/* Welcome Box */}
           <div className="bg-[#f8f9fc] border border-emerald-100 rounded-lg p-4 flex flex-col">
             <h3 className="text-[var(--primary-main)] text-[13px] font-bold mb-1">
               Checking Out, {guest.name}
             </h3>
             <span className="text-gray-500 text-[11px] font-medium leading-relaxed">
-              Booking ID: {guest.id}
+              Booking ID: {guest.bookingId || guest.id}
             </span>
             <span className="text-gray-500 text-[11px] font-medium leading-relaxed">
               Room {guest.room} ({guest.roomType})
@@ -647,8 +692,9 @@ export function CheckOutActionModal({ guest, onClose, onComplete }) {
             </div>
 
             <FormControl fullWidth size="small">
-              <InputLabel>Payment Method*</InputLabel>
+              <InputLabel id="payment-method-label">Payment Method*</InputLabel>
               <MuiSelect
+                labelId="payment-method-label"
                 label="Payment Method*"
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
@@ -670,8 +716,9 @@ export function CheckOutActionModal({ guest, onClose, onComplete }) {
               <h3 className="text-gray-900 text-[13px] font-bold">Room Condition</h3>
             </div>
             <FormControl fullWidth size="small">
-              <InputLabel>Room Inspection*</InputLabel>
+              <InputLabel id="room-inspection-label">Room Inspection*</InputLabel>
               <MuiSelect
+                labelId="room-inspection-label"
                 label="Room Inspection*"
                 value={roomInspection}
                 onChange={(e) => setRoomInspection(e.target.value)}
@@ -688,16 +735,17 @@ export function CheckOutActionModal({ guest, onClose, onComplete }) {
         {/* Footer */}
         <div className="px-5 py-4 pb-5 flex items-center justify-start gap-3 shrink-0 rounded-b-xl">
           <button
-            onClick={() => onComplete(guest.id)}
+            onClick={handleComplete}
             disabled={!isReady}
             className="px-5 py-2 rounded-full bg-[#e2e8f0] text-gray-400 text-[12px] font-bold disabled:opacity-70 transition-colors"
             style={isReady ? { backgroundColor: 'var(--primary-main)', color: 'white' } : {}}
           >
-            Complete Check-out
+            {submitting ? 'Checking Out...' : 'Complete Check-out'}
           </button>
           <button
             onClick={onClose}
-            className="px-6 py-2 rounded-full border border-gray-200 text-red-500 text-[12px] font-bold hover:bg-gray-50 transition-colors cursor-pointer bg-white"
+            disabled={submitting}
+            className="px-6 py-2 rounded-full border border-gray-200 text-red-500 text-[12px] font-bold hover:bg-gray-50 transition-colors cursor-pointer bg-white disabled:opacity-50"
           >
             Cancel
           </button>

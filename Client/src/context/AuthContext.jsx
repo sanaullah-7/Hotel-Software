@@ -1,66 +1,116 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import authService from '../services/authService';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    try {
-      const stored = localStorage.getItem('user');
-      if (stored) return JSON.parse(stored);
-      if (localStorage.getItem('isAuthenticated') === 'true') {
-        return {
-          email: localStorage.getItem('email') || 'admin@hotel.com',
-          role: 'Admin',
-          name: localStorage.getItem('fullName') || 'Admin',
-        };
-      }
-      return null;
-    } catch {
-      return null;
-    }
-  });
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const syncAuth = (event) => {
-      if (event.key !== null && !['user', 'isAuthenticated'].includes(event.key)) return;
-      try {
-        const stored = localStorage.getItem('user');
-        if (stored) setUser(JSON.parse(stored));
-        else if (localStorage.getItem('isAuthenticated') === 'true') {
-          setUser({
-            email: localStorage.getItem('email') || 'admin@hotel.com',
-            role: 'Admin',
-            name: localStorage.getItem('fullName') || 'Admin',
-          });
-        } else setUser(null);
-      } catch {
+  const initAuth = useCallback(async () => {
+    try {
+      const token = authService.getToken();
+      if (!token) {
+        // Try background token refresh via HTTP-only cookie
+        try {
+          const refreshRes = await authService.refreshToken();
+          if (refreshRes?.data?.accessToken) {
+            const profileRes = await authService.getProfile();
+            const profileUser = profileRes?.data;
+            if (profileUser) {
+              setUser(profileUser);
+              setIsAuthenticated(true);
+              localStorage.setItem('user', JSON.stringify(profileUser));
+              localStorage.setItem('isAuthenticated', 'true');
+              setIsLoading(false);
+              return;
+            }
+          }
+        } catch {
+          // No active session cookie
+        }
         setUser(null);
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
       }
-    };
-    window.addEventListener('storage', syncAuth);
-    return () => window.removeEventListener('storage', syncAuth);
+
+      // Verify token with backend /auth/me
+      const profileRes = await authService.getProfile();
+      const profileUser = profileRes?.data;
+      if (profileUser) {
+        setUser(profileUser);
+        setIsAuthenticated(true);
+        localStorage.setItem('user', JSON.stringify(profileUser));
+        localStorage.setItem('isAuthenticated', 'true');
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch {
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const login = (userData) => {
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
+  const login = async ({ email, password }) => {
+    const res = await authService.login({ email, password });
+    const userData = res?.data?.account || res?.data?.user;
     setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
-    localStorage.setItem('isAuthenticated', 'true');
-    if (userData?.email) localStorage.setItem('email', userData.email);
-    if (userData?.name || userData?.fullName) {
-      localStorage.setItem('fullName', userData.name || userData.fullName);
+    setIsAuthenticated(true);
+    return res;
+  };
+
+  const registerAndOnboard = async ({ fullName, email, phone, password, hotelName, address, city }) => {
+    // 1. Register account
+    await authService.register({ fullName, email, phone, password });
+
+    // 2. Login to get access token
+    await authService.login({ email, password });
+
+    // 3. Provision hotel tenant if hotelName is provided
+    if (hotelName && hotelName.trim()) {
+      await authService.onboard({
+        property_name: hotelName.trim(),
+        address: address?.trim() || `${hotelName.trim()} Main Road`,
+        city: city?.trim() || 'Karachi',
+      });
+      localStorage.setItem('hotelName', hotelName.trim());
     }
+
+    // 4. Fetch the final account profile with hotelId and HOTEL_ADMIN role
+    const profileRes = await authService.getProfile();
+    const finalUser = profileRes?.data;
+    setUser(finalUser);
+    setIsAuthenticated(true);
+    return finalUser;
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await authService.logout();
     setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('isAuthenticated');
+    setIsAuthenticated(false);
   };
-
-  const isAuthenticated = !!user;
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        registerAndOnboard,
+        logout,
+        refreshProfile: initAuth,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -69,14 +119,9 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    const stored = localStorage.getItem('user');
-    const isAuth = !!stored || localStorage.getItem('isAuthenticated') === 'true';
-    return {
-      user: isAuth ? (stored ? JSON.parse(stored) : { role: 'Admin', email: 'admin@hotel.com' }) : null,
-      isAuthenticated: isAuth,
-      login: () => {},
-      logout: () => {},
-    };
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
+
+export default AuthContext;

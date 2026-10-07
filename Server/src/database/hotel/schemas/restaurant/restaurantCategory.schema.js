@@ -27,7 +27,8 @@ const restaurantCategorySchema = new mongoose.Schema(
 );
 
 // Indexes
-restaurantCategorySchema.index({ name: 1 });
+// Note: name has unique: true which creates a unique index.
 restaurantCategorySchema.index({ display_order: 1 });
+restaurantCategorySchema.index({ status: 1 });
 
 export default restaurantCategorySchema;

@@ -13,17 +13,34 @@ const complaintSchema = new mongoose.Schema(
       ref: 'Guest',
       required: true,
     },
+    room_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Room',
+      required: false,
+    },
     reservation_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Reservation',
+      required: false,
     },
     category: {
-      type: String, // e.g., 'SERVICE', 'CLEANLINESS', 'NOISE', 'BILLING'
+      type: String,
+      enum: [
+        'GENERAL',
+        'PLUMBING',
+        'ELECTRICAL',
+        'HOUSEKEEPING',
+        'NOISE',
+        'AIR_CONDITIONING',
+        'ROOM_SERVICE',
+        'AMENITIES',
+      ],
       required: true,
     },
     description: {
       type: String,
       required: true,
+      trim: true,
     },
     severity: {
       type: String,
@@ -39,15 +56,18 @@ const complaintSchema = new mongoose.Schema(
     assigned_to: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Employee',
+      required: false,
     },
     resolution_notes: {
       type: String,
+      trim: true,
     },
     resolved_at: {
       type: Date,
     },
     compensation_offered: {
       type: String,
+      trim: true,
     },
   },
   {
@@ -56,8 +76,8 @@ const complaintSchema = new mongoose.Schema(
 );
 
 // Indexes
-complaintSchema.index({ complaint_ref: 1 });
-complaintSchema.index({ guest_id: 1 });
+complaintSchema.index({ guest_id: 1, created_at: -1 });
 complaintSchema.index({ status: 1 });
+complaintSchema.index({ room_id: 1 });
 
 export default complaintSchema;

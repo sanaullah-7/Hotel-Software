@@ -16,24 +16,7 @@ export const createPayment = async (tenantConn, paymentData) => {
   const Invoice = await getModel(tenantConn, "Invoice");
   const Payment = await getModel(tenantConn, "Payment");
 
-  const { invoice_id, folio_id, guest_id, amount, payment_method, transaction_id } = paymentData;
-
-  // 1. Cross-tenant & existence checks
-  if (!mongoose.Types.ObjectId.isValid(folio_id)) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Folio ID format");
-  }
-  const folio = await Folio.findById(folio_id);
-  if (!folio) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, "Folio not found in this hotel");
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(guest_id)) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Guest ID format");
-  }
-  const guest = await Guest.findById(guest_id);
-  if (!guest) {
-    throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found in this hotel");
-  }
+  let { invoice_id, folio_id, guest_id, amount, payment_method, transaction_id } = paymentData;
 
   let invoice = null;
   if (invoice_id) {
@@ -47,6 +30,16 @@ export const createPayment = async (tenantConn, paymentData) => {
     if (checkInvoice.status === "PAID") {
       throw new ApiError(HTTP_STATUS.CONFLICT, "Invoice is already fully paid");
     }
+
+    if (folio_id && String(folio_id) !== String(checkInvoice.folio_id)) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Provided folio_id does not match the invoice folio");
+    }
+    if (guest_id && String(guest_id) !== String(checkInvoice.guest_id)) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Provided guest_id does not match the invoice guest");
+    }
+
+    folio_id = checkInvoice.folio_id;
+    guest_id = checkInvoice.guest_id;
 
     invoice = await Invoice.findOneAndUpdate(
       {
@@ -75,6 +68,23 @@ export const createPayment = async (tenantConn, paymentData) => {
     await invoice.save();
   }
 
+  // 1. Cross-tenant & existence checks
+  if (!folio_id || !mongoose.Types.ObjectId.isValid(folio_id)) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Folio ID format");
+  }
+  const folio = await Folio.findById(folio_id);
+  if (!folio) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, "Folio not found in this hotel");
+  }
+
+  if (!guest_id || !mongoose.Types.ObjectId.isValid(guest_id)) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Guest ID format");
+  }
+  const guest = await Guest.findById(guest_id);
+  if (!guest) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found in this hotel");
+  }
+
   const payment_ref = generatePaymentRef();
 
   const payment = await Payment.create({
@@ -87,11 +97,11 @@ export const createPayment = async (tenantConn, paymentData) => {
     transaction_id: transaction_id || null,
     date: new Date(),
     status: "COMPLETED",
+    refunded_amount: 0,
   });
 
-  // Update folio balance
-  folio.balance = Math.max(0, folio.balance - amount);
-  await folio.save();
+  // Update folio balance atomically
+  await Folio.findByIdAndUpdate(folio._id, { $inc: { balance: -amount } });
 
   return payment;
 };
@@ -129,7 +139,11 @@ export const getPayments = async (tenantConn, query = {}) => {
   const payments = await Payment.find(filter)
     .populate("guest_id", "first_name last_name email phone guest_ref")
     .populate("invoice_id", "invoice_number total_amount amount_paid status")
-    .populate("folio_id", "folio_ref balance")
+    .populate({
+      path: "folio_id",
+      select: "folio_ref balance reservation_id",
+      populate: { path: "reservation_id", select: "booking_ref status" },
+    })
     .sort({ created_at: -1, _id: -1 })
     .skip(skip)
     .limit(limit);
@@ -151,7 +165,11 @@ export const getPaymentById = async (tenantConn, paymentId) => {
   const payment = await Payment.findById(paymentId)
     .populate("guest_id", "first_name last_name email phone guest_ref")
     .populate("invoice_id", "invoice_number total_amount amount_paid status")
-    .populate("folio_id", "folio_ref balance");
+    .populate({
+      path: "folio_id",
+      select: "folio_ref balance reservation_id",
+      populate: { path: "reservation_id", select: "booking_ref status" },
+    });
 
   if (!payment) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Payment not found");

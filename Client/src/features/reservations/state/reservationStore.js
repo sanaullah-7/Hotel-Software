@@ -1,6 +1,7 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
 import { getGuests } from '../../guests/state/guestStore.js';
 import { getRooms, toStandardRoomType } from '../../rooms/state/roomStore.js';
+import { toFrontendReservation } from '../adapters/reservationAdapter.js';
 
 const STORAGE_KEY = 'hotel_reservations';
 const UPDATE_EVENT = 'reservations_update';
@@ -63,6 +64,19 @@ export function getReservations(defaultReservations = []) {
     return result.bookings;
   } catch {
     return [];
+  }
+}
+
+export function syncReservationsFromBackend(reservations) {
+  if (Array.isArray(reservations)) {
+    try {
+      const adapted = reservations.map((res) => toFrontendReservation(res));
+      const { bookings } = migrateBookingRelationships(adapted);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+      window.dispatchEvent(new Event(UPDATE_EVENT));
+    } catch {
+      // Ignore quota or private mode write errors
+    }
   }
 }
 

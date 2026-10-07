@@ -10,11 +10,14 @@ import {
 import {
   getReservations,
   saveReservations,
+  syncReservationsFromBackend,
   RESERVATIONS_UPDATED_EVENT
 } from '../../../features/reservations/state/reservationStore';
+import reservationService from '../../../services/reservationService';
+import stayService from '../../../services/stayService';
+import { toFrontendReservation } from '../../../features/reservations/adapters/reservationAdapter';
 import { resolveGuestForBooking } from '../../../features/guests/state/guestStore';
 import { normalizeBookingStatus } from '../../../features/reservations/state/bookingRules';
-import { cancelBooking, checkOutBooking } from '../../../features/reservations/state/reservationLifecycle';
 import {
   getBookingDues,
   getCanonicalBookingPaymentStatus,
@@ -44,6 +47,27 @@ export default function CurrentBookingsTable({
   const [customEndDate, setCustomEndDate] = useState('');
   const [customAnchorEl, setCustomAnchorEl] = useState(null);
 
+  const fetchBackendBookings = React.useCallback(async () => {
+    try {
+      const res = await reservationService.getReservations({ limit: 100 });
+      const rawList = Array.isArray(res?.data?.reservations)
+        ? res.data.reservations
+        : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.reservations)
+            ? res.reservations
+            : (Array.isArray(res) ? res : null);
+
+      if (rawList !== null) {
+        const adapted = rawList.map(toFrontendReservation).filter(Boolean);
+        setBookings(adapted);
+        syncReservationsFromBackend(rawList);
+      }
+    } catch {
+      // Backend request failed - preserve existing state without injecting demo data
+    }
+  }, []);
+
   const handleRowClick = (booking) => {
     const guest = resolveGuestForBooking(booking);
     if (guest) navigate(`/guests/${guest.id}`);
@@ -68,21 +92,28 @@ export default function CurrentBookingsTable({
   const [activeMenuId, setActiveMenuId] = useState(null);
 
   useEffect(() => {
-    const syncReservations = () => setBookings(getReservations(initialBookings));
-    window.addEventListener('storage', syncReservations);
-    window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
-    // Job 23: refresh booking list on financial mutations so payment display stays current
-    window.addEventListener(INVOICES_UPDATED_EVENT, syncReservations);
-    window.addEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
-    window.addEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
-    return () => {
-      window.removeEventListener('storage', syncReservations);
-      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
-      window.removeEventListener(INVOICES_UPDATED_EVENT, syncReservations);
-      window.removeEventListener(PAYMENTS_UPDATED_EVENT, syncReservations);
-      window.removeEventListener(REFUNDS_UPDATED_EVENT, syncReservations);
+    fetchBackendBookings();
+    const handleLocalReservationsUpdate = () => {
+      const local = getReservations([]);
+      setBookings(local);
     };
-  }, []);
+    const handleFinancialUpdate = () => {
+      fetchBackendBookings();
+    };
+    window.addEventListener('storage', handleLocalReservationsUpdate);
+    window.addEventListener(RESERVATIONS_UPDATED_EVENT, handleLocalReservationsUpdate);
+    // Refresh booking list on financial mutations so payment display and dues stay current
+    window.addEventListener(INVOICES_UPDATED_EVENT, handleFinancialUpdate);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, handleFinancialUpdate);
+    window.addEventListener(REFUNDS_UPDATED_EVENT, handleFinancialUpdate);
+    return () => {
+      window.removeEventListener('storage', handleLocalReservationsUpdate);
+      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, handleLocalReservationsUpdate);
+      window.removeEventListener(INVOICES_UPDATED_EVENT, handleFinancialUpdate);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, handleFinancialUpdate);
+      window.removeEventListener(REFUNDS_UPDATED_EVENT, handleFinancialUpdate);
+    };
+  }, [fetchBackendBookings]);
 
   const persistBookings = (nextBookings) => {
     setBookings(nextBookings);
@@ -94,7 +125,7 @@ export default function CurrentBookingsTable({
     setDateFilter('All');
     setCustomStartDate('');
     setCustomEndDate('');
-    setBookings(getReservations(initialBookings));
+    fetchBackendBookings();
     setCurrentPage(1);
   };
 
@@ -219,15 +250,32 @@ export default function CurrentBookingsTable({
     setIsDeleteModalOpen(true);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (bookingToDelete) {
       if (normalizeBookingStatus(bookingToDelete.status) === 'Checked In') {
-        window.alert('Check out this booking before deleting it.');
+        window.alert('Check out this booking before cancelling it.');
         return;
       }
-      persistBookings(bookings.filter((b) => b.id !== bookingToDelete.id));
-      setIsDeleteModalOpen(false);
-      setBookingToDelete(null);
+      try {
+        const canonicalId = bookingToDelete._id || bookingToDelete.canonicalBookingId || bookingToDelete.id;
+        const res = await reservationService.cancelReservation(canonicalId, 'Cancelled from dashboard');
+        const updatedBackend = res?.data?.reservation || res?.data || res;
+        const adapted = toFrontendReservation(updatedBackend) || { ...bookingToDelete, status: 'Cancelled' };
+
+        const currentStored = getReservations([]);
+        const updatedList = currentStored.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        );
+        syncReservationsFromBackend(updatedList);
+        setBookings((current) => current.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        ));
+
+        setIsDeleteModalOpen(false);
+        setBookingToDelete(null);
+      } catch (error) {
+        window.alert(error?.message || 'Failed to cancel reservation');
+      }
     }
   };
 
@@ -236,22 +284,64 @@ export default function CurrentBookingsTable({
     setIsCancelModalOpen(true);
   };
 
-  const handleCancelBooking = () => {
+  const handleCancelBooking = async () => {
     if (bookingToCancel) {
       try {
-        const updatedBooking = cancelBooking(bookingToCancel.id, bookings);
-        setBookings((current) => current.map((booking) => String(booking.id) === String(updatedBooking.id) ? updatedBooking : booking));
+        const canonicalId = bookingToCancel._id || bookingToCancel.canonicalBookingId || bookingToCancel.id;
+        const res = await reservationService.cancelReservation(canonicalId, 'Cancelled from dashboard');
+        const updatedBackend = res?.data?.reservation || res?.data || res;
+        const adapted = toFrontendReservation(updatedBackend) || { ...bookingToCancel, status: 'Cancelled' };
+
+        const currentStored = getReservations([]);
+        const updatedList = currentStored.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        );
+        syncReservationsFromBackend(updatedList);
+        setBookings((current) => current.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        ));
+
         setIsCancelModalOpen(false);
         setBookingToCancel(null);
-      } catch (error) { window.alert(error.message); }
+      } catch (error) {
+        window.alert(error?.message || 'Failed to cancel reservation');
+      }
     }
   };
 
-  const handleCheckout = (id) => {
+  const handleCheckout = async (id) => {
     try {
-      const updated = checkOutBooking(id);
-      setBookings((current) => current.map((booking) => String(booking.id) === String(updated.id) ? updated : booking));
-    } catch (error) { window.alert(error.message); }
+      const booking = bookings.find((b) => String(b.id) === String(id) || String(b._id) === String(id));
+      if (!booking) throw new Error('Booking not found');
+      if (normalizeBookingStatus(booking.status) !== 'Checked In') {
+        throw new Error('Only a checked-in booking can be checked out.');
+      }
+      const canonicalId = booking._id || booking.canonicalBookingId || booking.id || id;
+      const payload = {
+        reservation_id: canonicalId,
+        notes: 'Checked out from Current Bookings'
+      };
+      if (booking.stayId && /^[0-9a-fA-F]{24}$/.test(String(booking.stayId).trim())) {
+        payload.stay_id = String(booking.stayId).trim();
+      }
+      const res = await stayService.checkOut(payload);
+      const updatedBackend = res?.data?.reservation || res?.reservation;
+      if (updatedBackend) {
+        const adapted = toFrontendReservation(updatedBackend);
+        setBookings((current) => current.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        ));
+        const currentStored = getReservations([]);
+        const updatedList = currentStored.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        );
+        syncReservationsFromBackend(updatedList);
+      } else {
+        await fetchBackendBookings();
+      }
+    } catch (error) {
+      window.alert(error?.message || 'Check-out failed');
+    }
   };
 
   const handleExportCSV = () => {
@@ -259,7 +349,10 @@ export default function CurrentBookingsTable({
     let csvContent = cols.join(',') + '\n';
 
     filteredBookings.forEach((b) => {
-      const duesAmt = getBookingDues(b);
+      const canonical = getBookingDues(b);
+      const duesAmt = canonical !== null
+        ? canonical
+        : (b.folio_balance !== undefined && b.folio_balance !== null ? Number(b.folio_balance) : 0);
       const row = [
         `"${b.name || ''}"`,
         `"Room ${b.roomNo || b.room || '101'}"`,
@@ -307,7 +400,10 @@ export default function CurrentBookingsTable({
           <tbody>`;
 
     filteredBookings.forEach((b) => {
-      const duesAmt = getBookingDues(b);
+      const canonical = getBookingDues(b);
+      const duesAmt = canonical !== null
+        ? canonical
+        : (b.folio_balance !== undefined && b.folio_balance !== null ? Number(b.folio_balance) : 0);
       html += `<tr>
         <td>${b.name || ''}</td>
         <td>Room ${b.roomNo || b.room || '101'}</td>

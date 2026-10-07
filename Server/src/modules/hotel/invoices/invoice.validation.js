@@ -8,17 +8,14 @@ export const lineItemSchema = Joi.object({
 });
 
 export const createInvoiceSchema = Joi.object({
-  folio_id: Joi.string().hex().length(24).required().messages({
-    "any.required": "folio_id is required",
-  }),
-  guest_id: Joi.string().hex().length(24).required().messages({
-    "any.required": "guest_id is required",
-  }),
+  folio_id: Joi.string().hex().length(24).optional(),
+  reservation_id: Joi.string().hex().length(24).optional(),
+  guest_id: Joi.string().hex().length(24).optional(),
   due_date: Joi.date().iso().optional().allow(null),
   line_items: Joi.array().items(lineItemSchema).min(1).required().messages({
     "array.min": "Invoice must contain at least one line item",
   }),
-});
+}).or("folio_id", "reservation_id");
 
 export const updateInvoiceSchema = Joi.object({
   due_date: Joi.date().iso().optional(),

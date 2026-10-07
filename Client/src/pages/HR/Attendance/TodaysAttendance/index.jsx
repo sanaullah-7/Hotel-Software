@@ -57,10 +57,30 @@ export default function TodaysAttendance() {
         handleOpenDeleteDialog,
         handleConfirmDelete,
         attendanceStats,
+        employees,
+        loading,
+        error,
+        loadAttendance,
     } = useTodaysAttendance();
 
     return (
         <div className="animate-fade-in">
+            {error && (
+                <div className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-xs text-red-700">
+                    <span>{error}</span>
+                    <button
+                        onClick={loadAttendance}
+                        className="px-2.5 py-1 bg-red-600 text-white rounded font-medium hover:bg-red-700 cursor-pointer text-xs"
+                    >
+                        Retry
+                    </button>
+                </div>
+            )}
+            {loading && !error && (
+                <div className="mb-2 p-2 bg-blue-50/70 border border-blue-100 rounded text-center text-xs text-blue-700 font-medium">
+                    Loading today's attendance records from server...
+                </div>
+            )}
             {/* 1. Attendance Summary Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full mt-1">
                 {attendanceStats.map((card) => {
@@ -123,6 +143,7 @@ export default function TodaysAttendance() {
 
             {/* 3. Attendance Modals */}
             <AttendanceModals
+                employees={employees}
                 isAddModalOpen={isAddModalOpen}
                 setIsAddModalOpen={setIsAddModalOpen}
                 handleSaveNewAttendance={handleSaveNewAttendance}

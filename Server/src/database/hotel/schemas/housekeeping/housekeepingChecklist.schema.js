@@ -22,6 +22,10 @@ const housekeepingChecklistSchema = new mongoose.Schema(
       enum: ['ACTIVE', 'INACTIVE'],
       default: 'ACTIVE',
     },
+    is_deleted: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
@@ -30,5 +34,6 @@ const housekeepingChecklistSchema = new mongoose.Schema(
 
 // Indexes
 housekeepingChecklistSchema.index({ task_type: 1 });
+housekeepingChecklistSchema.index({ is_deleted: 1 });
 
 export default housekeepingChecklistSchema;

@@ -36,17 +36,30 @@ export const createTask = async (tenantConn, taskData) => {
     assigned_to: employee ? employee._id : null,
     task_type,
     priority,
-    status: employee ? "ASSIGNED" : "PENDING",
+    status: taskData.status || (employee ? "ASSIGNED" : "PENDING"),
     notes,
+    scheduled_at: taskData.scheduled_at || null,
+    scheduled_end_at: taskData.scheduled_end_at || null,
+    started_at: taskData.started_at || (taskData.status === "IN_PROGRESS" ? new Date() : null),
+    completed_at: taskData.completed_at || (["COMPLETED", "VERIFIED"].includes(taskData.status) ? new Date() : null),
+    is_deleted: false,
   });
 
-  return task;
+  if (["COMPLETED", "VERIFIED"].includes(task.status)) {
+    room.housekeeping_status = task.status === "VERIFIED" ? "INSPECTED" : "CLEAN";
+    await room.save();
+  }
+
+  return HousekeepingTask.findById(task._id)
+    .populate("room_id", "room_number status housekeeping_status floor")
+    .populate("assigned_to", "first_name last_name employee_ref");
 };
 
 export const getTasks = async (tenantConn, query = {}) => {
   const HousekeepingTask = await getModel(tenantConn, "HousekeepingTask");
 
-  const filter = {};
+  const filter = { is_deleted: { $ne: true } };
+
   const status = asString(query.status);
   if (status) filter.status = status.toUpperCase();
 
@@ -58,12 +71,40 @@ export const getTasks = async (tenantConn, query = {}) => {
     filter.room_id = roomId;
   }
 
+  const assignedTo = asString(query.assigned_to);
+  if (assignedTo) {
+    if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Employee ID format");
+    }
+    filter.assigned_to = assignedTo;
+  }
+
+  const taskType = asString(query.task_type);
+  if (taskType) filter.task_type = taskType.toUpperCase();
+
+  const priority = asString(query.priority);
+  if (priority) filter.priority = priority.toUpperCase();
+
+  // Scheduled date filtering
+  const scheduledDate = asString(query.scheduled_date || query.date);
+  if (scheduledDate) {
+    const start = new Date(`${scheduledDate}T00:00:00.000Z`);
+    const end = new Date(`${scheduledDate}T23:59:59.999Z`);
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      filter.scheduled_at = { $gte: start, $lte: end };
+    }
+  } else if (query.start_date || query.end_date) {
+    filter.scheduled_at = {};
+    if (query.start_date) filter.scheduled_at.$gte = new Date(query.start_date);
+    if (query.end_date) filter.scheduled_at.$lte = new Date(query.end_date);
+  }
+
   const { page, limit, skip } = parsePagination(query, { defaultLimit: 50 });
 
   const tasks = await HousekeepingTask.find(filter)
     .populate("room_id", "room_number status housekeeping_status floor")
     .populate("assigned_to", "first_name last_name employee_ref")
-    .sort({ created_at: -1, _id: -1 })
+    .sort({ scheduled_at: -1, created_at: -1, _id: -1 })
     .skip(skip)
     .limit(limit);
 
@@ -84,7 +125,7 @@ export const updateTask = async (tenantConn, taskId, updateData) => {
   const Room = await getModel(tenantConn, "Room");
 
   const task = await HousekeepingTask.findById(taskId);
-  if (!task) {
+  if (!task || task.is_deleted) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Housekeeping task not found");
   }
 
@@ -94,8 +135,8 @@ export const updateTask = async (tenantConn, taskId, updateData) => {
       task.started_at = new Date();
     }
     if (["COMPLETED", "VERIFIED"].includes(updateData.status)) {
-      task.completed_at = new Date();
-      // Update room housekeeping status to CLEAN
+      task.completed_at = updateData.completed_at || new Date();
+      // Update room housekeeping status to CLEAN / INSPECTED
       const room = await Room.findById(task.room_id);
       if (room) {
         room.housekeeping_status = updateData.status === "VERIFIED" ? "INSPECTED" : "CLEAN";
@@ -110,9 +151,43 @@ export const updateTask = async (tenantConn, taskId, updateData) => {
   if (updateData.notes !== undefined) {
     task.notes = updateData.notes;
   }
+  if (updateData.priority !== undefined) {
+    task.priority = updateData.priority;
+  }
+  if (updateData.task_type !== undefined) {
+    task.task_type = updateData.task_type;
+  }
+  if (updateData.scheduled_at !== undefined) {
+    task.scheduled_at = updateData.scheduled_at;
+  }
+  if (updateData.scheduled_end_at !== undefined) {
+    task.scheduled_end_at = updateData.scheduled_end_at;
+  }
+  if (updateData.started_at !== undefined) {
+    task.started_at = updateData.started_at;
+  }
+  if (updateData.completed_at !== undefined) {
+    task.completed_at = updateData.completed_at;
+  }
 
   await task.save();
   return HousekeepingTask.findById(taskId)
     .populate("room_id", "room_number status housekeeping_status floor")
     .populate("assigned_to", "first_name last_name employee_ref");
+};
+
+export const deleteTask = async (tenantConn, taskId) => {
+  if (!mongoose.Types.ObjectId.isValid(taskId)) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid HousekeepingTask ID format");
+  }
+
+  const HousekeepingTask = await getModel(tenantConn, "HousekeepingTask");
+  const task = await HousekeepingTask.findById(taskId);
+  if (!task || task.is_deleted) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, "Housekeeping task not found");
+  }
+
+  task.is_deleted = true;
+  await task.save();
+  return { message: "Housekeeping task deleted successfully" };
 };

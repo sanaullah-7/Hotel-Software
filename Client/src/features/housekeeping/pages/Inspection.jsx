@@ -1,12 +1,19 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Search, CheckCircle, Warning, Edit, VerifiedUser, PlayArrow, AssignmentInd, MoreVert, Cancel, AssignmentTurnedIn
+  Search, CheckCircle, Warning, Edit, VerifiedUser, AssignmentInd, MoreVert, Cancel, AssignmentTurnedIn, Refresh
 } from '@mui/icons-material';
-import { IconButton, Menu, MenuItem, Select, FormControl, Dialog } from '@mui/material';
-
-import { getRooms, getStaff, saveRooms } from './hkStore';
+import { IconButton, Menu, MenuItem, Select, FormControl, Dialog, CircularProgress, Alert } from '@mui/material';
 import { useLocation } from 'react-router-dom';
+
+import opsService from '../../../services/opsService';
+import roomService from '../../../services/roomService';
+import inspectionService from '../../../services/inspectionService';
+import {
+  toInspectionUIList,
+  TASK_TYPE_UI_TO_BACKEND,
+  PRIORITY_UI_TO_BACKEND
+} from '../adapters/housekeepingAdapter';
 
 const muiSelectSx = {
   '& .MuiOutlinedInput-root': {
@@ -40,18 +47,23 @@ export default function Inspection() {
   const highlightStatus = location.state?.highlightStatus;
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [inspections, setInspections] = useState(getRooms().filter(r => r.status === 'Inspection Required'));
-  const [staff, setStaff] = useState(getStaff());
+  const [inspections, setInspections] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [actionError, setActionError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const [blinkActive, setBlinkActive] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (highlightStatus) {
       setBlinkActive(true);
       const timer = setTimeout(() => setBlinkActive(false), 5000);
       return () => clearTimeout(timer);
     }
   }, [highlightStatus]);
+
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedRoomId, setSelectedRoomId] = useState(null);
   
@@ -61,66 +73,163 @@ export default function Inspection() {
   const [inspectDialogOpen, setInspectDialogOpen] = useState(false);
   const [checkedItems, setCheckedItems] = useState({});
   const [comment, setComment] = useState('');
+  const [selectedInspectorId, setSelectedInspectorId] = useState('');
 
-  React.useEffect(() => {
-    const syncData = () => setInspections(getRooms().filter(r => r.status === 'Inspection Required'));
-    window.addEventListener('storage', syncData);
-    window.addEventListener('hk_update', syncData);
-    return () => {
-      window.removeEventListener('storage', syncData);
-      window.removeEventListener('hk_update', syncData);
-    };
-  }, []);
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [inspRes, tasksRes, roomsRes, empRes] = await Promise.all([
+        inspectionService.getInspections({ limit: 100 }),
+        opsService.getHousekeepingTasks({ limit: 100 }),
+        roomService.getRooms({ limit: 100 }).catch(err => {
+          console.warn('[Inspection] Failed to fetch rooms:', err);
+          return { data: [] };
+        }),
+        opsService.getEmployees({ limit: 100 }).catch(err => {
+          console.warn('[Inspection] Failed to fetch employees:', err);
+          return { data: [] };
+        })
+      ]);
 
-  const handleEditSave = () => {
-    const allRooms = getRooms();
-    const newRooms = allRooms.map(r => r.id === editingRowId ? { 
-      ...r, 
-      cleaningType: editRowData.cleaningType, 
-      assignee: editRowData.assignee, 
-      priority: editRowData.priority,
-      inspectionStatus: editRowData.inspectionStatus,
-      inspector: editRowData.inspector
-    } : r);
-    setInspections(newRooms.filter(r => r.status === 'Inspection Required'));
-    saveRooms(newRooms);
-    try { addAuditLog({ module: 'Housekeeping', action: 'Updated Room Status', description: `Room status updated.`, importance: 'Normal' }); } catch(e) {}
-    window.dispatchEvent(new Event('hk_update'));
-    setEditingRowId(null);
+      const loadedInsps = Array.isArray(inspRes.data)
+        ? inspRes.data
+        : (inspRes.data?.inspections || []);
+
+      const loadedTasks = Array.isArray(tasksRes.data)
+        ? tasksRes.data
+        : (tasksRes.data?.tasks || []);
+
+      const loadedRooms = Array.isArray(roomsRes.data)
+        ? roomsRes.data
+        : (roomsRes.data?.rooms || []);
+
+      const loadedEmployees = Array.isArray(empRes.data)
+        ? empRes.data
+        : (empRes.data?.employees || []);
+
+      setStaff(loadedEmployees);
+      if (loadedEmployees.length > 0 && !selectedInspectorId) {
+        setSelectedInspectorId(loadedEmployees[0]._id);
+      }
+
+      const uiList = toInspectionUIList(loadedInsps, loadedTasks, loadedRooms, loadedEmployees);
+      setInspections(uiList);
+    } catch (err) {
+      console.error('[Inspection] Failed to load data:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to load inspections from server');
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedInspectorId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleEditSave = async () => {
+    const row = inspections.find(r => r.id === editingRowId);
+    if (!row) return;
+
+    setSubmitting(true);
+    setActionError(null);
+    try {
+      if (row.taskId) {
+        const updatePayload = {
+          task_type: TASK_TYPE_UI_TO_BACKEND[editRowData.cleaningType] || 'CLEANING',
+          priority: PRIORITY_UI_TO_BACKEND[editRowData.priority] || 'MEDIUM'
+        };
+        const matchingStaff = staff.find(s => s.name === editRowData.assignee || `${s.first_name || ''} ${s.last_name || ''}`.trim() === editRowData.assignee);
+        if (matchingStaff) {
+          updatePayload.assigned_to = matchingStaff._id;
+        }
+        await opsService.updateHousekeepingTask(row.taskId, updatePayload);
+      }
+
+      if (row.inspectionId) {
+        await inspectionService.updateInspection(row.inspectionId, {
+          status: editRowData.inspectionStatus === 'Approved' ? 'PASSED' : (editRowData.inspectionStatus === 'Failed' ? 'FAILED' : 'PENDING')
+        });
+      }
+
+      try { addAuditLog({ module: 'Housekeeping', action: 'Updated Room Status', description: `Room ${row.roomNo} status updated.`, importance: 'Normal' }); } catch(e) {}
+      window.dispatchEvent(new Event('hk_update'));
+      setEditingRowId(null);
+      await loadData();
+    } catch (err) {
+      console.error('[Inspection] Edit save failed:', err);
+      setActionError(err.response?.data?.message || err.message || 'Failed to update inspection record');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleApprove = () => {
-    const allRooms = getRooms();
-    const newRooms = allRooms.map(r => r.id === selectedRoomId ? { 
-      ...r, 
-      status: 'Clean / Ready', 
-      inspectionStatus: 'Approved',
-      inspector: 'Supervisor',
-      inspectionTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      inspectionComments: comment 
-    } : r);
-    saveRooms(newRooms);
-    try { addAuditLog({ module: 'Housekeeping', action: 'Updated Room Status', description: `Room status updated.`, importance: 'Normal' }); } catch(e) {}
-    window.dispatchEvent(new Event('hk_update'));
-    setInspectDialogOpen(false);
-    setSelectedRoomId(null);
+  const handleApprove = async () => {
+    const row = inspections.find(r => r.id === selectedRoomId);
+    if (!row) return;
+
+    setSubmitting(true);
+    setActionError(null);
+    try {
+      const inspector = staff.find(s => s._id === selectedInspectorId) || staff[0];
+      const payload = {
+        room_id: row.roomId || undefined,
+        room_number: row.roomNo || undefined,
+        task_id: row.taskId || undefined,
+        inspector_id: inspector?._id || undefined,
+        inspector_name: inspector ? `${inspector.first_name || ''} ${inspector.last_name || ''}`.trim() : 'Supervisor',
+        status: 'PASSED',
+        passed: true,
+        score: 100,
+        comments: comment || 'Inspection passed'
+      };
+
+      await inspectionService.createInspection(payload);
+      try { addAuditLog({ module: 'Housekeeping', action: 'Updated Room Status', description: `Room ${row.roomNo} inspection approved.`, importance: 'Normal' }); } catch(e) {}
+      window.dispatchEvent(new Event('hk_update'));
+      setInspectDialogOpen(false);
+      setSelectedRoomId(null);
+      await loadData();
+    } catch (err) {
+      console.error('[Inspection] Approval failed:', err);
+      setActionError(err.response?.data?.message || err.message || 'Failed to approve room inspection');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleFail = () => {
-    const allRooms = getRooms();
-    const newRooms = allRooms.map(r => r.id === selectedRoomId ? { 
-      ...r, 
-      status: 'Cleaning Required', 
-      inspectionStatus: 'Failed',
-      inspector: 'Supervisor',
-      inspectionTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      inspectionComments: comment 
-    } : r);
-    saveRooms(newRooms);
-    try { addAuditLog({ module: 'Housekeeping', action: 'Updated Room Status', description: `Room status updated.`, importance: 'Normal' }); } catch(e) {}
-    window.dispatchEvent(new Event('hk_update'));
-    setInspectDialogOpen(false);
-    setSelectedRoomId(null);
+  const handleFail = async () => {
+    const row = inspections.find(r => r.id === selectedRoomId);
+    if (!row) return;
+
+    setSubmitting(true);
+    setActionError(null);
+    try {
+      const inspector = staff.find(s => s._id === selectedInspectorId) || staff[0];
+      const payload = {
+        room_id: row.roomId || undefined,
+        room_number: row.roomNo || undefined,
+        task_id: row.taskId || undefined,
+        inspector_id: inspector?._id || undefined,
+        inspector_name: inspector ? `${inspector.first_name || ''} ${inspector.last_name || ''}`.trim() : 'Supervisor',
+        status: 'FAILED',
+        passed: false,
+        score: 0,
+        comments: comment || 'Inspection failed'
+      };
+
+      await inspectionService.createInspection(payload);
+      try { addAuditLog({ module: 'Housekeeping', action: 'Updated Room Status', description: `Room ${row.roomNo} inspection failed.`, importance: 'Normal' }); } catch(e) {}
+      window.dispatchEvent(new Event('hk_update'));
+      setInspectDialogOpen(false);
+      setSelectedRoomId(null);
+      await loadData();
+    } catch (err) {
+      console.error('[Inspection] Fail action failed:', err);
+      setActionError(err.response?.data?.message || err.message || 'Failed to mark room inspection as failed');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleMenuClick = (event, id) => {
@@ -151,7 +260,8 @@ export default function Inspection() {
   };
 
   const filtered = inspections.filter(i => 
-    i.id.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    (i.roomNo && i.roomNo.toLowerCase().includes(searchQuery.toLowerCase())) ||
+    (i.id && i.id.toLowerCase().includes(searchQuery.toLowerCase())) || 
     (i.assignee && i.assignee.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
@@ -167,11 +277,35 @@ export default function Inspection() {
         }
       `}</style>
       <div className="mt-2"></div>
+
+      {actionError && (
+        <Alert severity="error" className="mb-3" onClose={() => setActionError(null)}>
+          {actionError}
+        </Alert>
+      )}
+
+      {error && (
+        <Alert 
+          severity="error" 
+          className="mb-3"
+          action={
+            <IconButton color="inherit" size="small" onClick={loadData}>
+              <Refresh fontSize="inherit" />
+            </IconButton>
+          }
+        >
+          {error}
+        </Alert>
+      )}
+
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col flex-1 w-full overflow-visible min-w-0">
         <div className="p-3 border-b border-gray-100 flex flex-row items-center justify-between space-x-2 overflow-visible">
-          <h3 className="text-gray-800 font-bold text-[13.5px] lg:text-[14px]">
-            Rooms Pending Inspection
-          </h3>
+          <div className="flex items-center space-x-2">
+            <h3 className="text-gray-800 font-bold text-[13.5px] lg:text-[14px]">
+              Rooms Pending Inspection
+            </h3>
+            {loading && <CircularProgress size={16} sx={{ color: '#1b7f43' }} />}
+          </div>
           
           <div className="flex flex-row items-center space-x-2 ml-auto">
             {/* Search Bar */}
@@ -185,6 +319,16 @@ export default function Inspection() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+
+            {/* Refresh Button */}
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="p-1 text-gray-500 hover:text-[#1b7f43] hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors"
+              title="Refresh inspections"
+            >
+              <Refresh sx={{ fontSize: 16 }} />
+            </button>
 
             {/* Filter Tabs */}
             <div className="flex bg-white border border-gray-200 rounded-lg overflow-hidden shrink-0">
@@ -213,14 +357,21 @@ export default function Inspection() {
               </tr>
             </thead>
             <tbody className="text-xs text-gray-700 divide-y divide-gray-50">
-              {filtered.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={11} className="py-12 text-center text-gray-400">
+                    <CircularProgress size={24} sx={{ color: '#1b7f43' }} />
+                    <p className="mt-2 text-xs font-medium">Loading inspections...</p>
+                  </td>
+                </tr>
+              ) : filtered.length > 0 ? (
                 filtered.map((row) => {
                   const isMatch = highlightStatus && row.status === highlightStatus;
                   const isEditing = editingRowId === row.id;
                   
                   return (
                     <tr key={row.id} className={`transition-colors ${blinkActive && isMatch ? 'blink-quick' : 'hover:bg-gray-50/30'}`}>
-                      <td className="py-1.5 px-2.5 text-[11px] font-bold text-gray-900">{row.id}</td>
+                      <td className="py-1.5 px-2.5 text-[11px] font-bold text-gray-900">{row.roomNo || row.id}</td>
                       <td className="py-1.5 px-2.5 text-[11px] font-medium text-gray-500">{row.type}</td>
                       <td className="py-1.5 px-2.5 text-[11px] font-bold text-gray-800">{row.guest}</td>
                       
@@ -249,9 +400,10 @@ export default function Inspection() {
                               onChange={e => setEditRowData({...editRowData, assignee: e.target.value})}
                             >
                               <MenuItem value="-">None</MenuItem>
-                              {staff.map(s => (
-                                <MenuItem key={s.id} value={s.name}>{s.name}</MenuItem>
-                              ))}
+                              {staff.map(s => {
+                                const sName = `${s.first_name || ''} ${s.last_name || ''}`.trim() || s.name || s.employee_ref;
+                                return <MenuItem key={s._id || s.id} value={sName}>{sName}</MenuItem>;
+                              })}
                             </Select>
                           </FormControl>
                         ) : row.assignee}
@@ -300,9 +452,10 @@ export default function Inspection() {
                               onChange={e => setEditRowData({...editRowData, inspector: e.target.value})}
                             >
                               <MenuItem value="-">None</MenuItem>
-                              <MenuItem value="Supervisor">Supervisor</MenuItem>
-                              <MenuItem value="Manager">Manager</MenuItem>
-                              <MenuItem value="Head Housekeeper">Head Housekeeper</MenuItem>
+                              {staff.map(s => {
+                                const sName = `${s.first_name || ''} ${s.last_name || ''}`.trim() || s.name || s.employee_ref;
+                                return <MenuItem key={s._id || s.id} value={sName}>{sName}</MenuItem>;
+                              })}
                             </Select>
                           </FormControl>
                         ) : row.inspector}
@@ -313,15 +466,22 @@ export default function Inspection() {
                       <td className="py-1.5 px-2.5 text-center">
                         {isEditing ? (
                           <div className="flex gap-1 justify-center">
-                            <IconButton size="small" onClick={handleEditSave}><CheckCircle sx={{ fontSize: 16, color: '#1b7f43' }}/></IconButton>
-                            <IconButton size="small" onClick={() => setEditingRowId(null)}><Cancel sx={{ fontSize: 16, color: '#ef4444' }}/></IconButton>
+                            <IconButton size="small" onClick={handleEditSave} disabled={submitting}>
+                              <CheckCircle sx={{ fontSize: 16, color: '#1b7f43' }}/>
+                            </IconButton>
+                            <IconButton size="small" onClick={() => setEditingRowId(null)} disabled={submitting}>
+                              <Cancel sx={{ fontSize: 16, color: '#ef4444' }}/>
+                            </IconButton>
                           </div>
                         ) : (
-                          row.status === 'Inspection Required' && (
-                            <IconButton onClick={(e) => handleMenuClick(e, row.id)} size="small" sx={{ p: 0.5 }}>
-                              <MoreVert sx={{ fontSize: 16 }} />
-                            </IconButton>
-                          )
+                          <IconButton 
+                            onClick={(e) => handleMenuClick(e, row.id)} 
+                            size="small" 
+                            sx={{ p: 0.5 }}
+                            aria-label={`actions-${row.roomNo || row.id}`}
+                          >
+                            <MoreVert sx={{ fontSize: 16 }} />
+                          </IconButton>
                         )}
                       </td>
                     </tr>
@@ -368,11 +528,33 @@ export default function Inspection() {
         </MenuItem>
       </Menu>
 
-      <Dialog open={inspectDialogOpen} onClose={() => { setInspectDialogOpen(false); setSelectedRoomId(null); }} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '12px' } }}>
+      <Dialog open={inspectDialogOpen} onClose={() => { if (!submitting) { setInspectDialogOpen(false); setSelectedRoomId(null); } }} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '12px' } }}>
         <div className="p-5">
-          <h2 className="text-base font-bold text-gray-900 mb-0.5">Room {selectedRoomId} Inspection</h2>
+          <h2 className="text-base font-bold text-gray-900 mb-0.5">
+            Room {inspections.find(r => r.id === selectedRoomId)?.roomNo || selectedRoomId} Inspection
+          </h2>
           <p className="text-[12px] text-gray-500 mb-4">Use the checklist below to verify the room condition.</p>
           
+          <div className="mb-4">
+            <FormControl fullWidth size="small" sx={muiSelectSx}>
+              <span className="text-[11px] font-bold text-gray-700 mb-1 block">Assigned Inspector</span>
+              <Select
+                value={selectedInspectorId}
+                onChange={(e) => setSelectedInspectorId(e.target.value)}
+                displayEmpty
+              >
+                {staff.map(s => {
+                  const sName = `${s.first_name || ''} ${s.last_name || ''}`.trim() || s.name || s.employee_ref;
+                  return (
+                    <MenuItem key={s._id || s.id} value={s._id || s.id}>
+                      {sName} {s.employee_ref ? `(${s.employee_ref})` : ''}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+          </div>
+
           <div className="space-y-2 mb-5">
             {CHECKLIST.map((item, idx) => (
               <div 
@@ -402,20 +584,25 @@ export default function Inspection() {
           <div className="flex items-center justify-end gap-2.5">
             <button 
               onClick={() => { setInspectDialogOpen(false); setSelectedRoomId(null); }}
-              className="px-3.5 py-1.5 text-[11.5px] font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              disabled={submitting}
+              className="px-3.5 py-1.5 text-[11.5px] font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button 
               onClick={handleFail}
-              className="px-3.5 py-1.5 text-[11.5px] font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors shadow-sm"
+              disabled={submitting}
+              className="px-3.5 py-1.5 text-[11.5px] font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1.5"
             >
+              {submitting && <CircularProgress size={12} color="inherit" />}
               Fail & Reassign
             </button>
             <button 
               onClick={handleApprove}
-              className="px-3.5 py-1.5 text-[11.5px] font-bold text-white bg-[#1b7f43] hover:bg-[#166b37] rounded-lg transition-colors shadow-sm"
+              disabled={submitting}
+              className="px-3.5 py-1.5 text-[11.5px] font-bold text-white bg-[#1b7f43] hover:bg-[#166b37] rounded-lg transition-colors shadow-sm disabled:opacity-50 flex items-center gap-1.5"
             >
+              {submitting && <CircularProgress size={12} color="inherit" />}
               Approve Room
             </button>
           </div>

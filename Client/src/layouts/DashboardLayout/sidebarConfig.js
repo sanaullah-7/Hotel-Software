@@ -15,7 +15,6 @@ export const reservationSubItems = [
 export const roomsSubItems = [
   { label: 'All Rooms', id: 'all-rooms', path: '/rooms' },
   { label: 'Room Types', id: 'room-types', path: '/rooms/room-types' },
-  { label: 'Rate & Pricing', id: 'rate-pricing', path: '/rooms/rate-pricing' },
   { label: 'Add Room', id: 'add-room', path: '/rooms/new' },
 ];
 
@@ -24,6 +23,8 @@ export const housekeepingSubItems = [
   { label: 'Cleaning Schedule', id: 'cleaning-schedule', path: '/housekeeping/cleaning-schedule' },
   { label: 'Lost and Found', id: 'lost-and-found', path: '/housekeeping/lost-and-found' },
   { label: 'Inspection Checklist', id: 'inspection-checklist', path: '/housekeeping/inspection-checklist' },
+  { label: 'Inspection', id: 'inspection', path: '/housekeeping/inspection' },
+  { label: 'Staff Assignment', id: 'staff-assignment', path: '/housekeeping/staff-assignment' },
 ];
 
 export const inventorySubItems = [

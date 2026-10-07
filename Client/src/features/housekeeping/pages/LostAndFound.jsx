@@ -1,122 +1,16 @@
 import { FilterList, AddCircleOutlined, TableChart, PictureAsPdf, Category, Inventory, CheckCircle, Delete } from '@mui/icons-material';
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import RefreshButton from '../../../components/common/RefreshButton';
-
-import { TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, TablePagination, Typography, Box } from '@mui/material';
-
-const initialItems = [
-  {
-    id: 1,
-    itemName: 'iPhone 13 Charger',
-    location: '101',
-    status: 'Found',
-    foundDate: '2026-02-01',
-    finderName: 'John Doe',
-    description: 'White color Apple charger'
-  },
-  {
-    id: 2,
-    itemName: 'Gold Bracelet',
-    location: '205',
-    status: 'Returned',
-    foundDate: '2026-01-28',
-    finderName: 'Jane Smith',
-    description: 'Thin gold bracelet'
-  },
-  {
-    id: 3,
-    itemName: 'Blue Sunglasses',
-    location: 'Pool Area',
-    status: 'Found',
-    foundDate: '2026-02-02',
-    finderName: 'Robert Brown',
-    description: 'Ray-Ban sunglasses'
-  },
-  {
-    id: 4,
-    itemName: 'Leather Wallet',
-    location: 'Lobby',
-    status: 'Claimed',
-    foundDate: '2026-01-30',
-    finderName: 'Maria Garcia',
-    description: 'Brown leather wallet with ID cards'
-  },
-  {
-    id: 5,
-    itemName: 'Silver Watch',
-    location: 'Gym',
-    status: 'Found',
-    foundDate: '2026-02-05',
-    finderName: 'Alice Green',
-    description: 'Men\'s silver wristwatch'
-  },
-  {
-    id: 6,
-    itemName: 'Black Backpack',
-    location: 'Lobby',
-    status: 'Claimed',
-    foundDate: '2026-02-04',
-    finderName: 'David Lee',
-    description: 'Contains books and a water bottle'
-  },
-  {
-    id: 7,
-    itemName: 'Diamond Ring',
-    location: '402',
-    status: 'Returned',
-    foundDate: '2026-02-01',
-    finderName: 'Sarah Connor',
-    description: 'Gold ring with small diamond'
-  },
-  {
-    id: 8,
-    itemName: 'Winter Coat',
-    location: 'Restaurant',
-    status: 'Disposed',
-    foundDate: '2025-11-20',
-    finderName: 'Tom White',
-    description: 'Unclaimed over 60 days'
-  },
-  {
-    id: 9,
-    itemName: 'Laptop Charger',
-    location: 'Conference Room',
-    status: 'Found',
-    foundDate: '2026-02-06',
-    finderName: 'Maria Garcia',
-    description: 'Black Dell 65W charger'
-  },
-  {
-    id: 10,
-    itemName: 'AirPods Pro',
-    location: 'Pool Area',
-    status: 'Claimed',
-    foundDate: '2026-02-05',
-    finderName: 'John Doe',
-    description: 'White case with blue cover'
-  },
-  {
-    id: 11,
-    itemName: 'Umbrella',
-    location: 'Lobby',
-    status: 'Returned',
-    foundDate: '2026-02-03',
-    finderName: 'Alice Green',
-    description: 'Large black golf umbrella'
-  },
-  {
-    id: 12,
-    itemName: 'Reading Glasses',
-    location: 'Restaurant',
-    status: 'Found',
-    foundDate: '2026-02-07',
-    finderName: 'Tom White',
-    description: 'Black frame, left on table 12'
-  }
-];
+import { TextField, FormControl, InputLabel, Select, MenuItem, TablePagination } from '@mui/material';
+import lostAndFoundService from '../../../services/lostAndFoundService';
+import opsService from '../../../services/opsService';
+import lostAndFoundAdapter from '../adapters/lostAndFoundAdapter';
 
 export default function LostAndFound() {
-  const [items, setItems] = useState(initialItems);
+  const [items, setItems] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -125,15 +19,45 @@ export default function LostAndFound() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [formSubmitting, setFormSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const [form, setForm] = useState({
     itemName: '',
     location: '',
     status: 'Found',
     foundDate: '',
+    foundBy: '',
     finderName: '',
-    description: ''
+    description: '',
+    claimant: '',
+    claimedDate: ''
   });
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [itemsRes, empRes] = await Promise.all([
+        lostAndFoundService.getItems({ limit: 200 }),
+        opsService.getEmployees({ limit: 100 }).catch(() => ({ data: [] }))
+      ]);
+      const rawItems = itemsRes.data?.items || itemsRes.data || [];
+      const adapted = lostAndFoundAdapter.toFrontendItemList(rawItems);
+      setItems(adapted);
+      const rawEmps = empRes.data?.employees || empRes.data || [];
+      setEmployees(rawEmps);
+    } catch (err) {
+      console.error('[LostAndFound] Load error:', err);
+      setError(err.message || 'Failed to load lost and found items');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Derived Summary Stats
   const totalCount = items.length;
@@ -188,15 +112,7 @@ export default function LostAndFound() {
   const handleRefresh = () => {
     setSearchTerm('');
     setPage(0);
-    setVisibleColumns({
-      'Item Name': true,
-      'Location': true,
-      'Found Date': true,
-      'Finder': true,
-      'Status': true,
-      'Description': true,
-      'Actions': true
-    });
+    loadData();
   };
 
   const handleExportCSV = () => {
@@ -279,24 +195,54 @@ export default function LostAndFound() {
 
   const handleOpenNew = () => {
     setEditingId(null);
-    setForm({ itemName: '', location: '', status: 'Found', foundDate: '', finderName: '', description: '' });
+    setForm({
+      itemName: '',
+      location: '',
+      status: 'Found',
+      foundDate: new Date().toISOString().slice(0, 10),
+      foundBy: '',
+      finderName: '',
+      description: '',
+      claimant: '',
+      claimedDate: ''
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (item) => {
     setEditingId(item.id);
-    setForm({ ...item });
+    setForm({
+      itemName: item.itemName,
+      location: item.location,
+      status: item.status,
+      foundDate: item.foundDate,
+      foundBy: item.foundBy || '',
+      finderName: item.finderName !== '-' ? item.finderName : '',
+      description: item.description,
+      claimant: item.claimant || '',
+      claimedDate: item.claimedDate || ''
+    });
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      setItems(paginatedItems.map(t => t.id === editingId ? { ...t, ...form } : t));
-    } else {
-      setItems([...items, { ...form, id: Date.now() }]);
+    setFormSubmitting(true);
+    try {
+      const payload = lostAndFoundAdapter.toBackendPayload(form);
+      if (editingId) {
+        await lostAndFoundService.updateItem(editingId, payload);
+      } else {
+        await lostAndFoundService.createItem(payload);
+      }
+      setIsModalOpen(false);
+      await loadData();
+    } catch (err) {
+      console.error('[LostAndFound] Save error:', err);
+      alert(err.message || 'Failed to save item');
+    } finally {
+      setFormSubmitting(false);
     }
-    setIsModalOpen(false);
   };
 
   const handleOpenDelete = (item) => {
@@ -304,10 +250,20 @@ export default function LostAndFound() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleDelete = () => {
-    setItems(items.filter(t => t.id !== itemToDelete.id));
-    setIsDeleteModalOpen(false);
-    setItemToDelete(null);
+  const handleDelete = async () => {
+    if (!itemToDelete) return;
+    setDeleting(true);
+    try {
+      await lostAndFoundService.deleteItem(itemToDelete.id);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+      await loadData();
+    } catch (err) {
+      console.error('[LostAndFound] Delete error:', err);
+      alert(err.message || 'Failed to delete item');
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const getStatusStyles = (status) => {
@@ -378,6 +334,19 @@ export default function LostAndFound() {
           </div>
         </div>
       </div>
+
+      {/* Error state */}
+      {error && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg text-xs flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={loadData}
+            className="font-semibold underline hover:text-rose-900 cursor-pointer text-xs ml-3"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Table Section */}
       <div className="bg-white rounded-lg shadow-xs border border-gray-100 flex-1 flex flex-col overflow-hidden">
@@ -455,7 +424,13 @@ export default function LostAndFound() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filteredItems.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="py-8 text-center text-gray-500 text-xs">
+                    Loading lost and found items...
+                  </td>
+                </tr>
+              ) : filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="py-8 text-center text-gray-400 text-xs">
                     No lost and found items recorded.
@@ -510,7 +485,7 @@ export default function LostAndFound() {
         />
       </div>
 
-      {/* Add / Edit Task Modal */}
+      {/* Add / Edit Item Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsModalOpen(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-[560px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
@@ -571,7 +546,33 @@ export default function LostAndFound() {
                   </Select>
                 </FormControl>
 
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-1">
+                  <FormControl size="small" fullWidth sx={muiInputSx}>
+                    <InputLabel>Finder (Staff)</InputLabel>
+                    <Select
+                      value={form.foundBy || ''}
+                      label="Finder (Staff)"
+                      onChange={e => {
+                        const empId = e.target.value;
+                        const foundEmp = employees.find(emp => (emp._id || emp.id) === empId);
+                        setForm({
+                          ...form,
+                          foundBy: empId,
+                          finderName: foundEmp ? `${foundEmp.first_name} ${foundEmp.last_name}` : form.finderName
+                        });
+                      }}
+                    >
+                      <MenuItem value=""><em>Select Employee (Optional)</em></MenuItem>
+                      {employees.map(emp => (
+                        <MenuItem key={emp._id || emp.id} value={emp._id || emp.id}>
+                          {emp.first_name} {emp.last_name}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </div>
+
+                <div className="sm:col-span-1">
                   <TextField 
                     label="Finder Name" 
                     value={form.finderName} 
@@ -579,8 +580,37 @@ export default function LostAndFound() {
                     sx={muiInputSx} 
                     size="small" 
                     fullWidth 
+                    placeholder="Or enter name manually"
                   />
                 </div>
+
+                {(form.status === 'Claimed' || form.status === 'Returned') && (
+                  <>
+                    <div className="sm:col-span-1">
+                      <TextField
+                        label="Claimant / Guest"
+                        value={form.claimant}
+                        onChange={e => setForm({ ...form, claimant: e.target.value })}
+                        sx={muiInputSx}
+                        size="small"
+                        fullWidth
+                        placeholder="Name of guest who claimed"
+                      />
+                    </div>
+                    <div className="sm:col-span-1">
+                      <TextField
+                        type="date"
+                        label="Date Claimed"
+                        value={form.claimedDate}
+                        onChange={e => setForm({ ...form, claimedDate: e.target.value })}
+                        sx={muiInputSx}
+                        size="small"
+                        fullWidth
+                        InputLabelProps={{ shrink: true }}
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div className="sm:col-span-2">
                   <TextField 
@@ -600,8 +630,8 @@ export default function LostAndFound() {
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-1.5 rounded-lg bg-[#1b7f43] text-white font-semibold text-xs hover:bg-[#166534] transition-colors cursor-pointer shadow-xs">
-                  Save
+                <button type="submit" disabled={formSubmitting} className="px-4 py-1.5 rounded-lg bg-[#1b7f43] text-white font-semibold text-xs hover:bg-[#166534] transition-colors cursor-pointer shadow-xs disabled:opacity-50">
+                  {formSubmitting ? 'Saving...' : 'Save'}
                 </button>
               </div>
             </form>
@@ -623,8 +653,8 @@ export default function LostAndFound() {
               <button onClick={() => setIsDeleteModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer">
                 Cancel
               </button>
-              <button onClick={handleDelete} className="px-3.5 py-1.5 rounded-lg bg-rose-600 text-white font-semibold text-xs hover:bg-rose-700 transition-colors cursor-pointer">
-                Delete
+              <button onClick={handleDelete} disabled={deleting} className="px-3.5 py-1.5 rounded-lg bg-rose-600 text-white font-semibold text-xs hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-50">
+                {deleting ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

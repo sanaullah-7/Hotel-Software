@@ -24,7 +24,6 @@ import GroupReservations from '../features/reservations/pages/GroupReservations'
 import Rooms from '../features/rooms/pages/Rooms';
 import AddRoom from '../features/rooms/pages/AddRoom';
 import RoomTypes from '../features/rooms/pages/RoomTypes';
-import RatePricing from '../features/rooms/pages/RatePricing';
 
 // Housekeeping Module Pages
 import RoomsAndCleaning from '../features/housekeeping/pages/RoomsAndCleaning';
@@ -127,7 +126,6 @@ export default function AppRoutes() {
         <Route path="/rooms/new" element={<DashboardLayout><AddRoom /></DashboardLayout>} />
         <Route path="/rooms/add" element={<DashboardLayout><AddRoom /></DashboardLayout>} />
         <Route path="/rooms/room-types" element={<DashboardLayout><RoomTypes /></DashboardLayout>} />
-        <Route path="/rooms/rate-pricing" element={<DashboardLayout><RatePricing /></DashboardLayout>} />
 
         {/* Housekeeping Sub-Routes */}
         <Route path="/housekeeping" element={<Navigate to="/housekeeping/rooms-cleaning" replace />} />

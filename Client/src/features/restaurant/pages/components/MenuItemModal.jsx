@@ -22,7 +22,7 @@ const EMPTY_FORM = {
  * onSave — fn(formData)
  * initialData — item object for edit mode, null for add
  */
-export default function MenuItemModal({ isOpen, onClose, onSave, initialData }) {
+export default function MenuItemModal({ isOpen, onClose, onSave, initialData, categories = CATEGORIES }) {
  const isEdit = Boolean(initialData);
  const [form, setForm] = useState(EMPTY_FORM);
  const [errors, setErrors] = useState({});
@@ -158,8 +158,8 @@ export default function MenuItemModal({ isOpen, onClose, onSave, initialData }) 
  className="w-full outline-none text-[13px] bg-transparent text-gray-800 appearance-none cursor-pointer"
  >
  <option value="">Select category</option>
- {CATEGORIES.map(cat => (
- <option key={cat.id} value={cat.id}>{cat.label}</option>
+ {(categories || CATEGORIES).map(cat => (
+ <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.label || cat.name}</option>
  ))}
  </select>
  </fieldset>

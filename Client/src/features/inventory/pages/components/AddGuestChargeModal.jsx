@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogContent, DialogActions,
-  IconButton, TextField, MenuItem, FormControl, InputLabel, Select, Alert
+  IconButton, TextField, MenuItem, FormControl, InputLabel, Select, Alert, CircularProgress
 } from '@mui/material';
 import { Close, Receipt } from '@mui/icons-material';
-import { addGuestCharge, getInventoryItems } from '../inventoryStore';
+import guestChargeService from '../../../../services/guestChargeService';
+import inventoryService from '../../../../services/inventoryService';
+import { adaptInventoryItemToUI } from '../../adapters/inventoryAdapter';
+import { getInventoryItems } from '../inventoryStore';
 import { getReservations } from '../../../reservations/state/reservationStore';
 import { isCheckedIn } from '../../../reservations/state/bookingRules';
+import api from '../../../../api/client';
 
 const muiSelectSx = {
   '& .MuiOutlinedInput-root': {
@@ -34,6 +38,8 @@ export default function AddGuestChargeModal({
   const [inventoryItems, setInventoryItems] = useState([]);
   const [activeStays, setActiveStays] = useState([]);
   const [notice, setNotice] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   const [formData, setFormData] = useState({
     bookingId: '',
@@ -53,8 +59,11 @@ export default function AddGuestChargeModal({
 
   useEffect(() => {
     if (!open) return;
-    const items = getInventoryItems();
-    setInventoryItems(items);
+    setApiError('');
+
+    // Synchronous initial load for instant rendering & test compatibility
+    const initialItems = getInventoryItems();
+    setInventoryItems(initialItems);
 
     const allBookings = getReservations();
     const active = allBookings.filter((b) => isCheckedIn(b));
@@ -64,13 +73,13 @@ export default function AddGuestChargeModal({
     let ambiguityNotice = '';
 
     if (prefilledData) {
-      // 1. Explicit bookingId provided
+      // Explicit bookingId provided
       if (prefilledData.bookingId) {
         const found = active.find((b) => String(b.id) === String(prefilledData.bookingId));
         if (found) targetBooking = found;
       }
 
-      // 2. guestId provided (e.g. from GuestProfile)
+      // guestId provided (e.g. from GuestProfile)
       if (!targetBooking && prefilledData.guestId) {
         const forGuest = active.filter((b) => String(b.guestId) === String(prefilledData.guestId));
         if (forGuest.length === 1) {
@@ -82,7 +91,7 @@ export default function AddGuestChargeModal({
         }
       }
 
-      // 3. roomNumber / guestName provided (e.g. from MissingInventory)
+      // roomNumber / guestName provided (e.g. from MissingInventory)
       if (!targetBooking && prefilledData.roomNumber && !prefilledData.guestId) {
         const forRoom = active.filter((b) => {
           const bRoom = b.roomNo || b.roomNumber || (typeof b.room === 'string' && b.room.includes(' - ') ? b.room.split(' - ')[0] : b.room) || '';
@@ -111,11 +120,11 @@ export default function AddGuestChargeModal({
 
     const bRoom = targetBooking
       ? (targetBooking.roomNo || targetBooking.roomNumber || (typeof targetBooking.room === 'string' && targetBooking.room.includes(' - ') ? targetBooking.room.split(' - ')[0] : targetBooking.room) || '')
-      : '';
+      : (prefilledData?.roomNumber || '');
 
     setFormData({
-      bookingId: targetBooking ? targetBooking.id : '',
-      guestId: targetBooking ? (targetBooking.guestId || '') : '',
+      bookingId: targetBooking ? targetBooking.id : (prefilledData?.bookingId || ''),
+      guestId: targetBooking ? (targetBooking.guestId || '') : (prefilledData?.guestId || ''),
       guestName: targetBooking ? (targetBooking.name || targetBooking.guestName || 'Guest') : (prefilledData?.guestName || ''),
       roomNumber: bRoom,
       chargeType: prefilledData?.chargeType || 'Consumption',
@@ -127,6 +136,36 @@ export default function AddGuestChargeModal({
       notes: prefilledData?.notes || ''
     });
     setErrors({});
+
+    // Async background refresh from backend API
+    inventoryService.getInventoryItems({ limit: 100 })
+      .then((res) => {
+        const rawItems = res?.data || [];
+        const adapted = rawItems.map(adaptInventoryItemToUI).filter(Boolean);
+        if (adapted.length > 0) setInventoryItems(adapted);
+      })
+      .catch(() => {});
+
+    api.get('/hotel/reservations', { limit: 100 })
+      .then((res) => {
+        const rawRes = res?.data || [];
+        if (Array.isArray(rawRes) && rawRes.length > 0) {
+          const backendActive = rawRes
+            .filter(r => r.status === 'CHECKED_IN' || r.status === 'Checked In' || isCheckedIn(r))
+            .map(r => ({
+              id: r._id || r.id,
+              guestId: r.guest_id?._id || r.guest_id || r.primary_guest_id,
+              name: r.guest_id?.first_name ? `${r.guest_id.first_name} ${r.guest_id.last_name || ''}`.trim() : (r.name || r.guestName || 'Guest'),
+              roomNo: r.room_id?.room_number || r.room_number || r.roomNo || '—',
+              roomNumber: r.room_id?.room_number || r.room_number || r.roomNo || '—',
+              status: r.status
+            }));
+          if (backendActive.length > 0) {
+            setActiveStays(backendActive);
+          }
+        }
+      })
+      .catch(() => {});
   }, [open, prefilledData]);
 
   const handleBookingSelect = (bookingId) => {
@@ -207,7 +246,9 @@ export default function AddGuestChargeModal({
 
   const validate = () => {
     const errs = {};
-    if (!formData.bookingId) errs.bookingId = 'An active checked-in reservation is required.';
+    if (!formData.bookingId && !formData.roomNumber) {
+      errs.bookingId = 'An active checked-in stay or room number is required.';
+    }
     if (!formData.itemName.trim()) errs.itemName = 'Item or charge description is required.';
     if (Number(formData.quantity) <= 0) errs.quantity = 'Quantity must be at least 1.';
     if (Number(formData.unitPrice) < 0) errs.unitPrice = 'Price cannot be negative.';
@@ -215,36 +256,53 @@ export default function AddGuestChargeModal({
     return Object.keys(errs).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
+
+    setSubmitting(true);
+    setApiError('');
 
     const totalAmount = (Number(formData.quantity) || 1) * (Number(formData.unitPrice) || 0);
 
     const chargePayload = {
       bookingId: formData.bookingId,
+      reservation_id: formData.bookingId,
       guestId: formData.guestId || null,
+      guest_id: formData.guestId || null,
       guestName: formData.guestName.trim(),
       roomNumber: formData.roomNumber,
+      room_number: formData.roomNumber,
       chargeType: formData.chargeType,
+      charge_type: formData.chargeType,
       itemName: formData.itemName.trim(),
-      inventoryItemId: (formData.chargeType === 'Consumption' || formData.chargeType === 'Damage') ? formData.selectedInventoryId || null : null,
+      item_name: formData.itemName.trim(),
       quantity: Number(formData.quantity) || 1,
       unitPrice: Number(formData.unitPrice) || 0,
+      unit_price: Number(formData.unitPrice) || 0,
       amount: totalAmount,
+      description: `${formData.itemName.trim()} (${formData.chargeType})`,
       status: formData.status,
       date: 'Today',
       reportedDate: new Date().toISOString().split('T')[0],
-      folioId: `FOL-${formData.roomNumber}-${Math.floor(10 + Math.random() * 90)}`,
-      notes: formData.notes.trim()
+      folioId: `FOL-${formData.roomNumber}`,
+      notes: formData.notes.trim(),
+      reference_id: prefilledData?.incidentId || prefilledData?.inventoryItemId || null
     };
 
     try {
-      addGuestCharge(chargePayload);
+      // 1. Save to Backend API (Posts to Folio & Invoice)
+      await guestChargeService.createGuestCharge(chargePayload);
+
+      window.dispatchEvent(new Event('guest_charges_update'));
       if (onChargeAdded) onChargeAdded();
       onClose();
     } catch (err) {
-      setErrors((prev) => ({ ...prev, bookingId: err.message }));
+      console.error('Failed to post guest charge:', err);
+      const msg = err.response?.data?.message || err.message || 'Failed to post guest charge.';
+      setApiError(msg);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -284,6 +342,12 @@ export default function AddGuestChargeModal({
       <form onSubmit={handleSubmit}>
         <DialogContent sx={{ p: 2.5, backgroundColor: '#f9fafb' }}>
           <div className="space-y-3">
+
+            {apiError && (
+              <Alert severity="error" sx={{ fontSize: '11.5px', py: 0.5 }}>
+                {apiError}
+              </Alert>
+            )}
 
             {notice && (
               <Alert severity="warning" sx={{ fontSize: '11.5px', py: 0.5 }}>
@@ -387,7 +451,7 @@ export default function AddGuestChargeModal({
             {(formData.chargeType === 'Consumption' || formData.chargeType === 'Damage') && (
               <div className="p-2.5 bg-emerald-50/50 rounded-lg border border-emerald-100">
                 <span className="text-[10.5px] font-bold text-[#1b7f43] block mb-1.5">
-                  Link to Hotel Inventory Stock (Auto-pricing & stock deduction):
+                  Link to Hotel Inventory Stock (Auto-pricing):
                 </span>
                 <FormControl fullWidth size="small" sx={muiSelectSx}>
                   <InputLabel>Select Hotel Stock Item</InputLabel>
@@ -399,7 +463,7 @@ export default function AddGuestChargeModal({
                     <MenuItem value="">Custom / Unlisted Item</MenuItem>
                     {inventoryItems.map((item) => (
                       <MenuItem key={item.id} value={item.id}>
-                        {item.itemName} ({item.category} • Rs. {item.unitPrice})
+                        {item.itemName} ({item.category}) — Rs. {item.unitPrice}
                       </MenuItem>
                     ))}
                   </Select>
@@ -407,21 +471,23 @@ export default function AddGuestChargeModal({
               </div>
             )}
 
-            {/* Charge Item / Description */}
-            <TextField
-              label="Charge / Item Description *"
-              size="small"
-              value={formData.itemName}
-              placeholder="e.g. Coca-Cola, Bedsheet, Pizza Order, Laundry..."
-              onChange={(e) => setFormData((prev) => ({ ...prev, itemName: e.target.value }))}
-              error={Boolean(errors.itemName)}
-              helperText={errors.itemName}
-              sx={muiSelectSx}
-              fullWidth
-            />
+            {/* Item / Service Name Description */}
+            <div>
+              <TextField
+                label="Item / Service Name *"
+                size="small"
+                value={formData.itemName}
+                onChange={(e) => setFormData((prev) => ({ ...prev, itemName: e.target.value }))}
+                error={Boolean(errors.itemName)}
+                helperText={errors.itemName}
+                sx={muiSelectSx}
+                fullWidth
+                placeholder="e.g., Minibar Red Bull, Damaged Lamp, Laundry"
+              />
+            </div>
 
-            {/* Qty, Unit Price & Total Amount */}
-            <div className="grid grid-cols-3 gap-2 items-center">
+            {/* Quantity & Unit Price */}
+            <div className="grid grid-cols-2 gap-2.5">
               <TextField
                 label="Quantity *"
                 type="number"
@@ -429,80 +495,79 @@ export default function AddGuestChargeModal({
                 value={formData.quantity}
                 onChange={(e) => setFormData((prev) => ({ ...prev, quantity: Math.max(1, parseInt(e.target.value) || 1) }))}
                 error={Boolean(errors.quantity)}
+                helperText={errors.quantity}
                 sx={muiSelectSx}
                 fullWidth
+                inputProps={{ min: 1 }}
               />
 
               <TextField
-                label="Unit Price / Rate *"
+                label="Unit Price (PKR) *"
                 type="number"
                 size="small"
                 value={formData.unitPrice}
-                onChange={(e) => setFormData((prev) => ({ ...prev, unitPrice: parseFloat(e.target.value) || 0 }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, unitPrice: Math.max(0, parseFloat(e.target.value) || 0) }))}
                 error={Boolean(errors.unitPrice)}
+                helperText={errors.unitPrice}
                 sx={muiSelectSx}
                 fullWidth
+                inputProps={{ min: 0, step: 'any' }}
               />
+            </div>
 
-              <div className="bg-white p-2 rounded-lg border border-gray-200 text-center">
-                <span className="text-[10px] font-bold text-gray-400 block uppercase">Total Charge</span>
-                <span className="text-sm font-extrabold text-[#1b7f43] block">
-                  Rs. {totalCalculated.toLocaleString()}
+            {/* Notes */}
+            <div>
+              <TextField
+                label="Notes / Charge Justification"
+                size="small"
+                multiline
+                rows={2}
+                value={formData.notes}
+                onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
+                sx={muiSelectSx}
+                fullWidth
+                placeholder="e.g., Guest consumed 2 bottles from room 203 mini fridge; housekeeping confirmed."
+              />
+            </div>
+
+            {/* Live Total Calculation Banner */}
+            <div className="bg-white p-3 rounded-lg border border-gray-100 flex items-center justify-between shadow-xs">
+              <div>
+                <span className="text-[10.5px] font-bold text-gray-400 uppercase tracking-wider block">
+                  Total Folio Charge
+                </span>
+                <span className="text-[11px] text-gray-500">
+                  {formData.quantity} x Rs. {Number(formData.unitPrice || 0).toLocaleString()}
                 </span>
               </div>
-            </div>
-
-            {/* Folio Status */}
-            <div>
-              <FormControl fullWidth size="small" sx={muiSelectSx}>
-                <InputLabel>Folio Billing Status *</InputLabel>
-                <Select
-                  label="Folio Billing Status *"
-                  value={formData.status}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, status: e.target.value }))}
-                >
-                  <MenuItem value="Added to Folio">Added to Folio (Billed to Room Account)</MenuItem>
-                  <MenuItem value="Pending">Pending (Awaiting Guest Approval)</MenuItem>
-                  <MenuItem value="Paid">Paid (Immediately Settled)</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-
-            {/* Notes / Folio Remarks */}
-            <TextField
-              label="Folio Notes / Remarks"
-              multiline
-              rows={2}
-              size="small"
-              value={formData.notes}
-              placeholder="e.g. Minibar checkout audit, vendor receipt reference, damage inspection report..."
-              onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
-              sx={muiSelectSx}
-              fullWidth
-            />
-
-            {/* Explanation Note */}
-            <div className="text-[10.5px] text-gray-500 bg-gray-50 p-2 rounded border border-gray-100 flex items-center gap-1.5">
-              <span className="font-bold text-gray-700">Folio Pipeline:</span>
-              <span>Guest Charge → Room Folio → Master Invoice → Checkout Settlement.</span>
+              <div className="text-right">
+                <span className="text-base font-bold text-[#1b7f43] font-mono">
+                  Rs. {totalCalculated.toLocaleString()}
+                </span>
+                <span className="text-[10px] text-emerald-600 block font-semibold">
+                  Will Post to Guest's Open Folio & Invoice
+                </span>
+              </div>
             </div>
 
           </div>
         </DialogContent>
 
-        <DialogActions sx={{ p: 2, backgroundColor: 'white', borderTop: '1px solid #f3f4f6' }}>
+        <DialogActions sx={{ p: 2, backgroundColor: '#f9fafb', borderTop: '1px solid #e5e7eb', gap: 1 }}>
           <button
             type="button"
             onClick={onClose}
-            className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded transition cursor-pointer"
+            disabled={submitting}
+            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-gray-700 bg-white border border-gray-200 hover:bg-gray-50 transition cursor-pointer"
           >
             Cancel
           </button>
           <button
             type="submit"
-            disabled={!formData.bookingId}
-            className="px-4 py-1.5 text-xs font-bold text-white bg-[#1b7f43] hover:bg-[#166b37] disabled:opacity-50 disabled:cursor-not-allowed rounded transition cursor-pointer shadow-xs"
+            disabled={submitting || !formData.bookingId}
+            className="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-[#1b7f43] hover:bg-[#166636] transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
           >
+            {submitting && <CircularProgress size={14} sx={{ color: 'white' }} />}
             Save & Add to Guest Folio
           </button>
         </DialogActions>

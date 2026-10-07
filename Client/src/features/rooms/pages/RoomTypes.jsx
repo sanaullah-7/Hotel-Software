@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Refresh, PictureAsPdf, EditOutlined, DeleteOutlined, Close, Search, 
-  KeyboardArrowLeft, KeyboardArrowRight, CloudUploadOutlined, TableChart, AddCircleOutlined 
+  KeyboardArrowLeft, KeyboardArrowRight, TableChart, AddCircleOutlined 
 } from '@mui/icons-material';
 import { 
-  TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment 
+  TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, Alert, CircularProgress, Snackbar 
 } from '@mui/material';
-
-const initialRoomTypes = [];
+import roomService from '../../../services/roomService';
+import { toFrontendRoomType, toBackendRoomTypePayload } from '../adapters/roomAdapter';
 
 export default function RoomTypes() {
-  const [rooms, setRooms] = useState(initialRoomTypes);
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modals
@@ -18,95 +19,170 @@ export default function RoomTypes() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [roomToDelete, setRoomToDelete] = useState(null);
+  const [typeToDelete, setTypeToDelete] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Notification state
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
 
   // Pagination
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [form, setForm] = useState({
-    roomNo: '', roomType: 'Delux', acNonAc: 'AC', shortCode: '', capacity: '', status: 'Active', rent: ''
+    code: '', 
+    name: '', 
+    description: '', 
+    base_occupancy: 2, 
+    max_occupancy: 4, 
+    base_price: 100
   });
 
-  // Extended form for Edit
   const [editForm, setEditForm] = useState({
-    roomNo: '', roomType: 'Delux', acNonAc: 'AC', shortCode: '', mealPlan: 'Lunch', floorNumber: '3', rent: '150', status: 'Active',
-    capacity: '4', bedType: 'Queen', numberOfBeds: '2', roomSize: '450', viewType: 'City View',
-    tvType: 'Smart TV', bathroomType: 'Deluxe', wifi: 'Yes', balcony: 'Yes', miniBar: 'No', petFriendly: 'No', accessibility: 'Wheelchair Accessible',
-    housekeepingStatus: 'Clean', maintenanceStatus: 'Good', smokingPolicy: 'Non-Smoking', mobile: '123456789',
-    notes: 'Luxury room with city view and modern amenities'
+    code: '', 
+    name: '', 
+    description: '', 
+    base_occupancy: 2, 
+    max_occupancy: 4, 
+    base_price: 100
   });
+
+  const loadRoomTypes = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await roomService.getRoomTypes();
+      const rawTypes = Array.isArray(res?.data) ? res.data : [];
+      setRoomTypes(rawTypes.map(toFrontendRoomType));
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: err.message || 'Failed to load room types',
+        severity: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRoomTypes();
+  }, [loadRoomTypes]);
 
   // Derived state
-  const filteredRooms = rooms.filter(r => 
-    r.roomNo.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    r.roomType.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTypes = roomTypes.filter(r => 
+    String(r.code || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+    String(r.name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const totalPages = Math.ceil(filteredRooms.length / itemsPerPage);
-  const currentRooms = filteredRooms.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+  const totalPages = Math.ceil(filteredTypes.length / itemsPerPage);
+  const currentTypes = filteredTypes.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   const handleOpenAdd = () => {
-    setForm({ roomNo: '', roomType: 'Delux', acNonAc: 'AC', shortCode: '', capacity: '', status: 'Active', rent: '' });
+    setForm({ 
+      code: '', 
+      name: '', 
+      description: '', 
+      base_occupancy: 2, 
+      max_occupancy: 4, 
+      base_price: 100 
+    });
     setIsAddModalOpen(true);
   };
 
-  const handleOpenEdit = (room) => {
-    setEditingId(room.id);
+  const handleOpenEdit = (type) => {
+    setEditingId(type._id || type.id);
     setEditForm({
-      ...editForm,
-      roomNo: room.roomNo,
-      roomType: room.roomType,
-      acNonAc: room.acNonAc,
-      shortCode: room.shortCode || '',
-      rent: (room.rent ?? '').toString(),
-      status: room.status === 'Active' || room.status === 'Open' ? 'Active' : 'Inactive',
-      capacity: (room.capacity ?? '').toString(),
+      code: type.code || '',
+      name: type.name || '',
+      description: type.description || '',
+      base_occupancy: type.base_occupancy ?? 1,
+      max_occupancy: type.max_occupancy ?? 2,
+      base_price: type.base_price ?? type.rent ?? 0
     });
     setIsEditModalOpen(true);
   };
 
-  const handleSaveAdd = (e) => {
+  const handleSaveAdd = async (e) => {
     e.preventDefault();
-    setRooms([{ ...form, id: Date.now(), roomImage: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop' }, ...rooms]);
-    setIsAddModalOpen(false);
+    if (!form.name.trim()) {
+      setNotification({ open: true, message: 'Room Type name is required', severity: 'error' });
+      return;
+    }
+    if (!form.code.trim()) {
+      setNotification({ open: true, message: 'Room Type short code is required', severity: 'error' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload = toBackendRoomTypePayload(form);
+      const res = await roomService.createRoomType(payload);
+      const created = toFrontendRoomType(res.data);
+      setRoomTypes([created, ...roomTypes]);
+      setNotification({ open: true, message: 'Room type created successfully', severity: 'success' });
+      setIsAddModalOpen(false);
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: err.message || (err.status === 409 ? 'A room type with this code already exists' : 'Failed to create room type'),
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleSaveEdit = (e) => {
+  const handleSaveEdit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
-    setRooms(rooms.map(r => r.id === editingId ? { 
-      ...r, 
-      roomNo: editForm.roomNo, 
-      roomType: editForm.roomType, 
-      acNonAc: editForm.acNonAc, 
-      shortCode: editForm.shortCode || r.shortCode || (editForm.roomType ? editForm.roomType.split(' ').map(w => w[0]).join('').toUpperCase() : 'RM'),
-      rent: Number(editForm.rent) || editForm.rent,
-      status: editForm.status === 'Active' || editForm.status === 'Open' ? 'Active' : 'Inactive',
-      capacity: Number(editForm.capacity) || editForm.capacity
-    } : r));
-    setIsEditModalOpen(false);
+    if (!editForm.name.trim()) {
+      setNotification({ open: true, message: 'Room Type name is required', severity: 'error' });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload = toBackendRoomTypePayload(editForm);
+      const res = await roomService.updateRoomType(editingId, payload);
+      const updated = toFrontendRoomType(res.data);
+      setRoomTypes(roomTypes.map(r => (r._id === editingId || r.id === editingId) ? updated : r));
+      setNotification({ open: true, message: 'Room type updated successfully', severity: 'success' });
+      setIsEditModalOpen(false);
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: err.message || 'Failed to update room type',
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleOpenDelete = (room) => {
-    setRoomToDelete(room);
+  const handleOpenDelete = (type) => {
+    setTypeToDelete(type);
     setIsDeleteModalOpen(true);
   };
 
-  const handleDelete = () => {
-    setRooms(rooms.filter(r => r.id !== roomToDelete.id));
-    setIsDeleteModalOpen(false);
-    setRoomToDelete(null);
-  };
-
-  const getStatusStyles = (status) => {
-    switch (status) {
-      case 'Active':
-      case 'Open': 
-        return 'bg-[#ecfdf5] text-[#10b981]';
-      case 'Inactive': 
-        return 'bg-[#fff7ed] text-[#f97316]';
-      default: 
-        return 'bg-gray-100 text-gray-600';
+  const handleDelete = async () => {
+    if (!typeToDelete) return;
+    setIsSubmitting(true);
+    try {
+      const targetId = typeToDelete._id || typeToDelete.id;
+      await roomService.deleteRoomType(targetId);
+      setRoomTypes(roomTypes.filter(r => r._id !== targetId && r.id !== targetId));
+      setNotification({ open: true, message: 'Room type deleted successfully', severity: 'success' });
+      setIsDeleteModalOpen(false);
+      setTypeToDelete(null);
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: err.status === 409 
+          ? 'Room type is in use by existing rooms and cannot be deleted.' 
+          : (err.message || 'Failed to delete room type'),
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -123,10 +199,10 @@ export default function RoomTypes() {
   };
 
   const handleExportCSV = () => {
-    const headers = ['Room No', 'Room Type', 'AC/Non AC', 'Short Code', 'Status', 'Bed Capacity', 'Rent'];
+    const headers = ['Code', 'Room Type Name', 'Base Occupancy', 'Max Occupancy', 'Base Price (Rent)'];
     const csvRows = [headers.join(',')];
-    rooms.forEach(room => {
-      csvRows.push([room.roomNo, room.roomType, room.acNonAc, room.shortCode, room.status, room.capacity, room.rent].join(','));
+    roomTypes.forEach(rt => {
+      csvRows.push([rt.code, rt.name, rt.base_occupancy, rt.max_occupancy, rt.base_price].join(','));
     });
     const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -144,49 +220,60 @@ export default function RoomTypes() {
     ]);
     const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
-    doc.text('RoomTypes', 14, 15);
-    const tableColumn = ['Room No', 'Room Type', 'AC/Non AC', 'Short Code', 'Status', 'Capacity', 'Rent'];
-    const tableRows = rooms.map(room => [room.roomNo, room.roomType, room.acNonAc, room.shortCode, room.status, room.capacity, room.rent]);
+    doc.text('Room Types', 14, 15);
+    const tableColumn = ['Code', 'Room Type Name', 'Base Occupancy', 'Max Occupancy', 'Base Price (Rent)'];
+    const tableRows = roomTypes.map(rt => [rt.code, rt.name, rt.base_occupancy, rt.max_occupancy, rt.base_price]);
     autoTable(doc, { head: [tableColumn], body: tableRows, startY: 20 });
     doc.save('RoomTypes.pdf');
   };
 
   return (
     <div className="w-full space-y-2.5 pb-3 flex flex-col">
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={4000} 
+        onClose={() => setNotification(n => ({ ...n, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert severity={notification.severity} onClose={() => setNotification(n => ({ ...n, open: false }))}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
+
       <div className="bg-white rounded-lg shadow-xs border border-gray-100 flex-1 flex flex-col overflow-hidden">
         
         {/* Header Bar */}
-        <div className="p-2 sm:p-2.5 flex items-center justify-between border-b border-gray-100">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <h2 className="text-xs sm:text-sm font-bold text-gray-800">Room Types</h2>
+        <div className="p-2 sm:p-2.5 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5">
+            <h2 className="text-xs sm:text-sm font-bold text-gray-800">Room Types & Categories</h2>
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" sx={{ fontSize: 15 }} />
-              <input 
-                type="text" 
-                placeholder="Search..." 
+              <input
+                type="text"
+                placeholder="Search..."
                 value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="pl-7 pr-3 py-1 w-36 sm:w-48 lg:w-56 border border-gray-200 rounded-lg text-xs outline-none focus:border-[var(--primary-main)]"
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-36 sm:w-48 pl-7 pr-2.5 py-1 text-xs border border-gray-200 rounded-lg outline-none focus:border-[var(--primary-main)] text-gray-700 bg-white"
               />
+              <Search className="absolute left-2 top-1.5 text-gray-400" sx={{ fontSize: 14 }} />
             </div>
           </div>
           
           <div className="flex items-center gap-1">
             <button 
-              onClick={handleOpenAdd}
+              onClick={handleOpenAdd} 
               className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
-              title="Add"
-              aria-label="Add room type"
+              title="Add Room Type"
+              aria-label="Add Room Type"
             >
               <AddCircleOutlined sx={{ fontSize: 18 }} className="text-[#1b7f43]" />
             </button>
             <button 
-              onClick={() => setRooms(initialRoomTypes)}
+              onClick={loadRoomTypes} 
               className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
               title="Refresh"
               aria-label="Refresh room types"
             >
-              <Refresh sx={{ fontSize: 18 }} className="text-[var(--primary-main)]" />
+              <Refresh sx={{ fontSize: 18 }} className={`text-[var(--primary-main)] ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button 
               onClick={handleExportCSV} 
@@ -207,70 +294,68 @@ export default function RoomTypes() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="flex-1 overflow-hidden">
-          <table className="w-full text-left border-collapse table-fixed">
-            <colgroup>
-              <col style={{ width: '15%' }} />
-              <col style={{ width: '16%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '11%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '11%' }} />
-              <col style={{ width: '11%' }} />
-            </colgroup>
-            <thead>
-              <tr className="border-b border-gray-100 bg-slate-50/50">
-                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Room No</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Room Type</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">AC/Non AC</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Short Code</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Bed Capacity</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Rent</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {currentRooms.map((room) => (
-                <tr key={room.id} className="hover:bg-gray-50/60 transition-colors">
-                  <td className="py-1.5 px-1.5">
-                    <div className="flex items-center gap-1.5">
-                      <img src={room.roomImage} alt="room" className="w-5.5 h-5.5 rounded-full object-cover shadow-xs border border-gray-200 shrink-0" />
-                      <span className="text-[11px] font-bold text-gray-800 truncate">{room.roomNo}</span>
-                    </div>
-                  </td>
-                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 truncate">{room.roomType}</td>
-                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600">{room.acNonAc}</td>
-                  <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-700">{room.shortCode}</td>
-                  <td className="py-1.5 px-1.5">
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold whitespace-nowrap ${getStatusStyles(room.status)}`}>
-                      {room.status}
-                    </span>
-                  </td>
-                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600">{room.capacity}</td>
-                  <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-700">${room.rent}</td>
-                  <td className="py-1.5 px-1.5 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => handleOpenEdit(room)} className="text-[#3b82f6] hover:bg-blue-50 p-0.5 rounded transition-colors cursor-pointer" title="Edit" aria-label="Edit room type">
-                        <EditOutlined sx={{ fontSize: 14 }} />
-                      </button>
-                      <button onClick={() => handleOpenDelete(room)} className="text-[#ef4444] hover:bg-red-50 p-0.5 rounded transition-colors cursor-pointer" title="Delete" aria-label="Delete room type">
-                        <DeleteOutlined sx={{ fontSize: 14 }} />
-                      </button>
-                    </div>
-                  </td>
+        {/* Loading indicator */}
+        {loading && (
+          <div className="flex items-center justify-center py-10">
+            <CircularProgress size={28} sx={{ color: 'var(--primary-main)' }} />
+          </div>
+        )}
+
+        {/* Table view */}
+        {!loading && (
+          <div className="flex-1 overflow-hidden">
+            <table className="w-full text-left border-collapse table-fixed">
+              <colgroup>
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '25%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '12%' }} />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-gray-100 bg-slate-50/50">
+                  <th className="py-2 px-2 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Code</th>
+                  <th className="py-2 px-2 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Room Type Name</th>
+                  <th className="py-2 px-2 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Base Occupancy</th>
+                  <th className="py-2 px-2 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Max Capacity</th>
+                  <th className="py-2 px-2 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Base Rent / Night</th>
+                  <th className="py-2 px-2 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider text-center">Actions</th>
                 </tr>
-              ))}
-              {currentRooms.length === 0 && (
-                <tr>
-                  <td colSpan="8" className="text-center py-6 text-gray-500 text-xs">No room types found.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {currentTypes.map((type) => (
+                  <tr key={type._id || type.id} className="hover:bg-gray-50/60 transition-colors">
+                    <td className="py-2 px-2">
+                      <span className="px-2 py-0.5 rounded bg-emerald-50 text-[#1b7f43] text-[11px] font-bold">
+                        {type.code}
+                      </span>
+                    </td>
+                    <td className="py-2 px-2 text-[11px] font-semibold text-gray-800">{type.name}</td>
+                    <td className="py-2 px-2 text-[11px] text-gray-600">{type.base_occupancy} Guests</td>
+                    <td className="py-2 px-2 text-[11px] text-gray-600">{type.max_occupancy} Guests</td>
+                    <td className="py-2 px-2 text-[11px] font-bold text-gray-800">${type.base_price || type.rent}</td>
+                    <td className="py-2 px-2 text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <button onClick={() => handleOpenEdit(type)} className="text-[#3b82f6] hover:bg-blue-50 p-1 rounded transition-colors cursor-pointer" title="Edit room type" aria-label="Edit room type">
+                          <EditOutlined sx={{ fontSize: 14 }} />
+                        </button>
+                        <button onClick={() => handleOpenDelete(type)} className="text-[#ef4444] hover:bg-red-50 p-1 rounded transition-colors cursor-pointer" title="Delete room type" aria-label="Delete room type">
+                          <DeleteOutlined sx={{ fontSize: 14 }} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {currentTypes.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="text-center py-6 text-gray-500 text-xs">No room types found. Click + to create a room type.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Pagination Footer */}
         <div className="flex items-center justify-end gap-3 sm:gap-4 px-3 py-1.5 sm:py-2 border-t border-gray-100 bg-white text-xs text-gray-500">
@@ -287,7 +372,7 @@ export default function RoomTypes() {
             </select>
           </div>
           <span>
-            {Math.min((page - 1) * itemsPerPage + 1, filteredRooms.length)} - {Math.min(page * itemsPerPage, filteredRooms.length)} of {filteredRooms.length}
+            {filteredTypes.length > 0 ? Math.min((page - 1) * itemsPerPage + 1, filteredTypes.length) : 0} - {Math.min(page * itemsPerPage, filteredTypes.length)} of {filteredTypes.length}
           </span>
           <div className="flex items-center gap-0.5">
             <button 
@@ -310,59 +395,105 @@ export default function RoomTypes() {
         </div>
       </div>
 
-      {/* Simple ADD Modal */}
+      {/* Add Modal */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsAddModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[700px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[550px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="bg-[var(--primary-main)] px-4 py-2.5 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-white">
-                <div className="w-6 h-6 rounded-full border border-white/30 overflow-hidden flex items-center justify-center bg-white/10 text-[9px]">
-                  IMG
-                </div>
-                <h2 className="text-sm font-bold">New Record</h2>
-              </div>
+              <h2 className="text-sm font-bold text-white">Create New Room Type</h2>
               <button onClick={() => setIsAddModalOpen(false)} aria-label="Close" className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
                 <Close sx={{ fontSize: 16 }} />
               </button>
             </div>
             
-            <form onSubmit={handleSaveAdd} className="p-4 sm:p-5">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-3.5">
-                <TextField required label="Room No*" value={form.roomNo} onChange={e => setForm({...form, roomNo: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Select Room Type*</InputLabel>
-                  <Select value={form.roomType} label="Select Room Type*" onChange={e => setForm({...form, roomType: e.target.value})}>
-                    <MenuItem value="Single">Single</MenuItem>
-                    <MenuItem value="Double">Double</MenuItem>
-                    <MenuItem value="Delux">Delux</MenuItem>
-                    <MenuItem value="Super Delux">Super Delux</MenuItem>
-                    <MenuItem value="Vila">Vila</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>AC/Non AC*</InputLabel>
-                  <Select value={form.acNonAc} label="AC/Non AC*" onChange={e => setForm({...form, acNonAc: e.target.value})}>
-                    <MenuItem value="AC">AC</MenuItem>
-                    <MenuItem value="Non AC">Non AC</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField required label="Short Code*" value={form.shortCode} onChange={e => setForm({...form, shortCode: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                <TextField required type="number" label="Capacity*" value={form.capacity} onChange={e => setForm({...form, capacity: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Status*</InputLabel>
-                  <Select value={form.status} label="Status*" onChange={e => setForm({...form, status: e.target.value})}>
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Inactive">Inactive</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField required type="number" label="Rent*" value={form.rent} onChange={e => setForm({...form, rent: e.target.value})} sx={muiInputSx} size="small" fullWidth InputProps={{ endAdornment: <InputAdornment position="end"><span className="text-gray-900 font-bold text-xs">$</span></InputAdornment> }} />
+            <form onSubmit={handleSaveAdd} className="p-4 sm:p-5 space-y-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <TextField 
+                  id="add-type-code"
+                  required 
+                  label="Short Code (e.g. DLX)*" 
+                  value={form.code} 
+                  onChange={e => setForm({...form, code: e.target.value.toUpperCase()})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth
+                />
+
+                <TextField 
+                  id="add-type-name"
+                  required 
+                  label="Room Type Name*" 
+                  value={form.name} 
+                  onChange={e => setForm({...form, name: e.target.value})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth
+                />
+
+                <TextField 
+                  id="add-type-base-occupancy"
+                  required
+                  type="number"
+                  label="Base Occupancy*" 
+                  value={form.base_occupancy} 
+                  onChange={e => setForm({...form, base_occupancy: Number(e.target.value)})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
+
+                <TextField 
+                  id="add-type-max-occupancy"
+                  required
+                  type="number"
+                  label="Max Capacity*" 
+                  value={form.max_occupancy} 
+                  onChange={e => setForm({...form, max_occupancy: Number(e.target.value)})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
+
+                <TextField 
+                  id="add-type-base-price"
+                  required
+                  type="number"
+                  label="Base Rent / Night*" 
+                  value={form.base_price} 
+                  onChange={e => setForm({...form, base_price: Number(e.target.value)})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end"><span className="text-gray-900 font-bold text-xs">$</span></InputAdornment>
+                  }}
+                />
+
+                <TextField 
+                  id="add-type-description"
+                  label="Description" 
+                  value={form.description} 
+                  onChange={e => setForm({...form, description: e.target.value})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
               </div>
               
-              <div className="flex items-center gap-2.5 mt-5">
-                <button type="submit" className="px-4 py-1.5 rounded-lg border border-green-200 bg-green-50 text-[var(--primary-main)] font-semibold text-xs hover:bg-green-100 transition-colors cursor-pointer shadow-xs">
-                  Save
+              <div className="flex items-center gap-2.5 pt-2">
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="px-4 py-1.5 rounded-lg border border-green-200 bg-green-50 text-[var(--primary-main)] font-semibold text-xs hover:bg-green-100 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Saving...' : 'Save Room Type'}
                 </button>
-                <button type="button" onClick={() => setIsAddModalOpen(false)} className="px-4 py-1.5 rounded-lg border border-transparent bg-rose-50 text-rose-600 font-semibold text-xs hover:bg-rose-100 transition-colors cursor-pointer shadow-xs">
+                <button 
+                  type="button" 
+                  onClick={() => setIsAddModalOpen(false)} 
+                  disabled={isSubmitting}
+                  className="px-4 py-1.5 rounded-lg border border-transparent bg-rose-50 text-rose-600 font-semibold text-xs hover:bg-rose-100 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                >
                   Cancel
                 </button>
               </div>
@@ -371,151 +502,95 @@ export default function RoomTypes() {
         </div>
       )}
 
-      {/* EDIT Modal */}
+      {/* Edit Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsEditModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[850px] max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="bg-[var(--primary-main)] px-4 py-2.5 flex items-center justify-between shrink-0">
-              <div className="flex flex-col text-white">
-                <h2 className="text-sm font-bold">Edit Room - #{editForm.roomNo}</h2>
-                <p className="text-white/80 text-[11px] mt-0.5">Update room specifications, amenities, and operational settings</p>
-              </div>
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-[550px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-[var(--primary-main)] px-4 py-2.5 flex items-center justify-between">
+              <h2 className="text-sm font-bold text-white">Edit Room Type: {editForm.name}</h2>
               <button onClick={() => setIsEditModalOpen(false)} aria-label="Close" className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
-                <Close sx={{ fontSize: 18 }} />
+                <Close sx={{ fontSize: 16 }} />
               </button>
             </div>
             
-            <form onSubmit={handleSaveEdit} className="flex flex-col flex-1 overflow-hidden">
-              <div className="p-4 sm:p-5 overflow-y-auto flex-1 bg-gray-50/50 space-y-4">
-                {/* Section 1: Room Information */}
-                <div>
-                  <h3 className="text-xs font-bold text-gray-800 mb-2.5 pb-1.5 border-b border-gray-200 uppercase tracking-wider">Room Information</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <TextField label="Room Number" value={editForm.roomNo} onChange={e => setEditForm({...editForm, roomNo: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <FormControl size="small" fullWidth sx={muiInputSx}>
-                      <InputLabel>Room Type</InputLabel>
-                      <Select value={editForm.roomType} label="Room Type" onChange={e => setEditForm({...editForm, roomType: e.target.value})}>
-                        <MenuItem value="Single">Single</MenuItem>
-                        <MenuItem value="Double">Double</MenuItem>
-                        <MenuItem value="Delux">Delux</MenuItem>
-                        <MenuItem value="Super Delux">Super Delux</MenuItem>
-                        <MenuItem value="Vila">Vila</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <FormControl size="small" fullWidth sx={muiInputSx}>
-                      <InputLabel>AC / Non AC</InputLabel>
-                      <Select value={editForm.acNonAc} label="AC / Non AC" onChange={e => setEditForm({...editForm, acNonAc: e.target.value})}>
-                        <MenuItem value="AC">AC</MenuItem>
-                        <MenuItem value="Non AC">Non AC</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <TextField label="Short Code" value={editForm.shortCode} onChange={e => setEditForm({...editForm, shortCode: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="Meal Plan" value={editForm.mealPlan} onChange={e => setEditForm({...editForm, mealPlan: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="Floor Number" type="number" value={editForm.floorNumber} onChange={e => setEditForm({...editForm, floorNumber: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="Rent per Night" type="number" value={editForm.rent} onChange={e => setEditForm({...editForm, rent: e.target.value})} sx={muiInputSx} size="small" fullWidth InputProps={{ endAdornment: <InputAdornment position="end"><span className="text-gray-900 font-bold text-xs">$</span></InputAdornment> }} />
-                    <FormControl size="small" fullWidth sx={muiInputSx}>
-                      <InputLabel>Room Status</InputLabel>
-                      <Select value={editForm.status} label="Room Status" onChange={e => setEditForm({...editForm, status: e.target.value})}>
-                        <MenuItem value="Active">Active</MenuItem>
-                        <MenuItem value="Inactive">Inactive</MenuItem>
-                      </Select>
-                    </FormControl>
-                  </div>
-                </div>
+            <form onSubmit={handleSaveEdit} className="p-4 sm:p-5 space-y-3.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <TextField 
+                  id="edit-type-name"
+                  required 
+                  label="Room Type Name*" 
+                  value={editForm.name} 
+                  onChange={e => setEditForm({...editForm, name: e.target.value})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth
+                />
 
-                {/* Section 2: Bed & Space Specifications */}
-                <div>
-                  <h3 className="text-xs font-bold text-gray-800 mb-2.5 pb-1.5 border-b border-gray-200 uppercase tracking-wider">Bed & Space Specifications</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <TextField label="Capacity (Persons)" type="number" value={editForm.capacity} onChange={e => setEditForm({...editForm, capacity: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="Bed Type" value={editForm.bedType} onChange={e => setEditForm({...editForm, bedType: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="Number of Beds" type="number" value={editForm.numberOfBeds} onChange={e => setEditForm({...editForm, numberOfBeds: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="Room Size (sq ft)" type="number" value={editForm.roomSize} onChange={e => setEditForm({...editForm, roomSize: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="View Type" value={editForm.viewType} onChange={e => setEditForm({...editForm, viewType: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                  </div>
-                </div>
+                <TextField 
+                  id="edit-type-base-occupancy"
+                  required
+                  type="number"
+                  label="Base Occupancy*" 
+                  value={editForm.base_occupancy} 
+                  onChange={e => setEditForm({...editForm, base_occupancy: Number(e.target.value)})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
 
-                {/* Section 3: Amenities & Facilities */}
-                <div>
-                  <h3 className="text-xs font-bold text-gray-800 mb-2.5 pb-1.5 border-b border-gray-200 uppercase tracking-wider">Amenities & Facilities</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <TextField label="TV Type" value={editForm.tvType} onChange={e => setEditForm({...editForm, tvType: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="Bathroom Type" value={editForm.bathroomType} onChange={e => setEditForm({...editForm, bathroomType: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <FormControl size="small" fullWidth sx={muiInputSx}>
-                      <InputLabel>WiFi Available</InputLabel>
-                      <Select value={editForm.wifi} label="WiFi Available" onChange={e => setEditForm({...editForm, wifi: e.target.value})}>
-                        <MenuItem value="Yes">Yes</MenuItem>
-                        <MenuItem value="No">No</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <FormControl size="small" fullWidth sx={muiInputSx}>
-                      <InputLabel>Balcony Available</InputLabel>
-                      <Select value={editForm.balcony} label="Balcony Available" onChange={e => setEditForm({...editForm, balcony: e.target.value})}>
-                        <MenuItem value="Yes">Yes</MenuItem>
-                        <MenuItem value="No">No</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <FormControl size="small" fullWidth sx={muiInputSx}>
-                      <InputLabel>Mini Bar Available</InputLabel>
-                      <Select value={editForm.miniBar} label="Mini Bar Available" onChange={e => setEditForm({...editForm, miniBar: e.target.value})}>
-                        <MenuItem value="Yes">Yes</MenuItem>
-                        <MenuItem value="No">No</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <FormControl size="small" fullWidth sx={muiInputSx}>
-                      <InputLabel>Pet Friendly</InputLabel>
-                      <Select value={editForm.petFriendly} label="Pet Friendly" onChange={e => setEditForm({...editForm, petFriendly: e.target.value})}>
-                        <MenuItem value="Yes">Yes</MenuItem>
-                        <MenuItem value="No">No</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <TextField label="Accessibility Features" value={editForm.accessibility} onChange={e => setEditForm({...editForm, accessibility: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                  </div>
-                </div>
+                <TextField 
+                  id="edit-type-max-occupancy"
+                  required
+                  type="number"
+                  label="Max Capacity*" 
+                  value={editForm.max_occupancy} 
+                  onChange={e => setEditForm({...editForm, max_occupancy: Number(e.target.value)})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
 
-                {/* Section 4: Operations & Policies */}
-                <div>
-                  <h3 className="text-xs font-bold text-gray-800 mb-2.5 pb-1.5 border-b border-gray-200 uppercase tracking-wider">Operations & Policies</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    <TextField label="Housekeeping Status" value={editForm.housekeepingStatus} onChange={e => setEditForm({...editForm, housekeepingStatus: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="Maintenance Status" value={editForm.maintenanceStatus} onChange={e => setEditForm({...editForm, maintenanceStatus: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="Smoking Policy" value={editForm.smokingPolicy} onChange={e => setEditForm({...editForm, smokingPolicy: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                    <TextField label="Contact Mobile" value={editForm.mobile} onChange={e => setEditForm({...editForm, mobile: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                  </div>
-                </div>
+                <TextField 
+                  id="edit-type-base-price"
+                  required
+                  type="number"
+                  label="Base Rent / Night*" 
+                  value={editForm.base_price} 
+                  onChange={e => setEditForm({...editForm, base_price: Number(e.target.value)})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                  InputProps={{
+                    endAdornment: <InputAdornment position="end"><span className="text-gray-900 font-bold text-xs">$</span></InputAdornment>
+                  }}
+                />
 
-                {/* Section 5: Additional Details */}
-                <div>
-                  <h3 className="text-xs font-bold text-gray-800 mb-2.5 pb-1.5 border-b border-gray-200 uppercase tracking-wider">Additional Details</h3>
-                  <div className="flex flex-col gap-3">
-                    <div>
-                      <label className="block text-xs text-gray-600 font-medium mb-1">Room Images / Documents</label>
-                      <div className="w-full border border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center text-gray-500 bg-white hover:bg-gray-50 transition-colors cursor-pointer">
-                        <CloudUploadOutlined sx={{ fontSize: 26, mb: 0.5 }} className="text-[var(--primary-main)]" />
-                        <p className="text-xs font-semibold text-gray-700">Click or drag and drop file here</p>
-                        <p className="text-[10px] text-gray-400 mt-0.5">No file chosen</p>
-                      </div>
-                    </div>
-
-                    <TextField 
-                      label="Notes & Instructions" 
-                      multiline 
-                      rows={3}
-                      value={editForm.notes} 
-                      onChange={e => setEditForm({...editForm, notes: e.target.value})} 
-                      sx={muiInputSx} 
-                      fullWidth 
-                    />
-                  </div>
-                </div>
+                <TextField 
+                  id="edit-type-description"
+                  label="Description" 
+                  value={editForm.description} 
+                  onChange={e => setEditForm({...editForm, description: e.target.value})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
               </div>
               
-              <div className="bg-white border-t border-gray-200 px-4 py-2.5 flex items-center justify-end gap-2.5 shrink-0">
-                <button type="button" onClick={() => setIsEditModalOpen(false)} className="px-4 py-1.5 rounded-lg border border-transparent bg-rose-50 text-rose-600 font-semibold text-xs hover:bg-rose-100 transition-colors cursor-pointer shadow-xs">
-                  Cancel
+              <div className="flex items-center gap-2.5 pt-2">
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting}
+                  className="px-4 py-1.5 rounded-lg border border-green-200 bg-green-50 text-[var(--primary-main)] font-semibold text-xs hover:bg-green-100 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Saving...' : 'Update Room Type'}
                 </button>
-                <button type="submit" className="px-4 py-1.5 rounded-lg border border-green-200 bg-green-50 text-[var(--primary-main)] font-semibold text-xs hover:bg-green-100 transition-colors cursor-pointer shadow-xs">
-                  Update Room
+                <button 
+                  type="button" 
+                  onClick={() => setIsEditModalOpen(false)} 
+                  disabled={isSubmitting}
+                  className="px-4 py-1.5 rounded-lg border border-transparent bg-rose-50 text-rose-600 font-semibold text-xs hover:bg-rose-100 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                >
+                  Cancel
                 </button>
               </div>
             </form>
@@ -524,22 +599,28 @@ export default function RoomTypes() {
       )}
 
       {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && roomToDelete && (
+      {isDeleteModalOpen && typeToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-[300px] overflow-hidden flex flex-col p-4 sm:p-5" onClick={e => e.stopPropagation()}>
-            <h2 className="text-base font-bold text-gray-800 mb-3 text-center">Are you sure?</h2>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-[320px] overflow-hidden flex flex-col p-4 sm:p-5" onClick={e => e.stopPropagation()}>
+            <h2 className="text-base font-bold text-gray-800 mb-2 text-center">Delete Room Type?</h2>
             
-            <div className="space-y-1.5 mb-5 text-xs text-gray-600">
-              <p><span className="font-medium text-gray-700">Room No:</span> {roomToDelete.roomNo}</p>
-              <p><span className="font-medium text-gray-700">Room Type:</span> {roomToDelete.roomType}</p>
-              <p><span className="font-medium text-gray-700">Short Code:</span> {roomToDelete.shortCode}</p>
-            </div>
+            <p className="text-xs text-gray-600 mb-4 text-center">
+              Are you sure you want to delete <span className="font-bold text-gray-800">{typeToDelete.name} ({typeToDelete.code})</span>?
+            </p>
             
             <div className="flex justify-center gap-2.5">
-              <button onClick={handleDelete} className="px-4 py-1.5 rounded-lg bg-orange-600 text-white font-semibold text-xs hover:bg-orange-700 transition-colors cursor-pointer shadow-xs">
-                Delete
+              <button 
+                onClick={handleDelete} 
+                disabled={isSubmitting}
+                className="px-4 py-1.5 rounded-lg bg-orange-600 text-white font-semibold text-xs hover:bg-orange-700 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              >
+                {isSubmitting ? 'Deleting...' : 'Delete'}
               </button>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white font-semibold text-xs hover:bg-emerald-800 transition-colors cursor-pointer shadow-xs">
+              <button 
+                onClick={() => setIsDeleteModalOpen(false)} 
+                disabled={isSubmitting}
+                className="px-4 py-1.5 rounded-lg bg-emerald-700 text-white font-semibold text-xs hover:bg-emerald-800 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+              >
                 Cancel
               </button>
             </div>

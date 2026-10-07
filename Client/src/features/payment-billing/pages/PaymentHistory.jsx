@@ -29,17 +29,54 @@ import {
   PendingActions as PendingIcon,
 } from '@mui/icons-material';
 import {
-  getPayments,
-  processRefund,
+  syncPaymentsFromBackend,
+  dispatchFinancialEvent,
+  REFUNDS_UPDATED_EVENT,
 } from './paymentBillingStore';
+import { billingService } from '../../../services/billingService';
+import { toFrontendPaymentList, toBackendRefundPayload } from '../adapters/billingAdapter';
 import PaymentDetailModal from './components/PaymentDetailModal';
 import ProcessRefundModal from './components/ProcessRefundModal';
 
 export default function PaymentHistory() {
-  const [payments, setPayments] = useState(() => getPayments());
+  const [payments, setPayments] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [methodFilter, setMethodFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
+
+  // Backend authoritative data fetching
+  const fetchPayments = React.useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await billingService.getPayments();
+      const rawList = Array.isArray(res?.data?.payments)
+        ? res.data.payments
+        : (Array.isArray(res?.data)
+          ? res.data
+          : (Array.isArray(res?.payments) ? res.payments : null));
+      if (Array.isArray(rawList)) {
+        const adapted = toFrontendPaymentList(rawList);
+        setPayments(adapted);
+        syncPaymentsFromBackend(adapted);
+      } else {
+        setPayments([]);
+      }
+    } catch (err) {
+      console.warn('Backend payments fetch failed:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to load payments from server.';
+      setError(errMsg);
+      setPayments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
 
   // Modals state
   const [selectedPaymentForDetail, setSelectedPaymentForDetail] = useState(null);
@@ -52,7 +89,7 @@ export default function PaymentHistory() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const reloadData = () => {
-    setPayments(getPayments());
+    fetchPayments();
   };
 
   // Metrics
@@ -139,19 +176,36 @@ export default function PaymentHistory() {
     }
   };
 
-  const handleProcessRefund = (refundData) => {
+  const handleProcessRefund = async (refundData) => {
     try {
-      processRefund(refundData);
-      reloadData();
+      const matched = payments.find(
+        (p) => p.id === refundData.paymentId || p.paymentId === refundData.paymentId
+      );
+      const backendPayload = toBackendRefundPayload(refundData);
+      if (matched?._id) {
+        backendPayload.payment_id = matched._id;
+      }
+
+      await billingService.createRefund(backendPayload);
+
+      await fetchPayments();
+      dispatchFinancialEvent(REFUNDS_UPDATED_EVENT, {
+        domain: 'refunds',
+        action: 'process_refund',
+        paymentId: refundData.paymentId,
+        amount: refundData.amount,
+      });
+
       setSnackbar({
         open: true,
         message: `Refund of $${refundData.amount.toFixed(2)} processed successfully for ${refundData.paymentId}!`,
         severity: 'success',
       });
     } catch (err) {
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to process refund.';
       setSnackbar({
         open: true,
-        message: err.message || 'Failed to process refund.',
+        message: errMsg,
         severity: 'error',
       });
       throw err;
@@ -291,8 +345,12 @@ export default function PaymentHistory() {
                 <tr>
                   <td colSpan={10} className="py-8 text-center text-gray-400">
                     <ReceiptIcon className="!text-3xl text-gray-300 mb-1" />
-                    <p className="text-[12px] font-semibold text-gray-600">No payment transactions found</p>
-                    <p className="text-[10.5px] text-gray-400">Try clearing filters or search terms</p>
+                    <p className="text-[12px] font-semibold text-gray-600">
+                      {payments.length === 0 ? 'No payments recorded' : 'No payment transactions found'}
+                    </p>
+                    <p className="text-[10.5px] text-gray-400">
+                      {payments.length === 0 ? 'No guest transactions posted yet' : 'Try clearing filters or search terms'}
+                    </p>
                   </td>
                 </tr>
               ) : (

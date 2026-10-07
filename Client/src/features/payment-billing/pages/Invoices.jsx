@@ -26,11 +26,12 @@ import {
   Person as PersonIcon,
 } from '@mui/icons-material';
 import {
-  getInvoices,
-  getInvoiceWithFinancialState,
-  getPayments,
-  recordInvoicePayment,
+  syncInvoicesFromBackend,
+  dispatchFinancialEvent,
+  PAYMENTS_UPDATED_EVENT,
 } from './paymentBillingStore';
+import { billingService } from '../../../services/billingService';
+import { toFrontendInvoiceList, toBackendPaymentPayload } from '../adapters/billingAdapter';
 import InvoiceDetailModal from './components/InvoiceDetailModal';
 import RecordPaymentModal from './components/RecordPaymentModal';
 
@@ -39,9 +40,43 @@ export default function Invoices() {
   const location = useLocation();
 
   const queryGuest = searchParams.get('guest') || searchParams.get('search') || location.state?.search || location.state?.guestName || '';
-  const [invoices, setInvoices] = useState(() => getInvoices().map(getInvoiceWithFinancialState));
+  const [invoices, setInvoices] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState(queryGuest);
   const [statusFilter, setStatusFilter] = useState('All');
+
+  // Backend authoritative data fetching
+  const fetchInvoices = React.useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await billingService.getInvoices();
+      const rawList = Array.isArray(res?.data?.invoices)
+        ? res.data.invoices
+        : (Array.isArray(res?.data)
+          ? res.data
+          : (Array.isArray(res?.invoices) ? res.invoices : null));
+      if (Array.isArray(rawList)) {
+        const adapted = toFrontendInvoiceList(rawList);
+        setInvoices(adapted);
+        syncInvoicesFromBackend(adapted);
+      } else {
+        setInvoices([]);
+      }
+    } catch (err) {
+      console.warn('Backend invoices fetch failed:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to fetch invoices from server.';
+      setError(errMsg);
+      setInvoices([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
 
   useEffect(() => {
     const q = searchParams.get('guest') || searchParams.get('search') || location.state?.search || location.state?.guestName || '';
@@ -62,7 +97,7 @@ export default function Invoices() {
 
   // Sync state helper
   const reloadData = () => {
-    setInvoices(getInvoices().map(getInvoiceWithFinancialState));
+    fetchInvoices();
   };
 
   // Status Chip Renderer
@@ -149,19 +184,42 @@ export default function Invoices() {
     });
   }, [invoices, searchTerm, statusFilter]);
 
-  const handleRecordPayment = (paymentData) => {
+  const handleRecordPayment = async (paymentData) => {
     try {
-      recordInvoicePayment(paymentData);
-      reloadData();
+      const matched = invoices.find(
+        (inv) => inv.id === paymentData.invoiceId || inv.invoiceNumber === paymentData.invoiceId
+      );
+      const backendPayload = toBackendPaymentPayload(paymentData);
+      if (matched?._id) {
+        backendPayload.invoice_id = matched._id;
+      }
+      if (matched?.folioId && /^[0-9a-fA-F]{24}$/.test(matched.folioId)) {
+        backendPayload.folio_id = matched.folioId;
+      }
+      if (matched?.guestId && /^[0-9a-fA-F]{24}$/.test(matched.guestId)) {
+        backendPayload.guest_id = matched.guestId;
+      }
+
+      await billingService.createPayment(backendPayload);
+
+      await fetchInvoices();
+      dispatchFinancialEvent(PAYMENTS_UPDATED_EVENT, {
+        domain: 'payments',
+        action: 'record_payment',
+        invoiceId: paymentData.invoiceId,
+        amount: paymentData.amount,
+      });
+
       setSnackbar({
         open: true,
         message: `Payment of $${paymentData.amount.toFixed(2)} recorded successfully for ${paymentData.invoiceId}!`,
         severity: 'success',
       });
     } catch (err) {
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to record payment.';
       setSnackbar({
         open: true,
-        message: err.message || 'Failed to record payment.',
+        message: errMsg,
         severity: 'error',
       });
       throw err;
@@ -316,8 +374,12 @@ export default function Invoices() {
                 <tr>
                   <td colSpan={11} className="py-8 text-center text-gray-400">
                     <InvoiceIcon className="!text-3xl text-gray-300 mb-1" />
-                    <p className="text-[12px] font-semibold text-gray-600">No invoices match your criteria</p>
-                    <p className="text-[10.5px] text-gray-400">Try adjusting your search query or status filter</p>
+                    <p className="text-[12px] font-semibold text-gray-600">
+                      {invoices.length === 0 ? 'No invoices found' : 'No invoices match your criteria'}
+                    </p>
+                    <p className="text-[10.5px] text-gray-400">
+                      {invoices.length === 0 ? 'No billing invoices recorded yet' : 'Try adjusting your search query or status filter'}
+                    </p>
                   </td>
                 </tr>
               ) : (
@@ -382,6 +444,8 @@ export default function Invoices() {
                           <Tooltip title="Record Payment">
                             <IconButton
                               size="small"
+                              title="Record Payment"
+                              aria-label="Record Payment"
                               sx={{ padding: '2px' }}
                               className="!text-emerald-600 hover:!bg-emerald-50"
                               onClick={() => {

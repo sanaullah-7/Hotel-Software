@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { getModel } from "../../../database/hotel/modelFactory.js";
+import { withTransaction } from "../../../database/transaction.js";
 import ApiError from "../../../utils/apiError.js";
 import { HTTP_STATUS } from "../../../constants/httpStatusCodes.js";
 import { asString, parsePagination } from "../../../utils/query.js";
@@ -277,10 +278,32 @@ export const getReservations = async (tenantConn, query = {}) => {
     .skip(skip)
     .limit(limit);
 
+  const resIds = reservations.map((r) => r._id);
+  const Folio = await getModel(tenantConn, "Folio");
+  const openFolios = await Folio.find({
+    reservation_id: { $in: resIds },
+    status: "OPEN",
+  }).select("reservation_id balance");
+
+  const folioMap = {};
+  openFolios.forEach((f) => {
+    if (f.reservation_id) {
+      folioMap[f.reservation_id.toString()] = Number(f.balance || 0);
+    }
+  });
+
+  const enrichedReservations = reservations.map((r) => {
+    const obj = r.toObject ? r.toObject() : { ...r };
+    const balance = folioMap[r._id.toString()];
+    obj.folio_balance = balance !== undefined ? balance : 0;
+    obj.dues = obj.folio_balance;
+    return obj;
+  });
+
   const total = await Reservation.countDocuments(filter);
 
   return {
-    reservations,
+    reservations: enrichedReservations,
     pagination: { page, limit, total, pages: Math.ceil(total / limit) },
   };
 };
@@ -292,6 +315,7 @@ export const getReservationById = async (tenantConn, reservationId) => {
 
   const Reservation = await getModel(tenantConn, "Reservation");
   const ReservationRoom = await getModel(tenantConn, "ReservationRoom");
+  const Folio = await getModel(tenantConn, "Folio");
 
   const reservation = await Reservation.findById(reservationId).populate(
     "primary_guest_id",
@@ -302,12 +326,20 @@ export const getReservationById = async (tenantConn, reservationId) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Reservation not found");
   }
 
+  const openFolio = await Folio.findOne({
+    reservation_id: reservation._id,
+    status: "OPEN",
+  }).select("balance");
+  const folio_balance = openFolio ? Number(openFolio.balance || 0) : 0;
+
   const rooms = await ReservationRoom.find({ reservation_id: reservation._id })
     .populate("room_type_id", "name code capacity base_price")
     .populate("room_id", "room_number status floor");
 
   return {
     ...reservation.toObject(),
+    folio_balance,
+    dues: folio_balance,
     rooms,
   };
 };
@@ -419,3 +451,242 @@ export const cancelReservation = async (tenantConn, reservationId, cancellation_
 
   return reservation;
 };
+
+const generateGroupRef = () => {
+  const randHex = crypto.randomBytes(3).toString("hex").toUpperCase();
+  return `GRP-${Date.now().toString().slice(-6)}${randHex}`;
+};
+
+export const getGroupReservations = async (tenantConn, query = {}) => {
+  const ReservationGroup = await getModel(tenantConn, "ReservationGroup");
+
+  const filter = {};
+  const status = asString(query.status);
+  if (status) {
+    filter.status = status.toUpperCase();
+  }
+
+  const search = asString(query.search);
+  if (search) {
+    filter.name = { $regex: search, $options: "i" };
+  }
+
+  const groups = await ReservationGroup.find(filter)
+    .populate("guest_id", "first_name last_name email phone")
+    .sort({ created_at: -1, _id: -1 });
+
+  return groups;
+};
+
+export const getGroupReservationById = async (tenantConn, id) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Group Reservation ID format");
+  }
+
+  const ReservationGroup = await getModel(tenantConn, "ReservationGroup");
+  const group = await ReservationGroup.findById(id).populate(
+    "guest_id",
+    "first_name last_name email phone"
+  );
+
+  if (!group) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, "Group Reservation not found");
+  }
+
+  return group;
+};
+
+export const createGroupReservation = async (tenantConn, data) => {
+  const Guest = await getModel(tenantConn, "Guest");
+  const ReservationGroup = await getModel(tenantConn, "ReservationGroup");
+
+  let guestId = data.guest_id;
+  if (!guestId || !mongoose.Types.ObjectId.isValid(guestId)) {
+    const contactName = (data.contact_person || data.contactPerson || "Group Contact").trim();
+    const parts = contactName.split(/\s+/);
+    const firstName = parts[0] || "Group";
+    const lastName = parts.slice(1).join(" ") || "Contact";
+    const email = data.email || `group_${Date.now()}@hotel.com`;
+    const phone = data.phone || "";
+
+    let guest = await Guest.findOne({
+      $or: [{ email: email.toLowerCase() }, { first_name: firstName, last_name: lastName }],
+    });
+
+    if (!guest) {
+      const randomHex = crypto.randomBytes(2).toString("hex").toUpperCase();
+      const guest_ref = `GST-${Date.now().toString().slice(-6)}${randomHex}`;
+      guest = await Guest.create({
+        guest_ref,
+        first_name: firstName,
+        last_name: lastName,
+        email: email.toLowerCase(),
+        phone,
+      });
+    }
+    guestId = guest._id;
+  }
+
+  const group_ref = generateGroupRef();
+  const rawStatus = (data.status || "PENDING").toUpperCase();
+  const status = ["CONFIRMED", "CANCELLED", "PENDING"].includes(rawStatus) ? rawStatus : "PENDING";
+
+  const newGroup = await ReservationGroup.create({
+    group_ref,
+    guest_id: guestId,
+    name: data.name || data.groupName || "Untitled Group",
+    contact_person: data.contact_person || data.contactPerson || "",
+    email: data.email || "",
+    phone: data.phone || "",
+    company_name: data.company_name || "",
+    billing_instructions: data.billing_instructions || "",
+    notes: data.notes || data.specialRequests || "",
+    status,
+    expected_check_in: data.expected_check_in || data.checkIn ? new Date(data.expected_check_in || data.checkIn) : null,
+    expected_check_out: data.expected_check_out || data.checkOut ? new Date(data.expected_check_out || data.checkOut) : null,
+    rooms_count: Number(data.rooms_count || data.rooms || 1),
+    total_guests: Number(data.total_guests || data.guests || 1),
+    room_types: data.room_types || data.roomTypes || "",
+    total_price: Number(data.total_price || data.totalPrice || 0),
+  });
+
+  return getGroupReservationById(tenantConn, newGroup._id);
+};
+
+export const updateGroupReservation = async (tenantConn, id, data) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Group Reservation ID format");
+  }
+
+  const ReservationGroup = await getModel(tenantConn, "ReservationGroup");
+  const Guest = await getModel(tenantConn, "Guest");
+
+  const group = await ReservationGroup.findById(id);
+  if (!group) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, "Group Reservation not found");
+  }
+
+  if (data.name !== undefined) group.name = data.name;
+  if (data.contact_person !== undefined) group.contact_person = data.contact_person;
+  if (data.email !== undefined) group.email = data.email;
+  if (data.phone !== undefined) group.phone = data.phone;
+  if (data.company_name !== undefined) group.company_name = data.company_name;
+  if (data.billing_instructions !== undefined) group.billing_instructions = data.billing_instructions;
+  if (data.notes !== undefined) group.notes = data.notes;
+  if (data.status !== undefined) {
+    const rawStatus = data.status.toUpperCase();
+    if (["PENDING", "CONFIRMED", "CANCELLED"].includes(rawStatus)) {
+      group.status = rawStatus;
+    }
+  }
+  if (data.expected_check_in || data.checkIn) {
+    group.expected_check_in = new Date(data.expected_check_in || data.checkIn);
+  }
+  if (data.expected_check_out || data.checkOut) {
+    group.expected_check_out = new Date(data.expected_check_out || data.checkOut);
+  }
+  if (data.rooms_count !== undefined || data.rooms !== undefined) {
+    group.rooms_count = Number(data.rooms_count ?? data.rooms);
+  }
+  if (data.total_guests !== undefined || data.guests !== undefined) {
+    group.total_guests = Number(data.total_guests ?? data.guests);
+  }
+  if (data.room_types !== undefined || data.roomTypes !== undefined) {
+    group.room_types = data.room_types ?? data.roomTypes;
+  }
+  if (data.total_price !== undefined || data.totalPrice !== undefined) {
+    group.total_price = Number(data.total_price ?? data.totalPrice);
+  }
+
+  if (data.contact_person || data.contactPerson || data.email || data.phone) {
+    if (group.guest_id) {
+      const guest = await Guest.findById(group.guest_id);
+      if (guest) {
+        if (data.contact_person || data.contactPerson) {
+          const parts = (data.contact_person || data.contactPerson).trim().split(/\s+/);
+          guest.first_name = parts[0] || guest.first_name;
+          guest.last_name = parts.slice(1).join(" ") || guest.last_name;
+        }
+        if (data.email) guest.email = data.email.toLowerCase();
+        if (data.phone) guest.phone = data.phone;
+        await guest.save();
+      }
+    }
+  }
+
+  await group.save();
+  return getGroupReservationById(tenantConn, id);
+};
+
+export const cancelGroupReservation = async (tenantConn, id, cancellation_reason) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Group Reservation ID format");
+  }
+
+  const ReservationGroup = await getModel(tenantConn, "ReservationGroup");
+  const Reservation = await getModel(tenantConn, "Reservation");
+  const ReservationRoom = await getModel(tenantConn, "ReservationRoom");
+  const Room = await getModel(tenantConn, "Room");
+
+  const group = await ReservationGroup.findById(id);
+  if (!group) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, "Group Reservation not found");
+  }
+
+  if (group.status === "CANCELLED") {
+    throw new ApiError(HTTP_STATUS.CONFLICT, "Group reservation is already cancelled");
+  }
+
+  // Inspect child reservations
+  const childReservations = await Reservation.find({ group_id: group._id });
+
+  // Enforce operational stay guard:
+  // Reject cancellation if any child reservation has entered an active or completed stay state
+  const hasInHouse = childReservations.some((r) => r.status === "IN_HOUSE");
+  if (hasInHouse) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Cannot cancel group reservation with active in-house reservations");
+  }
+
+  const hasCheckedOut = childReservations.some((r) => r.status === "CHECKED_OUT");
+  if (hasCheckedOut) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Cannot cancel group reservation with completed/checked-out stays");
+  }
+
+  await withTransaction(tenantConn, async (session) => {
+    const opts = session ? { session } : {};
+
+    // Fresh query inside transaction callback to ensure consistency on standalone MongoDB fallback
+    const activeChildren = await Reservation.find({
+      group_id: group._id,
+      status: { $in: ["PENDING", "CONFIRMED"] },
+    });
+
+    for (const child of activeChildren) {
+      child.status = "CANCELLED";
+      child.cancellation_reason = cancellation_reason || `Group reservation ${group.group_ref} cancelled`;
+      await child.save(opts);
+
+      const resRoom = await ReservationRoom.findOne({ reservation_id: child._id });
+      if (resRoom && resRoom.room_id) {
+        await Room.updateOne(
+          { _id: resRoom.room_id },
+          { $pull: { active_bookings: { reservation_id: child._id } } },
+          opts
+        );
+      }
+    }
+
+    group.status = "CANCELLED";
+    group.cancellation_reason = cancellation_reason || "Cancelled by guest/staff";
+    await group.save(opts);
+  });
+
+  return getGroupReservationById(tenantConn, id);
+};
+
+export const deleteGroupReservation = async (tenantConn, id) => {
+  // Physical deletion is strictly prohibited for ReservationGroup.
+  // Delegate safely to cancelGroupReservation to preserve document retention and audit trail.
+  return cancelGroupReservation(tenantConn, id, "Cancelled via deleteGroupReservation");
+};
+

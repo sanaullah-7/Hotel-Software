@@ -15,7 +15,8 @@ import {
 } from '@mui/icons-material';
 import InvoiceDetailModal from '../../../payment-billing/pages/components/InvoiceDetailModal';
 import RecordPaymentModal from '../../../payment-billing/pages/components/RecordPaymentModal';
-import { recordInvoicePayment } from '../../../payment-billing/pages/paymentBillingStore';
+import { billingService } from '../../../../services/billingService';
+import { toBackendPaymentPayload } from '../../../payment-billing/adapters/billingAdapter';
 
 export default function InvoicesTab({
   guest,
@@ -54,13 +55,28 @@ export default function InvoicesTab({
   const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1;
   const currentItems = filtered.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
-  const handleRecordPayment = (paymentData) => {
+  const handleRecordPayment = async (paymentData) => {
     try {
-      recordInvoicePayment(paymentData);
+      const matched = invoices.find(
+        (inv) => inv.id === paymentData.invoiceId || inv.invoiceNumber === paymentData.invoiceId
+      );
+      const backendPayload = toBackendPaymentPayload(paymentData);
+      if (matched?._id) {
+        backendPayload.invoice_id = matched._id;
+      }
+      if (matched?.folio_id) {
+        backendPayload.folio_id = matched.folio_id;
+      }
+      if (guest?._id || guest?.id) {
+        backendPayload.guest_id = guest._id || guest.id;
+      }
+
+      await billingService.createPayment(backendPayload);
       setSelectedInvoiceForPayment(null);
       if (onInvoicesUpdated) onInvoicesUpdated();
     } catch (err) {
-      alert(err.message || 'Failed to record payment');
+      const msg = err.response?.data?.message || err.message || 'Failed to record payment';
+      alert(msg);
       throw err;
     }
   };

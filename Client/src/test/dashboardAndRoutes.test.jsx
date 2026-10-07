@@ -1,6 +1,6 @@
 import React from 'react';
-import { describe, it, expect } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { PersonAdd } from '@mui/icons-material';
 import KPICard from '../components/common/KPICard';
@@ -191,30 +191,53 @@ describe('Dashboard and Shared UI Components', () => {
   });
 
   it('renders GuestComplaint with working delete confirmation modal and text truncation', async () => {
+    const { default: complaintService } = await import('../services/complaintService');
+    const mockComplaints = [
+      {
+        _id: '65b1c2d3e4f5678901234501',
+        complaint_ref: 'CMP-2024-001',
+        guest_id: { _id: '65a1b2c3d4e5f67890123001', first_name: 'John', last_name: 'Doe' },
+        room_id: { _id: '65d1e2f3a4b5678901234001', room_number: '101' },
+        category: 'PLUMBING',
+        severity: 'MEDIUM',
+        status: 'OPEN',
+        description: 'Leaking tap in bathroom causing water accumulation on floor',
+        created_at: '2024-05-20T10:00:00.000Z',
+      }
+    ];
+    let currentComplaints = [...mockComplaints];
+    vi.spyOn(complaintService, 'getComplaints').mockImplementation(async () => ({ data: currentComplaints }));
+    vi.spyOn(complaintService, 'deleteComplaint').mockImplementation(async (id) => {
+      currentComplaints = currentComplaints.filter(c => c._id !== id);
+      return { success: true };
+    });
+
     const { default: GuestComplaint } = await import('../features/front-office/pages/GuestComplaint');
-    const { getByText, queryByText, getAllByTitle } = render(
+    const { findByText, queryByText, findAllByTitle, getByText } = render(
       <MemoryRouter>
         <GuestComplaint />
       </MemoryRouter>
     );
 
     // Verify initial complaint exists
-    expect(getByText('John Doe')).toBeTruthy();
+    expect(await findByText('John Doe')).toBeTruthy();
 
     // Click delete icon for first complaint
-    const deleteButtons = getAllByTitle('Delete Complaint');
+    const deleteButtons = await findAllByTitle('Delete Complaint');
     expect(deleteButtons.length).toBeGreaterThan(0);
     fireEvent.click(deleteButtons[0]);
 
     // Delete confirmation modal should appear
-    expect(getByText('Are you sure?')).toBeTruthy();
+    expect(await findByText('Are you sure?')).toBeTruthy();
 
     // Confirm deletion
     const confirmDeleteBtn = getByText('Delete', { selector: 'button' });
     fireEvent.click(confirmDeleteBtn);
 
     // Complaint John Doe should now be deleted
-    expect(queryByText('John Doe')).toBeNull();
+    await waitFor(() => {
+      expect(queryByText('John Doe')).toBeNull();
+    });
   });
 
   it('renders AllReservations with no Email column and no column selection filter', async () => {

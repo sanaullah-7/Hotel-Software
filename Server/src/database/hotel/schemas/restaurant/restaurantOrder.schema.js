@@ -9,10 +9,12 @@ const restaurantOrderItemSchema = new mongoose.Schema(
     item_name_snapshot: {
       type: String,
       required: true,
+      trim: true,
     },
     unit_price_snapshot: {
       type: Number,
       required: true,
+      min: 0,
     },
     quantity: {
       type: Number,
@@ -22,9 +24,11 @@ const restaurantOrderItemSchema = new mongoose.Schema(
     subtotal: {
       type: Number,
       required: true,
+      min: 0,
     },
     special_requests: {
       type: String,
+      trim: true,
     },
   },
   { _id: false }
@@ -54,6 +58,30 @@ const restaurantOrderSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Employee',
     },
+    customer_name: {
+      type: String,
+      trim: true,
+    },
+    room_number: {
+      type: String,
+      trim: true,
+    },
+    payment_mode: {
+      type: String,
+      enum: ['ROOM_FOLIO', 'CASH', 'CARD', 'ONLINE'],
+      default: 'ROOM_FOLIO',
+    },
+    notes: {
+      type: String,
+      trim: true,
+    },
+    idempotency_key: {
+      type: String,
+      trim: true,
+    },
+    settled_at: {
+      type: Date,
+    },
     status: {
       type: String,
       enum: ['PENDING', 'PREPARING', 'SERVED', 'COMPLETED', 'CANCELLED'],
@@ -64,6 +92,7 @@ const restaurantOrderSchema = new mongoose.Schema(
       type: Number,
       required: true,
       default: 0,
+      min: 0,
     },
     items: [restaurantOrderItemSchema],
   },
@@ -73,8 +102,15 @@ const restaurantOrderSchema = new mongoose.Schema(
 );
 
 // Indexes
-restaurantOrderSchema.index({ order_ref: 1 });
+// Note: order_ref has unique: true which creates a unique index.
 restaurantOrderSchema.index({ table_id: 1 });
 restaurantOrderSchema.index({ status: 1 });
+restaurantOrderSchema.index({ folio_id: 1 });
+restaurantOrderSchema.index({ guest_id: 1 });
+restaurantOrderSchema.index({ created_at: -1 });
+restaurantOrderSchema.index(
+  { idempotency_key: 1 },
+  { unique: true, partialFilterExpression: { idempotency_key: { $type: 'string' } } }
+);
 
 export default restaurantOrderSchema;

@@ -28,18 +28,76 @@ import {
   Gavel as GavelIcon,
 } from '@mui/icons-material';
 import {
-  getRefunds,
-  getPayments,
-  processRefund,
+  syncRefundsFromBackend,
+  syncPaymentsFromBackend,
 } from './paymentBillingStore';
+import { billingService } from '../../../services/billingService';
+import {
+  toFrontendRefundList,
+  toFrontendPaymentList,
+  toBackendRefundPayload,
+} from '../adapters/billingAdapter';
 import ProcessRefundModal from './components/ProcessRefundModal';
 import RefundVoucherModal from './components/RefundVoucherModal';
 
 export default function Refunds() {
-  const [refunds, setRefunds] = useState(() => getRefunds());
-  const [payments, setPayments] = useState(() => getPayments());
+  const [refunds, setRefunds] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
+
+  // Backend authoritative data fetching
+  const fetchRefundsAndPayments = React.useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [refundsRes, paymentsRes] = await Promise.all([
+        billingService.getRefunds().catch((err) => {
+          console.error('Failed to fetch refunds:', err);
+          return null;
+        }),
+        billingService.getPayments().catch((err) => {
+          console.error('Failed to fetch payments:', err);
+          return null;
+        }),
+      ]);
+
+      if (refundsRes?.data) {
+        const rawRefunds = Array.isArray(refundsRes.data.refunds)
+          ? refundsRes.data.refunds
+          : (Array.isArray(refundsRes.data) ? refundsRes.data : []);
+        const adaptedRefunds = toFrontendRefundList(rawRefunds);
+        setRefunds(adaptedRefunds);
+        syncRefundsFromBackend(adaptedRefunds);
+      } else {
+        setRefunds([]);
+      }
+
+      if (paymentsRes?.data) {
+        const rawPayments = Array.isArray(paymentsRes.data.payments)
+          ? paymentsRes.data.payments
+          : (Array.isArray(paymentsRes.data) ? paymentsRes.data : []);
+        const adaptedPayments = toFrontendPaymentList(rawPayments);
+        setPayments(adaptedPayments);
+        syncPaymentsFromBackend(adaptedPayments);
+      } else {
+        setPayments([]);
+      }
+    } catch (err) {
+      console.error('Backend refunds fetch error:', err);
+      setError(err.message || 'Failed to load refunds');
+      setRefunds([]);
+      setPayments([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchRefundsAndPayments();
+  }, [fetchRefundsAndPayments]);
 
   // Modal state
   const [isProcessRefundOpen, setIsProcessRefundOpen] = useState(false);
@@ -52,8 +110,7 @@ export default function Refunds() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const reloadData = () => {
-    setRefunds(getRefunds());
-    setPayments(getPayments());
+    fetchRefundsAndPayments();
   };
 
   // Metrics
@@ -124,19 +181,29 @@ export default function Refunds() {
     }
   };
 
-  const handleProcessRefund = (refundData) => {
+  const handleProcessRefund = async (refundData) => {
     try {
-      processRefund(refundData);
-      reloadData();
+      const matched = payments.find(
+        (p) => p.id === refundData.paymentId || p.paymentId === refundData.paymentId
+      );
+      const backendPayload = toBackendRefundPayload(refundData);
+      if (matched?._id) {
+        backendPayload.payment_id = matched._id;
+      }
+      
+      await billingService.createRefund(backendPayload);
+
+      await fetchRefundsAndPayments();
       setSnackbar({
         open: true,
-        message: `Refund ${refundData.amount ? `${refundData.amount.toFixed(2)}` : ''} processed successfully!`,
+        message: `Refund ${refundData.amount ? `$${refundData.amount.toFixed(2)}` : ''} processed successfully!`,
         severity: 'success',
       });
     } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Failed to process refund.';
       setSnackbar({
         open: true,
-        message: err.message || 'Failed to process refund.',
+        message: msg,
         severity: 'error',
       });
       throw err;

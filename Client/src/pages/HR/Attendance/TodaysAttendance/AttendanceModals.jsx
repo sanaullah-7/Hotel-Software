@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import {
     Dialog,
     DialogContent,
@@ -10,6 +10,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
 
 export const AttendanceModals = ({
+    employees = [],
     isAddModalOpen,
     setIsAddModalOpen,
     handleSaveNewAttendance,
@@ -51,18 +52,44 @@ export const AttendanceModals = ({
                     <form onSubmit={handleSaveNewAttendance} className="space-y-4">
                         <div>
                             <label className="block text-xs font-semibold text-slate-600 mb-1">
-                                Employee Name *
+                                Employee *
                             </label>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                placeholder="e.g. Alex Morgan"
-                                value={formData.name}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, name: e.target.value })
-                                }
-                                required
-                            />
+                            {employees.length > 0 ? (
+                                <TextField
+                                    select
+                                    fullWidth
+                                    size="small"
+                                    value={formData.employee_id || ''}
+                                    onChange={(e) => {
+                                        const emp = employees.find(item => (item._id || item.id) === e.target.value);
+                                        const fullName = emp ? `${emp.first_name || ''} ${emp.last_name || ''}`.trim() : '';
+                                        setFormData({
+                                            ...formData,
+                                            employee_id: e.target.value,
+                                            name: fullName,
+                                            avatar: emp?.avatar || ''
+                                        });
+                                    }}
+                                    required
+                                >
+                                    {employees.map((emp) => (
+                                        <MenuItem key={emp._id || emp.id} value={emp._id || emp.id}>
+                                            {emp.first_name} {emp.last_name} ({emp.employee_ref || 'EMP'}) - {emp.job_title || 'Staff'}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                            ) : (
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    placeholder="e.g. Alex Morgan"
+                                    value={formData.name}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, name: e.target.value })
+                                    }
+                                    required
+                                />
+                            )}
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

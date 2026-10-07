@@ -46,6 +46,11 @@ const paymentSchema = new mongoose.Schema(
       default: 'COMPLETED',
       required: true,
     },
+    refunded_amount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },

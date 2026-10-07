@@ -5,61 +5,69 @@ import Add from'@mui/icons-material/Add';
 import Remove from'@mui/icons-material/Remove';
 import Badge from'@mui/icons-material/Badge';
 import CheckCircle from'@mui/icons-material/CheckCircle';
-import React, { useState, useEffect, useCallback } from'react';
-import { CATEGORIES, getMenuItems, placeOrder, updateOrder } from'../restaurantStore';
+import React, { useState, useEffect, useCallback } from 'react';
+import { CATEGORIES, getCategories, getMenuItems, placeOrder, updateOrder } from '../restaurantStore';
 
-const EMPTY_FORM = { customer:'', roomNo:'', deliveryDate:'', deliveryTime:'', gratuity: 0, description:'' };
+const EMPTY_FORM = { customer: '', roomNo: '', deliveryDate: '', deliveryTime: '', gratuity: 0, description: '' };
 
 /**
  * CreateOrderModal — lets staff place a new order from the Orders tab.
  * Allows picking items from the full menu with +/- controls.
  */
 export default function CreateOrderModal({ isOpen, onClose, onOrderPlaced, initialOrder }) {
- const [form, setForm] = useState(EMPTY_FORM);
- const [errors, setErrors] = useState({});
- const [menuItems] = useState(getMenuItems);
- const [orderItems, setOrderItems] = useState({}); // { itemId: { name, price, qty } }
- const [selectedCat, setSelectedCat] = useState(CATEGORIES[0].id);
- const [searchQuery, setSearchQuery] = useState('');
- const [isAnimating, setIsAnimating] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
+  const [menuItems, setMenuItems] = useState(getMenuItems());
+  const [categories, setCategories] = useState(getCategories());
+  const [orderItems, setOrderItems] = useState({}); // { itemId: { name, price, qty } }
+  const [selectedCat, setSelectedCat] = useState((getCategories()[0]?.id || 'all'));
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isAnimating, setIsAnimating] = useState(false);
 
- useEffect(() => {
- if (isOpen) {
- if (initialOrder) {
- setForm({
- customer: initialOrder.customer ||'',
- roomNo: initialOrder.roomNo ||'',
- deliveryDate: initialOrder.deliveryDate ||'',
- deliveryTime: initialOrder.deliveryTime ||'',
- gratuity: initialOrder.gratuity || 0,
- description: initialOrder.description ||''
- });
- const itemsMap = {};
- if (initialOrder.items) {
- initialOrder.items.forEach(item => {
- itemsMap[item.itemId] = { itemId: item.itemId, name: item.name, price: item.price, qty: item.qty };
- });
- }
- setOrderItems(itemsMap);
- } else {
- setForm(EMPTY_FORM);
- setOrderItems({});
- }
- setErrors({});
- setSelectedCat(CATEGORIES[0].id);
- setSearchQuery('');
- setTimeout(() => setIsAnimating(true), 10);
- } else {
- setIsAnimating(false);
- }
- }, [isOpen, initialOrder]);
+  useEffect(() => {
+    if (isOpen) {
+      const currentItems = getMenuItems();
+      const currentCats = getCategories();
+      setMenuItems(currentItems);
+      setCategories(currentCats);
 
- const filteredItems = menuItems.filter(i => {
- const matchCat = i.categoryId === selectedCat;
- const matchSearch = !searchQuery.trim() || i.name.toLowerCase().includes(searchQuery.toLowerCase());
- const matchAvail = i.availability ==='Available';
- return matchCat && matchSearch && matchAvail;
- });
+      if (initialOrder) {
+        setForm({
+          customer: initialOrder.customer || '',
+          roomNo: initialOrder.roomNo || '',
+          deliveryDate: initialOrder.deliveryDate || '',
+          deliveryTime: initialOrder.deliveryTime || '',
+          gratuity: initialOrder.gratuity || 0,
+          description: initialOrder.description || ''
+        });
+        const itemsMap = {};
+        if (initialOrder.items) {
+          initialOrder.items.forEach(item => {
+            itemsMap[item.itemId] = { itemId: item.itemId, name: item.name, price: item.price, qty: item.qty };
+          });
+        }
+        setOrderItems(itemsMap);
+      } else {
+        setForm(EMPTY_FORM);
+        setOrderItems({});
+      }
+      setErrors({});
+      setSelectedCat(currentCats[0]?.id || currentCats[0]?._id || 'all');
+      setSearchQuery('');
+      setTimeout(() => setIsAnimating(true), 10);
+    } else {
+      setIsAnimating(false);
+    }
+  }, [isOpen, initialOrder]);
+
+  const filteredItems = menuItems.filter(i => {
+    const matchCat = selectedCat === 'all' ||
+      i.categoryId === selectedCat ||
+      categories.some(c => (c.id === selectedCat || c._id === selectedCat) && (c.id === i.categoryId || c._id === i.categoryId));
+    const matchSearch = !searchQuery.trim() || i.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchAvail = i.availability === 'Available' || i.is_available === true;
+    return matchCat && matchSearch && matchAvail;
+  });
 
  const addItem = useCallback((item) => {
  setOrderItems(prev => ({
@@ -145,20 +153,23 @@ export default function CreateOrderModal({ isOpen, onClose, onOrderPlaced, initi
  {/* LEFT — Menu Picker */}
  <div className="flex-1 flex flex-col border-r border-gray-100 overflow-hidden">
  {/* Category tabs */}
- <div className="flex gap-1 px-4 pt-3 pb-2 hide-scrollbar flex-shrink-0 border-b border-gray-100">
- {CATEGORIES.map(cat => (
- <button
- key={cat.id}
- onClick={() => setSelectedCat(cat.id)}
- className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
- selectedCat === cat.id
- ?'bg-[var(--primary-main)] text-white border-[var(--primary-main)]'
- :'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
- }`}
- >
- {cat.emoji} {cat.label}
- </button>
- ))}
+ <div className="flex gap-1 px-4 pt-3 pb-2 hide-scrollbar flex-shrink-0 border-b border-gray-100 overflow-x-auto">
+ {(categories || CATEGORIES).map(cat => {
+   const catKey = cat.id || cat._id;
+   return (
+     <button
+       key={catKey}
+       onClick={() => setSelectedCat(catKey)}
+       className={`px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all whitespace-nowrap ${
+         selectedCat === catKey
+           ? 'bg-[var(--primary-main)] text-white border-[var(--primary-main)]'
+           : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
+       }`}
+     >
+       {cat.label || cat.name}
+     </button>
+   );
+ })}
  </div>
 
  {/* Item search */}

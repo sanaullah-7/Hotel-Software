@@ -13,8 +13,19 @@ const inventoryMovementSchema = new mongoose.Schema(
       required: true,
     },
     quantity: {
-      type: Number, // Can be positive or negative based on movement_type, but typically positive value and we infer math based on type
+      type: Number, // Strictly positive magnitude (>= 0.0001); movement_type dictates incoming vs outgoing
       required: true,
+      min: 0.0001,
+    },
+    previous_quantity: {
+      type: Number,
+      min: 0,
+      default: null,
+    },
+    new_quantity: {
+      type: Number,
+      min: 0,
+      default: null,
     },
     date: {
       type: Date,
@@ -27,10 +38,17 @@ const inventoryMovementSchema = new mongoose.Schema(
       required: true,
     },
     reference_id: {
-      type: mongoose.Schema.Types.ObjectId, // Optional reference (e.g., to an Expense or Incident)
+      type: mongoose.Schema.Types.ObjectId, // Optional reference (e.g. Expense, Incident, Order, Folio, Stay)
+      default: null,
+    },
+    reference_type: {
+      type: String, // e.g., 'INCIDENT', 'EXPENSE', 'GUEST_CHARGE', 'RESTAURANT_ORDER', 'MANUAL_AUDIT'
+      trim: true,
+      default: null,
     },
     notes: {
       type: String,
+      trim: true,
     },
   },
   {
@@ -40,6 +58,7 @@ const inventoryMovementSchema = new mongoose.Schema(
 
 // Indexes
 inventoryMovementSchema.index({ item_id: 1, date: -1 });
-inventoryMovementSchema.index({ movement_type: 1 });
+inventoryMovementSchema.index({ movement_type: 1, date: -1 });
+inventoryMovementSchema.index({ reference_id: 1 });
 
 export default inventoryMovementSchema;

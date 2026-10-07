@@ -14,6 +14,15 @@ import invoiceRoutes from "../modules/hotel/invoices/invoice.routes.js";
 import paymentRoutes from "../modules/hotel/payments/payment.routes.js";
 import housekeepingRoutes from "../modules/hotel/housekeeping/housekeeping.routes.js";
 import maintenanceRoutes from "../modules/hotel/maintenance/maintenance.routes.js";
+import complaintRoutes from "../modules/hotel/complaints/complaint.routes.js";
+import operationsAlertRoutes from "../modules/hotel/alerts/operationsAlert.routes.js";
+import guestChargeRoutes from "../modules/hotel/guestCharges/guestCharge.routes.js";
+import refundRoutes from "../modules/hotel/refunds/refund.routes.js";
+import leaveRequestRoutes from "../modules/hotel/hr/leaveRequest.routes.js";
+import attendanceRoutes from "../modules/hotel/hr/attendance.routes.js";
+import payrollRoutes from "../modules/hotel/hr/payroll.routes.js";
+import inventoryRoutes from "../modules/hotel/inventory/inventory.routes.js";
+import restaurantRoutes from "../modules/hotel/restaurant/restaurant.routes.js";
 
 export const hotelPmsRouter = Router();
 
@@ -26,7 +35,17 @@ hotelPmsRouter.use("/hotel", checkInOutRoutes); // Stay Lifecycle (Check-in / Ch
 hotelPmsRouter.use("/hotel", folioRoutes); // Guest Folios
 hotelPmsRouter.use("/hotel", invoiceRoutes); // Invoices & Charges
 hotelPmsRouter.use("/hotel", paymentRoutes); // Payments
+hotelPmsRouter.use("/hotel", refundRoutes); // Refunds
+hotelPmsRouter.use("/hotel", guestChargeRoutes); // Guest Charges
 hotelPmsRouter.use("/hotel", housekeepingRoutes); // Housekeeping
 hotelPmsRouter.use("/hotel", maintenanceRoutes); // Maintenance
+hotelPmsRouter.use("/hotel", complaintRoutes); // Guest Complaints
+hotelPmsRouter.use("/hotel", operationsAlertRoutes); // Operations Alerts
+hotelPmsRouter.use("/hotel", leaveRequestRoutes); // Leave Requests
+hotelPmsRouter.use("/hotel", attendanceRoutes); // Attendance Records
+hotelPmsRouter.use("/hotel", payrollRoutes); // Payroll & Employee Salary
+hotelPmsRouter.use("/hotel", inventoryRoutes); // Inventory & Stock
+hotelPmsRouter.use("/hotel", restaurantRoutes); // Restaurant & POS
 
 export default hotelPmsRouter;
+

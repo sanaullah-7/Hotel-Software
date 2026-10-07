@@ -2,13 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { 
   Search, Download, MoreVert, Visibility, Print, ChevronLeft, ChevronRight,
   Inventory2, KeyboardArrowDown, Close, Person, Phone, Hotel, Event, CheckCircle,
-  TableChart
+  TableChart, Refresh
 } from '@mui/icons-material';
 import { 
-  Menu, MenuItem, IconButton, Popover, Dialog, DialogTitle, DialogContent, DialogActions
+  Menu, MenuItem, IconButton, Popover, Dialog, DialogTitle, DialogContent, DialogActions,
+  Alert, CircularProgress
 } from '@mui/material';
-import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../state/reservationStore';
+import { getReservations, syncReservationsFromBackend, RESERVATIONS_UPDATED_EVENT } from '../state/reservationStore';
 import { normalizeBookingStatus } from '../state/bookingRules';
+import { toFrontendReservation } from '../adapters/reservationAdapter';
+import reservationService from '../../../services/reservationService';
 import { getGuestById, resolveGuestForBooking } from '../../guests/state/guestStore';
 import { getRoomById, getRoomByRoomNo, toStandardRoomType } from '../../rooms/state/roomStore';
 import { getBookingDues, getInvoices } from '../../payment-billing/pages/paymentBillingStore';
@@ -247,11 +250,43 @@ export default function ReservationHistory() {
   const [selectedRes, setSelectedRes] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
-  // Canonical reservations state
-  const [rawBookings, setRawBookings] = useState(() => getReservations());
+  // Backend reservations state
+  const [rawBookings, setRawBookings] = useState(() => getReservations([]));
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const loadHistory = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await reservationService.getReservations();
+      const items = Array.isArray(res?.data?.reservations)
+        ? res.data.reservations
+        : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.reservations)
+            ? res.reservations
+            : (Array.isArray(res) ? res : []);
+      if (Array.isArray(items)) {
+        const adapted = items.map(toFrontendReservation).filter(Boolean);
+        setRawBookings(adapted);
+        syncReservationsFromBackend(items);
+      }
+    } catch (err) {
+      setError(err?.message || 'Failed to load reservation history.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const syncReservations = () => setRawBookings(getReservations());
+    loadHistory();
+    const syncReservations = () => {
+      const stored = getReservations([]);
+      if (Array.isArray(stored)) {
+        setRawBookings(stored);
+      }
+    };
     window.addEventListener('storage', syncReservations);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
     return () => {
@@ -600,6 +635,16 @@ export default function ReservationHistory() {
             )}
           </div>
           
+          {/* Refresh Button */}
+          <button 
+            onClick={loadHistory}
+            className="w-7.5 h-7.5 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer shrink-0"
+            title="Refresh"
+            aria-label="Refresh"
+          >
+            <Refresh sx={{ fontSize: 17 }} className="text-[#1b7f43]" />
+          </button>
+
           {/* Export CSV Button */}
           <button 
             onClick={handleExportCSV}
@@ -611,6 +656,21 @@ export default function ReservationHistory() {
           </button>
         </div>
       </div>
+
+      {/* Error Banner */}
+      {error && (
+        <Alert
+          severity="error"
+          className="mb-2"
+          action={
+            <button onClick={loadHistory} className="text-xs underline font-semibold cursor-pointer">
+              Retry
+            </button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
 
       {/* Data Table Card */}
       <div className="bg-white rounded-lg border border-gray-200/80 shadow-xs overflow-hidden flex flex-col">

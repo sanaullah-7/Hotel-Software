@@ -11,6 +11,9 @@ import {
   updateReservationSchema,
   cancelReservationSchema,
   availabilityQuerySchema,
+  createGroupReservationSchema,
+  updateGroupReservationSchema,
+  cancelGroupReservationSchema,
 } from "./reservation.validation.js";
 
 const router = Router();
@@ -29,6 +32,33 @@ router.post(
   authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
   validate(createReservationSchema),
   reservationController.createReservation
+);
+
+// Group Reservations
+router.get("/reservations/groups", reservationController.getGroupReservations);
+router.post(
+  "/reservations/groups",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
+  validate(createGroupReservationSchema),
+  reservationController.createGroupReservation
+);
+router.get("/reservations/groups/:id", reservationController.getGroupReservationById);
+router.put(
+  "/reservations/groups/:id",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
+  validate(updateGroupReservationSchema),
+  reservationController.updateGroupReservation
+);
+router.post(
+  "/reservations/groups/:id/cancel",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
+  validate(cancelGroupReservationSchema),
+  reservationController.cancelGroupReservation
+);
+router.delete(
+  "/reservations/groups/:id",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
+  reservationController.cancelGroupReservation
 );
 
 router.get("/reservations", reservationController.getReservations);

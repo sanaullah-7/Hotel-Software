@@ -1,51 +1,63 @@
 import { FilterList, AddCircleOutlined, Refresh, TableChart, PictureAsPdf, HourglassEmpty, Autorenew, CheckCircle, Warning } from '@mui/icons-material';
-import React, { useState, useRef, useEffect } from 'react';
-import { TextField, FormControl, InputLabel, Select, MenuItem, InputAdornment, TablePagination } from '@mui/material';
-import { getRooms, saveRooms } from './hkStore';
-import { getRoomByRoomNo } from '../../rooms/state/roomStore';
-
-function mapRoomToTask(r) {
-  const roomNo = String(r.roomNo || r.id || '');
-  let status = 'Pending';
-  if (r.status === 'Clean / Ready' || r.cleaningStatus === 'Completed') status = 'Completed';
-  else if (r.status === 'Cleaning' || r.cleaningStatus === 'In Progress') status = 'In Progress';
-  else if (r.status === 'Delayed') status = 'Delayed';
-  else status = 'Pending';
-
-  let priority = r.priority || 'Medium';
-  if (priority === 'Standard' || priority === 'Normal') priority = 'Medium';
-  if (priority === 'Urgent') priority = 'High';
-
-  let taskType = r.taskType || r.cleaningType || 'Full Clean';
-  if (!['Full Clean', 'Quick Clean', 'Turn Down', 'Deep Clean'].includes(taskType)) {
-    taskType = 'Full Clean';
-  }
-
-  return {
-    ...r,
-    id: r.id || roomNo,
-    roomNo,
-    taskType,
-    assignedStaff: r.assignedStaff !== undefined ? r.assignedStaff : (r.assignee && r.assignee !== '-' ? r.assignee : ''),
-    startTime: r.startTime || (r.started && r.started !== '-' ? r.started : '09:00'),
-    endTime: r.endTime || (r.completed && r.completed !== '-' ? r.completed : '10:00'),
-    priority,
-    status,
-    notes: r.notes || ''
-  };
-}
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { TextField, FormControl, InputLabel, Select, MenuItem, TablePagination, CircularProgress, Alert } from '@mui/material';
+import { saveRooms } from './hkStore';
+import opsService from '../../../services/opsService';
+import roomService from '../../../services/roomService';
+import {
+  toScheduleTask,
+  toScheduleTaskList,
+  toScheduleBackendPayload
+} from '../adapters/housekeepingAdapter';
 
 const formatTime = (time24) => {
   if (!time24) return '';
   const [hour, minute] = time24.split(':');
   const h = parseInt(hour, 10);
+  if (isNaN(h)) return time24;
   const ampm = h >= 12 ? 'PM' : 'AM';
   const formattedHour = h % 12 || 12;
   return `${formattedHour.toString().padStart(2, '0')}:${minute} ${ampm}`;
 };
 
+/**
+ * Non-authoritative legacy synchronization for dashboard/assistant widgets.
+ * Cleaning Schedule does not read from hk_rooms as authority.
+ */
+function syncLegacyHkRooms(scheduleTasks) {
+  try {
+    const bridgeRooms = scheduleTasks.map(task => ({
+      id: task.roomNo || task.id,
+      roomId: task.roomId,
+      roomNo: task.roomNo,
+      taskType: task.taskType,
+      cleaningType: task.taskType,
+      assignedStaff: task.assignedStaff,
+      assignee: task.assignedStaff || '-',
+      startTime: task.startTime,
+      endTime: task.endTime,
+      started: task.startTime || '-',
+      completed: task.endTime || '-',
+      priority: task.priority,
+      status: task.status === 'Completed' ? 'Clean / Ready' : (task.status === 'In Progress' ? 'Cleaning' : (task.status === 'Delayed' ? 'Delayed' : 'Pending')),
+      cleaningStatus: task.status === 'Completed' ? 'Completed' : (task.status === 'In Progress' ? 'In Progress' : 'Scheduled'),
+      notes: task.notes || ''
+    }));
+    saveRooms(bridgeRooms);
+  } catch (err) {
+    console.warn('[Legacy Bridge] Could not sync to hk_rooms:', err);
+  }
+}
+
 export default function CleaningSchedule() {
-  const [tasks, setTasks] = useState(() => getRooms().map(mapRoomToTask));
+  const [tasks, setTasks] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -57,14 +69,62 @@ export default function CleaningSchedule() {
 
   const [form, setForm] = useState({
     roomNo: '',
-    taskType: '',
+    taskType: 'Full Clean',
     priority: 'Medium',
     status: 'Pending',
     assignedStaff: '',
-    startTime: '',
-    endTime: '',
+    startTime: '09:00',
+    endTime: '10:00',
     notes: ''
   });
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [tasksRes, roomsRes, employeesRes] = await Promise.all([
+        opsService.getHousekeepingTasks({ limit: 100 }),
+        roomService.getRooms({ limit: 100 }).catch(err => {
+          console.warn('[CleaningSchedule] Failed to fetch rooms:', err);
+          return { data: [] };
+        }),
+        opsService.getEmployees({ limit: 100 }).catch(err => {
+          console.warn('[CleaningSchedule] Failed to fetch employees:', err);
+          return { data: [] };
+        })
+      ]);
+
+      const loadedTasks = Array.isArray(tasksRes.data)
+        ? tasksRes.data
+        : (tasksRes.data?.tasks || []);
+
+      const loadedRooms = Array.isArray(roomsRes.data)
+        ? roomsRes.data
+        : (roomsRes.data?.rooms || []);
+
+      const loadedEmployees = Array.isArray(employeesRes.data)
+        ? employeesRes.data
+        : (employeesRes.data?.employees || []);
+
+      setRooms(loadedRooms);
+      setEmployees(loadedEmployees);
+
+      const frontendTasks = toScheduleTaskList(loadedTasks, loadedRooms, loadedEmployees);
+      setTasks(frontendTasks);
+
+      // Maintain isolated legacy bridge for dashboard compatibility
+      syncLegacyHkRooms(frontendTasks);
+    } catch (err) {
+      console.error('[CleaningSchedule] Load error:', err);
+      setError(err?.response?.data?.message || err?.message || 'Failed to load cleaning schedule');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Derived Summary Stats
   const pendingCount = tasks.filter(t => t.status === 'Pending').length;
@@ -113,6 +173,7 @@ export default function CleaningSchedule() {
   const handleRefresh = () => {
     setSearchTerm('');
     setPage(0);
+    loadData();
     setVisibleColumns({
       'Room No': true, 'Task Type': true, 'Assigned Staff': true, 'Time Slot': true, 'Priority': true, 'Status': true, 'Notes': true, 'Actions': true
     });
@@ -200,73 +261,87 @@ export default function CleaningSchedule() {
 
   const handleOpenNew = () => {
     setEditingId(null);
-    setForm({ roomNo: '', taskType: '', priority: 'Medium', status: 'Pending', assignedStaff: '', startTime: '', endTime: '', notes: '' });
+    setFormError(null);
+    setForm({
+      roomNo: '',
+      taskType: 'Full Clean',
+      priority: 'Medium',
+      status: 'Pending',
+      assignedStaff: '',
+      startTime: '09:00',
+      endTime: '10:00',
+      notes: ''
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (task) => {
     setEditingId(task.id);
-    setForm({ ...task });
+    setFormError(null);
+    setForm({
+      roomNo: task.roomNo,
+      taskType: task.taskType || 'Full Clean',
+      priority: task.priority || 'Medium',
+      status: task.status || 'Pending',
+      assignedStaff: task.assignedStaff || '',
+      startTime: task.startTime || '09:00',
+      endTime: task.endTime || '10:00',
+      notes: task.notes || ''
+    });
     setIsModalOpen(true);
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    const currentCanonicalRooms = getRooms();
-    let updatedRooms;
-    if (editingId) {
-      updatedRooms = currentCanonicalRooms.map(r => {
-        if (r.id === editingId || r.roomNo === editingId) {
-          const status = form.status === 'Completed' ? 'Clean / Ready' : (form.status === 'In Progress' ? 'Cleaning' : (form.status === 'Delayed' ? 'Delayed' : 'Pending'));
-          const cleaningStatus = form.status === 'Completed' ? 'Completed' : (form.status === 'In Progress' ? 'In Progress' : 'Scheduled');
-          return {
-            ...r,
-            roomNo: form.roomNo,
-            cleaningType: form.taskType,
-            taskType: form.taskType,
-            priority: form.priority,
-            assignedStaff: form.assignedStaff,
-            assignee: form.assignedStaff && form.assignedStaff.trim() ? form.assignedStaff : (r.assignee || '-'),
-            startTime: form.startTime,
-            started: form.startTime || r.started || '-',
-            endTime: form.endTime,
-            completed: form.endTime || r.completed || '-',
-            status,
-            cleaningStatus,
-            notes: form.notes
-          };
-        }
-        return r;
+    setFormError(null);
+    setSubmitting(true);
+
+    try {
+      const existing = editingId ? tasks.find(t => t.id === editingId) : null;
+      const payload = toScheduleBackendPayload(form, {
+        rooms,
+        employees,
+        existingTask: existing?.rawBackend || existing
       });
-    } else {
-      const newRoom = {
-        id: form.roomNo,
-        roomNo: form.roomNo,
-        roomType: 'Delux',
-        acNonAc: 'AC',
-        meal: 'All',
-        capacity: '2',
-        rent: '100',
-        mobile: '',
-        roomImage: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop',
-        cleaningType: form.taskType,
-        taskType: form.taskType,
-        priority: form.priority,
-        assignedStaff: form.assignedStaff,
-        assignee: form.assignedStaff && form.assignedStaff.trim() ? form.assignedStaff : '-',
-        startTime: form.startTime,
-        started: form.startTime || '-',
-        endTime: form.endTime,
-        completed: form.endTime || '-',
-        status: form.status === 'Completed' ? 'Clean / Ready' : (form.status === 'In Progress' ? 'Cleaning' : (form.status === 'Delayed' ? 'Delayed' : 'Pending')),
-        cleaningStatus: form.status === 'Completed' ? 'Completed' : (form.status === 'In Progress' ? 'In Progress' : 'Scheduled'),
-        notes: form.notes
-      };
-      updatedRooms = [...currentCanonicalRooms, newRoom];
+
+      let updatedTask;
+      if (editingId) {
+        const res = await opsService.updateHousekeepingTask(editingId, payload);
+        updatedTask = res.data;
+        const frontendRecord = toScheduleTask(
+          updatedTask,
+          rooms.reduce((acc, r) => ({ ...acc, [r._id]: r }), {}),
+          employees.reduce((acc, emp) => ({ ...acc, [emp._id]: emp }), {})
+        );
+
+        setTasks(prev => {
+          const next = prev.map(t => t.id === editingId ? frontendRecord : t);
+          syncLegacyHkRooms(next);
+          return next;
+        });
+      } else {
+        const res = await opsService.createHousekeepingTask(payload);
+        updatedTask = res.data;
+        const frontendRecord = toScheduleTask(
+          updatedTask,
+          rooms.reduce((acc, r) => ({ ...acc, [r._id]: r }), {}),
+          employees.reduce((acc, emp) => ({ ...acc, [emp._id]: emp }), {})
+        );
+
+        setTasks(prev => {
+          const next = [frontendRecord, ...prev];
+          syncLegacyHkRooms(next);
+          return next;
+        });
+      }
+
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('[CleaningSchedule] Save error:', err);
+      setFormError(err?.response?.data?.message || err?.message || 'Failed to save schedule task');
+    } finally {
+      setSubmitting(false);
     }
-    saveRooms(updatedRooms);
-    setTasks(getRooms().map(mapRoomToTask));
-    setIsModalOpen(false);
   };
 
   const handleOpenDelete = (task) => {
@@ -274,13 +349,24 @@ export default function CleaningSchedule() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleDelete = () => {
-    const currentCanonicalRooms = getRooms();
-    const updatedRooms = currentCanonicalRooms.filter(r => r.id !== taskToDelete.id && r.roomNo !== taskToDelete.roomNo);
-    saveRooms(updatedRooms);
-    setTasks(getRooms().map(mapRoomToTask));
-    setIsDeleteModalOpen(false);
-    setTaskToDelete(null);
+  const handleDelete = async () => {
+    if (!taskToDelete) return;
+    setSubmitting(true);
+    try {
+      await opsService.deleteHousekeepingTask(taskToDelete.id);
+      setTasks(prev => {
+        const next = prev.filter(t => t.id !== taskToDelete.id);
+        syncLegacyHkRooms(next);
+        return next;
+      });
+      setIsDeleteModalOpen(false);
+      setTaskToDelete(null);
+    } catch (err) {
+      console.error('[CleaningSchedule] Delete error:', err);
+      alert(err?.response?.data?.message || err?.message || 'Failed to delete schedule task');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getStatusStyles = (status) => {
@@ -414,6 +500,16 @@ export default function CleaningSchedule() {
             </button>
           </div>
         </div>
+
+        {/* Global Error Banner */}
+        {error && (
+          <div className="p-3 bg-rose-50 border-b border-rose-100 flex items-center justify-between text-xs text-rose-700">
+            <span>{error}</span>
+            <button onClick={loadData} className="font-semibold underline cursor-pointer ml-3">
+              Retry
+            </button>
+          </div>
+        )}
         
         {/* Table */}
         <div className="w-full overflow-hidden">
@@ -441,7 +537,16 @@ export default function CleaningSchedule() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {filteredTasks.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="py-8 text-center text-gray-500 text-xs">
+                    <div className="flex items-center justify-center gap-2">
+                      <CircularProgress size={16} sx={{ color: '#1b7f43' }} />
+                      <span>Loading cleaning schedule...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredTasks.length === 0 ? (
                 <tr>
                   <td colSpan={Object.values(visibleColumns).filter(Boolean).length} className="py-8 text-center text-gray-400 text-xs">
                     No cleaning tasks scheduled for today.
@@ -505,18 +610,24 @@ export default function CleaningSchedule() {
 
       {/* Add / Edit Task Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsModalOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => !submitting && setIsModalOpen(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-[560px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="bg-[#1b7f43] px-4 py-2.5 flex items-center justify-between text-white">
               <h2 className="text-sm font-bold">
                 {editingId ? `Edit Task for Room ${form.roomNo}` : 'New Cleaning Task'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center text-xs font-bold">
+              <button disabled={submitting} onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center text-xs font-bold disabled:opacity-50">
                 ✕
               </button>
             </div>
             
             <form onSubmit={handleSave} className="p-4 sm:p-5 overflow-y-auto max-h-[80vh]">
+              {formError && (
+                <Alert severity="error" sx={{ mb: 2, fontSize: '12px' }}>
+                  {formError}
+                </Alert>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <TextField 
                   required 
@@ -526,6 +637,7 @@ export default function CleaningSchedule() {
                   sx={muiInputSx} 
                   size="small" 
                   fullWidth
+                  helperText={rooms.length > 0 && !rooms.some(r => String(r.room_number) === String(form.roomNo)) && form.roomNo ? "Must match existing room" : ""}
                 />
 
                 <FormControl size="small" fullWidth sx={muiInputSx}>
@@ -588,7 +700,7 @@ export default function CleaningSchedule() {
                   sx={muiInputSx} 
                   size="small" 
                   fullWidth 
-                  InputLabelProps={{ shrink: true }} 
+                  slotProps={{ inputLabel: { shrink: true } }}
                 />
 
                 <TextField 
@@ -599,7 +711,7 @@ export default function CleaningSchedule() {
                   sx={muiInputSx} 
                   size="small" 
                   fullWidth 
-                  InputLabelProps={{ shrink: true }} 
+                  slotProps={{ inputLabel: { shrink: true } }}
                 />
 
                 <div className="sm:col-span-2">
@@ -617,11 +729,12 @@ export default function CleaningSchedule() {
               </div>
               
               <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-gray-100">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer">
+                <button type="button" disabled={submitting} onClick={() => setIsModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50">
                   Cancel
                 </button>
-                <button type="submit" className="px-4 py-1.5 rounded-lg bg-[#1b7f43] text-white font-semibold text-xs hover:bg-[#166534] transition-colors cursor-pointer shadow-xs">
-                  Save
+                <button type="submit" disabled={submitting} className="px-4 py-1.5 rounded-lg bg-[#1b7f43] text-white font-semibold text-xs hover:bg-[#166534] transition-colors cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5">
+                  {submitting && <CircularProgress size={12} color="inherit" />}
+                  <span>Save</span>
                 </button>
               </div>
             </form>
@@ -631,7 +744,7 @@ export default function CleaningSchedule() {
 
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && taskToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => !submitting && setIsDeleteModalOpen(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-[340px] p-5 text-center" onClick={e => e.stopPropagation()}>
             <h3 className="text-base font-bold text-gray-800 mb-3 text-left">Confirm Delete</h3>
             
@@ -640,11 +753,12 @@ export default function CleaningSchedule() {
             </p>
             
             <div className="flex justify-end gap-2">
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer">
+              <button disabled={submitting} onClick={() => setIsDeleteModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50">
                 Cancel
               </button>
-              <button onClick={handleDelete} className="px-3.5 py-1.5 rounded-lg bg-rose-600 text-white font-semibold text-xs hover:bg-rose-700 transition-colors cursor-pointer">
-                Delete
+              <button disabled={submitting} onClick={handleDelete} className="px-3.5 py-1.5 rounded-lg bg-rose-600 text-white font-semibold text-xs hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                {submitting && <CircularProgress size={12} color="inherit" />}
+                <span>Delete</span>
               </button>
             </div>
           </div>

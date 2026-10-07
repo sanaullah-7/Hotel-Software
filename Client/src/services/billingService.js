@@ -15,6 +15,17 @@ export const billingService = {
   getPayments: (params) => api.get("/hotel/payments", params),
   getPaymentById: (id) => api.get(`/hotel/payments/${id}`),
   createPayment: (data) => api.post("/hotel/payments", data),
+
+  // Refunds
+  getRefunds: (params) => api.get("/hotel/refunds", params),
+  getRefundById: (id) => api.get(`/hotel/refunds/${id}`),
+  createRefund: (data) => api.post("/hotel/refunds", data),
+
+  // Guest Charges
+  getGuestCharges: (params) => api.get("/hotel/guest-charges", params),
+  getGuestChargeById: (id) => api.get(`/hotel/guest-charges/${id}`),
+  createGuestCharge: (data) => api.post("/hotel/guest-charges", data),
+  voidGuestCharge: (id) => api.patch(`/hotel/guest-charges/${id}/void`),
 };
 
 export default billingService;

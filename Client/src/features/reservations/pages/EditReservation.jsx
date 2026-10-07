@@ -5,13 +5,14 @@ import {
   Person, Hotel, CreditCard, NoteAlt, CameraAlt
 } from '@mui/icons-material';
 import {
-  TextField, MenuItem, FormControl, InputLabel, Select
+  TextField, MenuItem, FormControl, InputLabel, Select, Alert, CircularProgress
 } from '@mui/material';
-import { getReservations } from '../state/reservationStore';
+import reservationService from '../../../services/reservationService';
+import { toFrontendReservation, toBackendReservationPayload } from '../adapters/reservationAdapter';
+import { getReservations, syncReservationsFromBackend } from '../state/reservationStore';
 import { addAuditLog } from '../../audit/state/auditStore';
 import { getRooms, getRoomById, getRoomByRoomNo, normalizeRoomType, getAvailableRoomTypes, toStandardRoomType } from '../../../features/rooms/state/roomStore';
 import { getGuests } from '../../guests/state/guestStore';
-import { getRoomAvailability, saveBookingsWithRoomState } from '../state/reservationLifecycle';
 import { validateStayDates } from '../state/bookingRules';
 
 export default function EditReservation() {
@@ -58,109 +59,178 @@ export default function EditReservation() {
   const profileImageInputRef = React.useRef(null);
   const [cnicBase64, setCnicBase64] = useState(null);
 
-  // Load booking from canonical store on mount
+  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [backendAvailability, setBackendAvailability] = useState(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState(null);
+
+  // Load booking from backend or canonical compatibility store on mount
   useEffect(() => {
     if (!id) return;
-    const allRes = getReservations();
-    const booking = allRes.find(b => String(b.id) === String(id));
-    if (!booking) return;
+    let isMounted = true;
 
-    setOriginalBooking(booking);
+    async function loadBooking() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        let booking = null;
+        if (/^[0-9a-fA-F]{24}$/.test(String(id).trim())) {
+          try {
+            const res = await reservationService.getReservationById(String(id).trim());
+            const backendRes = res?.data?.reservation || res?.data || res;
+            if (backendRes) {
+              booking = toFrontendReservation(backendRes);
+            }
+          } catch (fetchErr) {
+            console.warn('Backend fetch by id failed, checking local compatibility store:', fetchErr);
+          }
+        }
 
-    const nameParts = (booking.name || '').split(' ');
-    const fName = nameParts[0];
-    const lNames = nameParts.slice(1).join(' ');
+        if (!booking) {
+          const allRes = getReservations();
+          booking = allRes.find(b => String(b.id) === String(id) || String(b._id) === String(id) || String(b.bookingId) === String(id));
+        }
 
-    // Pre-select the room by its canonical id (stored as string to match Select value)
-    const roomId = booking.roomId !== undefined && booking.roomId !== null ? String(booking.roomId) : '';
+        if (!booking && isMounted) {
+          setError('Reservation not found.');
+          return;
+        }
 
-    setFormData(prev => ({
-      ...prev,
-      firstName: fName || '',
-      lastName: lNames || '',
-      email: booking.email || '',
-      mobile: booking.mobile || '',
-      gender: booking.gender || '',
-      city: booking.city || '',
-      idNumber: booking.idNumber || booking.passport || '',
-      nationality: booking.nationality || '',
-      checkInDate: booking.checkIn || '',
-      checkOutDate: booking.checkOut || '',
-      roomType: booking.roomType || '',
-      room: roomId,
-      totalPerson: booking.totalPerson || '',
-      numberOfRooms: booking.numRooms || '1',
-      package: (booking.package === 'Standard' ? 'Standard (Room Only)' : booking.package) || 'Standard (Room Only)',
-      purposeOfStay: booking.purposeOfStay || booking.purpose || 'Leisure',
-      paymentMethod: booking.payment || 'Credit Card',
-      discountCode: booking.discountCode || '',
-      bookingReference: booking.bookingRef || String(booking.id),
-      emergencyContactName: booking.emergencyName || '',
-      emergencyContactPhone: booking.emergencyPhone || '',
-      address: booking.address || '',
-      specialRequests: booking.specialRequests || '',
-      note: booking.note || '',
-    }));
+        if (isMounted && booking) {
+          setOriginalBooking(booking);
 
-    if (booking.avatar) {
-      setGuestProfileImage(booking.avatar);
+          const nameParts = (booking.name || '').split(' ');
+          const fName = booking.firstName || nameParts[0] || '';
+          const lNames = booking.lastName || nameParts.slice(1).join(' ') || '';
+
+          // Pre-select the room by its canonical id
+          const roomId = booking.roomId !== undefined && booking.roomId !== null ? String(booking.roomId) : '';
+
+          setFormData(prev => ({
+            ...prev,
+            firstName: fName || '',
+            lastName: lNames || '',
+            email: booking.email || '',
+            mobile: booking.mobile || booking.phone || '',
+            gender: booking.gender || '',
+            city: booking.city || '',
+            idNumber: booking.idNumber || booking.passport || '',
+            nationality: booking.nationality || '',
+            checkInDate: booking.checkIn || '',
+            checkOutDate: booking.checkOut || '',
+            roomType: booking.roomType || '',
+            room: roomId,
+            totalPerson: booking.totalPerson || String(booking.adults || 1),
+            numberOfRooms: booking.numRooms || '1',
+            package: (booking.package === 'Standard' ? 'Standard (Room Only)' : booking.package) || 'Standard (Room Only)',
+            purposeOfStay: booking.purposeOfStay || booking.purpose || 'Leisure',
+            paymentMethod: booking.payment || 'Credit Card',
+            discountCode: booking.discountCode || '',
+            bookingReference: booking.bookingRef || booking.bookingId || String(booking.id),
+            emergencyContactName: booking.emergencyName || '',
+            emergencyContactPhone: booking.emergencyPhone || '',
+            address: booking.address || '',
+            specialRequests: booking.specialRequests || booking.special_requests || '',
+            note: booking.note || '',
+          }));
+
+          if (booking.avatar) {
+            setGuestProfileImage(booking.avatar);
+          }
+        }
+      } catch (err) {
+        if (isMounted) setError(err.message || 'Failed to load reservation.');
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
     }
+
+    loadBooking();
+    return () => { isMounted = false; };
   }, [id]);
 
-  // ─── TASK 1: Available rooms computed from canonical availability check ───────
-  // Uses getRoomAvailability() with excludeBookingId=id so the current booking's
-  // own room does not count as a conflict for its own dates.
-  const computeAvailableRooms = () => {
-    const checkIn = formData.checkInDate;
-    const checkOut = formData.checkOutDate;
-    const allRooms = getRooms();
-    const allBookings = getReservations();
-
-    // If dates are not yet entered, fall back to showing rooms that are simply 'Open'
-    // or already assigned to this booking (so the current room is always selectable).
-    if (!checkIn || !checkOut) {
-      return allRooms
-        .filter(room => {
-          const status = String(room.status || '').toLowerCase();
-          if (status === 'open') return true;
-          // Always include the room currently assigned to this booking
-          if (originalBooking?.roomId && String(room.id) === String(originalBooking.roomId)) return true;
-          return false;
-        })
-        .map(room => ({
-          id: String(room.id),
-          sourceId: room.id,
-          number: room.roomNo,
-          type: room.roomType,
-          capacity: room.capacity || room.bedCapacity || 2
-        }));
+  useEffect(() => {
+    if (!formData.checkInDate || !formData.checkOutDate) {
+      setBackendAvailability(null);
+      return;
+    }
+    const checkIn = new Date(formData.checkInDate);
+    const checkOut = new Date(formData.checkOutDate);
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime()) || checkOut <= checkIn) {
+      setBackendAvailability(null);
+      return;
     }
 
-    // With dates available, use full canonical availability check
-    try {
-      validateStayDates(checkIn, checkOut);
-    } catch {
-      // Dates are invalid — show only the currently assigned room (if any)
-      const currentRoom = originalBooking?.roomId ? getRoomById(originalBooking.roomId) : null;
-      return currentRoom
-        ? [{
-            id: String(currentRoom.id),
-            sourceId: currentRoom.id,
-            number: currentRoom.roomNo,
-            type: currentRoom.roomType,
-            capacity: currentRoom.capacity || currentRoom.bedCapacity || 2
-          }]
-        : [];
+    let isMounted = true;
+    setAvailabilityLoading(true);
+    setAvailabilityError(null);
+
+    reservationService.checkAvailability({
+      check_in: checkIn.toISOString(),
+      check_out: checkOut.toISOString(),
+    })
+      .then((res) => {
+        if (!isMounted) return;
+        const list = Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.availability)
+            ? res.data.availability
+            : (Array.isArray(res) ? res : []);
+        setBackendAvailability(list);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        setAvailabilityError(err?.message || 'Failed to check room availability.');
+        setBackendAvailability([]);
+      })
+      .finally(() => {
+        if (isMounted) setAvailabilityLoading(false);
+      });
+
+    return () => { isMounted = false; };
+  }, [formData.checkInDate, formData.checkOutDate]);
+
+  // Available rooms computed from backend-authoritative availability check
+  const computeAvailableRooms = () => {
+    const allRooms = getRooms();
+    const currentRoomId = originalBooking?.roomId ? String(originalBooking.roomId) : null;
+    const currentRoom = currentRoomId ? allRooms.find((r) => String(r.id) === currentRoomId || String(r._id) === currentRoomId) : null;
+
+    if (!formData.checkInDate || !formData.checkOutDate) {
+      return currentRoom ? [{
+        id: String(currentRoom.id || currentRoom._id),
+        sourceId: currentRoom.id || currentRoom._id,
+        number: currentRoom.roomNo,
+        type: currentRoom.roomType,
+        capacity: currentRoom.capacity || currentRoom.bedCapacity || 2
+      }] : [];
     }
 
     return allRooms
-      .filter(room => {
-        const result = getRoomAvailability(room, checkIn, checkOut, allBookings, id);
-        return result.available;
+      .filter((room) => {
+        const roomId = String(room.id || room._id);
+        // The currently assigned room to this reservation remains selectable for this booking
+        if (currentRoomId && roomId === currentRoomId) return true;
+
+        const roomStatus = String(room.status || '').toLowerCase();
+        if (['inactive', 'maintenance', 'out of order'].includes(roomStatus)) return false;
+
+        if (backendAvailability === null) return true;
+        if (!backendAvailability || backendAvailability.length === 0) return false;
+
+        const matchedType = backendAvailability.find((item) => {
+          const typeIdMatch = room.roomTypeId && String(item.room_type_id) === String(room.roomTypeId);
+          const typeNameMatch = room.roomType && String(item.room_type_name).toLowerCase() === String(room.roomType).toLowerCase();
+          const typeCodeMatch = room.roomType && item.room_type_code && String(item.room_type_code).toLowerCase() === String(room.roomType).toLowerCase();
+          return typeIdMatch || typeNameMatch || typeCodeMatch;
+        });
+        return Boolean(matchedType && matchedType.is_available && (matchedType.available_rooms > 0));
       })
-      .map(room => ({
-        id: String(room.id),
-        sourceId: room.id,
+      .map((room) => ({
+        id: String(room.id || room._id),
+        sourceId: room.id || room._id,
         number: room.roomNo,
         type: room.roomType,
         capacity: room.capacity || room.bedCapacity || 2
@@ -247,128 +317,115 @@ export default function EditReservation() {
     }
   };
 
-  // ─── TASK 3: Save via saveBookingsWithRoomState() ────────────────────────────
-  // This ensures room inventory status is updated for both the old and new room.
-  const handleSave = (e) => {
+  // ─── TASK 3: Save via backend update API ──────────────────────────────────
+  const handleSave = async (e) => {
     e.preventDefault();
     if (!id) return;
-
-    const reservations = getReservations();
-    const currentBooking = reservations.find(res => String(res.id) === String(id));
-    if (!currentBooking) {
-      window.alert('Reservation not found. It may have been deleted.');
-      return;
-    }
-
-    // Resolve the newly selected room from canonical inventory
-    const selectedRoom = formData.room ? getRoomById(formData.room) : null;
-
-    // If user selected a room, validate it is still available (double-check)
-    if (selectedRoom) {
-      const checkIn = formData.checkInDate || currentBooking.checkIn;
-      const checkOut = formData.checkOutDate || currentBooking.checkOut;
-      if (checkIn && checkOut) {
-        try {
-          validateStayDates(checkIn, checkOut);
-          const availability = getRoomAvailability(selectedRoom, checkIn, checkOut, reservations, id);
-          if (!availability.available) {
-            window.alert(`Room ${selectedRoom.roomNo} is not available: ${availability.reason}`);
-            return;
-          }
-        } catch (err) {
-          window.alert(err.message);
-          return;
-        }
-      }
-    }
-
-    // Determine guest relationship: re-resolve by name+email to preserve guestId
-    const fullName = `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || currentBooking.name || 'Guest';
-    const newEmail = formData.email || currentBooking.email || '';
-
-    // Preserve existing guestId if name/email haven't changed; otherwise let migration resolve it
-    const guestId = currentBooking.guestId || '';
-
-    const updatedBooking = {
-      ...currentBooking,
-      name: fullName,
-      avatar: guestProfileImage || currentBooking.avatar,
-      package: formData.package || formData.purposeOfStay || currentBooking.package,
-      // Only update room fields if user actually selected a different room
-      roomNo: selectedRoom ? String(selectedRoom.roomNo) : currentBooking.roomNo,
-      room: selectedRoom ? String(selectedRoom.roomNo) : currentBooking.room,
-      roomId: selectedRoom ? selectedRoom.id : currentBooking.roomId,
-      roomType: toStandardRoomType(formData.roomType || (selectedRoom ? selectedRoom.roomType : currentBooking.roomType) || 'Standard Room'),
-      checkIn: formData.checkInDate || currentBooking.checkIn,
-      checkOut: formData.checkOutDate || currentBooking.checkOut,
-      payment: formData.paymentMethod || currentBooking.payment,
-      email: newEmail,
-      mobile: formData.mobile || currentBooking.mobile,
-      gender: formData.gender || currentBooking.gender,
-      city: formData.city || currentBooking.city,
-      idNumber: formData.idNumber || currentBooking.idNumber,
-      nationality: formData.nationality || currentBooking.nationality,
-      discountCode: formData.discountCode || currentBooking.discountCode,
-      emergencyName: formData.emergencyContactName || currentBooking.emergencyName,
-      emergencyPhone: formData.emergencyContactPhone || currentBooking.emergencyPhone,
-      address: formData.address || currentBooking.address,
-      specialRequests: formData.specialRequests || currentBooking.specialRequests,
-      note: formData.note || currentBooking.note,
-      guestId,
-    };
-
-    const updatedReservations = reservations.map(res =>
-      String(res.id) === String(id) ? updatedBooking : res
-    );
-
-    // Collect all affected room IDs (old + new) so saveBookingsWithRoomState
-    // correctly recalculates status for both rooms.
-    const affectedRoomIds = [];
-    if (currentBooking.roomId !== undefined && currentBooking.roomId !== null) {
-      affectedRoomIds.push(currentBooking.roomId);
-    }
-    if (selectedRoom && String(selectedRoom.id) !== String(currentBooking.roomId)) {
-      affectedRoomIds.push(selectedRoom.id);
-    }
-
-    // TASK 3: use canonical saveBookingsWithRoomState() — NOT saveReservations()
-    saveBookingsWithRoomState(updatedReservations, affectedRoomIds);
+    setError(null);
+    setIsSubmitting(true);
 
     try {
-      addAuditLog({
-        module: 'Reservations',
-        action: 'Edited Reservation',
-        recordId: String(id),
-        description: `Reservation ${id} updated for ${fullName}${selectedRoom ? ` — room changed to ${selectedRoom.roomNo}` : ''}.`,
-        importance: 'Normal',
-      });
-    } catch { /* audit log failure is non-blocking */ }
-
-    // Optional CNIC document storage
-    if (cnicBase64) {
-      const INITIAL_DOCS = [{"id":"DOC-1","formNo":"REG-2026-089","guest":"Kamran Akmal","idType":"CNIC","idNumber":"42101-1122334-1","room":"101","date":"2026-05-10","status":"Signed & Verified"}];
-      let storedDocs = [];
-      try {
-        const rawDocs = localStorage.getItem('hotel_registration_forms');
-        storedDocs = rawDocs ? JSON.parse(rawDocs) : INITIAL_DOCS;
-      } catch {
-        storedDocs = INITIAL_DOCS;
+      if (!formData.firstName?.trim()) {
+        throw new Error('First Name is required.');
       }
-      const newDoc = {
-        id: 'DOC-' + Date.now(),
-        formNo: 'REG-' + Date.now(),
-        guest: fullName,
-        idType: 'CNIC',
-        idNumber: formData.idNumber || 'N/A',
-        room: selectedRoom ? String(selectedRoom.roomNo) : (currentBooking.roomNo || 'N/A'),
-        date: new Date().toISOString().split('T')[0],
-        status: 'Signed & Verified',
-        cnicImage: cnicBase64
-      };
-      try { localStorage.setItem('hotel_registration_forms', JSON.stringify([newDoc, ...storedDocs])); } catch(err) { console.warn('CNIC storage error', err); }
-    }
+      if (!formData.checkInDate || !formData.checkOutDate) {
+        throw new Error('Check-in and Check-out dates are required.');
+      }
+      if (new Date(formData.checkOutDate) <= new Date(formData.checkInDate)) {
+        throw new Error('Check-out date must be strictly after check-in date.');
+      }
 
-    navigate('/reservation/all');
+      // Resolve the newly selected room & roomType from canonical inventory
+      let targetRoomId = null;
+      let targetRoomTypeId = null;
+      let selectedRoom = null;
+
+      if (formData.room) {
+        selectedRoom = getRoomById(formData.room) || getRoomByRoomNo(formData.room);
+        if (selectedRoom) {
+          targetRoomId = /^[0-9a-fA-F]{24}$/.test(String(selectedRoom._id))
+            ? selectedRoom._id
+            : (/^[0-9a-fA-F]{24}$/.test(String(selectedRoom.id)) ? String(selectedRoom.id) : null);
+          targetRoomTypeId = selectedRoom.roomTypeId || selectedRoom.room_type_id || null;
+        } else if (/^[0-9a-fA-F]{24}$/.test(formData.room)) {
+          targetRoomId = formData.room;
+        }
+      }
+
+      const formToAdapt = {
+        ...formData,
+        room_id: targetRoomId,
+        room_type_id: targetRoomTypeId,
+        adults: Number(formData.totalPerson || 1),
+        children: 0,
+        special_requests: formData.specialRequests || formData.note || '',
+      };
+
+      const backendPayload = toBackendReservationPayload(formToAdapt, { isUpdate: true });
+
+      const canonicalId = originalBooking?._id || originalBooking?.canonicalBookingId || originalBooking?.id || id;
+
+      const res = await reservationService.updateReservation(canonicalId, backendPayload);
+      const updatedBackend = res?.data?.reservation || res?.data || res;
+
+      if (updatedBackend) {
+        const adapted = toFrontendReservation(updatedBackend);
+        const currentStored = getReservations();
+        const exists = currentStored.some(b =>
+          String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)
+        );
+        const updatedList = exists
+          ? currentStored.map(b =>
+              (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+            )
+          : [adapted, ...currentStored];
+        syncReservationsFromBackend(updatedList);
+        try {
+          addAuditLog({
+            module: 'Reservation',
+            action: 'Edited Reservation',
+            recordId: adapted.bookingId || adapted.id,
+            description: `Reservation ${adapted.bookingId || adapted.id} updated for ${adapted.name}.`,
+            importance: 'Normal',
+          });
+        } catch {}
+      }
+
+      // Optional CNIC document storage
+      if (cnicBase64) {
+        const INITIAL_DOCS = [{"id":"DOC-1","formNo":"REG-2026-089","guest":"Kamran Akmal","idType":"CNIC","idNumber":"42101-1122334-1","room":"101","date":"2026-05-10","status":"Signed & Verified"}];
+        let storedDocs = [];
+        try {
+          const rawDocs = localStorage.getItem('hotel_registration_forms');
+          storedDocs = rawDocs ? JSON.parse(rawDocs) : INITIAL_DOCS;
+        } catch {
+          storedDocs = INITIAL_DOCS;
+        }
+        const fullName = `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Guest';
+        const newDoc = {
+          id: 'DOC-' + Date.now(),
+          formNo: 'REG-' + Date.now(),
+          guest: fullName,
+          idType: 'CNIC',
+          idNumber: formData.idNumber || 'N/A',
+          room: selectedRoom ? String(selectedRoom.roomNo) : (originalBooking?.roomNo || 'N/A'),
+          date: new Date().toISOString().split('T')[0],
+          status: 'Signed & Verified',
+          cnicImage: cnicBase64
+        };
+        try { localStorage.setItem('hotel_registration_forms', JSON.stringify([newDoc, ...storedDocs])); } catch(err) { console.warn('CNIC storage error', err); }
+      }
+
+      navigate('/reservation/all');
+    } catch (err) {
+      if (err.status === 409 || err.message?.includes('already booked')) {
+        setError('The selected room is no longer available for these dates.');
+      } else {
+        setError(err.message || 'Failed to update reservation.');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const muiInputSx = {'& .MuiOutlinedInput-root': {
@@ -390,6 +447,11 @@ export default function EditReservation() {
       {/* FORM CARD */}
       <div className="bg-white rounded-lg shadow-xs border border-gray-100 overflow-hidden">
         <div className="p-3 sm:p-5 bg-white">
+          {error && (
+            <Alert severity="error" className="mb-3 text-xs" onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          )}
           <form onSubmit={handleSave} className="space-y-4">
             {/* SECTION 1: GUEST INFORMATION */}
             <div>
@@ -664,10 +726,20 @@ export default function EditReservation() {
               </button>
               <button
                 type="submit"
-                className="px-4.5 py-1.5 text-xs font-semibold text-white bg-[#1b7f43] hover:bg-[#156736] rounded-lg shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+                disabled={isSubmitting}
+                className="px-4.5 py-1.5 text-xs font-semibold text-white bg-[#1b7f43] hover:bg-[#156736] disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <Save sx={{ fontSize: 16 }} />
-                Update Booking
+                {isSubmitting ? (
+                  <>
+                    <CircularProgress size={14} color="inherit" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Save sx={{ fontSize: 16 }} />
+                    Update Booking
+                  </>
+                )}
               </button>
             </div>
           </form>

@@ -49,3 +49,49 @@ export const availabilityQuerySchema = Joi.object({
   }),
   room_type_id: Joi.string().hex().length(24).optional(),
 });
+
+export const createGroupReservationSchema = Joi.object({
+  name: Joi.string().trim().required().messages({
+    "any.required": "Group name is required",
+  }),
+  contact_person: Joi.string().trim().required().messages({
+    "any.required": "Contact person is required",
+  }),
+  email: Joi.string().email().allow("", null),
+  phone: Joi.string().allow("", null),
+  expected_check_in: Joi.date().iso().allow(null),
+  expected_check_out: Joi.date().iso().allow(null),
+  rooms_count: Joi.number().integer().min(1).default(1),
+  total_guests: Joi.number().integer().min(1).default(1),
+  room_types: Joi.string().allow("", null),
+  status: Joi.string().valid("PENDING", "CONFIRMED", "CANCELLED", "Pending", "Confirmed", "Cancelled").default("PENDING"),
+  total_price: Joi.number().min(0).default(0),
+  notes: Joi.string().allow("", null).max(1000),
+  billing_instructions: Joi.string().allow("", null).max(1000),
+  company_name: Joi.string().allow("", null).max(200),
+  guest_id: Joi.string().hex().length(24).optional().allow(null),
+});
+
+export const updateGroupReservationSchema = Joi.object({
+  name: Joi.string().trim().optional(),
+  contact_person: Joi.string().trim().optional(),
+  email: Joi.string().email().allow("", null),
+  phone: Joi.string().allow("", null),
+  expected_check_in: Joi.date().iso().allow(null),
+  expected_check_out: Joi.date().iso().allow(null),
+  rooms_count: Joi.number().integer().min(1).optional(),
+  total_guests: Joi.number().integer().min(1).optional(),
+  room_types: Joi.string().allow("", null),
+  status: Joi.string().valid("PENDING", "CONFIRMED", "CANCELLED", "Pending", "Confirmed", "Cancelled").optional(),
+  total_price: Joi.number().min(0).optional(),
+  notes: Joi.string().allow("", null).max(1000),
+  billing_instructions: Joi.string().allow("", null).max(1000),
+  company_name: Joi.string().allow("", null).max(200),
+  guest_id: Joi.string().hex().length(24).optional().allow(null),
+});
+
+export const cancelGroupReservationSchema = Joi.object({
+  cancellation_reason: Joi.string().allow("", null).max(500),
+});
+
+

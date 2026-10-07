@@ -4,27 +4,28 @@ import FormatListBulleted from'@mui/icons-material/FormatListBulleted';
 import CalendarToday from'@mui/icons-material/CalendarToday';
 import LabelImportant from'@mui/icons-material/LabelImportant';
 import React, { useState, useEffect } from'react';
-import { CATEGORIES } from'../restaurantStore';
+import { CATEGORIES, getCategories } from '../restaurantStore';
 
 export default function ViewItemModal({ isOpen, onClose, onEdit, item }) {
- const [isAnimating, setIsAnimating] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
- useEffect(() => {
- if (isOpen) {
- setTimeout(() => setIsAnimating(true), 10);
- } else {
- setIsAnimating(false);
- }
- }, [isOpen]);
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => setIsAnimating(true), 10);
+    } else {
+      setIsAnimating(false);
+    }
+  }, [isOpen]);
 
- if (!isOpen || !item) return null;
+  if (!isOpen || !item) return null;
 
- const handleBackdropClick = (e) => {
- if (e.target === e.currentTarget) onClose();
- };
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) onClose();
+  };
 
- const category = CATEGORIES.find(c => c.id === item.categoryId);
- const catLabel = category ? category.label : item.categoryId;
+  const cats = typeof getCategories === 'function' ? getCategories() : CATEGORIES;
+  const category = cats.find(c => c.id === item.categoryId || c._id === item.categoryId);
+  const catLabel = category ? (category.label || category.name) : item.categoryId;
 
  return (
  <div

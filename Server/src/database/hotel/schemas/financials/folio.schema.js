@@ -43,6 +43,17 @@ const folioSchema = new mongoose.Schema(
 
 // Indexes
 folioSchema.index({ reservation_id: 1 });
+folioSchema.index(
+  { reservation_id: 1, status: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: 'OPEN',
+      reservation_id: { $type: 'objectId' },
+    },
+    name: 'unique_open_folio_per_reservation',
+  }
+);
 folioSchema.index({ stay_id: 1 });
 folioSchema.index({ guest_id: 1 });
 

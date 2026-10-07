@@ -7,40 +7,32 @@ import {
  Close, Print, ReceiptLong, Hotel, Person,
  CalendarMonth, Payment, CheckCircle, Warning, AssignmentReturn as RefundIcon, AccessTime
 } from '@mui/icons-material';
-import {
- reconcileBookingChargesToInvoice,
- getInvoiceWithFinancialState,
- getInvoices,
-} from '../paymentBillingStore';
+import { reconcileBookingChargesToInvoice } from '../paymentBillingStore';
 
 export default function InvoiceDetailModal({
- open,
- onClose,
- invoice: initialInvoice,
- onRecordPayment,
- onRecordPaymentClick,
+  open,
+  onClose,
+  invoice: initialInvoice,
+  onRecordPayment,
+  onRecordPaymentClick,
 }) {
- const recordPaymentAction = onRecordPayment || onRecordPaymentClick;
-
- const invoice = useMemo(() => {
-  if (!initialInvoice) return null;
-  const targetId = initialInvoice.id || initialInvoice.invoiceNumber;
-  const freshInvoice = getInvoices().find((inv) => inv && (inv.id === targetId || inv.invoiceNumber === targetId)) || initialInvoice;
-  const cleanBookingId = String(freshInvoice.bookingId || '').trim();
-  if (cleanBookingId) {
-   try {
-    const reconResult = reconcileBookingChargesToInvoice(cleanBookingId);
-    if (reconResult && reconResult.success && reconResult.invoice) {
-     return reconResult.invoice;
+  const recordPaymentAction = onRecordPayment || onRecordPaymentClick;
+  
+  const invoice = useMemo(() => {
+    if (!initialInvoice) return null;
+    const cleanBookingId = String(initialInvoice.bookingId || '').trim();
+    if (cleanBookingId) {
+      try {
+        const reconResult = reconcileBookingChargesToInvoice(cleanBookingId);
+        if (reconResult && reconResult.success && reconResult.invoice) {
+          return reconResult.invoice;
+        }
+      } catch {}
     }
-   } catch (err) {
-    console.warn('Reconciliation error before invoice detail view:', err);
-   }
-  }
-  return getInvoiceWithFinancialState(freshInvoice);
- }, [initialInvoice]);
+    return initialInvoice;
+  }, [initialInvoice]);
 
- if (!invoice) return null;
+  if (!invoice) return null;
 
  const getStatusBadge = (status) => {
  switch (status) {

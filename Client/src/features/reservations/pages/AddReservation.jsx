@@ -1,17 +1,19 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   ArrowBack, Save, UploadFile, CalendarMonth, AccessTime,
   Person, Hotel, CreditCard, NoteAlt, CameraAlt
 } from '@mui/icons-material';
 import {
-  TextField, MenuItem, FormControl, InputLabel, Select
+  TextField, MenuItem, FormControl, InputLabel, Select, Alert, CircularProgress
 } from '@mui/material';
-import { getReservations } from '../state/reservationStore';
+import reservationService from '../../../services/reservationService';
+import guestService from '../../../services/guestService';
+import { toFrontendReservation, toBackendReservationPayload } from '../adapters/reservationAdapter';
+import { getReservations, syncReservationsFromBackend } from '../state/reservationStore';
 import { addGuest, findGuestByExactIdentity, getGuestById, getGuests } from '../../guests/state/guestStore';
 import { addAuditLog } from '../../audit/state/auditStore';
-import { validateBookingRequest, getAvailableRooms, saveBookingsWithRoomState } from '../state/reservationLifecycle';
-import { normalizeRoomType, getAvailableRoomTypes, toStandardRoomType } from '../../rooms/state/roomStore';
+import { normalizeRoomType, getAvailableRoomTypes, toStandardRoomType, getRoomById, getRoomByRoomNo, getRooms } from '../../rooms/state/roomStore';
 
 export default function AddReservation() {
   const navigate = useNavigate();
@@ -53,6 +55,83 @@ export default function AddReservation() {
   const [guestProfileImage, setGuestProfileImage] = useState(null);
   const profileImageInputRef = useRef(null);
   const [cnicBase64, setCnicBase64] = useState(null);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const [backendAvailability, setBackendAvailability] = useState(null);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
+  const [availabilityError, setAvailabilityError] = useState(null);
+
+  const [registeredGuests, setRegisteredGuests] = useState(() => getGuests());
+
+  useEffect(() => {
+    let isMounted = true;
+    guestService.getGuests().then((res) => {
+      if (!isMounted) return;
+      const list = Array.isArray(res?.data) ? res.data : (Array.isArray(res?.data?.guests) ? res.data.guests : []);
+      if (list.length > 0) {
+        const mapped = list.map((g) => ({
+          id: g._id || g.id,
+          _id: g._id || g.id,
+          name: `${g.first_name || ''} ${g.last_name || ''}`.trim() || 'Guest',
+          firstName: g.first_name || '',
+          lastName: g.last_name || '',
+          email: g.email || '',
+          phone: g.phone || '',
+          mobile: g.phone || '',
+          city: g.city || '',
+          idNumber: g.national_id || g.passport_number || '',
+          nationality: g.nationality || '',
+          gender: g.gender || '',
+        }));
+        setRegisteredGuests(mapped);
+      }
+    }).catch(() => {
+      // Fallback to local guests
+    });
+    return () => { isMounted = false; };
+  }, []);
+
+  useEffect(() => {
+    if (!formData.checkInDate || !formData.checkOutDate) {
+      setBackendAvailability(null);
+      return;
+    }
+    const checkIn = new Date(formData.checkInDate);
+    const checkOut = new Date(formData.checkOutDate);
+    if (isNaN(checkIn.getTime()) || isNaN(checkOut.getTime()) || checkOut <= checkIn) {
+      setBackendAvailability(null);
+      return;
+    }
+
+    let isMounted = true;
+    setAvailabilityLoading(true);
+    setAvailabilityError(null);
+
+    reservationService.checkAvailability({
+      check_in: checkIn.toISOString(),
+      check_out: checkOut.toISOString(),
+    })
+      .then((res) => {
+        if (!isMounted) return;
+        const list = Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.data?.availability)
+            ? res.data.availability
+            : (Array.isArray(res) ? res : []);
+        setBackendAvailability(list);
+      })
+      .catch((err) => {
+        if (!isMounted) return;
+        setAvailabilityError(err?.message || 'Failed to check room availability.');
+        setBackendAvailability([]);
+      })
+      .finally(() => {
+        if (isMounted) setAvailabilityLoading(false);
+      });
+
+    return () => { isMounted = false; };
+  }, [formData.checkInDate, formData.checkOutDate]);
 
   const compressImage = (file, maxWidth = 200, quality = 0.6) => {
     return new Promise((resolve) => {
@@ -97,12 +176,33 @@ export default function AddReservation() {
     }
   };
 
-  const registeredGuests = getGuests();
+  const allInventoryRooms = getRooms();
 
-  const availableRooms = getAvailableRooms(formData.checkInDate, formData.checkOutDate)
+  const isRoomAvailableByBackend = (room) => {
+    if (backendAvailability === null) {
+      return true;
+    }
+    if (!backendAvailability || backendAvailability.length === 0) {
+      return false;
+    }
+    const matchedType = backendAvailability.find((item) => {
+      const typeIdMatch = room.roomTypeId && String(item.room_type_id) === String(room.roomTypeId);
+      const typeNameMatch = room.roomType && String(item.room_type_name).toLowerCase() === String(room.roomType).toLowerCase();
+      const typeCodeMatch = room.roomType && item.room_type_code && String(item.room_type_code).toLowerCase() === String(room.roomType).toLowerCase();
+      return typeIdMatch || typeNameMatch || typeCodeMatch;
+    });
+    return Boolean(matchedType && matchedType.is_available && (matchedType.available_rooms > 0));
+  };
+
+  const availableRooms = allInventoryRooms
+    .filter((room) => {
+      const roomStatus = String(room.status || '').toLowerCase();
+      if (['inactive', 'maintenance', 'out of order'].includes(roomStatus)) return false;
+      return isRoomAvailableByBackend(room);
+    })
     .map(room => ({
-      id: String(room.id),
-      sourceId: room.id,
+      id: String(room.id || room._id),
+      sourceId: room.id || room._id,
       number: room.roomNo,
       type: room.roomType,
       capacity: room.capacity || room.bedCapacity || 2
@@ -114,13 +214,13 @@ export default function AddReservation() {
 
   const handleGuestSelect = (e) => {
     const selectedId = e.target.value;
-    const guest = registeredGuests.find(g => String(g.id) === String(selectedId));
+    const guest = registeredGuests.find(g => String(g.id) === String(selectedId) || String(g._id) === String(selectedId));
     if (guest) {
-      setSelectedGuestId(guest.id);
+      setSelectedGuestId(guest._id || guest.id);
       setFormData(prev => ({
         ...prev,
-        firstName: String(guest.name || '').split(' ')[0] || '',
-        lastName: String(guest.name || '').split(' ').slice(1).join(' '),
+        firstName: guest.firstName || String(guest.name || '').split(' ')[0] || '',
+        lastName: guest.lastName || String(guest.name || '').split(' ').slice(1).join(' '),
         email: guest.email || '',
         gender: guest.gender || '',
         mobile: guest.phone || guest.mobile || '',
@@ -145,79 +245,170 @@ export default function AddReservation() {
     });
   };
 
-  const handleSave = (e) => {
+  const isObjectId = (val) => typeof val === 'string' && /^[0-9a-fA-F]{24}$/.test(val.trim());
+
+  const handleSave = async (e) => {
     e.preventDefault();
-    let selectedRoom;
+    setError(null);
+    setIsSubmitting(true);
+
     try {
-      selectedRoom = validateBookingRequest({ roomId: formData.room, checkIn: formData.checkInDate, checkOut: formData.checkOutDate });
-    } catch (error) {
-      window.alert(error.message);
-      return;
-    }
-    const reservations = getReservations();
-    const nextId = reservations.length
-      ? Math.max(...reservations.map((reservation) => Number(reservation.id) || 0)) + 1
-      : 1;
-    const guestName = `${formData.firstName} ${formData.lastName}`.trim();
-    const selectedGuest = getGuestById(selectedGuestId);
-    const guest = selectedGuest || findGuestByExactIdentity(guestName, formData.email) || addGuest({
-      name: guestName, email: formData.email, phone: formData.mobile, city: formData.city,
-      gender: formData.gender, idNumber: formData.idNumber, nationality: formData.nationality,
-    });
-
-    try { addAuditLog({ module: 'Reservation', action: 'Created Reservation', recordId: nextId, description: `Reservation ${nextId} created.`, importance: 'Important' }); } catch(e) {}
-    saveBookingsWithRoomState([{
-      id: nextId,
-      guestId: guest.id,
-      roomId: selectedRoom?.id,
-      name: guestName || 'New Guest',
-      avatar: guestProfileImage || 'https://i.pravatar.cc/150?img=1',
-      package: formData.package || formData.purposeOfStay || 'Standard',
-      room: selectedRoom?.roomNo || '—',
-      roomType: toStandardRoomType(formData.roomType || selectedRoom?.roomType || 'Standard Room'),
-      status: 'Booked',
-      checkIn: formData.checkInDate,
-      checkOut: formData.checkOutDate,
-      createdAt: new Date().toISOString().split('T')[0],
-      bookingDate: new Date().toISOString().split('T')[0],
-      payment: formData.paymentMethod ? 'Pending' : 'Unpaid',
-      email: formData.email,
-      mobile: formData.mobile,
-    }, ...reservations], selectedRoom ? [selectedRoom.id] : []);
-
-    // Save CNIC Document if uploaded
-    if (cnicBase64) {
-      const INITIAL_DOCS = [
-        {"id":"DOC-1","formNo":"REG-2026-089","guest":"Kamran Akmal","idType":"CNIC","idNumber":"42101-1122334-1","room":"101","date":"2026-05-10","status":"Signed & Verified"},
-        {"id":"DOC-2","formNo":"REG-2026-088","guest":"Cara Stevens","idType":"Passport","idNumber":"USA-9988221","room":"102","date":"2026-05-01","status":"Signed & Verified"},
-        {"id":"DOC-3","formNo":"REG-2026-087","guest":"Airi Satou","idType":"Passport","idNumber":"JPN-4455112","room":"105","date":"2026-05-02","status":"Pending Signature"},
-        {"id":"DOC-4","formNo":"REG-2026-086","guest":"Mahira Khan","idType":"CNIC","idNumber":"42201-6655443-2","room":"201","date":"2026-05-09","status":"Signed & Verified"},
-        {"id":"DOC-5","formNo":"REG-2026-085","guest":"Jens Brincker","idType":"Passport","idNumber":"GER-8833119","room":"302","date":"2026-05-03","status":"Signed & Verified"},
-        {"id":"DOC-6","formNo":"REG-2026-001","guest":"John Smith","idType":"Passport","idNumber":"USA-4491028","room":"101","date":"2026-05-20","status":"Signed & Verified"},
-        {"id":"DOC-7","formNo":"REG-2026-002","guest":"Sarah Johnson","idType":"Passport","idNumber":"UK-8891002","room":"205","date":"2026-05-19","status":"Signed & Verified"}
-      ];
-      let storedDocs = [];
-      try {
-        const rawDocs = localStorage.getItem('hotel_registration_forms');
-        storedDocs = rawDocs ? JSON.parse(rawDocs) : INITIAL_DOCS;
-      } catch {
-        storedDocs = INITIAL_DOCS;
+      // 1. Validate form fields
+      if (!formData.firstName?.trim()) {
+        throw new Error('First Name is required.');
       }
-      const newDoc = {
-        id: 'DOC-' + Date.now(),
-        formNo: 'REG-' + Date.now(),
-        guest: guestName || 'New Guest',
-        idType: 'CNIC',
-        idNumber: formData.idNumber || 'N/A',
-        room: selectedRoom?.roomNo || 'N/A',
-        date: new Date().toISOString().split('T')[0],
-        status: 'Signed & Verified',
-        cnicImage: cnicBase64
-      };
-      try { localStorage.setItem('hotel_registration_forms', JSON.stringify([newDoc, ...storedDocs])); } catch(err) { console.warn("CNIC storage error", err); }
-    }
+      if (!formData.checkInDate || !formData.checkOutDate) {
+        throw new Error('Check-in and Check-out dates are required.');
+      }
+      if (new Date(formData.checkOutDate) <= new Date(formData.checkInDate)) {
+        throw new Error('Check-out date must be strictly after check-in date.');
+      }
 
-    navigate('/reservation/all');
+      // 2. Resolve room & roomType
+      let targetRoomId = null;
+      let targetRoomTypeId = null;
+      let selectedRoom = null;
+
+      if (formData.room) {
+        selectedRoom = getRoomById(formData.room) || getRoomByRoomNo(formData.room);
+        if (selectedRoom) {
+          targetRoomId = isObjectId(selectedRoom._id) ? selectedRoom._id : (isObjectId(selectedRoom.id) ? String(selectedRoom.id) : null);
+          targetRoomTypeId = selectedRoom.roomTypeId || selectedRoom.room_type_id || null;
+        } else if (isObjectId(formData.room)) {
+          targetRoomId = formData.room;
+        }
+      }
+
+      // 3. Resolve or Create guest reference
+      let primaryGuestId = null;
+      if (isObjectId(selectedGuestId)) {
+        primaryGuestId = selectedGuestId.trim();
+      } else {
+        const guestName = `${formData.firstName} ${formData.lastName}`.trim().toLowerCase();
+        const guestEmail = (formData.email || '').trim().toLowerCase();
+
+        // 3a. Check registered guests loaded from backend
+        const matchInRegistered = registeredGuests.find(g => {
+          const gName = (g.name || `${g.first_name || ''} ${g.last_name || ''}`).trim().toLowerCase();
+          const gEmail = (g.email || '').trim().toLowerCase();
+          return (guestEmail && gEmail === guestEmail) || (guestName && gName === guestName);
+        });
+
+        if (matchInRegistered && isObjectId(matchInRegistered._id || matchInRegistered.id)) {
+          primaryGuestId = String(matchInRegistered._id || matchInRegistered.id).trim();
+        } else {
+          const existingLocal = getGuestById(selectedGuestId) || findGuestByExactIdentity(`${formData.firstName} ${formData.lastName}`.trim(), formData.email);
+          if (existingLocal && isObjectId(existingLocal._id || existingLocal.id)) {
+            primaryGuestId = String(existingLocal._id || existingLocal.id).trim();
+          } else {
+            try {
+              const guestPayload = {
+                first_name: formData.firstName.trim(),
+                last_name: formData.lastName?.trim() || 'Guest',
+                email: formData.email?.trim() || null,
+                phone: formData.mobile?.trim() || null,
+                city: formData.city?.trim() || null,
+                nationality: formData.nationality?.trim() || null,
+                national_id: formData.idNumber?.trim() || null,
+              };
+              const guestRes = await guestService.createGuest(guestPayload);
+              const createdGuest = guestRes?.data;
+              if (createdGuest && isObjectId(createdGuest._id)) {
+                primaryGuestId = createdGuest._id;
+                addGuest({ ...createdGuest, id: createdGuest._id, name: `${createdGuest.first_name} ${createdGuest.last_name}` });
+              }
+            } catch (guestErr) {
+              if (guestErr.status === 409 || guestErr.message?.includes('already exists')) {
+                const searchRes = await guestService.getGuests({ search: formData.email || formData.firstName });
+                const list = Array.isArray(searchRes?.data) ? searchRes.data : (Array.isArray(searchRes?.data?.guests) ? searchRes.data.guests : []);
+                const found = list[0];
+                if (found && isObjectId(found._id)) {
+                  primaryGuestId = found._id;
+                }
+              }
+              if (!primaryGuestId) {
+                throw new Error(guestErr.message || 'Failed to establish valid guest reference.');
+              }
+            }
+          }
+        }
+      }
+
+      if (!primaryGuestId || !isObjectId(primaryGuestId)) {
+        throw new Error('A valid guest reference is required to create a reservation.');
+      }
+
+      // 4. Build backend payload via adapter
+      const formToAdapt = {
+        ...formData,
+        primary_guest_id: primaryGuestId,
+        room_id: targetRoomId,
+        room_type_id: targetRoomTypeId,
+        adults: Number(formData.totalPerson || 1),
+        children: 0,
+        special_requests: formData.specialRequests || formData.note || '',
+      };
+
+      const backendPayload = toBackendReservationPayload(formToAdapt, { isCreate: true });
+
+      // 5. Call backend reservation API
+      const res = await reservationService.createReservation(backendPayload);
+      const createdReservation = res?.data?.reservation || res?.data || res;
+
+      // 6. Adapt response & sync compatibility store
+      if (createdReservation) {
+        const adapted = toFrontendReservation(createdReservation);
+        const currentStored = getReservations();
+        syncReservationsFromBackend([createdReservation, ...currentStored]);
+        try {
+          addAuditLog({
+            module: 'Reservation',
+            action: 'Created Reservation',
+            recordId: adapted.bookingId || adapted.id,
+            description: `Reservation ${adapted.bookingId || adapted.id} created for ${adapted.name}.`,
+            importance: 'Important'
+          });
+        } catch {}
+      }
+
+      // 7. Save CNIC Document if uploaded
+      if (cnicBase64) {
+        const INITIAL_DOCS = [
+          {"id":"DOC-1","formNo":"REG-2026-089","guest":"Kamran Akmal","idType":"CNIC","idNumber":"42101-1122334-1","room":"101","date":"2026-05-10","status":"Signed & Verified"},
+          {"id":"DOC-2","formNo":"REG-2026-088","guest":"Cara Stevens","idType":"Passport","idNumber":"USA-9988221","room":"102","date":"2026-05-01","status":"Signed & Verified"},
+          {"id":"DOC-3","formNo":"REG-2026-087","guest":"Airi Satou","idType":"Passport","idNumber":"JPN-4455112","room":"105","date":"2026-05-02","status":"Pending Signature"},
+          {"id":"DOC-4","formNo":"REG-2026-086","guest":"Mahira Khan","idType":"CNIC","idNumber":"42201-6655443-2","room":"201","date":"2026-05-09","status":"Signed & Verified"},
+          {"id":"DOC-5","formNo":"REG-2026-085","guest":"Jens Brincker","idType":"Passport","idNumber":"GER-8833119","room":"302","date":"2026-05-03","status":"Signed & Verified"},
+          {"id":"DOC-6","formNo":"REG-2026-001","guest":"John Smith","idType":"Passport","idNumber":"USA-4491028","room":"101","date":"2026-05-20","status":"Signed & Verified"},
+          {"id":"DOC-7","formNo":"REG-2026-002","guest":"Sarah Johnson","idType":"Passport","idNumber":"UK-8891002","room":"205","date":"2026-05-19","status":"Signed & Verified"}
+        ];
+        let storedDocs = [];
+        try {
+          const rawDocs = localStorage.getItem('hotel_registration_forms');
+          storedDocs = rawDocs ? JSON.parse(rawDocs) : INITIAL_DOCS;
+        } catch {
+          storedDocs = INITIAL_DOCS;
+        }
+        const newDoc = {
+          id: 'DOC-' + Date.now(),
+          formNo: 'REG-' + Date.now(),
+          guest: `${formData.firstName} ${formData.lastName}`.trim() || 'New Guest',
+          idType: 'CNIC',
+          idNumber: formData.idNumber || 'N/A',
+          room: selectedRoom?.roomNo || 'N/A',
+          date: new Date().toISOString().split('T')[0],
+          status: 'Signed & Verified',
+          cnicImage: cnicBase64
+        };
+        try { localStorage.setItem('hotel_registration_forms', JSON.stringify([newDoc, ...storedDocs])); } catch(err) { console.warn("CNIC storage error", err); }
+      }
+
+      navigate('/reservation/all');
+    } catch (err) {
+      setError(err.message || 'Failed to create reservation.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const muiInputSx = {
@@ -242,6 +433,11 @@ export default function AddReservation() {
       {/* FORM CARD */}
       <div className="bg-white rounded-lg shadow-xs border border-gray-100 overflow-hidden">
         <div className="p-3 sm:p-5 bg-white">
+          {error && (
+            <Alert severity="error" className="mb-3 text-xs" onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          )}
           <form onSubmit={handleSave} className="space-y-4">
             {/* SECTION 1: GUEST INFORMATION */}
             <div>
@@ -516,10 +712,20 @@ export default function AddReservation() {
               </button>
               <button 
                 type="submit"
-                className="px-4.5 py-1.5 text-xs font-semibold text-white bg-[#1b7f43] hover:bg-[#156736] rounded-lg shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+                disabled={isSubmitting}
+                className="px-4.5 py-1.5 text-xs font-semibold text-white bg-[#1b7f43] hover:bg-[#156736] disabled:bg-gray-400 disabled:cursor-not-allowed rounded-lg shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <Save sx={{ fontSize: 16 }} />
-                Save Booking
+                {isSubmitting ? (
+                  <>
+                    <CircularProgress size={14} color="inherit" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save sx={{ fontSize: 16 }} />
+                    Save Booking
+                  </>
+                )}
               </button>
             </div>
           </form>

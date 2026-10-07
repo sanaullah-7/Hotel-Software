@@ -36,6 +36,7 @@ export default function CheckInOutTable({
   guests = [],
   filteredGuests = [],
   currentRows = [],
+  loading = false,
   searchQuery,
   onSearchChange,
   totalGuests,
@@ -113,7 +114,13 @@ export default function CheckInOutTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50 text-[11px]">
-            {currentRows.length > 0 ? (
+            {loading && currentRows.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="py-8 text-center text-gray-400 text-xs animate-pulse">
+                  Loading Front Office records...
+                </td>
+              </tr>
+            ) : currentRows.length > 0 ? (
               currentRows.map((guest) => {
                 const StatusIcon = STATUS_ICONS[guest.status];
                 const canCheckIn = !guest.isLegacyUnmapped && ['Booked', 'Reserved'].includes(guest.status);

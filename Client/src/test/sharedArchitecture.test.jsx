@@ -282,11 +282,10 @@ describe('accessible table action menus', () => {
     expect(menu.getAttribute('aria-labelledby')).toBe('reservation-actions-trigger-res-1');
 
     const menuItems = screen.getAllByRole('menuitem');
-    expect(menuItems).toHaveLength(5);
+    expect(menuItems).toHaveLength(4);
 
-    // Row 1 status is "Checked In": Delete Booking (item 2) and Cancel Booking (item 4) are disabled
-    expect(menuItems[2].disabled).toBe(true);
-    expect(menuItems[4].disabled).toBe(true);
+    // Row 1 status is "Checked In": Cancel Booking (item 3) is disabled
+    expect(menuItems[3].disabled).toBe(true);
 
     // First enabled item receives focus
     expect(document.activeElement).toBe(menuItems[0]); // View Booking
@@ -295,11 +294,11 @@ describe('accessible table action menus', () => {
     fireEvent.keyDown(menu, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(menuItems[1]); // Edit Booking
 
-    // Next ArrowDown should SKIP disabled Delete Booking (item 2) and move to Check Out (item 3)
+    // Next ArrowDown moves to Check Out (item 2)
     fireEvent.keyDown(menu, { key: 'ArrowDown' });
-    expect(document.activeElement).toBe(menuItems[3]); // Check Out
+    expect(document.activeElement).toBe(menuItems[2]); // Check Out
 
-    // Next ArrowDown should SKIP disabled Cancel Booking (item 4) and WRAP to View Booking (item 0)
+    // Next ArrowDown should SKIP disabled Cancel Booking (item 3) and WRAP to View Booking (item 0)
     fireEvent.keyDown(menu, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(menuItems[0]); // View Booking
 

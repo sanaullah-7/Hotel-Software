@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  EditOutlined, DeleteOutlined,
+  EditOutlined, CancelOutlined,
   PhoneOutlined, EmailOutlined
 } from '@mui/icons-material';
 import { statusStyles } from '../data/groupReservationsDemoData';
@@ -9,7 +9,7 @@ export default function GroupReservationsTable({
   filteredGroups,
   openViewModal,
   openEditModal,
-  confirmDelete
+  confirmCancel
 }) {
   return (
     <div className="bg-white rounded-lg border border-gray-200/80 shadow-xs w-full overflow-hidden flex flex-col">
@@ -77,8 +77,13 @@ export default function GroupReservationsTable({
                     <button onClick={(e) => { e.stopPropagation(); openEditModal(group); }} className="text-[var(--primary-main)] hover:text-green-700 transition-colors cursor-pointer" title="Edit">
                       <EditOutlined sx={{ fontSize: 15 }} />
                     </button>
-                    <button onClick={(e) => { e.stopPropagation(); confirmDelete(group); }} className="text-orange-500 hover:text-orange-600 transition-colors cursor-pointer" title="Delete">
-                      <DeleteOutlined sx={{ fontSize: 15 }} />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); confirmCancel(group); }}
+                      disabled={group.status === 'Cancelled'}
+                      className="text-orange-500 hover:text-orange-600 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                      title={group.status === 'Cancelled' ? 'Group is already cancelled' : 'Cancel Group Reservation'}
+                    >
+                      <CancelOutlined sx={{ fontSize: 15 }} />
                     </button>
                   </div>
                 </td>

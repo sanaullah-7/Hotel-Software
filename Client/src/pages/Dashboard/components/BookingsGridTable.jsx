@@ -262,7 +262,10 @@ export default function BookingsGridTable({
               {/* Dues */}
               <td className="py-1.5 px-1.5 font-semibold">
                 {(() => {
-                  const duesAmt = getBookingDues(booking);
+                  const canonicalDues = getBookingDues(booking);
+                  const duesAmt = canonicalDues !== null
+                    ? canonicalDues
+                    : (booking.folio_balance !== undefined && booking.folio_balance !== null ? Number(booking.folio_balance) : null);
                   return duesAmt === null ? (
                     <span className="text-amber-600 text-[10px] font-medium whitespace-nowrap">Unverified</span>
                   ) : duesAmt > 0 ? (

@@ -15,6 +15,7 @@ const restaurantTableSchema = new mongoose.Schema(
     },
     location: {
       type: String, // e.g., 'Patio', 'Main Dining', 'Window'
+      trim: true,
     },
     status: {
       type: String,
@@ -29,7 +30,7 @@ const restaurantTableSchema = new mongoose.Schema(
 );
 
 // Indexes
-restaurantTableSchema.index({ table_number: 1 });
+// Note: table_number has unique: true which creates a unique index.
 restaurantTableSchema.index({ status: 1 });
 
 export default restaurantTableSchema;

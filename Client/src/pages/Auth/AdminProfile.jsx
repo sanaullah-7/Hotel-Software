@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button, Avatar, Paper, Grid } from '@mui/material';
 import { Person, Business, Email, Save } from '@mui/icons-material';
+import { useAuth } from '../../context/AuthContext';
 
 export default function AdminProfile() {
+  const { user } = useAuth();
   const [profile, setProfile] = useState({
-    fullName: '',
-    email: 'admin@hotel.com',
-    hotelName: ''
+    fullName: user?.fullName || '',
+    email: user?.email || '',
+    hotelName: localStorage.getItem('hotelName') || 'Hotel Admin'
   });
 
   useEffect(() => {
     setProfile({
-      fullName: localStorage.getItem('fullName') || 'Admin',
-      email: localStorage.getItem('email') || 'admin@hotel.com',
+      fullName: user?.fullName || localStorage.getItem('fullName') || 'Admin',
+      email: user?.email || localStorage.getItem('email') || 'admin@hotel.com',
       hotelName: localStorage.getItem('hotelName') || 'Hotel Admin'
     });
-  }, []);
+  }, [user]);
 
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });

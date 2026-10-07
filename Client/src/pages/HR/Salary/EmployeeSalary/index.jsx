@@ -8,6 +8,9 @@ import { SalaryModals } from './SalaryModals';
 export default function EmployeeSalary() {
   const {
     salaries,
+    isLoading,
+    error,
+    fetchSalaries,
     searchQuery,
     setSearchQuery,
     selectedIds,
@@ -59,6 +62,26 @@ export default function EmployeeSalary() {
 
   return (
     <div className="animate-fade-in">
+      {/* Error Banner with Retry */}
+      {error && (
+        <div className="mt-2 mb-2">
+          <Alert
+            severity="error"
+            action={
+              <button
+                type="button"
+                onClick={fetchSalaries}
+                className="text-xs font-semibold underline hover:text-red-900 cursor-pointer"
+              >
+                Retry
+              </button>
+            }
+          >
+            {error}
+          </Alert>
+        </div>
+      )}
+
       {/* 1. Payroll Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full mt-1">
         {payrollStats.map((card) => {
@@ -91,7 +114,7 @@ export default function EmployeeSalary() {
         setFilterAnchorEl={setFilterAnchorEl}
         handleOpenAddModal={handleOpenAddModal}
         handleRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
+        isRefreshing={isRefreshing || isLoading}
         setColumnAnchorEl={setColumnAnchorEl}
         handleExportPDF={handleExportPDF}
         isAllSelected={isAllSelected}

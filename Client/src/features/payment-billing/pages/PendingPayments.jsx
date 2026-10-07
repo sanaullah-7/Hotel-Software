@@ -27,17 +27,53 @@ import {
   ReceiptLong as InvoiceIcon,
 } from '@mui/icons-material';
 import {
-  getInvoices,
-  getInvoiceWithFinancialState,
-  recordInvoicePayment,
+  syncInvoicesFromBackend,
+  dispatchFinancialEvent,
+  PAYMENTS_UPDATED_EVENT,
 } from './paymentBillingStore';
+import { billingService } from '../../../services/billingService';
+import { toFrontendInvoiceList, toBackendPaymentPayload } from '../adapters/billingAdapter';
 import InvoiceDetailModal from './components/InvoiceDetailModal';
 import RecordPaymentModal from './components/RecordPaymentModal';
 
 export default function PendingPayments() {
-  const [invoices, setInvoices] = useState(() => getInvoices().map(getInvoiceWithFinancialState));
+  const [invoices, setInvoices] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [urgencyFilter, setUrgencyFilter] = useState('All');
+
+  // Backend authoritative data fetching
+  const fetchInvoices = React.useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await billingService.getInvoices();
+      const rawList = Array.isArray(res?.data?.invoices)
+        ? res.data.invoices
+        : (Array.isArray(res?.data)
+          ? res.data
+          : (Array.isArray(res?.invoices) ? res.invoices : null));
+      if (Array.isArray(rawList)) {
+        const adapted = toFrontendInvoiceList(rawList);
+        setInvoices(adapted);
+        syncInvoicesFromBackend(adapted);
+      } else {
+        setInvoices([]);
+      }
+    } catch (err) {
+      console.warn('Backend invoices fetch failed:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to load pending payments from server.';
+      setError(errMsg);
+      setInvoices([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
 
   // Modals state
   const [selectedInvoiceForDetail, setSelectedInvoiceForDetail] = useState(null);
@@ -50,12 +86,12 @@ export default function PendingPayments() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const reloadData = () => {
-    setInvoices(getInvoices().map(getInvoiceWithFinancialState));
+    fetchInvoices();
   };
 
   // Only invoices with balanceDue > 0
   const pendingInvoices = useMemo(() => {
-    return invoices.filter((inv) => inv.financialIntegrity === 'verified' && inv.balanceDue > 0);
+    return invoices.filter((inv) => (inv.balanceDue || 0) > 0);
   }, [invoices]);
 
   // Metrics
@@ -106,19 +142,42 @@ export default function PendingPayments() {
     });
   }, [pendingInvoices, searchTerm, urgencyFilter]);
 
-  const handleRecordPayment = (paymentData) => {
+  const handleRecordPayment = async (paymentData) => {
     try {
-      recordInvoicePayment(paymentData);
-      reloadData();
+      const matched = invoices.find(
+        (inv) => inv.id === paymentData.invoiceId || inv.invoiceNumber === paymentData.invoiceId
+      );
+      const backendPayload = toBackendPaymentPayload(paymentData);
+      if (matched?._id) {
+        backendPayload.invoice_id = matched._id;
+      }
+      if (matched?.folioId && /^[0-9a-fA-F]{24}$/.test(matched.folioId)) {
+        backendPayload.folio_id = matched.folioId;
+      }
+      if (matched?.guestId && /^[0-9a-fA-F]{24}$/.test(matched.guestId)) {
+        backendPayload.guest_id = matched.guestId;
+      }
+
+      await billingService.createPayment(backendPayload);
+
+      await fetchInvoices();
+      dispatchFinancialEvent(PAYMENTS_UPDATED_EVENT, {
+        domain: 'payments',
+        action: 'record_payment',
+        invoiceId: paymentData.invoiceId,
+        amount: paymentData.amount,
+      });
+
       setSnackbar({
         open: true,
         message: `Payment of $${paymentData.amount.toFixed(2)} recorded successfully for ${paymentData.invoiceId}!`,
         severity: 'success',
       });
     } catch (err) {
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to record payment.';
       setSnackbar({
         open: true,
-        message: err.message || 'Failed to record payment.',
+        message: errMsg,
         severity: 'error',
       });
       throw err;

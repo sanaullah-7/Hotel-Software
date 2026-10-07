@@ -23,3 +23,10 @@ export const updateTask = asyncHandler(async (req, res) => {
     .status(HTTP_STATUS.OK)
     .json(new ApiResponse(HTTP_STATUS.OK, task, "Housekeeping task updated successfully"));
 });
+
+export const deleteTask = asyncHandler(async (req, res) => {
+  const result = await housekeepingService.deleteTask(req.hotelContext, req.params.id);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, result, "Housekeeping task deleted successfully"));
+});

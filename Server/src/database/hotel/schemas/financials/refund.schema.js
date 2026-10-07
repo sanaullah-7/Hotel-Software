@@ -40,7 +40,6 @@ const refundSchema = new mongoose.Schema(
 );
 
 // Indexes
-refundSchema.index({ refund_ref: 1 });
 refundSchema.index({ payment_id: 1 });
 refundSchema.index({ date: -1 });
 

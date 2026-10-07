@@ -15,9 +15,9 @@ import {
   Close as CloseIcon,
   Receipt as ReceiptIcon,
 } from '@mui/icons-material';
+
 import {
   reconcileBookingChargesToInvoice,
-  getInvoiceWithFinancialState,
   getInvoices,
 } from '../paymentBillingStore';
 
@@ -27,12 +27,11 @@ function RecordPaymentInnerForm({ invoice, invoices = [], onSave, onClose }) {
   const [selectedInvoiceId, setSelectedInvoiceId] = useState(
     invoice ? (invoice.id || invoice.invoiceNumber) : (invoices[0]?.id || '')
   );
-  const [refreshTick, setRefreshTick] = useState(0);
 
   const targetInvoiceId = invoice ? (invoice.id || invoice.invoiceNumber) : selectedInvoiceId;
 
   const baseInvoice = useMemo(() => {
-    if (refreshTick < 0) return null;
+    if (invoice && invoice.balanceDue !== undefined && invoice.guestName) return invoice;
     const storeInvoices = getInvoices();
     if (targetInvoiceId) {
       const match = storeInvoices.find(
@@ -42,36 +41,23 @@ function RecordPaymentInnerForm({ invoice, invoices = [], onSave, onClose }) {
     }
     if (invoice) return invoice;
     return invoices.find((inv) => inv && (inv.id === selectedInvoiceId || inv.invoiceNumber === selectedInvoiceId)) || null;
-  }, [targetInvoiceId, invoice, invoices, selectedInvoiceId, refreshTick]);
+  }, [invoice, targetInvoiceId, invoices, selectedInvoiceId]);
 
-  // Phase 7 Job 22 & 23: Reconcile eligible folio charges into booking invoice before payment review,
-  // and load canonical financial state
-  const { currentInvoice, reconError } = useMemo(() => {
-    if (!baseInvoice) return { currentInvoice: null, reconError: '' };
+  const currentInvoice = useMemo(() => {
+    if (!baseInvoice) return null;
     const cleanBookingId = String(baseInvoice.bookingId || '').trim();
     if (cleanBookingId) {
       try {
         const reconResult = reconcileBookingChargesToInvoice(cleanBookingId);
-        if (!reconResult.success) {
-          return {
-            currentInvoice: getInvoiceWithFinancialState(baseInvoice),
-            reconError: reconResult.reason || 'Reconciliation failed.'
-          };
+        if (reconResult && reconResult.success && reconResult.invoice) {
+          return reconResult.invoice;
         }
-        if (reconResult.invoice) {
-          return { currentInvoice: reconResult.invoice, reconError: '' };
-        }
-      } catch (err) {
-        return {
-          currentInvoice: getInvoiceWithFinancialState(baseInvoice),
-          reconError: err?.message || 'Reconciliation error.'
-        };
-      }
+      } catch {}
     }
-    return { currentInvoice: getInvoiceWithFinancialState(baseInvoice), reconError: '' };
+    return baseInvoice;
   }, [baseInvoice]);
 
-  const maxPayable = currentInvoice ? currentInvoice.balanceDue : 0;
+  const maxPayable = currentInvoice ? (currentInvoice.balanceDue ?? 0) : 0;
 
   const [amount, setAmount] = useState(() => (maxPayable > 0 ? maxPayable : ''));
   const [paymentMethod, setPaymentMethod] = useState('Credit Card');
@@ -129,13 +115,11 @@ function RecordPaymentInnerForm({ invoice, invoices = [], onSave, onClose }) {
       });
     } catch (err) {
       setError(err?.message || 'Failed to record payment.');
-      setRefreshTick((t) => t + 1);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-      {reconError && <Alert severity="error">{reconError}</Alert>}
       {error && <Alert severity="error">{error}</Alert>}
       {maxPayable === 0 && currentInvoice && (
         <Alert severity="info">This invoice is fully paid ($0.00 remaining balance).</Alert>
@@ -189,7 +173,7 @@ function RecordPaymentInnerForm({ invoice, invoices = [], onSave, onClose }) {
           </div>
           <div className="text-left sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-emerald-200">
             <p className="text-xs text-gray-500">Remaining Balance Due</p>
-            <p className="text-xl font-extrabold text-red-600">${currentInvoice.balanceDue.toFixed(2)}</p>
+            <p className="text-xl font-extrabold text-red-600">${Number(currentInvoice.balanceDue ?? 0).toFixed(2)}</p>
           </div>
         </div>
       )}

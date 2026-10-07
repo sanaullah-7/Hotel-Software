@@ -1,51 +1,85 @@
 import React from 'react';
-import { beforeEach, describe, expect, it } from 'vitest';
-import { render, screen, fireEvent, act } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { getRooms as getHousekeepingRooms, saveRooms as saveHousekeepingRooms } from '../features/housekeeping/pages/hkStore';
 import { saveRooms as saveInventoryRooms } from '../features/rooms/state/roomStore';
 import RoomsAndCleaning from '../features/housekeeping/pages/RoomsAndCleaning';
 import CleaningSchedule from '../features/housekeeping/pages/CleaningSchedule';
+import opsService from '../services/opsService';
+import roomService from '../services/roomService';
 
-describe('Housekeeping Canonical State Alignment (Phase 7 Job 1)', () => {
+vi.mock('../services/opsService', () => ({
+  default: {
+    getHousekeepingTasks: vi.fn(),
+    createHousekeepingTask: vi.fn(),
+    updateHousekeepingTask: vi.fn(),
+    deleteHousekeepingTask: vi.fn(),
+    getEmployees: vi.fn()
+  }
+}));
+
+vi.mock('../services/roomService', () => ({
+  default: {
+    getRooms: vi.fn()
+  }
+}));
+
+describe('Housekeeping Canonical State Alignment & Migration Bridge', () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     localStorage.clear();
+
+    roomService.getRooms.mockResolvedValue({
+      data: [{ _id: 'INV-101', room_number: '101', floor: '1' }]
+    });
+    opsService.getEmployees.mockResolvedValue({ data: [] });
+    opsService.getHousekeepingTasks.mockResolvedValue({
+      data: [
+        {
+          _id: 'task_101',
+          room_id: { _id: 'INV-101', room_number: '101', floor: '1' },
+          assigned_to: { _id: 'emp_1', first_name: 'Bob', last_name: 'Builder' },
+          task_type: 'CLEANING',
+          priority: 'HIGH',
+          status: 'PENDING',
+          notes: '[Guest: Alice Wonderland] Clean please'
+        }
+      ]
+    });
   });
 
-  it('active RoomsAndCleaning UI reads canonical records from hkStore', () => {
-    saveInventoryRooms([{ id: 'INV-101', roomNo: '101' }]);
-    saveHousekeepingRooms([
-      {
-        id: '101',
-        roomId: 'INV-101',
-        guest: 'Alice Wonderland',
-        status: 'Dirty',
-        cleaningType: 'Full Clean',
-        priority: 'High',
-        assignee: 'Bob Builder'
+  it('active RoomsAndCleaning UI reads records from backend API and syncs compatibility bridge', async () => {
+    render(<RoomsAndCleaning />);
+
+    await waitFor(() => {
+      expect(screen.getByText('101')).toBeTruthy();
+      expect(screen.getByText('Alice Wonderland')).toBeTruthy();
+      expect(screen.getByText('Bob Builder')).toBeTruthy();
+    });
+
+    // Check that downstream bridge was synchronized for Cleaning Schedule
+    const bridgeRooms = getHousekeepingRooms();
+    expect(bridgeRooms.some(r => String(r.roomNo) === '101' || String(r.id) === '101')).toBe(true);
+  });
+
+  it('updates made in RoomsAndCleaning call backend and update downstream bridge', async () => {
+    opsService.updateHousekeepingTask.mockResolvedValue({
+      data: {
+        _id: 'task_101',
+        room_id: { _id: 'INV-101', room_number: '101', floor: '1' },
+        assigned_to: { _id: 'emp_1', first_name: 'Carol', last_name: 'Staff' },
+        task_type: 'CLEANING',
+        priority: 'MEDIUM',
+        status: 'PENDING',
+        notes: '[Guest: Alice Wonderland] Extra towels placed'
       }
-    ]);
+    });
 
     render(<RoomsAndCleaning />);
 
-    expect(screen.getByText('101')).toBeTruthy();
-    expect(screen.getByText('Alice Wonderland')).toBeTruthy();
-    expect(screen.getByText('Bob Builder')).toBeTruthy();
-  });
-
-  it('updates made in RoomsAndCleaning persist to canonical hk_rooms in localStorage', () => {
-    saveHousekeepingRooms([
-      {
-        id: '101',
-        roomNo: '101',
-        guest: 'John Doe',
-        status: 'Dirty',
-        cleaningType: 'Full Clean',
-        priority: 'Normal',
-        assignee: 'Carol Staff'
-      }
-    ]);
-
-    render(<RoomsAndCleaning />);
+    await waitFor(() => {
+      expect(screen.getByText('101')).toBeTruthy();
+    });
 
     // Click edit on the record
     const editBtn = screen.getByTitle('Edit');
@@ -59,15 +93,20 @@ describe('Housekeeping Canonical State Alignment (Phase 7 Job 1)', () => {
     const saveBtn = screen.getByRole('button', { name: /^Save$/i });
     fireEvent.click(saveBtn);
 
-    // Verify canonical store state
-    const canonicalRooms = getHousekeepingRooms();
-    const room101 = canonicalRooms.find((r) => r.id === '101');
-    expect(room101).toBeDefined();
-    expect(room101.notes).toBe('Extra towels placed');
+    await waitFor(() => {
+      expect(opsService.updateHousekeepingTask).toHaveBeenCalledWith(
+        'task_101',
+        expect.objectContaining({
+          notes: expect.stringContaining('Extra towels placed')
+        })
+      );
+    });
 
-    // Verify localStorage persistence
-    const stored = JSON.parse(localStorage.getItem('hk_rooms'));
-    expect(stored.find((r) => r.id === '101').notes).toBe('Extra towels placed');
+    // Verify compatibility bridge sync
+    const canonicalRooms = getHousekeepingRooms();
+    const room101 = canonicalRooms.find((r) => r.id === '101' || r.roomNo === '101');
+    expect(room101).toBeDefined();
+    expect(room101.notes).toContain('Extra towels placed');
   });
 
   it('preserves Room.id -> Housekeeping.roomId relationship on save', () => {
@@ -86,51 +125,41 @@ describe('Housekeeping Canonical State Alignment (Phase 7 Job 1)', () => {
     expect(rooms.find((r) => r.id === '202').roomId).toBe('R-INV-202');
   });
 
-  it('persists changes across unmount and remount', () => {
-    saveHousekeepingRooms([
-      {
-        id: '101',
-        roomNo: '101',
-        guest: 'Original Guest',
-        status: 'Dirty',
-        cleaningType: 'Full Clean',
-        priority: 'Normal',
-        assignee: 'Original Staff'
+  it('active CleaningSchedule UI reads canonical housekeeping records from backend and persists task edits to backend', async () => {
+    opsService.getHousekeepingTasks.mockResolvedValue({
+      data: [
+        {
+          _id: 'task_105',
+          room_id: { _id: 'INV-105', room_number: '105', floor: '1' },
+          assigned_to: { _id: 'emp_5', first_name: 'Frank', last_name: 'Miller' },
+          task_type: 'DEEP_CLEANING',
+          priority: 'HIGH',
+          status: 'IN_PROGRESS',
+          scheduled_at: '2026-10-06T10:00:00.000Z',
+          scheduled_end_at: '2026-10-06T11:30:00.000Z',
+          notes: 'Deep clean needed'
+        }
+      ]
+    });
+
+    opsService.updateHousekeepingTask.mockResolvedValue({
+      data: {
+        _id: 'task_105',
+        room_id: { _id: 'INV-105', room_number: '105', floor: '1' },
+        assigned_to: { _id: 'emp_5', first_name: 'Frank', last_name: 'Miller' },
+        task_type: 'DEEP_CLEANING',
+        priority: 'HIGH',
+        status: 'IN_PROGRESS',
+        notes: 'Clean windows and balcony'
       }
-    ]);
-
-    const { unmount } = render(<RoomsAndCleaning />);
-
-    // Edit record
-    fireEvent.click(screen.getByTitle('Edit'));
-    fireEvent.change(screen.getByLabelText(/Guest Name\*/i), { target: { value: 'Updated VIP Guest' } });
-    fireEvent.click(screen.getByRole('button', { name: /^Save$/i }));
-
-    unmount();
-
-    // Remount
-    render(<RoomsAndCleaning />);
-    expect(screen.getByText('Updated VIP Guest')).toBeTruthy();
-  });
-
-  it('active CleaningSchedule UI reads canonical housekeeping records and persists task edits', () => {
-    saveHousekeepingRooms([
-      {
-        id: '105',
-        roomNo: '105',
-        status: 'Cleaning',
-        cleaningType: 'Deep Clean',
-        priority: 'High',
-        assignee: 'Frank Miller',
-        started: '10:00',
-        completed: '11:30'
-      }
-    ]);
+    });
 
     render(<CleaningSchedule />);
 
-    expect(screen.getByText(/Room 105/)).toBeTruthy();
-    expect(screen.getByText('Frank Miller')).toBeTruthy();
+    await waitFor(() => {
+      expect(screen.getByText(/Room 105/)).toBeTruthy();
+      expect(screen.getByText('Frank Miller')).toBeTruthy();
+    });
 
     // Click edit on the task
     const editBtn = screen.getByRole('button', { name: /^Edit$/i });
@@ -144,43 +173,13 @@ describe('Housekeeping Canonical State Alignment (Phase 7 Job 1)', () => {
     const saveBtn = screen.getByRole('button', { name: /^Save$/i });
     fireEvent.click(saveBtn);
 
-    // Verify persistence in canonical hk_rooms
-    const canonicalRooms = getHousekeepingRooms();
-    const room105 = canonicalRooms.find((r) => r.id === '105');
-    expect(room105).toBeDefined();
-    expect(room105.notes).toBe('Clean windows and balcony');
-  });
-
-  it('syncs live when an external hk_update event is dispatched', () => {
-    saveHousekeepingRooms([
-      {
-        id: '101',
-        roomNo: '101',
-        guest: 'Initial Guest',
-        status: 'Dirty',
-        cleaningType: 'Daily',
-        priority: 'Normal',
-        assignee: 'Initial Staff'
-      }
-    ]);
-
-    render(<RoomsAndCleaning />);
-    expect(screen.getByText('Initial Guest')).toBeTruthy();
-
-    act(() => {
-      saveHousekeepingRooms([
-        {
-          id: '101',
-          roomNo: '101',
-          guest: 'Synced New Guest',
-          status: 'Clean / Ready',
-          cleaningType: 'Daily',
-          priority: 'Normal',
-          assignee: 'New Staff'
-        }
-      ]);
+    await waitFor(() => {
+      expect(opsService.updateHousekeepingTask).toHaveBeenCalledWith(
+        'task_105',
+        expect.objectContaining({
+          notes: 'Clean windows and balcony'
+        })
+      );
     });
-
-    expect(screen.getByText('Synced New Guest')).toBeTruthy();
   });
 });

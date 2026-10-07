@@ -19,8 +19,21 @@ const attendanceRecordSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY', 'ON_LEAVE'],
+      enum: ['PRESENT', 'ABSENT', 'LATE', 'HALF_DAY', 'ON_LEAVE', 'HOLIDAY', 'WEEKEND'],
+      default: 'PRESENT',
       required: true,
+    },
+    shift: {
+      type: String,
+      enum: ['DAY', 'NIGHT', 'Day Shift', 'Night Shift', 'GENERAL'],
+      default: 'Day Shift',
+    },
+    break_time: {
+      type: String,
+      default: '01:00',
+    },
+    total_hours: {
+      type: String,
     },
     notes: {
       type: String,
@@ -32,6 +45,8 @@ const attendanceRecordSchema = new mongoose.Schema(
 );
 
 // Indexes
-attendanceRecordSchema.index({ employee_id: 1, date: -1 });
+// Enforce single authoritative attendance record per employee per date
+attendanceRecordSchema.index({ employee_id: 1, date: 1 }, { unique: true });
+attendanceRecordSchema.index({ date: 1, status: 1 });
 
 export default attendanceRecordSchema;

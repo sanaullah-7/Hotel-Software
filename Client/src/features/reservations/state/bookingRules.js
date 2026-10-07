@@ -54,7 +54,7 @@ export function hasBookingDateOverlap(existing, requestedCheckIn, requestedCheck
 export function resolveBookingReference(reference, bookings = []) {
   if (reference === undefined || reference === null || String(reference).trim() === '') return null;
   const key = String(reference).trim();
-  const matches = bookings.filter((booking) => [booking.id, booking.bookingId, booking.bookingRef]
+  const matches = bookings.filter((booking) => [booking._id, booking.id, booking.bookingId, booking.bookingRef, booking.booking_ref]
     .some((value) => value !== undefined && value !== null && String(value) === key));
   return matches.length === 1 ? matches[0] : null;
 }

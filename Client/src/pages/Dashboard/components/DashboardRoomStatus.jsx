@@ -10,24 +10,18 @@ import {
 import KPICard from '../../../components/common/KPICard';
 import {
   getInvoices,
-  getInvoiceFinancialState,
   INVOICES_UPDATED_EVENT,
   PAYMENTS_UPDATED_EVENT,
   REFUNDS_UPDATED_EVENT
 } from '../../../features/payment-billing/pages/paymentBillingStore';
 
-/** Count invoices with outstanding canonical balance (pending payments). */
+/** Count invoices with outstanding backend balance (pending payments). */
 function computePendingPayments() {
   const invoices = getInvoices();
   let count = 0;
   for (const inv of invoices) {
-    const state = getInvoiceFinancialState(inv.id || inv.invoiceNumber);
-    if (state.integrity === 'verified') {
-      if (state.due > 0.005) count++;
-    } else {
-      const balance = Number(inv.balanceDue ?? (Number(inv.totalAmount || 0) - Number(inv.paidAmount || 0)));
-      if (balance > 0.005 && inv.status !== 'Paid') count++;
-    }
+    const due = Number(inv.balanceDue ?? (Number(inv.totalAmount || 0) - Number(inv.paidAmount || 0)));
+    if (due > 0.005 && inv.status !== 'Paid') count++;
   }
   return count;
 }

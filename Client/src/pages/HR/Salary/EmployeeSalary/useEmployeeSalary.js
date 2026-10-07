@@ -1,5 +1,7 @@
-import { useState, useMemo } from 'react';
-import { initialSalaryList } from './constants';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { payrollService } from '../../../../features/staff/services/payrollService';
+import { payrollAdapter } from '../../../../features/staff/adapters/payrollAdapter';
+import { staffService } from '../../../../features/staff/services/staffService';
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import TrendingUpOutlinedIcon from '@mui/icons-material/TrendingUpOutlined';
 import WorkspacePremiumOutlinedIcon from '@mui/icons-material/WorkspacePremiumOutlined';
@@ -9,7 +11,9 @@ import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOut
 
 export function useEmployeeSalary() {
   // Main Data State
-  const [salaries, setSalaries] = useState(initialSalaryList);
+  const [salaries, setSalaries] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -37,7 +41,7 @@ export function useEmployeeSalary() {
     deductions: true,
     netSalary: true,
     payslip: true,
-    actions: true
+    actions: true,
   });
 
   // Modal Dialogs State
@@ -56,11 +60,46 @@ export function useEmployeeSalary() {
     salary: '',
     bonus: '',
     deductions: '',
-    avatar: ''
+    avatar: '',
   });
 
   // Notification Toast State
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
+
+  // Fetch from backend
+  const fetchSalaries = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await payrollService.getPayrollRoster();
+      const rawData = res?.data ?? res;
+      const normalized = payrollAdapter.toSalaryList(rawData);
+      setSalaries(normalized);
+    } catch (err) {
+      console.error('Failed to load employee salary records:', err);
+      setError(err?.response?.data?.error?.message || err?.message || 'Failed to load salary records');
+      setSalaries([]);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSalaries();
+  }, [fetchSalaries]);
+
+  // Refresh Action
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    fetchSalaries().then(() => {
+      setToast({
+        open: true,
+        message: 'Employee salary records refreshed successfully!',
+        severity: 'success',
+      });
+    });
+  };
 
   // Sorting Handler
   const handleSort = (field) => {
@@ -77,11 +116,11 @@ export function useEmployeeSalary() {
     return salaries.filter((item) => {
       const net = (item.salary || 0) + (item.bonus || 0) - (item.deductions || 0);
       const matchesSearch =
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.empId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.empId || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.department || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.role || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
         String(net).includes(searchQuery);
 
       const matchesDept = departmentFilter === 'All' || item.department === departmentFilter;
@@ -141,27 +180,15 @@ export function useEmployeeSalary() {
   const isAllSelected =
     paginatedSalaries.length > 0 && paginatedSalaries.every((r) => selectedIds.includes(r.id));
   const isSomeSelected =
-    paginatedSalaries.some((r) => selectedIds.includes(r.id)) && !isAllSelected;
-
-  // Refresh Action
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setSalaries(initialSalaryList);
-      setIsRefreshing(false);
-      setToast({
-        open: true,
-        message: 'Employee salary records refreshed successfully!',
-        severity: 'success'
-      });
-    }, 400);
-  };
+    paginatedSalaries.length > 0 &&
+    paginatedSalaries.some((r) => selectedIds.includes(r.id)) &&
+    !isAllSelected;
 
   // Full Table PDF Export Action
   const handleExportPDF = async () => {
     const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
       import('jspdf'),
-      import('jspdf-autotable')
+      import('jspdf-autotable'),
     ]);
     const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
@@ -184,7 +211,7 @@ export function useEmployeeSalary() {
       `$${Number(item.salary).toLocaleString()}`,
       `$${Number(item.bonus || 0).toLocaleString()}`,
       `$${Number(item.deductions || 0).toLocaleString()}`,
-      `$${((item.salary || 0) + (item.bonus || 0) - (item.deductions || 0)).toLocaleString()}`
+      `$${((item.salary || 0) + (item.bonus || 0) - (item.deductions || 0)).toLocaleString()}`,
     ]);
 
     autoTable(doc, {
@@ -195,19 +222,19 @@ export function useEmployeeSalary() {
       headStyles: {
         fillColor: [93, 95, 239],
         textColor: [255, 255, 255],
-        fontStyle: 'bold'
+        fontStyle: 'bold',
       },
       styles: {
         fontSize: 9,
-        cellPadding: 3
-      }
+        cellPadding: 3,
+      },
     });
 
     doc.save(`Employee_Salary_Report_${new Date().toISOString().split('T')[0]}.pdf`);
     setToast({
       open: true,
       message: 'Full salary report exported to PDF!',
-      severity: 'success'
+      severity: 'success',
     });
   };
 
@@ -215,7 +242,7 @@ export function useEmployeeSalary() {
   const handleDownloadPayslip = async (row) => {
     const [{ default: jsPdfDefault, jsPDF: jsPdfNamed }, { default: autoTable }] = await Promise.all([
       import('jspdf'),
-      import('jspdf-autotable')
+      import('jspdf-autotable'),
     ]);
     const jsPDF = jsPdfNamed || jsPdfDefault;
     const doc = new jsPDF();
@@ -247,7 +274,11 @@ export function useEmployeeSalary() {
     doc.text(`Role: ${row.role || 'Staff'}`, 14, 77);
 
     doc.text(`Email: ${row.email}`, 120, 56);
-    doc.text(`Payment Period: ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}`, 120, 63);
+    doc.text(
+      `Payment Period: ${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}`,
+      120,
+      63
+    );
     doc.text(`Status: ${row.paymentStatus || 'Paid'}`, 120, 70);
 
     // Breakdown Table
@@ -258,18 +289,18 @@ export function useEmployeeSalary() {
         ['Basic Salary', `$${Number(row.salary).toLocaleString()}`],
         ['Bonus & Allowances', `+$${Number(row.bonus || 0).toLocaleString()}`],
         ['Deductions & Taxes', `-$${Number(row.deductions || 0).toLocaleString()}`],
-        ['NET SALARY PAYABLE', `$${net.toLocaleString()}`]
+        ['NET SALARY PAYABLE', `$${net.toLocaleString()}`],
       ],
       theme: 'striped',
       headStyles: {
         fillColor: [93, 95, 239],
         textColor: [255, 255, 255],
-        fontStyle: 'bold'
+        fontStyle: 'bold',
       },
       styles: {
         fontSize: 10,
-        cellPadding: 4
-      }
+        cellPadding: 4,
+      },
     });
 
     // Signature Area
@@ -285,7 +316,7 @@ export function useEmployeeSalary() {
     setToast({
       open: true,
       message: `Payslip downloaded for ${row.name}!`,
-      severity: 'success'
+      severity: 'success',
     });
   };
 
@@ -296,43 +327,50 @@ export function useEmployeeSalary() {
       empId: `EMP-${Math.floor(100 + Math.random() * 900)}`,
       email: '',
       department: 'Front Office',
-      role: 'Manager',
+      role: 'Staff',
       salary: '',
       bonus: '',
       deductions: '',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
+      avatar: '',
     });
     setIsAddModalOpen(true);
   };
 
-  // Save New Employee Salary
-  const handleSaveNewSalary = (e) => {
+  // Save New Employee / Salary Record
+  const handleSaveNewSalary = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim() || !formData.salary) return;
+    if (!formData.name.trim() || formData.salary === '') return;
 
-    const newRecord = {
-      id: Date.now(),
-      empId: formData.empId || `EMP-${Math.floor(100 + Math.random() * 900)}`,
-      name: formData.name,
-      avatar:
-        formData.avatar ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=5d5fef&color=fff`,
-      email: formData.email || 'test@email.com',
-      department: formData.department,
-      role: formData.role,
-      salary: Number(formData.salary) || 0,
-      bonus: Number(formData.bonus) || 0,
-      deductions: Number(formData.deductions) || 0,
-      paymentStatus: 'Paid'
-    };
+    try {
+      const nameParts = formData.name.trim().split(' ');
+      const firstName = nameParts[0] || 'Staff';
+      const lastName = nameParts.slice(1).join(' ') || 'Member';
 
-    setSalaries([newRecord, ...salaries]);
-    setIsAddModalOpen(false);
-    setToast({
-      open: true,
-      message: `Salary record added for ${formData.name}!`,
-      severity: 'success'
-    });
+      // Create new employee with base salary
+      await staffService.createStaff({
+        first_name: firstName,
+        last_name: lastName,
+        employee_ref: formData.empId || `EMP-${Date.now().toString().slice(-4)}`,
+        email: formData.email || `${firstName.toLowerCase()}.${Date.now().toString().slice(-4)}@hotel.com`,
+        job_title: formData.role || 'Staff',
+        salary: Number(formData.salary) || 0,
+      });
+
+      setIsAddModalOpen(false);
+      setToast({
+        open: true,
+        message: `Salary record added for ${formData.name}!`,
+        severity: 'success',
+      });
+      await fetchSalaries();
+    } catch (err) {
+      console.error('Failed to create employee salary record:', err);
+      setToast({
+        open: true,
+        message: err?.response?.data?.error?.message || err?.message || 'Failed to save salary record',
+        severity: 'error',
+      });
+    }
   };
 
   // Open Edit Modal
@@ -347,40 +385,47 @@ export function useEmployeeSalary() {
       salary: record.salary,
       bonus: record.bonus || 0,
       deductions: record.deductions || 0,
-      avatar: record.avatar
+      avatar: record.avatar,
     });
     setIsEditModalOpen(true);
   };
 
   // Save Edit Salary
-  const handleSaveEditSalary = (e) => {
+  const handleSaveEditSalary = async (e) => {
     e.preventDefault();
     if (!selectedRecord) return;
 
-    setSalaries(
-      salaries.map((item) =>
-        item.id === selectedRecord.id
-          ? {
-              ...item,
-              name: formData.name,
-              empId: formData.empId,
-              email: formData.email,
-              department: formData.department,
-              role: formData.role,
-              salary: Number(formData.salary) || 0,
-              bonus: Number(formData.bonus) || 0,
-              deductions: Number(formData.deductions) || 0
-            }
-          : item
-      )
-    );
+    try {
+      const empId = selectedRecord.employeeId || selectedRecord.id;
+      const newSalary = Number(formData.salary) || 0;
 
-    setIsEditModalOpen(false);
-    setToast({
-      open: true,
-      message: `Salary record updated for ${formData.name}!`,
-      severity: 'success'
-    });
+      // 1. Update Employee base salary reference
+      await payrollService.updateEmployeeSalary(empId, newSalary);
+
+      // 2. If payroll item exists, update its bonuses/deductions/salary
+      if (selectedRecord.payroll_item_id) {
+        await payrollService.updatePayrollItem(selectedRecord.payroll_item_id, {
+          base_salary: newSalary,
+          bonuses: Number(formData.bonus) || 0,
+          deductions: Number(formData.deductions) || 0,
+        });
+      }
+
+      setIsEditModalOpen(false);
+      setToast({
+        open: true,
+        message: `Salary record updated for ${formData.name}!`,
+        severity: 'success',
+      });
+      await fetchSalaries();
+    } catch (err) {
+      console.error('Failed to update salary record:', err);
+      setToast({
+        open: true,
+        message: err?.response?.data?.error?.message || err?.message || 'Failed to update salary record',
+        severity: 'error',
+      });
+    }
   };
 
   // Open Delete Dialog
@@ -390,19 +435,36 @@ export function useEmployeeSalary() {
   };
 
   // Confirm Delete
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!selectedRecord) return;
-    setSalaries(salaries.filter((item) => item.id !== selectedRecord.id));
-    setSelectedIds(selectedIds.filter((id) => id !== selectedRecord.id));
-    setIsDeleteDialogOpen(false);
-    setToast({
-      open: true,
-      message: `Salary record for ${selectedRecord.name} deleted!`,
-      severity: 'success'
-    });
+
+    try {
+      if (selectedRecord.payroll_item_id) {
+        await payrollService.deletePayrollItem(selectedRecord.payroll_item_id);
+      }
+      // Reset salary reference to 0
+      const empId = selectedRecord.employeeId || selectedRecord.id;
+      await payrollService.updateEmployeeSalary(empId, 0);
+
+      setIsDeleteDialogOpen(false);
+      setSelectedIds(selectedIds.filter((id) => id !== selectedRecord.id));
+      setToast({
+        open: true,
+        message: `Salary record for ${selectedRecord.name} reset!`,
+        severity: 'success',
+      });
+      await fetchSalaries();
+    } catch (err) {
+      console.error('Failed to delete salary record:', err);
+      setToast({
+        open: true,
+        message: err?.response?.data?.error?.message || err?.message || 'Failed to delete salary record',
+        severity: 'error',
+      });
+    }
   };
 
-  // Dynamic 6-card Payroll Summary Metrics (calculated from overall salaries state)
+  // Dynamic 6-card Payroll Summary Metrics
   const payrollStats = useMemo(() => {
     const list = Array.isArray(salaries) ? salaries : [];
     const totalEmployees = list.length;
@@ -439,7 +501,7 @@ export function useEmployeeSalary() {
         subtext: 'Employees with salary records',
         icon: PeopleOutlinedIcon,
         iconBg: 'bg-[var(--primary-main)]/10',
-        iconColor: 'text-[var(--primary-main)]'
+        iconColor: 'text-[var(--primary-main)]',
       },
       {
         id: 'total-payroll',
@@ -448,7 +510,7 @@ export function useEmployeeSalary() {
         subtext: 'Total net salary payable',
         icon: PaymentsOutlinedIcon,
         iconBg: 'bg-emerald-50',
-        iconColor: 'text-emerald-600'
+        iconColor: 'text-emerald-600',
       },
       {
         id: 'total-bonuses',
@@ -457,7 +519,7 @@ export function useEmployeeSalary() {
         subtext: 'Total bonuses & allowances',
         icon: AttachMoneyOutlinedIcon,
         iconBg: 'bg-amber-50',
-        iconColor: 'text-amber-600'
+        iconColor: 'text-amber-600',
       },
       {
         id: 'total-deductions',
@@ -466,7 +528,7 @@ export function useEmployeeSalary() {
         subtext: 'Total deductions',
         icon: RemoveCircleOutlineOutlinedIcon,
         iconBg: 'bg-rose-50',
-        iconColor: 'text-rose-600'
+        iconColor: 'text-rose-600',
       },
       {
         id: 'average-salary',
@@ -475,7 +537,7 @@ export function useEmployeeSalary() {
         subtext: 'Average net salary',
         icon: TrendingUpOutlinedIcon,
         iconBg: 'bg-blue-50',
-        iconColor: 'text-blue-600'
+        iconColor: 'text-blue-600',
       },
       {
         id: 'highest-net-salary',
@@ -484,14 +546,17 @@ export function useEmployeeSalary() {
         subtext: highestSalaryEmployee ? `Highest paid: ${highestSalaryEmployee.name}` : 'No salary records',
         icon: WorkspacePremiumOutlinedIcon,
         iconBg: 'bg-indigo-50',
-        iconColor: 'text-indigo-600'
-      }
+        iconColor: 'text-indigo-600',
+      },
     ];
   }, [salaries]);
 
   return {
     salaries,
     setSalaries,
+    isLoading,
+    error,
+    fetchSalaries,
     searchQuery,
     setSearchQuery,
     selectedIds,
@@ -539,6 +604,6 @@ export function useEmployeeSalary() {
     handleSaveEditSalary,
     handleOpenDeleteDialog,
     handleConfirmDelete,
-    payrollStats
+    payrollStats,
   };
 }

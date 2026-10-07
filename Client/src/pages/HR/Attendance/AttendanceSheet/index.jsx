@@ -43,11 +43,30 @@ export default function AttendanceSheet() {
  filteredStaff,
  handleUpdateSheet,
  handleCellClick,
- handleExportCSV
+ handleExportCSV,
+ loading,
+ error,
+ loadSheetData
  } = useAttendanceSheet();
 
  return (
  <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden">
+  {error && (
+   <div className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-xs text-red-700">
+    <span>{error}</span>
+    <button
+     onClick={() => loadSheetData(appliedYear, appliedMonth)}
+     className="px-2.5 py-1 bg-red-600 text-white rounded font-medium hover:bg-red-700 cursor-pointer text-xs"
+    >
+     Retry
+    </button>
+   </div>
+  )}
+  {loading && !error && (
+   <div className="mb-2 p-2 bg-blue-50/70 border border-blue-100 rounded text-center text-xs text-blue-700 font-medium">
+    Loading attendance sheet records from server...
+   </div>
+  )}
 
  {/* 2. Top 4 Metric Summary Cards */}
  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1 mb-2">
@@ -348,7 +367,7 @@ export default function AttendanceSheet() {
 
  {/* Day Matrix Badges (1 to 28/29/30/31) */}
  {daysArray.map((day) => {
- const status = attendanceData[staff.id]?.[day] ||'P';
+ const status = attendanceData[staff.id]?.[day] ||'';
 
  let badgeClass ='';
  let statusText ='';
@@ -356,13 +375,15 @@ export default function AttendanceSheet() {
  if (status ==='P') {
  badgeClass ='bg-emerald-100 text-emerald-700 hover:bg-emerald-200';
  statusText ='Present';
- } else if (status ==='L') {
+ } else if (status ==='A') { badgeClass ='bg-orange-100 text-orange-700 hover:bg-orange-200'; statusText ='Absent';
+  } else if (status ==='L') {
  badgeClass ='bg-rose-100 text-rose-700 hover:bg-rose-200';
  statusText ='Leave';
  } else if (status ==='H') {
  badgeClass ='bg-amber-100 text-amber-700 hover:bg-amber-200';
  statusText ='Holiday';
- } else {
+ } else if (status ==='') { badgeClass ='bg-white text-slate-300 border border-dashed border-slate-200 hover:bg-slate-50'; statusText ='Not recorded';
+  } else {
  badgeClass ='bg-slate-100 text-slate-600 hover:bg-slate-200';
  statusText ='Weekend';
  }
