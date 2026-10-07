@@ -80,10 +80,12 @@ export default function DashboardMetrics({
 }) {
   // Reservation Today: reservations created/booked for today or checking in today
   const reservationTodayCount = reservations.filter((r) =>
-    isToday(r.createdAt || r.bookingDate || r.reservationDate || r.date || r.checkIn)
+    isToday(r.createdAt) || isToday(r.bookingDate) || isToday(r.reservationDate) || isToday(r.date) || isToday(r.checkIn)
   ).length;
 
-  const occupiedCount = roomInventory.filter((room) => room.status === 'Booked').length;
+  const occupiedCount = roomInventory.filter(
+    (room) => room.status === 'Booked' || room.status === 'OCCUPIED' || room.status === 'Occupied'
+  ).length;
 
   // Check-in Today: bookings currently in canonical 'Checked In' state
   const checkInCount = reservations.filter(
@@ -96,7 +98,7 @@ export default function DashboardMetrics({
     return isToday(r.checkedOutAt || r.checkoutDate || r.checkOut);
   }).length;
 
-  // Billing-derived KPIs (reactive to payment & invoice events)
+  // Billing-derived KPIs (reactive to payment & invoice events and backend data)
   const [revenueToday, setRevenueToday] = useState(0);
   const [paymentsTodayCount, setPaymentsTodayCount] = useState(0);
 

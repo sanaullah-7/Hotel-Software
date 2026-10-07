@@ -40,7 +40,9 @@ export default function BookingsGridTable({
   const refreshFinancialStatus = useCallback(() => {
     const map = {};
     (filteredBookings || []).forEach((b) => {
-      map[b.id] = getCanonicalBookingPaymentStatus(b.id);
+      const canonicalStatus = getCanonicalBookingPaymentStatus(b.id) ?? (b._id ? getCanonicalBookingPaymentStatus(b._id) : null);
+      if (b.id !== undefined && b.id !== null) map[b.id] = canonicalStatus;
+      if (b._id) map[b._id] = canonicalStatus;
     });
     setFinancialStatusMap(map);
   }, [filteredBookings]);
@@ -248,9 +250,15 @@ export default function BookingsGridTable({
 
               {/* Payment */}
               <td className="py-1.5 px-1.5">
-                {financialStatusMap[booking.id] !== null && financialStatusMap[booking.id] !== undefined ? (
+                {(financialStatusMap[booking.id] !== null && financialStatusMap[booking.id] !== undefined) ? (
                   <StatusBadge
                     status={financialStatusMap[booking.id]}
+                    stylesMap={paymentStyles}
+                    size="xs"
+                  />
+                ) : (booking._id && financialStatusMap[booking._id] !== null && financialStatusMap[booking._id] !== undefined) ? (
+                  <StatusBadge
+                    status={financialStatusMap[booking._id]}
                     stylesMap={paymentStyles}
                     size="xs"
                   />

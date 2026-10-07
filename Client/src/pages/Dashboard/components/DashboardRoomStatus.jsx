@@ -16,8 +16,7 @@ import {
 } from '../../../features/payment-billing/pages/paymentBillingStore';
 
 /** Count invoices with outstanding backend balance (pending payments). */
-function computePendingPayments() {
-  const invoices = getInvoices();
+function computePendingPayments(invoices = getInvoices()) {
   let count = 0;
   for (const inv of invoices) {
     const due = Number(inv.balanceDue ?? (Number(inv.totalAmount || 0) - Number(inv.paidAmount || 0)));
@@ -28,18 +27,25 @@ function computePendingPayments() {
 
 export default function DashboardRoomStatus({
   roomInventory = [],
-  hkRooms = []
+  hkRooms = [],
+  absentStaffCount
 }) {
-  // Rooms Dirty — from canonical housekeeping store (status === 'Dirty')
-  const dirtyCount = hkRooms.filter((r) => r.status === 'Dirty').length;
+  // Rooms Dirty — from authoritative backend room (housekeeping_status === 'DIRTY') or status 'Dirty'
+  const dirtyCount = (hkRooms.length > 0 ? hkRooms : roomInventory).filter(
+    (r) => r.housekeeping_status === 'DIRTY' || r.status === 'Dirty' || r.status === 'DIRTY' || r.status === 'CLEANING'
+  ).length;
 
-  // Rooms Available — from canonical room inventory (status === 'Open')
-  const availableCount = roomInventory.filter((room) => room.status === 'Open').length;
+  // Rooms Available — from authoritative room inventory (status === 'AVAILABLE' or 'Open')
+  const availableCount = roomInventory.filter(
+    (room) => room.status === 'AVAILABLE' || room.status === 'Open' || room.status === 'Available'
+  ).length;
 
-  // Under Maintenance — from canonical housekeeping store (status === 'Maintenance')
-  const maintenanceCount = hkRooms.filter((r) => r.status === 'Maintenance').length;
+  // Under Maintenance — from authoritative room inventory (status === 'MAINTENANCE' or 'Maintenance')
+  const maintenanceCount = (hkRooms.length > 0 ? hkRooms : roomInventory).filter(
+    (r) => r.status === 'MAINTENANCE' || r.status === 'Maintenance'
+  ).length;
 
-  // Pending Payments — canonical invoice balance > 0 (reactive to billing events)
+  // Pending Payments — canonical invoice balance > 0 (reactive to billing events & backend invoices)
   const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0);
 
   const refreshPending = useCallback(() => {

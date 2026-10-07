@@ -37,10 +37,13 @@ import BookingsGridTable from './BookingsGridTable';
 
 export default function CurrentBookingsTable({
   title = 'Current Booking',
-  showDateFilter = true
+  showDateFilter = true,
+  onMutationSuccess
 }) {
   const navigate = useNavigate();
   const [bookings, setBookings] = useState(() => getReservations(initialBookings));
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('All');
   const [customStartDate, setCustomStartDate] = useState('');
@@ -48,6 +51,8 @@ export default function CurrentBookingsTable({
   const [customAnchorEl, setCustomAnchorEl] = useState(null);
 
   const fetchBackendBookings = React.useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const res = await reservationService.getReservations({ limit: 100 });
       const rawList = Array.isArray(res?.data?.reservations)
@@ -63,14 +68,23 @@ export default function CurrentBookingsTable({
         setBookings(adapted);
         syncReservationsFromBackend(rawList);
       }
-    } catch {
-      // Backend request failed - preserve existing state without injecting demo data
+    } catch (err) {
+      console.warn('[CurrentBookings] Backend fetch warning:', err);
+      const errMsg = err?.message || 'Failed to load bookings from server';
+      setError(errMsg);
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
   const handleRowClick = (booking) => {
+    const guestId = booking.guestId || booking.primary_guest_id || booking.guest?._id || booking.guest?.id;
+    if (guestId) {
+      navigate(`/guests/${guestId}`);
+      return;
+    }
     const guest = resolveGuestForBooking(booking);
-    if (guest) navigate(`/guests/${guest.id}`);
+    if (guest) navigate(`/guests/${guest.id || guest._id}`);
     else openViewModal(booking);
   };
 
@@ -126,6 +140,7 @@ export default function CurrentBookingsTable({
     setCustomStartDate('');
     setCustomEndDate('');
     fetchBackendBookings();
+    if (onMutationSuccess) onMutationSuccess();
     setCurrentPage(1);
   };
 
@@ -273,6 +288,8 @@ export default function CurrentBookingsTable({
 
         setIsDeleteModalOpen(false);
         setBookingToDelete(null);
+        await fetchBackendBookings();
+        if (onMutationSuccess) onMutationSuccess();
       } catch (error) {
         window.alert(error?.message || 'Failed to cancel reservation');
       }
@@ -303,6 +320,8 @@ export default function CurrentBookingsTable({
 
         setIsCancelModalOpen(false);
         setBookingToCancel(null);
+        await fetchBackendBookings();
+        if (onMutationSuccess) onMutationSuccess();
       } catch (error) {
         window.alert(error?.message || 'Failed to cancel reservation');
       }
@@ -336,9 +355,9 @@ export default function CurrentBookingsTable({
           (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
         );
         syncReservationsFromBackend(updatedList);
-      } else {
-        await fetchBackendBookings();
       }
+      await fetchBackendBookings();
+      if (onMutationSuccess) onMutationSuccess();
     } catch (error) {
       window.alert(error?.message || 'Check-out failed');
     }
@@ -533,6 +552,21 @@ export default function CurrentBookingsTable({
           </button>
         </div>
       </div>
+
+      {/* Backend Error Banner */}
+      {error && (
+        <div className="px-3.5 py-2">
+          <div role="alert" className="flex items-center justify-between p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+            <span>{error}</span>
+            <button
+              onClick={handleRefresh}
+              className="px-2 py-0.5 bg-red-100 hover:bg-red-200 text-red-800 font-semibold rounded text-xs cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Grid Table */}
       <BookingsGridTable
