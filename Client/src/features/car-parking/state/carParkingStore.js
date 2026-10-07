@@ -40,7 +40,7 @@ const generateDummyRecords = () => {
 
 export function getParkingSpaces() {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY_SPACES);
+    const stored = null;
     if (!stored) {
       const defaultSpaces = generateDefaultSpaces();
       
@@ -54,7 +54,7 @@ export function getParkingSpaces() {
         }
       });
       
-      localStorage.setItem(STORAGE_KEY_SPACES, JSON.stringify(defaultSpaces));
+      // localStorage.setItem(STORAGE_KEY_SPACES, JSON.stringify(defaultSpaces));
       return defaultSpaces;
     }
     return JSON.parse(stored);
@@ -65,16 +65,16 @@ export function getParkingSpaces() {
 }
 
 export function saveParkingSpaces(spaces) {
-  localStorage.setItem(STORAGE_KEY_SPACES, JSON.stringify(spaces));
+  // localStorage.setItem(STORAGE_KEY_SPACES, JSON.stringify(spaces));
   window.dispatchEvent(new Event(PARKING_UPDATED_EVENT));
 }
 
 export function getParkingRecords() {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY_RECORDS);
+    const stored = null;
     if (!stored) {
       const defaultRecords = generateDummyRecords();
-      localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(defaultRecords));
+      // localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(defaultRecords));
       return defaultRecords;
     }
     return JSON.parse(stored);
@@ -85,7 +85,7 @@ export function getParkingRecords() {
 }
 
 export function saveParkingRecords(records) {
-  localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(records));
+  // localStorage.setItem(STORAGE_KEY_RECORDS, JSON.stringify(records));
   window.dispatchEvent(new Event(PARKING_UPDATED_EVENT));
 }
 

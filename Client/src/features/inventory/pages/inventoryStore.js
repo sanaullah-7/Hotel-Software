@@ -31,39 +31,39 @@ const STORAGE_KEY_INCIDENTS = 'hotel_inventory_incidents_v2';
 const STORAGE_KEY_CHARGES = 'hotel_guest_charges_v2';
 
 export const getInventoryItems = () => {
-  const data = localStorage.getItem(STORAGE_KEY_ITEMS);
+  const data = null;
   if (!data) {
-    localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(INITIAL_INVENTORY_ITEMS));
-    return INITIAL_INVENTORY_ITEMS;
+    // localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(INITIAL_INVENTORY_ITEMS));
+    return [];
   }
   try {
     return JSON.parse(data);
   } catch {
-    return INITIAL_INVENTORY_ITEMS;
+    return [];
   }
 };
 
 export const saveInventoryItems = (items) => {
-  localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
+  // localStorage.setItem(STORAGE_KEY_ITEMS, JSON.stringify(items));
   window.dispatchEvent(new Event('inventory_update'));
   try { addAuditLog({ module: 'Inventory', action: 'Updated Record', description: 'Inventory items saved.', importance: 'Normal' }); } catch(e){}
 };
 
 export const getMissingIncidents = () => {
-  const data = localStorage.getItem(STORAGE_KEY_INCIDENTS);
+  const data = null;
   if (!data) {
-    localStorage.setItem(STORAGE_KEY_INCIDENTS, JSON.stringify(INITIAL_MISSING_INCIDENTS));
-    return INITIAL_MISSING_INCIDENTS;
+    // localStorage.setItem(STORAGE_KEY_INCIDENTS, JSON.stringify(INITIAL_MISSING_INCIDENTS));
+    return [];
   }
   try {
     return JSON.parse(data);
   } catch {
-    return INITIAL_MISSING_INCIDENTS;
+    return [];
   }
 };
 
 export const saveMissingIncidents = (incidents) => {
-  localStorage.setItem(STORAGE_KEY_INCIDENTS, JSON.stringify(incidents));
+  // localStorage.setItem(STORAGE_KEY_INCIDENTS, JSON.stringify(incidents));
   window.dispatchEvent(new Event('inventory_incidents_update'));
   try { addAuditLog({ module: 'Inventory', action: 'Updated Record', description: 'Missing incidents saved.', importance: 'Normal' }); } catch(e){}
 };
@@ -317,10 +317,10 @@ export const getStorageReserveForItem = (item, allItems = []) => {
 
 // Guest Charges Store & Helpers
 export const getGuestCharges = () => {
-  const data = localStorage.getItem(STORAGE_KEY_CHARGES);
+  const data = null;
   if (!data) {
-    localStorage.setItem(STORAGE_KEY_CHARGES, JSON.stringify(INITIAL_GUEST_CHARGES));
-    return INITIAL_GUEST_CHARGES.map((c) => ({
+    // localStorage.setItem(STORAGE_KEY_CHARGES, JSON.stringify(INITIAL_GUEST_CHARGES));
+    return [].map((c) => ({
       ...c,
       bookingId: c.bookingId ?? null,
       guestId: c.guestId ?? null
@@ -335,7 +335,7 @@ export const getGuestCharges = () => {
       guestId: c.guestId ?? null
     }));
   } catch {
-    return INITIAL_GUEST_CHARGES.map((c) => ({
+    return [].map((c) => ({
       ...c,
       bookingId: c.bookingId ?? null,
       guestId: c.guestId ?? null
@@ -344,7 +344,7 @@ export const getGuestCharges = () => {
 };
 
 export const saveGuestCharges = (charges) => {
-  localStorage.setItem(STORAGE_KEY_CHARGES, JSON.stringify(charges));
+  // localStorage.setItem(STORAGE_KEY_CHARGES, JSON.stringify(charges));
   window.dispatchEvent(new Event('guest_charges_update'));
   try { addAuditLog({ module: 'Inventory', action: 'Created Record', description: 'addInventoryItem was called.', importance: 'Normal' }); } catch(e){}
 };

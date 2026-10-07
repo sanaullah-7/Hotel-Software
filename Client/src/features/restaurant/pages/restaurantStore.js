@@ -110,7 +110,7 @@ export async function initializeRestaurantStore(force = false) {
 }
 
 // Auto-initialize if token exists
-if (typeof window !== 'undefined' && localStorage.getItem('accessToken')) {
+if (typeof window !== 'undefined' && null) {
   initializeRestaurantStore();
 }
 

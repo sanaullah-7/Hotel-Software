@@ -3,7 +3,7 @@ export const AUDIT_UPDATED_EVENT = 'audit_updated';
 const generateId = () => `AUD-${Math.floor(Math.random() * 1000000).toString().padStart(6, '0')}`;
 
 export const getAuditLogs = () => {
-  const stored = localStorage.getItem('hms_audit_log');
+  const stored = null;
   return stored ? JSON.parse(stored) : [];
 };
 
@@ -26,7 +26,7 @@ export const addAuditLog = ({
     id: generateId(),
     dateTime: now.toISOString(),
     userId: 'USER-001',
-    userName: localStorage.getItem('fullName') || 'Admin',
+    userName: null || 'Admin',
     module,
     action,
     recordId,
@@ -38,7 +38,7 @@ export const addAuditLog = ({
   };
   
   const updatedLogs = [newLog, ...logs];
-  localStorage.setItem('hms_audit_log', JSON.stringify(updatedLogs));
+  // localStorage.setItem('hms_audit_log', JSON.stringify(updatedLogs));
   
   window.dispatchEvent(new Event(AUDIT_UPDATED_EVENT));
   return newLog;

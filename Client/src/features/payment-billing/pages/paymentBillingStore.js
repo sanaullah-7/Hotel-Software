@@ -38,7 +38,7 @@ export function dispatchFinancialEvent(eventName, detail = {}) {
 
 export const getInvoices = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.INVOICES);
+    const raw = null;
     if (raw === null) {
       return [];
     }
@@ -55,7 +55,7 @@ export const getInvoices = () => {
       changed = true;
       return { ...invoice, bookingId: matches[0].id };
     });
-    if (changed) localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(migrated));
+    if (changed) // localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(migrated));
     return migrated;
   } catch {
     return [];
@@ -63,7 +63,7 @@ export const getInvoices = () => {
 };
 
 export const saveInvoices = (invoices, options = {}) => {
-  localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
+  // localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
   if (!options?.silent) {
     dispatchFinancialEvent(INVOICES_UPDATED_EVENT, {
       domain: 'invoices',
@@ -297,8 +297,8 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
   const updatedPayments = [newPaymentRecord, ...payments];
 
   // Capture snapshots for safe rollback if any storage write fails
-  const prevInvoicesRaw = localStorage.getItem(STORAGE_KEYS.INVOICES);
-  const prevPaymentsRaw = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
+  const prevInvoicesRaw = null;
+  const prevPaymentsRaw = null;
 
   try {
     saveInvoices(updatedInvoices, { silent: true });
@@ -307,12 +307,12 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
     // Safe recovery: rollback to pre-operation snapshots
     try {
       if (prevInvoicesRaw !== null) {
-        localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
+        // localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
       } else {
         localStorage.removeItem(STORAGE_KEYS.INVOICES);
       }
       if (prevPaymentsRaw !== null) {
-        localStorage.setItem(STORAGE_KEYS.PAYMENTS, prevPaymentsRaw);
+        // localStorage.setItem(STORAGE_KEYS.PAYMENTS, prevPaymentsRaw);
       } else {
         localStorage.removeItem(STORAGE_KEYS.PAYMENTS);
       }
@@ -340,7 +340,7 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
   // Synchronize reservation payment status in hotel_reservations
   if (targetInvoice.bookingId) {
     try {
-      const rawBookings = localStorage.getItem('hotel_reservations');
+      const rawBookings = null;
       if (rawBookings) {
         const bookingsList = JSON.parse(rawBookings);
         if (Array.isArray(bookingsList)) {
@@ -350,7 +350,7 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
             }
             return b;
           });
-          localStorage.setItem('hotel_reservations', JSON.stringify(updatedBookingsList));
+          // localStorage.setItem('hotel_reservations', JSON.stringify(updatedBookingsList));
           window.dispatchEvent(new Event('reservations_update'));
         }
       }
@@ -377,7 +377,7 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
 
 export const getPayments = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
+    const raw = null;
     if (raw === null) {
       return [];
     }
@@ -394,7 +394,7 @@ export const getPayments = () => {
       changed = true;
       return { ...payment, bookingId: invoiceMatches[0].bookingId };
     });
-    if (changed) localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(migrated));
+    if (changed) // localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(migrated));
     return migrated;
   } catch {
     return [];
@@ -402,7 +402,7 @@ export const getPayments = () => {
 };
 
 export const savePayments = (payments, options = {}) => {
-  localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+  // localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
   if (!options?.silent) {
     dispatchFinancialEvent(PAYMENTS_UPDATED_EVENT, {
       domain: 'payments',
@@ -428,7 +428,7 @@ export const deletePayment = (paymentId) => {
 
 export const getRefunds = () => {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.REFUNDS);
+    const raw = null;
     if (raw === null) {
       return [];
     }
@@ -440,7 +440,7 @@ export const getRefunds = () => {
 };
 
 export const saveRefunds = (refunds, options = {}) => {
-  localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(refunds));
+  // localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(refunds));
   if (!options?.silent) {
     dispatchFinancialEvent(REFUNDS_UPDATED_EVENT, {
       domain: 'refunds',
@@ -579,9 +579,9 @@ export const processRefund = (refundData) => {
   }
 
   // Transactional persistence with snapshot rollback
-  const prevRefundsRaw = localStorage.getItem(STORAGE_KEYS.REFUNDS);
-  const prevPaymentsRaw = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
-  const prevInvoicesRaw = localStorage.getItem(STORAGE_KEYS.INVOICES);
+  const prevRefundsRaw = null;
+  const prevPaymentsRaw = null;
+  const prevInvoicesRaw = null;
 
   try {
     saveRefunds(updatedRefunds, { silent: true });
@@ -591,12 +591,9 @@ export const processRefund = (refundData) => {
     }
   } catch (persistErr) {
     try {
-      if (prevRefundsRaw !== null) localStorage.setItem(STORAGE_KEYS.REFUNDS, prevRefundsRaw);
-      else localStorage.removeItem(STORAGE_KEYS.REFUNDS);
-      if (prevPaymentsRaw !== null) localStorage.setItem(STORAGE_KEYS.PAYMENTS, prevPaymentsRaw);
-      else localStorage.removeItem(STORAGE_KEYS.PAYMENTS);
-      if (prevInvoicesRaw !== null) localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
-      else localStorage.removeItem(STORAGE_KEYS.INVOICES);
+      /* localStorage removed */
+      /* localStorage removed */
+      /* localStorage removed */
     } catch {}
     throw new Error(`Refund persistence failed and was rolled back: ${persistErr.message || 'Storage write error'}`, { cause: persistErr });
   }
@@ -688,9 +685,9 @@ export const updateRefundStatus = (refundId, newStatus) => {
   const updated = refunds.map((r) => (r.id === target.id ? { ...r, status: newStatus } : r));
 
   // Snapshot rollback protection
-  const prevRefundsRaw = localStorage.getItem(STORAGE_KEYS.REFUNDS);
-  const prevPaymentsRaw = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
-  const prevInvoicesRaw = localStorage.getItem(STORAGE_KEYS.INVOICES);
+  const prevRefundsRaw = null;
+  const prevPaymentsRaw = null;
+  const prevInvoicesRaw = null;
 
   try {
     saveRefunds(updated, { silent: true });
@@ -700,12 +697,9 @@ export const updateRefundStatus = (refundId, newStatus) => {
     }
   } catch (persistErr) {
     try {
-      if (prevRefundsRaw !== null) localStorage.setItem(STORAGE_KEYS.REFUNDS, prevRefundsRaw);
-      else localStorage.removeItem(STORAGE_KEYS.REFUNDS);
-      if (prevPaymentsRaw !== null) localStorage.setItem(STORAGE_KEYS.PAYMENTS, prevPaymentsRaw);
-      else localStorage.removeItem(STORAGE_KEYS.PAYMENTS);
-      if (prevInvoicesRaw !== null) localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
-      else localStorage.removeItem(STORAGE_KEYS.INVOICES);
+      /* localStorage removed */
+      /* localStorage removed */
+      /* localStorage removed */
     } catch {}
     throw new Error(`Refund status persistence failed and was rolled back: ${persistErr.message || 'Storage write error'}`, { cause: persistErr });
   }
@@ -1163,7 +1157,7 @@ export const reconcileDerivedInvoiceFinancialState = (invoiceId) => {
   }
 
   // Snapshot capture for failure rollback
-  const prevInvoicesRaw = localStorage.getItem(STORAGE_KEYS.INVOICES);
+  const prevInvoicesRaw = null;
   const invoices = getInvoices();
   let updatedInvoice = null;
 
@@ -1184,8 +1178,7 @@ export const reconcileDerivedInvoiceFinancialState = (invoiceId) => {
     saveInvoices(nextInvoices, { silent: true });
   } catch (persistErr) {
     try {
-      if (prevInvoicesRaw !== null) localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
-      else localStorage.removeItem(STORAGE_KEYS.INVOICES);
+      /* localStorage removed */
     } catch {}
     throw new Error(`Derived financial reconciliation failed and was rolled back: ${persistErr.message || 'Storage write error'}`, { cause: persistErr });
   }
@@ -1239,7 +1232,7 @@ export const reconcileAllDerivedInvoiceFinancialStates = () => {
     };
   }
 
-  const prevInvoicesRaw = localStorage.getItem(STORAGE_KEYS.INVOICES);
+  const prevInvoicesRaw = null;
   const invoices = getInvoices();
   const repairMap = new Map(repairable.map((r) => [String(r.id), r]));
   const repairedInvoices = [];
@@ -1263,8 +1256,7 @@ export const reconcileAllDerivedInvoiceFinancialStates = () => {
     saveInvoices(nextInvoices, { silent: true });
   } catch (persistErr) {
     try {
-      if (prevInvoicesRaw !== null) localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
-      else localStorage.removeItem(STORAGE_KEYS.INVOICES);
+      /* localStorage removed */
     } catch {}
     throw new Error(`Batch financial reconciliation failed and was rolled back: ${persistErr.message || 'Storage write error'}`, { cause: persistErr });
   }
@@ -1296,9 +1288,9 @@ export const reconcileAllDerivedInvoiceFinancialStates = () => {
 
 // Reset all store data to defaults
 export const resetPaymentBillingStore = () => {
-  localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(INITIAL_INVOICES));
-  localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(INITIAL_PAYMENTS));
-  localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(INITIAL_REFUNDS));
+  // localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(INITIAL_INVOICES));
+  // localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(INITIAL_PAYMENTS));
+  // localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(INITIAL_REFUNDS));
   dispatchFinancialEvent(INVOICES_UPDATED_EVENT, { domain: 'invoices', action: 'reset' });
   dispatchFinancialEvent(PAYMENTS_UPDATED_EVENT, { domain: 'payments', action: 'reset' });
   dispatchFinancialEvent(REFUNDS_UPDATED_EVENT, { domain: 'refunds', action: 'reset' });
