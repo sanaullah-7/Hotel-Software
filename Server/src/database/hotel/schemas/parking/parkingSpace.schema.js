@@ -9,8 +9,8 @@ const parkingSpaceSchema = new mongoose.Schema(
       trim: true,
     },
     location: {
-      type: String, // e.g., 'Level 1', 'Basement 2'
-      required: true,
+      type: String, // e.g., 'Main Lot', 'Level 1', 'Basement 2'
+      default: 'Main Lot',
     },
     is_accessible: { // For disabled parking
       type: Boolean,
@@ -23,7 +23,7 @@ const parkingSpaceSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['AVAILABLE', 'OCCUPIED', 'RESERVED', 'MAINTENANCE'],
+      enum: ['AVAILABLE', 'OCCUPIED', 'RESERVED', 'MAINTENANCE', 'BLOCKED'],
       default: 'AVAILABLE',
       required: true,
     },
@@ -34,7 +34,6 @@ const parkingSpaceSchema = new mongoose.Schema(
 );
 
 // Indexes
-parkingSpaceSchema.index({ space_number: 1 });
 parkingSpaceSchema.index({ status: 1 });
 
 export default parkingSpaceSchema;

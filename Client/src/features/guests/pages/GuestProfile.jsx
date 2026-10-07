@@ -35,16 +35,6 @@ import RequestsComplaintsTab from '../components/tabs/RequestsComplaintsTab';
 import DocumentsTab from '../components/tabs/DocumentsTab';
 import ActivityLogTab from '../components/tabs/ActivityLogTab';
 
-const INITIAL_DOCS = [
-  { id: 'DOC-1', formNo: 'REG-2026-089', guest: 'Kamran Akmal', idType: 'CNIC', idNumber: '42101-1122334-1', room: '101', date: '2026-05-10', status: 'Signed & Verified' },
-  { id: 'DOC-2', formNo: 'REG-2026-088', guest: 'Cara Stevens', idType: 'Passport', idNumber: 'USA-9988221', room: '102', date: '2026-05-01', status: 'Signed & Verified' },
-  { id: 'DOC-3', formNo: 'REG-2026-087', guest: 'Airi Satou', idType: 'Passport', idNumber: 'JPN-4455112', room: '105', date: '2026-05-02', status: 'Pending Signature' },
-  { id: 'DOC-4', formNo: 'REG-2026-086', guest: 'Mahira Khan', idType: 'CNIC', idNumber: '42201-6655443-2', room: '201', date: '2026-05-09', status: 'Signed & Verified' },
-  { id: 'DOC-5', formNo: 'REG-2026-085', guest: 'Jens Brincker', idType: 'Passport', idNumber: 'GER-8833119', room: '302', date: '2026-05-03', status: 'Signed & Verified' },
-  { id: 'DOC-6', formNo: 'REG-2026-001', guest: 'John Smith', idType: 'Passport', idNumber: 'USA-4491028', room: '101', date: '2026-05-20', status: 'Signed & Verified' },
-  { id: 'DOC-7', formNo: 'REG-2026-002', guest: 'Sarah Johnson', idType: 'Passport', idNumber: 'UK-8891002', room: '205', date: '2026-05-19', status: 'Signed & Verified' }
-];
-
 export default function GuestProfile() {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -70,6 +60,9 @@ export default function GuestProfile() {
   const [complaintsError, setComplaintsError] = useState(null);
   const [availableRooms, setAvailableRooms] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [isDocumentsLoading, setIsDocumentsLoading] = useState(false);
+  const [backendActivities, setBackendActivities] = useState([]);
+  const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
   
   // Modals state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -235,6 +228,55 @@ export default function GuestProfile() {
     }
   }, []);
 
+  const fetchGuestDocuments = useCallback(async (guestId) => {
+    if (!guestId) {
+      setDocuments([]);
+      return;
+    }
+    setIsDocumentsLoading(true);
+    try {
+      const res = await guestService.getGuestDocuments(guestId);
+      const rawList = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      const mapped = rawList.map((d) => ({
+        id: d._id,
+        _id: d._id,
+        formNo: d.form_no || `DOC-${String(d._id).slice(-4)}`,
+        name: d.name || d.document_type || 'Identity Proof',
+        idType: d.document_type || 'Passport',
+        idNumber: d.document_number || 'N/A',
+        room: d.room_number || '101',
+        status: d.status || 'Signed & Verified',
+        date: d.created_at ? new Date(d.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        notes: d.notes || '',
+        raw: d,
+      }));
+      setDocuments(mapped);
+    } catch (err) {
+      console.error('Failed to fetch guest documents:', err);
+      setDocuments([]);
+    } finally {
+      setIsDocumentsLoading(false);
+    }
+  }, []);
+
+  const fetchGuestActivities = useCallback(async (guestId) => {
+    if (!guestId) {
+      setBackendActivities([]);
+      return;
+    }
+    setIsActivitiesLoading(true);
+    try {
+      const res = await guestService.getGuestActivities(guestId);
+      const rawList = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      setBackendActivities(rawList);
+    } catch (err) {
+      console.error('Failed to fetch guest activities:', err);
+      setBackendActivities([]);
+    } finally {
+      setIsActivitiesLoading(false);
+    }
+  }, []);
+
   const loadRelatedData = useCallback((g) => {
     if (!g) return;
 
@@ -260,23 +302,12 @@ export default function GuestProfile() {
     // 2. Complaints (Authoritative Backend)
     fetchGuestComplaints(guestId);
 
-    // 3. Documents & Registration Forms
-    let storedDocs = [];
-    try {
-      const rawDocs = localStorage.getItem('hotel_registration_forms');
-      storedDocs = rawDocs ? JSON.parse(rawDocs) : INITIAL_DOCS;
-    } catch {
-      storedDocs = INITIAL_DOCS;
-    }
-    const guestDocsList = storedDocs.filter((d) => {
-      if (d.guestId && String(d.guestId).trim() === guestId) return true;
-      if (d.guestId && String(d.guestId).trim() !== guestId) return false;
-      const dName = String(d.guest || d.guestName || '').trim().toLowerCase();
-      if (guestName && dName && guestName === dName) return true;
-      return false;
-    });
-    setDocuments(guestDocsList);
-  }, [fetchBackendBillingData, fetchGuestComplaints]);
+    // 3. Documents (Authoritative Backend)
+    fetchGuestDocuments(guestId);
+
+    // 4. Activities (Authoritative Backend)
+    fetchGuestActivities(guestId);
+  }, [fetchBackendBillingData, fetchGuestComplaints, fetchGuestDocuments, fetchGuestActivities]);
 
   const fetchGuestProfile = useCallback(async () => {
     if (!id) {
@@ -438,31 +469,36 @@ export default function GuestProfile() {
     }
   };
 
-  // Handle Document additions/deletions
-  const handleAddDocument = (newDoc) => {
-    let allDocs = [];
+  // Handle Document additions/deletions (Authoritative Backend)
+  const handleAddDocument = async (newDoc) => {
+    const canonicalGuestId = String(guest?._id || guest?.id || id || '').trim();
+    if (!canonicalGuestId) return;
     try {
-      const raw = localStorage.getItem('hotel_registration_forms');
-      allDocs = raw ? JSON.parse(raw) : INITIAL_DOCS;
-    } catch {
-      allDocs = INITIAL_DOCS;
+      await guestService.createGuestDocument(canonicalGuestId, newDoc);
+      await Promise.all([
+        fetchGuestDocuments(canonicalGuestId),
+        fetchGuestActivities(canonicalGuestId),
+      ]);
+    } catch (err) {
+      console.error('Backend add document failed:', err);
+      alert(err.message || 'Failed to add document to database.');
     }
-    const updated = [newDoc, ...allDocs];
-    localStorage.setItem('hotel_registration_forms', JSON.stringify(updated));
-    if (guest) loadRelatedData(guest);
   };
 
-  const handleDeleteDocument = (docId) => {
-    let allDocs = [];
+  const handleDeleteDocument = async (docId) => {
+    const canonicalGuestId = String(guest?._id || guest?.id || id || '').trim();
+    if (!canonicalGuestId || !docId) return;
+    if (!window.confirm('Are you sure you want to delete this document from the database?')) return;
     try {
-      const raw = localStorage.getItem('hotel_registration_forms');
-      allDocs = raw ? JSON.parse(raw) : INITIAL_DOCS;
-    } catch {
-      allDocs = INITIAL_DOCS;
+      await guestService.deleteGuestDocument(canonicalGuestId, docId);
+      await Promise.all([
+        fetchGuestDocuments(canonicalGuestId),
+        fetchGuestActivities(canonicalGuestId),
+      ]);
+    } catch (err) {
+      console.error('Backend delete document failed:', err);
+      alert(err.message || 'Failed to delete document from database.');
     }
-    const updated = allDocs.filter((d) => d.id !== docId && d.formNo !== docId);
-    localStorage.setItem('hotel_registration_forms', JSON.stringify(updated));
-    if (guest) loadRelatedData(guest);
   };
 
   // Financial totals (authoritative from backend invoice balances)
@@ -482,8 +518,11 @@ export default function GuestProfile() {
   const currentStay = reservations[0] || null;
   const currentRoom = currentStay?.roomNumber || currentStay?.room || '101';
 
-  // Real audit activities derived from guest lifecycle
+  // Real audit activities from database with derived fallback
   const activities = useMemo(() => {
+    if (backendActivities && backendActivities.length > 0) {
+      return backendActivities;
+    }
     if (!guest) return [];
     const list = [];
 
@@ -564,7 +603,7 @@ export default function GuestProfile() {
 
     // Sort newest first
     return list.sort((a, b) => (b.date > a.date ? 1 : -1));
-  }, [guest, reservations, invoices, payments, charges, complaints, documents]);
+  }, [backendActivities, guest, reservations, invoices, payments, charges, complaints, documents]);
 
   // Tab Badge counts
   const tabCounts = {
@@ -725,6 +764,7 @@ export default function GuestProfile() {
             guest={guest}
             documents={documents}
             currentRoom={currentRoom}
+            isLoading={isDocumentsLoading}
             onDocumentAdded={handleAddDocument}
             onDocumentDeleted={handleDeleteDocument}
           />
@@ -734,6 +774,7 @@ export default function GuestProfile() {
           <ActivityLogTab
             activities={activities}
             guest={guest}
+            isLoading={isActivitiesLoading}
           />
         )}
       </div>

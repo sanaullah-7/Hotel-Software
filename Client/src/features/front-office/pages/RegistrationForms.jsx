@@ -6,39 +6,133 @@ import FileDownload from '@mui/icons-material/FileDownload';
 import Add from '@mui/icons-material/Add';
 import Print from '@mui/icons-material/Print';
 import Visibility from '@mui/icons-material/Visibility';
+import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
+import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Button from '@mui/material/Button';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import { registrationFormService } from '../../../services/registrationFormService';
 
 export default function RegistrationForms() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('All');
+  const [formsList, setFormsList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedForm, setSelectedForm] = useState(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  const initialForms = [
-    { formNo: 'REG-2023-089', guest: 'Kamran Akmal', idType: 'CNIC', idNumber: '42101-1122334-1', room: '101', date: '10/08/2023', status: 'Signed & Verified' },
-    { formNo: 'REG-2023-088', guest: 'Cara Stevens', idType: 'Passport', idNumber: 'USA-9988221', room: '102', date: '10/01/2023', status: 'Signed & Verified' },
-    { formNo: 'REG-2023-087', guest: 'Airi Satou', idType: 'Passport', idNumber: 'JPN-4455112', room: '105', date: '10/02/2023', status: 'Pending Signature' },
-    { formNo: 'REG-2023-086', guest: 'Mahira Khan', idType: 'CNIC', idNumber: '42201-6655443-2', room: '201', date: '10/09/2023', status: 'Signed & Verified' },
-    { formNo: 'REG-2023-085', guest: 'Jens Brincker', idType: 'Passport', idNumber: 'GER-8833119', room: '302', date: '10/03/2023', status: 'Signed & Verified' },
-  ];
-
-  const [formsList, setFormsList] = useState(() => {
+  const fetchForms = async () => {
+    setLoading(true);
     try {
-      const saved = localStorage.getItem('hotel_registration_forms');
-      return saved ? JSON.parse(saved) : initialForms;
-    } catch (e) {
-      return initialForms;
+      const res = await registrationFormService.getRegistrationForms();
+      const rawData = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      const mapped = rawData.map(f => ({
+        id: f._id,
+        formNo: f.form_no || f.formNo || 'REG-FORM',
+        guest: f.guest_name || f.guest || 'Guest',
+        idType: f.id_type || f.idType || 'ID',
+        idNumber: f.id_number || f.idNumber || 'N/A',
+        room: f.room_number || f.room || 'N/A',
+        date: f.completed_at ? new Date(f.completed_at).toLocaleDateString() : (f.created_at ? new Date(f.created_at).toLocaleDateString() : new Date().toLocaleDateString()),
+        status: f.status || 'Signed & Verified',
+        termsAccepted: f.terms_accepted,
+        raw: f,
+      }));
+      setFormsList(mapped);
+    } catch (err) {
+      console.error('Failed to load registration forms from backend:', err);
+      setSnackbar({ open: true, message: 'Failed to load registration forms from database.', severity: 'error' });
+    } finally {
+      setLoading(false);
     }
-  });
+  };
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('hotel_registration_forms');
-      if (saved) {
-        setFormsList(JSON.parse(saved));
-      }
-    } catch (e) {
-      console.error('Error reading localStorage:', e);
-    }
+    fetchForms();
   }, []);
+
+  const handleDelete = async (id, e) => {
+    e?.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this registration form?')) return;
+    try {
+      await registrationFormService.deleteRegistrationForm(id);
+      setSnackbar({ open: true, message: 'Registration form deleted successfully.', severity: 'info' });
+      fetchForms();
+    } catch (err) {
+      setSnackbar({ open: true, message: err.message || 'Failed to delete registration form', severity: 'error' });
+    }
+  };
+
+  const handlePrint = (form, e) => {
+    e?.stopPropagation();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Registration Form - ${form.formNo}</title>
+          <style>
+            body { font-family: sans-serif; padding: 40px; color: #333; }
+            .header { border-bottom: 2px solid #1b7f43; padding-bottom: 12px; margin-bottom: 20px; }
+            .header h1 { margin: 0; color: #1b7f43; font-size: 24px; }
+            .header p { margin: 4px 0 0; color: #666; font-size: 13px; }
+            .section { margin-bottom: 20px; }
+            .field { margin-bottom: 8px; font-size: 14px; }
+            .field strong { display: inline-block; width: 160px; color: #111; }
+            .badge { display: inline-block; padding: 4px 10px; background: #e2f8e9; color: #1b7f43; font-weight: bold; border-radius: 4px; }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px dashed #ccc; font-size: 12px; color: #888; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>HOTEL GUEST REGISTRATION FORM</h1>
+            <p>Form ID: ${form.formNo} &bull; Generated on: ${new Date().toLocaleString()}</p>
+          </div>
+          <div class="section">
+            <div class="field"><strong>Status:</strong> <span class="badge">${form.status}</span></div>
+            <div class="field"><strong>Guest Name:</strong> ${form.guest}</div>
+            <div class="field"><strong>ID / Document:</strong> ${form.idType} (${form.idNumber})</div>
+            <div class="field"><strong>Allocated Room:</strong> Room ${form.room}</div>
+            <div class="field"><strong>Registration Date:</strong> ${form.date}</div>
+          </div>
+          <div class="footer">
+            <p>Guest Signature: _______________________ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Front Desk Officer: _______________________</p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
+  const handleExportCSV = () => {
+    if (!formsList.length) return;
+    const headers = ['Form ID', 'Guest Name', 'ID Type', 'Document No', 'Allocated Room', 'Registration Date', 'Status'];
+    const rows = formsList.map(f => [
+      `"${f.formNo}"`,
+      `"${f.guest}"`,
+      `"${f.idType}"`,
+      `"${f.idNumber}"`,
+      `"${f.room}"`,
+      `"${f.date}"`,
+      `"${f.status}"`
+    ]);
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `registration_forms_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const filteredForms = formsList.filter(form => {
     const matchesSearch = form.guest.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -95,6 +189,7 @@ export default function RegistrationForms() {
 
             {/* CSV Export Button */}
             <button 
+              onClick={handleExportCSV}
               className="flex items-center space-x-1 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 px-2 py-1 rounded-lg text-[10.5px] font-bold shadow-xs transition-all shrink-0 cursor-pointer"
             >
               <FileDownload sx={{ fontSize: 13 }} className="text-gray-500" />
@@ -126,9 +221,20 @@ export default function RegistrationForms() {
               </tr>
             </thead>
             <tbody>
-              {filteredForms.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="8" className="py-10 text-center">
+                    <CircularProgress size={24} sx={{ color: '#1b7f43' }} />
+                    <p className="text-gray-500 text-xs mt-2">Loading registration forms from database...</p>
+                  </td>
+                </tr>
+              ) : filteredForms.length > 0 ? (
                 filteredForms.map((form, idx) => (
-                  <tr key={idx} className="hover:bg-gray-50/30 transition-colors cursor-pointer">
+                  <tr 
+                    key={form.id || idx} 
+                    onClick={() => { setSelectedForm(form); setViewModalOpen(true); }}
+                    className="hover:bg-gray-50/50 transition-colors cursor-pointer border-b border-gray-50"
+                  >
                     <td className="py-1.5 px-2.5 font-bold text-[11px] text-gray-800">{form.formNo}</td>
                     <td className="py-1.5 px-2.5 font-semibold text-[11.5px] text-gray-900">{form.guest}</td>
                     <td className="py-1.5 px-2.5 text-[11px] text-gray-600">{form.idType}</td>
@@ -142,12 +248,27 @@ export default function RegistrationForms() {
                         {form.status}
                       </span>
                     </td>
-                    <td className="py-1.5 px-2.5 text-center">
-                      <button className="text-gray-400 hover:text-gray-700 p-0.5 cursor-pointer mr-0.5">
+                    <td className="py-1.5 px-2.5 text-center" onClick={e => e.stopPropagation()}>
+                      <button 
+                        onClick={(e) => handlePrint(form, e)}
+                        title="Print Registration Form" 
+                        className="text-gray-400 hover:text-gray-700 p-1 cursor-pointer mr-0.5 rounded hover:bg-gray-100"
+                      >
                         <Print sx={{ fontSize: 15 }} />
                       </button>
-                      <button className="text-gray-400 hover:text-gray-700 p-0.5 cursor-pointer">
+                      <button 
+                        onClick={() => { setSelectedForm(form); setViewModalOpen(true); }}
+                        title="View Details" 
+                        className="text-gray-400 hover:text-gray-700 p-1 cursor-pointer mr-0.5 rounded hover:bg-gray-100"
+                      >
                         <Visibility sx={{ fontSize: 15 }} />
+                      </button>
+                      <button 
+                        onClick={(e) => handleDelete(form.id, e)}
+                        title="Delete Form" 
+                        className="text-red-400 hover:text-red-600 p-1 cursor-pointer rounded hover:bg-red-50"
+                      >
+                        <DeleteOutlined sx={{ fontSize: 15 }} />
                       </button>
                     </td>
                   </tr>
@@ -163,6 +284,93 @@ export default function RegistrationForms() {
           </table>
         </div>
       </div>
+
+      {/* VIEW MODAL */}
+      <Dialog 
+        open={viewModalOpen} 
+        onClose={() => setViewModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: '12px', p: 1 } }}
+      >
+        <DialogTitle sx={{ fontWeight: 'bold', fontSize: '15px', color: '#1f2937', pb: 1, borderBottom: '1px solid #f3f4f6' }}>
+          Registration Form Details
+        </DialogTitle>
+        <DialogContent sx={{ pt: 2 }}>
+          {selectedForm && (
+            <div className="space-y-3 text-[12.5px] text-gray-700">
+              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                <span className="font-semibold text-gray-500">Form Number:</span>
+                <span className="font-bold text-gray-900">{selectedForm.formNo}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                <span className="font-semibold text-gray-500">Guest Name:</span>
+                <span className="font-bold text-gray-900">{selectedForm.guest}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                <span className="font-semibold text-gray-500">ID Type:</span>
+                <span>{selectedForm.idType}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                <span className="font-semibold text-gray-500">Document / ID Number:</span>
+                <span className="font-mono text-gray-800">{selectedForm.idNumber}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                <span className="font-semibold text-gray-500">Allocated Room:</span>
+                <span className="font-semibold text-[#1b7f43]">Room {selectedForm.room}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                <span className="font-semibold text-gray-500">Registration Date:</span>
+                <span>{selectedForm.date}</span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                <span className="font-semibold text-gray-500">Status:</span>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded bg-[#e2f8e9] text-[#1b7f43]">
+                  {selectedForm.status}
+                </span>
+              </div>
+              {selectedForm.raw?.special_requests && (
+                <div className="py-1">
+                  <span className="font-semibold text-gray-500 block mb-1">Special Requests:</span>
+                  <p className="bg-gray-50 p-2 rounded text-gray-600 text-xs">{selectedForm.raw.special_requests}</p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2, borderTop: '1px solid #f3f4f6' }}>
+          {selectedForm && (
+            <Button 
+              onClick={(e) => handlePrint(selectedForm, e)} 
+              variant="outlined" 
+              size="small"
+              startIcon={<Print sx={{ fontSize: 16 }} />}
+              sx={{ borderColor: '#e5e7eb', color: '#374151', textTransform: 'none' }}
+            >
+              Print Form
+            </Button>
+          )}
+          <Button 
+            onClick={() => setViewModalOpen(false)} 
+            variant="contained" 
+            size="small"
+            sx={{ backgroundColor: '#1b7f43', textTransform: 'none', '&:hover': { backgroundColor: '#166534' } }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar(prev => ({ ...prev, open: false }))}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

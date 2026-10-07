@@ -60,6 +60,15 @@ export const AuthProvider = ({ children }) => {
     initAuth();
   }, [initAuth]);
 
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      setUser(null);
+      setIsAuthenticated(false);
+    };
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
+  }, []);
+
   const login = async ({ email, password }) => {
     const res = await authService.login({ email, password });
     const userData = res?.data?.account || res?.data?.user;

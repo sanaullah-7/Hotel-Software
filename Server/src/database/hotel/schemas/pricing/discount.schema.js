@@ -5,34 +5,56 @@ const discountSchema = new mongoose.Schema(
     code: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       uppercase: true,
     },
-    description: {
+    name: {
       type: String,
       required: true,
+      trim: true,
+    },
+    description: {
+      type: String,
+      default: '',
     },
     discount_type: {
       type: String,
-      enum: ['PERCENTAGE', 'FIXED'],
-      required: true,
+      enum: ['Percentage', 'Fixed', 'PERCENTAGE', 'FIXED'],
+      default: 'Percentage',
     },
     value: {
       type: Number,
       required: true,
       min: 0,
     },
-    start_date: {
+    applicable_rate_plan: {
+      type: String,
+      default: 'All Rate Plans',
+    },
+    valid_from: {
       type: Date,
     },
-    end_date: {
+    valid_to: {
       type: Date,
+    },
+    min_nights: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
+    max_usage_count: {
+      type: Number,
+      default: 100,
+    },
+    current_usage_count: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     status: {
       type: String,
-      enum: ['ACTIVE', 'INACTIVE'],
-      default: 'ACTIVE',
+      enum: ['Active', 'Inactive', 'ACTIVE', 'INACTIVE'],
+      default: 'Active',
     },
   },
   {
@@ -40,7 +62,6 @@ const discountSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-discountSchema.index({ code: 1 });
+discountSchema.index({ code: 1 }, { unique: true });
 
 export default discountSchema;

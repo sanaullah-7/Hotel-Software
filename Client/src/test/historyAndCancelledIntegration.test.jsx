@@ -36,7 +36,9 @@ describe('Phase 3 Step 6: ReservationHistory & CancelledBookings Backend Integra
 
   describe('ReservationHistory Component', () => {
     it('Test 1 & 2 — Loads backend historical reservations and adapts them correctly', async () => {
-      const todayISO = new Date().toISOString();
+      const now = new Date();
+      const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const todayISO = `${localDateStr}T12:00:00.000Z`;
       const mockHistoryDocs = [
         {
           _id: '67a1b2c3d4e5f678901234a1',

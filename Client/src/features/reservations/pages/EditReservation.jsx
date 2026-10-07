@@ -8,6 +8,7 @@ import {
   TextField, MenuItem, FormControl, InputLabel, Select, Alert, CircularProgress
 } from '@mui/material';
 import reservationService from '../../../services/reservationService';
+import { registrationFormService } from '../../../services/registrationFormService';
 import { toFrontendReservation, toBackendReservationPayload } from '../adapters/reservationAdapter';
 import { getReservations, syncReservationsFromBackend } from '../state/reservationStore';
 import { addAuditLog } from '../../audit/state/auditStore';
@@ -393,27 +394,20 @@ export default function EditReservation() {
 
       // Optional CNIC document storage
       if (cnicBase64) {
-        const INITIAL_DOCS = [{"id":"DOC-1","formNo":"REG-2026-089","guest":"Kamran Akmal","idType":"CNIC","idNumber":"42101-1122334-1","room":"101","date":"2026-05-10","status":"Signed & Verified"}];
-        let storedDocs = [];
         try {
-          const rawDocs = localStorage.getItem('hotel_registration_forms');
-          storedDocs = rawDocs ? JSON.parse(rawDocs) : INITIAL_DOCS;
-        } catch {
-          storedDocs = INITIAL_DOCS;
+          const fullName = `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Guest';
+          await registrationFormService.createRegistrationForm({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            guest: fullName,
+            idType: 'CNIC',
+            idNumber: formData.idNumber || 'N/A',
+            room: selectedRoom ? String(selectedRoom.roomNo) : (originalBooking?.roomNo || 'N/A'),
+            status: 'Signed & Verified'
+          });
+        } catch (err) {
+          console.warn('Backend registration form creation error:', err);
         }
-        const fullName = `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Guest';
-        const newDoc = {
-          id: 'DOC-' + Date.now(),
-          formNo: 'REG-' + Date.now(),
-          guest: fullName,
-          idType: 'CNIC',
-          idNumber: formData.idNumber || 'N/A',
-          room: selectedRoom ? String(selectedRoom.roomNo) : (originalBooking?.roomNo || 'N/A'),
-          date: new Date().toISOString().split('T')[0],
-          status: 'Signed & Verified',
-          cnicImage: cnicBase64
-        };
-        try { localStorage.setItem('hotel_registration_forms', JSON.stringify([newDoc, ...storedDocs])); } catch(err) { console.warn('CNIC storage error', err); }
       }
 
       navigate('/reservation/all');

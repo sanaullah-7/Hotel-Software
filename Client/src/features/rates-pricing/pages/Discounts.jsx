@@ -10,12 +10,13 @@ import {
 import ActionModal from '../../../components/common/ActionModal';
 import DiscountModal from './components/DiscountModal';
 import {
-  getDiscounts, addDiscount, updateDiscount,
-  deleteDiscount, toggleDiscountStatus
+  getDiscounts, fetchDiscounts, addDiscount, updateDiscount,
+  deleteDiscount, toggleDiscountStatus, DISCOUNTS_UPDATED_EVENT
 } from './ratesPricingStore';
 
 export default function Discounts() {
   const [discounts, setDiscounts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStatusTab, setActiveStatusTab] = useState('All');
   const [selectedTypeFilter, setSelectedTypeFilter] = useState('All');
@@ -34,12 +35,23 @@ export default function Discounts() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  const refreshDiscounts = () => {
-    setDiscounts(getDiscounts());
+  const refreshDiscounts = async () => {
+    setLoading(true);
+    try {
+      const list = await fetchDiscounts();
+      setDiscounts(list);
+    } catch (err) {
+      setSnackbar({ open: true, message: err?.message || 'Failed to load discounts', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     refreshDiscounts();
+    const handleUpdate = () => setDiscounts(getDiscounts());
+    window.addEventListener(DISCOUNTS_UPDATED_EVENT, handleUpdate);
+    return () => window.removeEventListener(DISCOUNTS_UPDATED_EVENT, handleUpdate);
   }, []);
 
   const handleOpenAddModal = () => {
@@ -52,16 +64,20 @@ export default function Discounts() {
     setModalOpen(true);
   };
 
-  const handleSaveDiscount = (discountData, discountId) => {
-    if (discountId) {
-      updateDiscount(discountId, discountData);
-      setSnackbar({ open: true, message: `Discount "${discountData.name}" updated successfully!`, severity: 'success' });
-    } else {
-      addDiscount(discountData);
-      setSnackbar({ open: true, message: `Discount "${discountData.name}" (${discountData.code}) created successfully!`, severity: 'success' });
+  const handleSaveDiscount = async (discountData, discountId) => {
+    try {
+      if (discountId) {
+        await updateDiscount(discountId, discountData);
+        setSnackbar({ open: true, message: `Discount "${discountData.name}" updated successfully!`, severity: 'success' });
+      } else {
+        await addDiscount(discountData);
+        setSnackbar({ open: true, message: `Discount "${discountData.name}" (${discountData.code}) created successfully!`, severity: 'success' });
+      }
+      setModalOpen(false);
+      await refreshDiscounts();
+    } catch (err) {
+      setSnackbar({ open: true, message: err?.message || 'Failed to save discount', severity: 'error' });
     }
-    setModalOpen(false);
-    refreshDiscounts();
   };
 
   const handlePromptDelete = (discount) => {
@@ -69,21 +85,29 @@ export default function Discounts() {
     setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (discountToDelete) {
-      deleteDiscount(discountToDelete.id);
-      setSnackbar({ open: true, message: `Discount "${discountToDelete.name}" deleted.`, severity: 'info' });
-      setDeleteModalOpen(false);
-      setDiscountToDelete(null);
-      refreshDiscounts();
+      try {
+        await deleteDiscount(discountToDelete.id);
+        setSnackbar({ open: true, message: `Discount "${discountToDelete.name}" deleted.`, severity: 'info' });
+        setDeleteModalOpen(false);
+        setDiscountToDelete(null);
+        await refreshDiscounts();
+      } catch (err) {
+        setSnackbar({ open: true, message: err?.message || 'Failed to delete discount', severity: 'error' });
+      }
     }
   };
 
-  const handleToggleStatus = (discount) => {
-    toggleDiscountStatus(discount.id);
-    const nextStatus = discount.status === 'Active' ? 'Inactive' : 'Active';
-    setSnackbar({ open: true, message: `Discount "${discount.name}" is now ${nextStatus}.`, severity: 'success' });
-    refreshDiscounts();
+  const handleToggleStatus = async (discount) => {
+    try {
+      await toggleDiscountStatus(discount.id);
+      const nextStatus = discount.status === 'Active' ? 'Inactive' : 'Active';
+      setSnackbar({ open: true, message: `Discount "${discount.name}" is now ${nextStatus}.`, severity: 'success' });
+      await refreshDiscounts();
+    } catch (err) {
+      setSnackbar({ open: true, message: err?.message || 'Failed to toggle status', severity: 'error' });
+    }
   };
 
   // Filter calculations

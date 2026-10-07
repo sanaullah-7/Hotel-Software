@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, TextField, Button, Avatar, Paper, Grid } from '@mui/material';
+import { Box, Typography, TextField, Button, Avatar, Paper, Grid, CircularProgress, Alert } from '@mui/material';
 import { Person, Business, Email, Save } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
+import hotelConfigService from '../../services/hotelConfigService';
 
 export default function AdminProfile() {
   const { user } = useAuth();
@@ -10,6 +11,8 @@ export default function AdminProfile() {
     email: user?.email || '',
     hotelName: localStorage.getItem('hotelName') || 'Hotel Admin'
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const [feedback, setFeedback] = useState(null);
 
   useEffect(() => {
     setProfile({
@@ -17,17 +20,33 @@ export default function AdminProfile() {
       email: user?.email || localStorage.getItem('email') || 'admin@hotel.com',
       hotelName: localStorage.getItem('hotelName') || 'Hotel Admin'
     });
-  }, [user]);
+  }, [user?.fullName, user?.email]);
 
   const handleChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
-  const handleSave = () => {
-    localStorage.setItem('fullName', profile.fullName);
-    localStorage.setItem('email', profile.email);
-    localStorage.setItem('hotelName', profile.hotelName);
-    alert('Profile updated successfully! Refresh the page to see changes in the sidebar.');
+  const handleSave = async () => {
+    setIsSaving(true);
+    setFeedback(null);
+    try {
+      if (profile.hotelName && profile.hotelName.trim().length >= 2) {
+        await hotelConfigService.updateProfile({
+          property_name: profile.hotelName.trim(),
+          legal_name: profile.fullName?.trim() || undefined,
+        });
+      }
+      localStorage.setItem('fullName', profile.fullName);
+      localStorage.setItem('email', profile.email);
+      localStorage.setItem('hotelName', profile.hotelName);
+      window.dispatchEvent(new Event('storage'));
+      setFeedback({ severity: 'success', message: 'Profile updated successfully!' });
+    } catch (err) {
+      console.error('[AdminProfile] Update failed:', err);
+      setFeedback({ severity: 'error', message: err?.message || 'Failed to update profile' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -82,14 +101,22 @@ export default function AdminProfile() {
           </Grid>
 
           <Grid item xs={12} mt={2}>
+            {feedback && (
+              <Box mb={2}>
+                <Alert severity={feedback.severity} onClose={() => setFeedback(null)}>
+                  {feedback.message}
+                </Alert>
+              </Box>
+            )}
             <Button
               variant="contained"
               size="large"
-              startIcon={<Save />}
+              disabled={isSaving}
+              startIcon={isSaving ? <CircularProgress size={18} color="inherit" /> : <Save />}
               onClick={handleSave}
               sx={{ bgcolor: 'var(--primary-main)', '&:hover': { bgcolor: 'var(--primary-dark)' }, px: 4 }}
             >
-              Save Changes
+              {isSaving ? 'Saving...' : 'Save Changes'}
             </Button>
           </Grid>
         </Grid>

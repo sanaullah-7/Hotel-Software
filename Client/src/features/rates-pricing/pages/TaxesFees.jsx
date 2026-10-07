@@ -7,8 +7,8 @@ import FeeModal from './components/FeeModal';
 import { TaxesTable } from '../components/TaxesTable';
 import { FeesTable } from '../components/FeesTable';
 import {
-  getTaxes, addTax, updateTax, deleteTax, toggleTaxStatus,
-  getFees, addFee, updateFee, deleteFee, toggleFeeStatus
+  getTaxes, fetchTaxes, addTax, updateTax, deleteTax, toggleTaxStatus,
+  getFees, fetchFees, addFee, updateFee, deleteFee, toggleFeeStatus
 } from './ratesPricingStore';
 
 export default function TaxesFees() {
@@ -17,6 +17,7 @@ export default function TaxesFees() {
   // Data State
   const [taxes, setTaxes] = useState([]);
   const [fees, setFees] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // Search & Filters
   const [taxSearch, setTaxSearch] = useState('');
@@ -46,9 +47,20 @@ export default function TaxesFees() {
   const [feePage, setFeePage] = useState(1);
   const itemsPerPage = 8;
 
-  const refreshData = () => {
-    setTaxes(getTaxes());
-    setFees(getFees());
+  const refreshData = async () => {
+    setLoading(true);
+    try {
+      const [fetchedTaxes, fetchedFees] = await Promise.all([
+        fetchTaxes(),
+        fetchFees()
+      ]);
+      setTaxes(fetchedTaxes || getTaxes());
+      setFees(fetchedFees || getFees());
+    } catch (err) {
+      console.error('Failed to load taxes/fees:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -66,16 +78,20 @@ export default function TaxesFees() {
     setTaxModalOpen(true);
   };
 
-  const handleSaveTax = (taxData, taxId) => {
-    if (taxId) {
-      updateTax(taxId, taxData);
-      setSnackbar({ open: true, message: `Tax "${taxData.name}" updated successfully!`, severity: 'success' });
-    } else {
-      addTax(taxData);
-      setSnackbar({ open: true, message: `Tax "${taxData.name}" created successfully!`, severity: 'success' });
+  const handleSaveTax = async (taxData, taxId) => {
+    try {
+      if (taxId) {
+        await updateTax(taxId, taxData);
+        setSnackbar({ open: true, message: `Tax "${taxData.name}" updated successfully!`, severity: 'success' });
+      } else {
+        await addTax(taxData);
+        setSnackbar({ open: true, message: `Tax "${taxData.name}" created successfully!`, severity: 'success' });
+      }
+      setTaxModalOpen(false);
+      await refreshData();
+    } catch (err) {
+      setSnackbar({ open: true, message: err.message || 'Failed to save tax', severity: 'error' });
     }
-    setTaxModalOpen(false);
-    refreshData();
   };
 
   const handlePromptDeleteTax = (tax) => {
@@ -83,21 +99,29 @@ export default function TaxesFees() {
     setDeleteTaxModalOpen(true);
   };
 
-  const handleConfirmDeleteTax = () => {
+  const handleConfirmDeleteTax = async () => {
     if (taxToDelete) {
-      deleteTax(taxToDelete.id);
-      setSnackbar({ open: true, message: `Tax "${taxToDelete.name}" removed.`, severity: 'info' });
-      setDeleteTaxModalOpen(false);
-      setTaxToDelete(null);
-      refreshData();
+      try {
+        await deleteTax(taxToDelete.id);
+        setSnackbar({ open: true, message: `Tax "${taxToDelete.name}" removed.`, severity: 'info' });
+        setDeleteTaxModalOpen(false);
+        setTaxToDelete(null);
+        await refreshData();
+      } catch (err) {
+        setSnackbar({ open: true, message: err.message || 'Failed to delete tax', severity: 'error' });
+      }
     }
   };
 
-  const handleToggleTaxStatus = (tax) => {
-    toggleTaxStatus(tax.id);
-    const nextStatus = tax.status === 'Active' ? 'Inactive' : 'Active';
-    setSnackbar({ open: true, message: `Tax "${tax.name}" is now ${nextStatus}.`, severity: 'success' });
-    refreshData();
+  const handleToggleTaxStatus = async (tax) => {
+    try {
+      await toggleTaxStatus(tax.id);
+      const nextStatus = tax.status === 'Active' ? 'Inactive' : 'Active';
+      setSnackbar({ open: true, message: `Tax "${tax.name}" is now ${nextStatus}.`, severity: 'success' });
+      await refreshData();
+    } catch (err) {
+      setSnackbar({ open: true, message: err.message || 'Failed to update tax status', severity: 'error' });
+    }
   };
 
   // --- FEE HANDLERS ---
@@ -111,16 +135,20 @@ export default function TaxesFees() {
     setFeeModalOpen(true);
   };
 
-  const handleSaveFee = (feeData, feeId) => {
-    if (feeId) {
-      updateFee(feeId, feeData);
-      setSnackbar({ open: true, message: `Fee "${feeData.name}" updated successfully!`, severity: 'success' });
-    } else {
-      addFee(feeData);
-      setSnackbar({ open: true, message: `Fee "${feeData.name}" created successfully!`, severity: 'success' });
+  const handleSaveFee = async (feeData, feeId) => {
+    try {
+      if (feeId) {
+        await updateFee(feeId, feeData);
+        setSnackbar({ open: true, message: `Fee "${feeData.name}" updated successfully!`, severity: 'success' });
+      } else {
+        await addFee(feeData);
+        setSnackbar({ open: true, message: `Fee "${feeData.name}" created successfully!`, severity: 'success' });
+      }
+      setFeeModalOpen(false);
+      await refreshData();
+    } catch (err) {
+      setSnackbar({ open: true, message: err.message || 'Failed to save fee', severity: 'error' });
     }
-    setFeeModalOpen(false);
-    refreshData();
   };
 
   const handlePromptDeleteFee = (fee) => {
@@ -128,21 +156,29 @@ export default function TaxesFees() {
     setDeleteFeeModalOpen(true);
   };
 
-  const handleConfirmDeleteFee = () => {
+  const handleConfirmDeleteFee = async () => {
     if (feeToDelete) {
-      deleteFee(feeToDelete.id);
-      setSnackbar({ open: true, message: `Fee "${feeToDelete.name}" removed.`, severity: 'info' });
-      setDeleteFeeModalOpen(false);
-      setFeeToDelete(null);
-      refreshData();
+      try {
+        await deleteFee(feeToDelete.id);
+        setSnackbar({ open: true, message: `Fee "${feeToDelete.name}" removed.`, severity: 'info' });
+        setDeleteFeeModalOpen(false);
+        setFeeToDelete(null);
+        await refreshData();
+      } catch (err) {
+        setSnackbar({ open: true, message: err.message || 'Failed to delete fee', severity: 'error' });
+      }
     }
   };
 
-  const handleToggleFeeStatus = (fee) => {
-    toggleFeeStatus(fee.id);
-    const nextStatus = fee.status === 'Active' ? 'Inactive' : 'Active';
-    setSnackbar({ open: true, message: `Fee "${fee.name}" is now ${nextStatus}.`, severity: 'success' });
-    refreshData();
+  const handleToggleFeeStatus = async (fee) => {
+    try {
+      await toggleFeeStatus(fee.id);
+      const nextStatus = fee.status === 'Active' ? 'Inactive' : 'Active';
+      setSnackbar({ open: true, message: `Fee "${fee.name}" is now ${nextStatus}.`, severity: 'success' });
+      await refreshData();
+    } catch (err) {
+      setSnackbar({ open: true, message: err.message || 'Failed to update fee status', severity: 'error' });
+    }
   };
 
   // Filtered Taxes

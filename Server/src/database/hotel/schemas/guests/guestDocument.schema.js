@@ -7,9 +7,19 @@ const guestDocumentSchema = new mongoose.Schema(
       ref: 'Guest',
       required: true,
     },
-    document_type: {
-      type: String, // e.g., 'PASSPORT', 'ID_CARD', 'DRIVER_LICENSE'
+    form_no: {
+      type: String,
+      default: '',
+    },
+    name: {
+      type: String,
       required: true,
+      default: 'Guest Identification Document',
+    },
+    document_type: {
+      type: String,
+      required: true,
+      default: 'Passport',
     },
     document_number: {
       type: String,
@@ -17,10 +27,23 @@ const guestDocumentSchema = new mongoose.Schema(
     },
     document_url: {
       type: String,
-      required: true,
+      default: '',
+    },
+    room_number: {
+      type: String,
+      default: '',
+    },
+    status: {
+      type: String,
+      default: 'Signed & Verified',
+    },
+    notes: {
+      type: String,
+      default: '',
     },
     issued_country: {
       type: String,
+      default: '',
     },
     expiry_date: {
       type: Date,
@@ -31,7 +54,6 @@ const guestDocumentSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
 guestDocumentSchema.index({ guest_id: 1 });
 guestDocumentSchema.index({ document_number: 1 });
 

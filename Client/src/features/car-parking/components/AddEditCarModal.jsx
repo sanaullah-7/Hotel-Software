@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -7,18 +7,21 @@ import {
   Button,
   TextField,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   Grid,
   Typography,
   Box,
-  IconButton
+  IconButton,
+  Alert,
+  CircularProgress,
 } from '@mui/material';
-import { Close as CloseIcon, DirectionsCar as CarIcon, PhotoCamera as CameraIcon } from '@mui/icons-material';
-import { getParkingSpaces, addParkingRecord, updateParkingRecord } from '../state/carParkingStore';
+import { Close as CloseIcon, PhotoCamera as CameraIcon } from '@mui/icons-material';
+import { parkingService } from '../../../services/parkingService';
+import { toFrontendSpaces, toBackendRecordPayload } from '../adapters/parkingAdapter';
+import { PARKING_UPDATED_EVENT } from '../state/carParkingStore';
 
-export default function AddEditCarModal({ open, onClose, editRecord }) {
+export default function AddEditCarModal({ open, onClose, editRecord, onSuccess }) {
   const [formData, setFormData] = useState({
     guestName: '',
     roomNumber: '',
@@ -34,12 +37,30 @@ export default function AddEditCarModal({ open, onClose, editRecord }) {
   });
   
   const [spaces, setSpaces] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
     if (open) {
-      setSpaces(getParkingSpaces());
+      setErrorMessage(null);
+      parkingService.getSpaces()
+        .then((backendSpaces) => setSpaces(toFrontendSpaces(backendSpaces)))
+        .catch((err) => console.error('Failed to load spaces:', err));
+
       if (editRecord) {
-        setFormData(editRecord);
+        setFormData({
+          guestName: editRecord.guestName || '',
+          roomNumber: editRecord.roomNumber || '',
+          carNumber: editRecord.carNumber || '',
+          carType: editRecord.carType || 'Sedan',
+          parkingSpace: editRecord.parkingSpace || '',
+          entryDate: editRecord.entryDate || new Date().toISOString().split('T')[0],
+          entryTime: editRecord.entryTime || new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }),
+          chargeType: editRecord.chargeType || 'Free',
+          chargeAmount: Number(editRecord.chargeAmount || 0),
+          paymentStatus: editRecord.paymentStatus || 'Pending',
+          carImage: editRecord.carImage || '',
+        });
       } else {
         setFormData({
           guestName: '',
@@ -52,13 +73,12 @@ export default function AddEditCarModal({ open, onClose, editRecord }) {
           chargeType: 'Free',
           chargeAmount: 0,
           paymentStatus: 'Pending',
-    carImage: '',
+          carImage: '',
         });
       }
     }
   }, [open, editRecord]);
 
-  
   const compressImage = (file, maxWidth = 400, quality = 0.6) => {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -83,7 +103,7 @@ export default function AddEditCarModal({ open, onClose, editRecord }) {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       const compressed = await compressImage(file, 400, 0.6);
-      setFormData(prev => ({ ...prev, carImage: compressed }));
+      setFormData((prev) => ({ ...prev, carImage: compressed }));
     }
   };
 
@@ -101,23 +121,38 @@ export default function AddEditCarModal({ open, onClose, editRecord }) {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.guestName || !formData.carNumber || !formData.parkingSpace) {
-      alert("Guest Name, Car Number, and Parking Space are required.");
+      setErrorMessage("Guest Name, Car Number, and Parking Space are required.");
       return;
     }
     
-    if (editRecord) {
-      updateParkingRecord(editRecord.id, formData);
-    } else {
-      addParkingRecord(formData);
+    setIsSubmitting(true);
+    setErrorMessage(null);
+
+    try {
+      const payload = toBackendRecordPayload(formData);
+      if (editRecord) {
+        await parkingService.updateRecord(editRecord.id, payload);
+      } else {
+        await parkingService.createRecord(payload);
+      }
+
+      window.dispatchEvent(new Event(PARKING_UPDATED_EVENT));
+      if (onSuccess) onSuccess();
+      onClose();
+    } catch (err) {
+      console.error('Error saving parking record:', err);
+      setErrorMessage(err?.message || 'Failed to save parking record. Please verify input.');
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    onClose();
   };
 
   // Only show available spaces, plus the space currently assigned to the record being edited
-  const availableSpaces = spaces.filter(s => s.status === 'Available' || (editRecord && s.number === editRecord.parkingSpace));
+  const availableSpaces = spaces.filter(
+    (s) => s.status === 'Available' || (editRecord && s.number === editRecord.parkingSpace)
+  );
 
   const renderLabel = (text, required = false) => (
     <Typography variant="body2" sx={{ fontSize: '11.5px', fontWeight: 600, color: '#475569', mb: 0.5, mt: 0.5 }}>
@@ -137,6 +172,12 @@ export default function AddEditCarModal({ open, onClose, editRecord }) {
       </DialogTitle>
       
       <DialogContent sx={{ p: 2.5, bgcolor: 'white' }}>
+        {errorMessage && (
+          <Alert severity="error" sx={{ mb: 1.5, fontSize: '12px' }}>
+            {errorMessage}
+          </Alert>
+        )}
+
         <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '12px', color: '#1e293b', mb: 1, mt: 0.5, borderBottom: '1px solid #f1f5f9', pb: 0.5 }}>
           Guest Information
         </Typography>
@@ -177,9 +218,9 @@ export default function AddEditCarModal({ open, onClose, editRecord }) {
             <FormControl fullWidth size="small">
               <Select name="parkingSpace" value={formData.parkingSpace} displayEmpty onChange={handleChange} sx={{ fontSize: '12px', '& .MuiSelect-select': { py: '6px' } }}>
                 <MenuItem value="" disabled sx={{ fontSize: '12px' }}>Select Space</MenuItem>
-                {availableSpaces.map(space => (
+                {availableSpaces.map((space) => (
                   <MenuItem key={space.id} value={space.number} sx={{ fontSize: '12px' }}>
-                    {space.number}
+                    {space.number} ({space.status})
                   </MenuItem>
                 ))}
                 {availableSpaces.length === 0 && (
@@ -235,7 +276,6 @@ export default function AddEditCarModal({ open, onClose, editRecord }) {
               )}
             </label>
           </Grid>
-
         </Grid>
 
         <Typography variant="subtitle2" sx={{ fontWeight: 700, fontSize: '12px', color: '#1e293b', mb: 1, mt: 2, borderBottom: '1px solid #f1f5f9', pb: 0.5 }}>
@@ -265,8 +305,14 @@ export default function AddEditCarModal({ open, onClose, editRecord }) {
       </DialogContent>
       
       <DialogActions sx={{ px: 2.5, py: 1.5, bgcolor: 'white', borderTop: '1px solid #e2e8f0' }}>
-        <Button onClick={onClose} sx={{ color: '#1e293b', bgcolor: '#f1f5f9', px: 2.5, py: 0.5, '&:hover': { bgcolor: '#e2e8f0' }, textTransform: 'none', fontWeight: 600, fontSize: '11.5px', borderRadius: '6px' }}>Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" sx={{ bgcolor: '#1b7f43', px: 2.5, py: 0.5, '&:hover': { bgcolor: '#166534' }, textTransform: 'none', fontWeight: 600, fontSize: '11.5px', borderRadius: '6px', boxShadow: 'none' }}>
+        <Button onClick={onClose} disabled={isSubmitting} sx={{ color: '#1e293b', bgcolor: '#f1f5f9', px: 2.5, py: 0.5, '&:hover': { bgcolor: '#e2e8f0' }, textTransform: 'none', fontWeight: 600, fontSize: '11.5px', borderRadius: '6px' }}>Cancel</Button>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isSubmitting} 
+          variant="contained" 
+          sx={{ bgcolor: '#1b7f43', px: 2.5, py: 0.5, '&:hover': { bgcolor: '#166534' }, textTransform: 'none', fontWeight: 600, fontSize: '11.5px', borderRadius: '6px', boxShadow: 'none' }}
+        >
+          {isSubmitting ? <CircularProgress size={16} sx={{ color: 'white', mr: 1 }} /> : null}
           {editRecord ? 'Update Record' : 'Add Parking'}
         </Button>
       </DialogActions>

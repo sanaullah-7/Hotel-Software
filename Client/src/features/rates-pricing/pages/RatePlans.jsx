@@ -11,12 +11,13 @@ import {
 import ActionModal from '../../../components/common/ActionModal';
 import RatePlanModal from './components/RatePlanModal';
 import {
-  getRatePlans, addRatePlan, updateRatePlan,
-  deleteRatePlan, toggleRatePlanStatus, resetRatesPricingStore
+  getRatePlans, fetchRatePlans, addRatePlan, updateRatePlan,
+  deleteRatePlan, toggleRatePlanStatus, resetRatesPricingStore, RATE_PLANS_UPDATED_EVENT
 } from './ratesPricingStore';
 
 export default function RatePlans() {
   const [ratePlans, setRatePlans] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeStatusTab, setActiveStatusTab] = useState('All');
   const [selectedRoomType, setSelectedRoomType] = useState('All');
@@ -35,13 +36,24 @@ export default function RatePlans() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  // Load plans from local store
-  const refreshPlans = () => {
-    setRatePlans(getRatePlans());
+  // Load plans from backend store
+  const refreshPlans = async () => {
+    setLoading(true);
+    try {
+      const plans = await fetchRatePlans();
+      setRatePlans(plans);
+    } catch (err) {
+      setSnackbar({ open: true, message: err?.message || 'Failed to load rate plans', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     refreshPlans();
+    const handleUpdate = () => setRatePlans(getRatePlans());
+    window.addEventListener(RATE_PLANS_UPDATED_EVENT, handleUpdate);
+    return () => window.removeEventListener(RATE_PLANS_UPDATED_EVENT, handleUpdate);
   }, []);
 
   const handleOpenAddModal = () => {
@@ -54,16 +66,20 @@ export default function RatePlans() {
     setModalOpen(true);
   };
 
-  const handleSavePlan = (planData, planId) => {
-    if (planId) {
-      updateRatePlan(planId, planData);
-      setSnackbar({ open: true, message: `Rate Plan "${planData.name}" updated successfully!`, severity: 'success' });
-    } else {
-      addRatePlan(planData);
-      setSnackbar({ open: true, message: `Rate Plan "${planData.name}" created successfully!`, severity: 'success' });
+  const handleSavePlan = async (planData, planId) => {
+    try {
+      if (planId) {
+        await updateRatePlan(planId, planData);
+        setSnackbar({ open: true, message: `Rate Plan "${planData.name}" updated successfully!`, severity: 'success' });
+      } else {
+        await addRatePlan(planData);
+        setSnackbar({ open: true, message: `Rate Plan "${planData.name}" created successfully!`, severity: 'success' });
+      }
+      setModalOpen(false);
+      await refreshPlans();
+    } catch (err) {
+      setSnackbar({ open: true, message: err?.message || 'Failed to save rate plan', severity: 'error' });
     }
-    setModalOpen(false);
-    refreshPlans();
   };
 
   const handlePromptDelete = (plan) => {
@@ -71,28 +87,36 @@ export default function RatePlans() {
     setDeleteModalOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (planToDelete) {
-      deleteRatePlan(planToDelete.id);
-      setSnackbar({ open: true, message: `Rate Plan "${planToDelete.name}" deleted.`, severity: 'info' });
-      setDeleteModalOpen(false);
-      setPlanToDelete(null);
-      refreshPlans();
+      try {
+        await deleteRatePlan(planToDelete.id);
+        setSnackbar({ open: true, message: `Rate Plan "${planToDelete.name}" deleted.`, severity: 'info' });
+        setDeleteModalOpen(false);
+        setPlanToDelete(null);
+        await refreshPlans();
+      } catch (err) {
+        setSnackbar({ open: true, message: err?.message || 'Failed to delete rate plan', severity: 'error' });
+      }
     }
   };
 
-  const handleToggleStatus = (plan) => {
-    toggleRatePlanStatus(plan.id);
-    const nextStatus = plan.status === 'Active' ? 'Inactive' : 'Active';
-    setSnackbar({ open: true, message: `Rate Plan "${plan.name}" marked as ${nextStatus}.`, severity: 'success' });
-    refreshPlans();
+  const handleToggleStatus = async (plan) => {
+    try {
+      await toggleRatePlanStatus(plan.id);
+      const nextStatus = plan.status === 'Active' ? 'Inactive' : 'Active';
+      setSnackbar({ open: true, message: `Rate Plan "${plan.name}" marked as ${nextStatus}.`, severity: 'success' });
+      await refreshPlans();
+    } catch (err) {
+      setSnackbar({ open: true, message: err?.message || 'Failed to toggle status', severity: 'error' });
+    }
   };
 
-  const handleResetDefaults = () => {
-    if (window.confirm('Reset all Rate Plans & Pricing to initial default sample data?')) {
-      resetRatesPricingStore();
-      refreshPlans();
-      setSnackbar({ open: true, message: 'Rates & Pricing data reset to default demo records.', severity: 'info' });
+  const handleResetDefaults = async () => {
+    if (window.confirm('Reload Rate Plans & Pricing from database?')) {
+      await resetRatesPricingStore();
+      await refreshPlans();
+      setSnackbar({ open: true, message: 'Rates & Pricing data refreshed.', severity: 'info' });
     }
   };
 

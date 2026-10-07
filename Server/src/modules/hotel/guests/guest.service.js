@@ -216,3 +216,170 @@ export const deleteGuest = async (tenantConn, guestId) => {
   await Guest.deleteOne({ _id: guest._id });
   return true;
 };
+
+const resolveGuest = async (tenantConn, guestId) => {
+  const Guest = await getModel(tenantConn, "Guest");
+  let guest = null;
+  if (mongoose.Types.ObjectId.isValid(guestId)) {
+    guest = await Guest.findById(guestId);
+  }
+  if (!guest) {
+    guest = await Guest.findOne({ guest_ref: guestId });
+  }
+  return guest;
+};
+
+export const getGuestDocuments = async (tenantConn, guestId) => {
+  const guest = await resolveGuest(tenantConn, guestId);
+  if (!guest) throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found");
+
+  const GuestDocument = await getModel(tenantConn, "GuestDocument");
+  const docs = await GuestDocument.find({ guest_id: guest._id }).sort({ created_at: -1 });
+
+  if (docs.length === 0 && (guest.passport_number || guest.national_id)) {
+    const isPassport = Boolean(guest.passport_number);
+    const initialDoc = new GuestDocument({
+      guest_id: guest._id,
+      form_no: `REG-2026-${Math.floor(100 + Math.random() * 900)}`,
+      name: isPassport ? 'Passport Scan' : 'National ID Document',
+      document_type: isPassport ? 'Passport' : 'CNIC / National ID',
+      document_number: guest.passport_number || guest.national_id,
+      status: 'Signed & Verified',
+      issued_country: guest.country || 'Pakistan',
+    });
+    const saved = await initialDoc.save();
+    return [saved];
+  }
+
+  return docs;
+};
+
+export const createGuestDocument = async (tenantConn, guestId, data) => {
+  const guest = await resolveGuest(tenantConn, guestId);
+  if (!guest) throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found");
+
+  const GuestDocument = await getModel(tenantConn, "GuestDocument");
+  const formNo = data.form_no || data.formNo || `REG-2026-${Math.floor(100 + Math.random() * 900)}`;
+
+  const newDoc = new GuestDocument({
+    guest_id: guest._id,
+    form_no: formNo,
+    name: data.name || 'Guest Identification Document',
+    document_type: data.document_type || data.idType || data.documentType || 'Passport',
+    document_number: (data.document_number || data.idNumber || '').trim(),
+    document_url: data.document_url || data.documentUrl || '',
+    room_number: data.room_number || data.room || '',
+    status: data.status || 'Signed & Verified',
+    notes: data.notes || '',
+    issued_country: data.issued_country || data.country || guest.country || '',
+    expiry_date: data.expiry_date || data.expiryDate || null,
+  });
+
+  return await newDoc.save();
+};
+
+export const deleteGuestDocument = async (tenantConn, guestId, docId) => {
+  const GuestDocument = await getModel(tenantConn, "GuestDocument");
+  const doc = await GuestDocument.findByIdAndDelete(docId);
+  if (!doc) throw new ApiError(HTTP_STATUS.NOT_FOUND, "Document not found");
+  return { message: "Document deleted successfully", id: docId };
+};
+
+export const getGuestActivities = async (tenantConn, guestId) => {
+  const guest = await resolveGuest(tenantConn, guestId);
+  if (!guest) throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found");
+
+  const Reservation = await getModel(tenantConn, "Reservation");
+  const Stay = await getModel(tenantConn, "Stay");
+  const Invoice = await getModel(tenantConn, "Invoice");
+  const Complaint = await getModel(tenantConn, "Complaint");
+  const GuestDocument = await getModel(tenantConn, "GuestDocument");
+
+  const [reservations, stays, invoices, complaints, documents] = await Promise.all([
+    Reservation.find({ primary_guest_id: guest._id }).sort({ created_at: -1 }),
+    Stay.find({ primary_guest_id: guest._id }).sort({ created_at: -1 }),
+    Invoice.find({ guest_id: guest._id }).sort({ created_at: -1 }),
+    Complaint.find({ guest_id: guest._id }).sort({ created_at: -1 }),
+    GuestDocument.find({ guest_id: guest._id }).sort({ created_at: -1 }),
+  ]);
+
+  const activities = [];
+
+  activities.push({
+    id: `ACT-REG-${guest._id}`,
+    date: guest.created_at || new Date(),
+    title: 'Guest Profile Registered',
+    description: `Guest profile created for ${guest.full_name} (${guest.guest_ref}) with status: ${guest.status || 'Active'}.`,
+    category: 'Profile',
+    performedBy: 'Front Desk System',
+  });
+
+  reservations.forEach((r) => {
+    activities.push({
+      id: `ACT-RES-${r._id}`,
+      date: r.created_at || r.check_in_date || new Date(),
+      title: `Reservation ${r.status || 'Created'}`,
+      description: `Reservation ref ${r.confirmation_code || r._id} booked. Status: ${r.status}.`,
+      category: 'Reservation',
+      performedBy: 'Reservation Desk',
+    });
+  });
+
+  stays.forEach((s) => {
+    activities.push({
+      id: `ACT-STY-${s._id}`,
+      date: s.actual_check_in || s.created_at || new Date(),
+      title: `Guest Check-In (${s.status})`,
+      description: `Stay recorded for Room ${s.room_id || 'allocated'}. Status: ${s.status}.`,
+      category: 'Reservation',
+      performedBy: 'Front Desk',
+    });
+    if (s.actual_check_out) {
+      activities.push({
+        id: `ACT-STYO-${s._id}`,
+        date: s.actual_check_out,
+        title: 'Guest Check-Out Completed',
+        description: `Stay checked out successfully.`,
+        category: 'Reservation',
+        performedBy: 'Front Desk',
+      });
+    }
+  });
+
+  invoices.forEach((inv) => {
+    activities.push({
+      id: `ACT-INV-${inv._id}`,
+      date: inv.created_at || new Date(),
+      title: `Invoice Generated (${inv.invoice_number})`,
+      description: `Total Amount: PKR ${Number(inv.total_amount).toLocaleString()} with status: ${inv.status}.`,
+      category: 'Invoice',
+      performedBy: 'Billing Engine',
+    });
+  });
+
+  complaints.forEach((c) => {
+    activities.push({
+      id: `ACT-CMP-${c._id}`,
+      date: c.created_at || new Date(),
+      title: `Guest Complaint (${c.category || 'Service'})`,
+      description: `Complaint [${c.severity || 'Normal'}]: ${c.description}. Status: ${c.status}.`,
+      category: 'Complaint',
+      performedBy: 'Operations / Guest Relations',
+    });
+  });
+
+  documents.forEach((d) => {
+    activities.push({
+      id: `ACT-DOC-${d._id}`,
+      date: d.created_at || new Date(),
+      title: `Document Uploaded: ${d.name}`,
+      description: `${d.document_type} (${d.document_number}) verified.`,
+      category: 'Document',
+      performedBy: 'Front Desk System',
+    });
+  });
+
+  activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return activities;
+};

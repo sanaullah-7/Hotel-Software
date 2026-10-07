@@ -5,7 +5,6 @@ const feeSchema = new mongoose.Schema(
     code: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       uppercase: true,
     },
@@ -19,14 +18,27 @@ const feeSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    calc_type: {
+      type: String,
+      enum: ['Per Night', 'Per Stay', 'Per Person', 'Fixed', 'PER_NIGHT', 'PER_STAY', 'PER_PERSON', 'FIXED'],
+      default: 'Per Night',
+    },
     fee_type: {
       type: String,
-      enum: ['FIXED', 'PER_NIGHT', 'PER_PERSON'],
-      required: true,
+      default: 'PER_NIGHT',
+    },
+    charge_type: {
+      type: String,
+      default: 'Room',
     },
     is_active: {
       type: Boolean,
       default: true,
+    },
+    status: {
+      type: String,
+      enum: ['Active', 'Inactive', 'ACTIVE', 'INACTIVE'],
+      default: 'Active',
     },
   },
   {
@@ -34,7 +46,6 @@ const feeSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-feeSchema.index({ code: 1 });
+feeSchema.index({ code: 1 }, { unique: true });
 
 export default feeSchema;

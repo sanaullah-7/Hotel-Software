@@ -107,12 +107,18 @@ export const apiRequest = async (endpoint, options = {}, isRetry = false) => {
               setToken(null);
               localStorage.removeItem("user");
               localStorage.removeItem("isAuthenticated");
+              if (typeof window !== "undefined") {
+                window.dispatchEvent(new Event("auth:logout"));
+              }
             }
           } catch {
             isRefreshing = false;
             setToken(null);
             localStorage.removeItem("user");
             localStorage.removeItem("isAuthenticated");
+            if (typeof window !== "undefined") {
+              window.dispatchEvent(new Event("auth:logout"));
+            }
           }
         } else {
           // Wait for the in-flight refresh to finish

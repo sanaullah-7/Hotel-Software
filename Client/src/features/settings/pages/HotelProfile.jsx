@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import {
   HomeOutlined as HomeIcon,
   Apartment as ApartmentIcon,
@@ -17,10 +17,14 @@ import {
   LightbulbOutlined as LightbulbIcon,
   Delete as DeleteIcon,
   CheckCircle as SuccessIcon,
+  ErrorOutlineOutlined as ErrorIcon,
   Person as UserIcon,
 } from '@mui/icons-material';
+import { CircularProgress, Alert } from '@mui/material';
 import FormField from '../components/FormField';
 import { addAuditLog } from '../../audit/state/auditStore';
+import hotelConfigService from '../../../services/hotelConfigService';
+import configAdapter from '../adapters/configAdapter';
 import '../../assigned-ui/formStyles.css';
 
 const DEFAULT_PROFILE = {
@@ -53,6 +57,10 @@ export default function HotelProfile() {
       shayan: localStorage.getItem('fullName') || DEFAULT_PROFILE.shayan
     };
   });
+  const [lastSavedProfile, setLastSavedProfile] = useState(DEFAULT_PROFILE);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [serverError, setServerError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#3b82f6');
   
@@ -70,14 +78,46 @@ export default function HotelProfile() {
   const [isOwnerDragging, setIsOwnerDragging] = useState(false);
   const fileInputRefOwner = useRef(null);
 
-  const [toastMessage, setToMessage] = useState(null);
+  const [toast, setToast] = useState(null);
 
-  const showToast = (message) => {
-    setToMessage(message);
+  const showToast = (message, type = 'success') => {
+    setToast({ message, type });
     setTimeout(() => {
-      setToMessage(null);
-    }, 3500);
+      setToast(null);
+    }, 4000);
   };
+
+  const fetchProfile = useCallback(async () => {
+    setIsLoading(true);
+    setServerError(null);
+    try {
+      const res = await hotelConfigService.getProfile();
+      const profile = res?.data || res;
+      if (profile && (profile.property_name || profile._id)) {
+        const adapted = configAdapter.toFrontendProfile(profile, DEFAULT_PROFILE);
+        setFormData(adapted);
+        setLastSavedProfile(adapted);
+
+        if (profile.property_name) {
+          localStorage.setItem('hotelName', profile.property_name);
+        }
+        if (profile.logo_url) {
+          setLogoPreview({ url: profile.logo_url, name: 'Hotel Logo', size: '' });
+          localStorage.setItem('hotelLogo', profile.logo_url);
+        }
+        window.dispatchEvent(new Event('storage'));
+      }
+    } catch (err) {
+      console.warn('[HotelProfile] Failed to fetch backend profile:', err);
+      setServerError(err?.message || 'Failed to fetch hotel profile from server');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -145,35 +185,57 @@ export default function HotelProfile() {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    localStorage.setItem('fullName', formData.shayan);
-    localStorage.setItem('hotelName', formData.hotelName);
-    
-    if (ownerLogoPreview && ownerLogoPreview.url) {
-      localStorage.setItem('ownerLogo', ownerLogoPreview.url);
-    } else {
-      localStorage.removeItem('ownerLogo');
+    setIsSaving(true);
+    setServerError(null);
+
+    try {
+      const payload = configAdapter.toBackendProfilePayload(formData, logoPreview?.url);
+      const res = await hotelConfigService.updateProfile(payload);
+      const updated = res?.data || res;
+
+      if (updated?.property_name) {
+        localStorage.setItem('hotelName', updated.property_name);
+      } else if (formData.hotelName) {
+        localStorage.setItem('hotelName', formData.hotelName);
+      }
+
+      if (formData.shayan) {
+        localStorage.setItem('fullName', formData.shayan);
+      }
+      
+      if (ownerLogoPreview && ownerLogoPreview.url) {
+        localStorage.setItem('ownerLogo', ownerLogoPreview.url);
+      } else {
+        localStorage.removeItem('ownerLogo');
+      }
+      
+      if (logoPreview && logoPreview.url) {
+        localStorage.setItem('hotelLogo', logoPreview.url);
+      } else {
+        localStorage.removeItem('hotelLogo');
+      }
+      
+      window.dispatchEvent(new Event('storage'));
+      setLastSavedProfile(formData);
+      showToast('Hotel profile saved successfully!', 'success');
+      addAuditLog({ module: 'Hotel Settings', action: 'Updated Hotel Profile', description: 'Hotel name, logo, or contact info was changed.', importance: 'Important' });
+      setIsEditing(false);
+    } catch (err) {
+      console.error('[HotelProfile] Failed to update hotel profile:', err);
+      const msg = err?.message || 'Failed to save hotel profile';
+      setServerError(msg);
+      showToast(msg, 'error');
+    } finally {
+      setIsSaving(false);
     }
-    
-    if (logoPreview && logoPreview.url) {
-      localStorage.setItem('hotelLogo', logoPreview.url);
-    } else {
-      localStorage.removeItem('hotelLogo');
-    }
-    
-    window.dispatchEvent(new Event('storage'));
-    showToast('Hotel profile saved successfully!');
-    addAuditLog({ module: 'Hotel Settings', action: 'Updated Hotel Profile', description: 'Hotel name, logo, or contact info was changed.', importance: 'Important' });
-    setIsEditing(false);
   };
 
   const handleDiscard = () => {
-    setFormData(DEFAULT_PROFILE);
+    setFormData(lastSavedProfile);
     setSelectedColor('#3b82f6');
-    setLogoPreview(null);
-    setOwnerLogoPreview(null);
-    showToast('Changes discarded.');
+    showToast('Changes discarded.', 'info');
     setIsEditing(false);
   };
 
@@ -185,10 +247,14 @@ export default function HotelProfile() {
 
   return (
     <div className="assigned-form-surface w-full space-y-2 pb-1 font-sans">
-      {toastMessage && (
-        <div className="fixed top-20 right-8 z-50 flex items-center gap-2 bg-[#1e293b] text-white px-4 py-3 rounded-xl shadow-xl animate-in fade-in slide-in-from-top-4 duration-200">
-          <SuccessIcon sx={{ fontSize: 20, color: '#10b981' }} />
-          <span className="text-sm font-medium">{toastMessage}</span>
+      {toast && (
+        <div className={`fixed top-20 right-8 z-50 flex items-center gap-2 ${toast.type === 'error' ? 'bg-[#7f1d1d] border border-red-500' : 'bg-[#1e293b]'} text-white px-4 py-3 rounded-xl shadow-xl animate-in fade-in slide-in-from-top-4 duration-200`}>
+          {toast.type === 'error' ? (
+            <ErrorIcon sx={{ fontSize: 20, color: '#f87171' }} />
+          ) : (
+            <SuccessIcon sx={{ fontSize: 20, color: '#10b981' }} />
+          )}
+          <span className="text-sm font-medium">{toast.message}</span>
         </div>
       )}
 
@@ -200,7 +266,7 @@ export default function HotelProfile() {
           <div className="flex-1">
             <div className="flex items-center justify-between w-full">
               <h3 className="text-[16px] font-bold text-[#1e293b]">Property Details</h3>
-              {!isEditing && (
+              {!isEditing && !isLoading && (
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
@@ -216,6 +282,30 @@ export default function HotelProfile() {
           </div>
         </div>
 
+        {serverError && (
+          <div className="mt-3">
+            <Alert 
+              severity="error" 
+              action={
+                <button 
+                  onClick={fetchProfile} 
+                  className="text-xs font-bold underline cursor-pointer text-red-800"
+                >
+                  Retry
+                </button>
+              }
+            >
+              {serverError}
+            </Alert>
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 gap-3" data-testid="hotel-profile-loading">
+            <CircularProgress size={32} sx={{ color: '#008000' }} />
+            <span className="text-xs text-gray-500">Loading hotel profile from server...</span>
+          </div>
+        ) : (
         <form onSubmit={handleSave} className="space-y-4 mt-3">
           <div>
             <div className="flex items-center gap-2 mb-3">
@@ -468,13 +558,24 @@ export default function HotelProfile() {
             <div className="pt-4 flex items-center gap-3">
               <button
                 type="submit"
-                className="px-5 py-2.5 bg-[#008000] hover:bg-green-800 text-white rounded-xl font-semibold text-sm shadow-xs transition-all flex items-center gap-2 cursor-pointer"
+                disabled={isSaving}
+                className="px-5 py-2.5 bg-[#008000] hover:bg-green-800 disabled:opacity-50 text-white rounded-xl font-semibold text-sm shadow-xs transition-all flex items-center gap-2 cursor-pointer"
               >
-                <SaveIcon sx={{ fontSize: 18 }} />
-                Save Changes
+                {isSaving ? (
+                  <>
+                    <CircularProgress size={16} sx={{ color: 'white' }} />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <SaveIcon sx={{ fontSize: 18 }} />
+                    <span>Save Changes</span>
+                  </>
+                )}
               </button>
               <button
                 type="button"
+                disabled={isSaving}
                 onClick={handleDiscard}
                 className="px-5 py-2.5 bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 rounded-xl font-semibold text-sm transition-all flex items-center gap-2 cursor-pointer"
               >
@@ -484,6 +585,7 @@ export default function HotelProfile() {
             </div>
           )}
         </form>
+        )}
       </div>
     </div>
   );

@@ -55,13 +55,12 @@ export default function AddDocumentModal({ isOpen, onClose, guest, defaultRoom, 
     if (!form.idNumber.trim()) return;
 
     onSave({
-      id: `DOC-${Date.now()}`,
-      formNo: `REG-2026-${Math.floor(100 + Math.random() * 900)}`,
-      guestId: guest.id,
       name: form.name,
-      guest: guest.name,
+      document_type: form.idType,
       idType: form.idType,
+      document_number: form.idNumber.trim(),
       idNumber: form.idNumber.trim(),
+      room_number: form.room,
       room: form.room,
       status: form.status,
       date: form.date,

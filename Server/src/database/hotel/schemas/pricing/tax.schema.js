@@ -5,7 +5,6 @@ const taxSchema = new mongoose.Schema(
     code: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
       uppercase: true,
     },
@@ -14,15 +13,36 @@ const taxSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    percentage: {
+    rate: {
       type: Number,
       required: true,
       min: 0,
-      max: 100,
+    },
+    percentage: {
+      type: Number,
+      default: 0,
+    },
+    calc_type: {
+      type: String,
+      enum: ['Percentage', 'Fixed', 'PERCENTAGE', 'FIXED'],
+      default: 'Percentage',
+    },
+    applicable_on: {
+      type: String,
+      default: 'Room Charge & Extra Services',
+    },
+    is_compound: {
+      type: Boolean,
+      default: false,
     },
     is_active: {
       type: Boolean,
       default: true,
+    },
+    status: {
+      type: String,
+      enum: ['Active', 'Inactive', 'ACTIVE', 'INACTIVE'],
+      default: 'Active',
     },
   },
   {
@@ -30,7 +50,6 @@ const taxSchema = new mongoose.Schema(
   }
 );
 
-// Indexes
-taxSchema.index({ code: 1 });
+taxSchema.index({ code: 1 }, { unique: true });
 
 export default taxSchema;

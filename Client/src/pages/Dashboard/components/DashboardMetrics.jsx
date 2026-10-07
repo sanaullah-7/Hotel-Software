@@ -21,9 +21,6 @@ import {
 function isToday(dateValue) {
   if (!dateValue) return false;
   const rawStr = String(dateValue).trim();
-  const todayIso = new Date().toISOString().split('T')[0];
-  if (rawStr.startsWith(todayIso)) return true;
-
   const now = new Date();
   const localIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   if (rawStr.startsWith(localIso)) return true;
@@ -31,8 +28,11 @@ function isToday(dateValue) {
   const ts = typeof dateValue === 'number' ? dateValue : parseStayDate(dateValue);
   if (ts !== null && ts !== undefined && !isNaN(ts)) {
     const d = new Date(ts);
-    const dIso = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
-    if (dIso === todayIso || dIso === localIso) return true;
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth() &&
+      d.getDate() === now.getDate()
+    );
   }
 
   const parsed = new Date(dateValue);

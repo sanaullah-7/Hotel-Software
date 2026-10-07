@@ -38,4 +38,30 @@ router.delete(
   guestController.deleteGuest
 );
 
+// Guest Documents
+router.get(
+  "/guests/:id/documents",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
+  guestController.getGuestDocuments
+);
+
+router.post(
+  "/guests/:id/documents",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
+  guestController.createGuestDocument
+);
+
+router.delete(
+  "/guests/:id/documents/:docId",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN),
+  guestController.deleteGuestDocument
+);
+
+// Guest Activities
+router.get(
+  "/guests/:id/activities",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
+  guestController.getGuestActivities
+);
+
 export default router;

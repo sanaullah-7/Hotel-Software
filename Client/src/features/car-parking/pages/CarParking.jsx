@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
@@ -18,6 +18,8 @@ import {
   Chip,
   IconButton,
   Menu,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -28,14 +30,12 @@ import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   MoreVert as MoreVertIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 
-import { 
-  getParkingRecords, 
-  getParkingSpaces, 
-  deleteParkingRecord,
-  PARKING_UPDATED_EVENT 
-} from '../state/carParkingStore';
+import { parkingService } from '../../../services/parkingService';
+import { toFrontendRecords, toFrontendSpaces } from '../adapters/parkingAdapter';
+import { PARKING_UPDATED_EVENT } from '../state/carParkingStore';
 
 import AddEditCarModal from '../components/AddEditCarModal';
 import CheckoutCarModal from '../components/CheckoutCarModal';
@@ -78,6 +78,8 @@ const DATE_PERIODS = ['All Time', 'Daily', 'Weekly', 'Monthly', 'Yearly'];
 export default function CarParking() {
   const [records, setRecords] = useState([]);
   const [spaces, setSpaces] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // Modals state
   const [addEditModalOpen, setAddEditModalOpen] = useState(false);
@@ -99,16 +101,29 @@ export default function CarParking() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  const fetchData = () => {
-    setRecords(getParkingRecords());
-    setSpaces(getParkingSpaces());
-  };
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const [backendSpaces, backendRecords] = await Promise.all([
+        parkingService.getSpaces(),
+        parkingService.getRecords(),
+      ]);
+      setSpaces(toFrontendSpaces(backendSpaces));
+      setRecords(toFrontendRecords(backendRecords));
+    } catch (err) {
+      console.error('Failed to fetch car parking data from backend:', err);
+      setError(err?.message || 'Failed to load car parking records. Please check backend connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchData();
     window.addEventListener(PARKING_UPDATED_EVENT, fetchData);
     return () => window.removeEventListener(PARKING_UPDATED_EVENT, fetchData);
-  }, []);
+  }, [fetchData]);
 
   const handleClear = () => {
     setSearchQuery('');
@@ -146,9 +161,15 @@ export default function CarParking() {
     handleMenuClose();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this parking record?')) {
-      deleteParkingRecord(id);
+      try {
+        await parkingService.deleteRecord(id);
+        window.dispatchEvent(new Event(PARKING_UPDATED_EVENT));
+        fetchData();
+      } catch (err) {
+        alert(err?.message || 'Failed to delete parking record');
+      }
     }
     handleMenuClose();
   };
@@ -156,7 +177,7 @@ export default function CarParking() {
   // Metrics
   const totalSpaces = spaces.length;
   const parkedCars = records.filter(r => r.status === 'Parked').length;
-  const availableSpaces = totalSpaces - parkedCars;
+  const availableSpaces = Math.max(0, totalSpaces - parkedCars);
   
   const todaysCharges = useMemo(() => {
     const today = new Date().toDateString();
@@ -219,6 +240,21 @@ export default function CarParking() {
 
   return (
     <div className="w-full space-y-2.5 pb-3 flex flex-col">
+      {/* ERROR BANNER */}
+      {error && (
+        <Alert
+          severity="error"
+          sx={{ mb: 1, fontSize: '12px', alignItems: 'center' }}
+          action={
+            <Button color="inherit" size="small" onClick={fetchData} startIcon={<RefreshIcon sx={{ fontSize: 14 }} />}>
+              Retry
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
+
       {/* SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
         <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between gap-2.5">
@@ -377,104 +413,111 @@ export default function CarParking() {
 
         {/* Main Table */}
         <div className="w-full overflow-hidden">
-          <table className="table-fixed w-full text-left border-collapse">
-            <colgroup>
-              <col style={{ width: '10.5%' }} />
-              <col style={{ width: '14%' }} />
-              <col style={{ width: '5.5%' }} />
-              <col style={{ width: '5.5%' }} />
-              <col style={{ width: '6.5%' }} />
-              <col style={{ width: '14%' }} />
-              <col style={{ width: '14%' }} />
-              <col style={{ width: '8%' }} />
-              <col style={{ width: '7.5%' }} />
-              <col style={{ width: '7.5%' }} />
-              <col style={{ width: '7%' }} />
-            </colgroup>
-            <thead>
-              <tr className="border-b border-gray-100 bg-slate-50/50">
-                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Car Number</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Guest</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Room</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Space</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Type</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Entry Time</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Exit Time</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Charge</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Payment</th>
-                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
-                <th className="py-2 px-1 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider text-center whitespace-nowrap">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {paginatedRecords.length > 0 ? paginatedRecords.map((record) => (
-                <tr key={record.id} className="hover:bg-slate-50/60 transition-colors border-b border-gray-50">
-                  <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-900 whitespace-nowrap truncate" title={record.carNumber}>
-                    {record.carNumber}
-                  </td>
-                  <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-700 truncate" title={record.guestName}>
-                    {record.guestName}
-                  </td>
-                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
-                    {record.roomNumber || '-'}
-                  </td>
-                  <td className="py-1.5 px-1.5 whitespace-nowrap">
-                    <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700">
-                      {record.parkingSpace}
-                    </span>
-                  </td>
-                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
-                    {record.carType}
-                  </td>
-                  <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600 whitespace-nowrap truncate" title={`${record.entryTime} (${record.entryDate})`}>
-                    {record.entryTime} <span className="text-[9.5px] text-gray-400">({record.entryDate})</span>
-                  </td>
-                  <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600 whitespace-nowrap truncate" title={record.exitTime ? `${record.exitTime} (${record.exitDate})` : '-'}>
-                    {record.exitTime ? (
-                      <>{record.exitTime} <span className="text-[9.5px] text-gray-400">({record.exitDate})</span></>
-                    ) : '-'}
-                  </td>
-                  <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-800 whitespace-nowrap">
-                    Rs. {record.chargeAmount}
-                  </td>
-                  <td className="py-1.5 px-1.5 whitespace-nowrap">
-                    <span 
-                      className={`px-1.5 py-0.5 rounded text-[9.5px] font-semibold inline-block ${
-                        record.paymentStatus === 'Paid' 
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                          : 'bg-amber-50 text-amber-700 border border-amber-200'
-                      }`}
-                    >
-                      {record.paymentStatus}
-                    </span>
-                  </td>
-                  <td className="py-1.5 px-1.5 whitespace-nowrap">
-                    <div className="flex items-center gap-1">
-                      {record.status === 'Parked' ? (
-                        <CheckCircleIcon sx={{ fontSize: 13, color: '#1b7f43' }} />
-                      ) : (
-                        <CancelIcon sx={{ fontSize: 13, color: '#94a3b8' }} />
-                      )}
-                      <span className={`text-[10.5px] font-semibold ${record.status === 'Parked' ? 'text-[#1b7f43]' : 'text-gray-400'}`}>
-                        {record.status}
+          {isLoading ? (
+            <div className="py-16 flex flex-col items-center justify-center gap-2">
+              <CircularProgress size={28} sx={{ color: '#1b7f43' }} />
+              <span className="text-xs text-gray-500 font-medium">Loading parking records from server...</span>
+            </div>
+          ) : (
+            <table className="table-fixed w-full text-left border-collapse">
+              <colgroup>
+                <col style={{ width: '10.5%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '5.5%' }} />
+                <col style={{ width: '5.5%' }} />
+                <col style={{ width: '6.5%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '7.5%' }} />
+                <col style={{ width: '7.5%' }} />
+                <col style={{ width: '7%' }} />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-gray-100 bg-slate-50/50">
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Car Number</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Guest</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Room</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Space</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Type</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Entry Time</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Exit Time</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Charge</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Payment</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="py-2 px-1 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider text-center whitespace-nowrap">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {paginatedRecords.length > 0 ? paginatedRecords.map((record) => (
+                  <tr key={record.id} className="hover:bg-slate-50/60 transition-colors border-b border-gray-50">
+                    <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-900 whitespace-nowrap truncate" title={record.carNumber}>
+                      {record.carNumber}
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-700 truncate" title={record.guestName}>
+                      {record.guestName || '-'}
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
+                      {record.roomNumber || '-'}
+                    </td>
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700">
+                        {record.parkingSpace}
                       </span>
-                    </div>
-                  </td>
-                  <td className="py-1.5 px-1 text-center whitespace-nowrap">
-                    <IconButton size="small" onClick={(e) => handleMenuOpen(e, record)} sx={{ p: 0.5 }}>
-                      <MoreVertIcon sx={{ fontSize: 15 }} />
-                    </IconButton>
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan={11} className="py-8 text-center text-gray-400 text-[11.5px]">
-                    No parking records found matching your filters.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
+                      {record.carType}
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600 whitespace-nowrap truncate" title={`${record.entryTime} (${record.entryDate})`}>
+                      {record.entryTime} <span className="text-[9.5px] text-gray-400">({record.entryDate})</span>
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600 whitespace-nowrap truncate" title={record.exitTime ? `${record.exitTime} (${record.exitDate})` : '-'}>
+                      {record.exitTime ? (
+                        <>{record.exitTime} <span className="text-[9.5px] text-gray-400">({record.exitDate})</span></>
+                      ) : '-'}
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-800 whitespace-nowrap">
+                      Rs. {record.chargeAmount}
+                    </td>
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
+                      <span 
+                        className={`px-1.5 py-0.5 rounded text-[9.5px] font-semibold inline-block ${
+                          record.paymentStatus === 'Paid' 
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}
+                      >
+                        {record.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        {record.status === 'Parked' ? (
+                          <CheckCircleIcon sx={{ fontSize: 13, color: '#1b7f43' }} />
+                        ) : (
+                          <CancelIcon sx={{ fontSize: 13, color: '#94a3b8' }} />
+                        )}
+                        <span className={`text-[10.5px] font-semibold ${record.status === 'Parked' ? 'text-[#1b7f43]' : 'text-gray-400'}`}>
+                          {record.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-1.5 px-1 text-center whitespace-nowrap">
+                      <IconButton size="small" onClick={(e) => handleMenuOpen(e, record)} sx={{ p: 0.5 }}>
+                        <MoreVertIcon sx={{ fontSize: 15 }} />
+                      </IconButton>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={11} className="py-8 text-center text-gray-400 text-[11.5px]">
+                      No parking records found matching your filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
         </div>
 
         {/* Footer Pagination */}
@@ -531,15 +574,18 @@ export default function CarParking() {
         open={addEditModalOpen} 
         onClose={() => setAddEditModalOpen(false)} 
         editRecord={selectedRecord}
+        onSuccess={fetchData}
       />
       <CheckoutCarModal 
         open={checkoutModalOpen} 
         onClose={() => setCheckoutModalOpen(false)} 
         record={selectedRecord}
+        onSuccess={fetchData}
       />
       <ManageSpacesModal 
         open={manageSpacesModalOpen} 
         onClose={() => setManageSpacesModalOpen(false)} 
+        onSuccess={fetchData}
       />
     </div>
   );

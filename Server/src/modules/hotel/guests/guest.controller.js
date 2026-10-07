@@ -44,3 +44,32 @@ export const deleteGuest = asyncHandler(async (req, res) => {
     .status(HTTP_STATUS.OK)
     .json(new ApiResponse(HTTP_STATUS.OK, null, "Guest deleted successfully"));
 });
+
+export const getGuestDocuments = asyncHandler(async (req, res) => {
+  const docs = await guestService.getGuestDocuments(req.hotelContext, req.params.id);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, docs, "Guest documents retrieved successfully"));
+});
+
+export const createGuestDocument = asyncHandler(async (req, res) => {
+  const doc = await guestService.createGuestDocument(req.hotelContext, req.params.id, req.body);
+  res
+    .status(HTTP_STATUS.CREATED)
+    .json(new ApiResponse(HTTP_STATUS.CREATED, doc, "Guest document created successfully"));
+});
+
+export const deleteGuestDocument = asyncHandler(async (req, res) => {
+  const result = await guestService.deleteGuestDocument(req.hotelContext, req.params.id, req.params.docId);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, result, "Guest document deleted successfully"));
+});
+
+export const getGuestActivities = asyncHandler(async (req, res) => {
+  const activities = await guestService.getGuestActivities(req.hotelContext, req.params.id);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, activities, "Guest activities retrieved successfully"));
+});
+

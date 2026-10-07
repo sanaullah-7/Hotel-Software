@@ -23,6 +23,9 @@ import attendanceRoutes from "../modules/hotel/hr/attendance.routes.js";
 import payrollRoutes from "../modules/hotel/hr/payroll.routes.js";
 import inventoryRoutes from "../modules/hotel/inventory/inventory.routes.js";
 import restaurantRoutes from "../modules/hotel/restaurant/restaurant.routes.js";
+import parkingRoutes from "../modules/hotel/parking/parking.routes.js";
+import pricingRoutes from "../modules/hotel/pricing/pricing.routes.js";
+import registrationFormRoutes from "../modules/hotel/registrationForms/registrationForm.routes.js";
 
 export const hotelPmsRouter = Router();
 
@@ -46,6 +49,9 @@ hotelPmsRouter.use("/hotel", attendanceRoutes); // Attendance Records
 hotelPmsRouter.use("/hotel", payrollRoutes); // Payroll & Employee Salary
 hotelPmsRouter.use("/hotel", inventoryRoutes); // Inventory & Stock
 hotelPmsRouter.use("/hotel", restaurantRoutes); // Restaurant & POS
+hotelPmsRouter.use("/hotel", parkingRoutes); // Car Parking
+hotelPmsRouter.use("/hotel", pricingRoutes); // Rates & Pricing (Rate Plans, Discounts, Taxes, Fees)
+hotelPmsRouter.use("/hotel", registrationFormRoutes); // Registration Forms
 
 export default hotelPmsRouter;
 

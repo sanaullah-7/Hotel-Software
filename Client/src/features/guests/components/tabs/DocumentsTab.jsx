@@ -21,7 +21,8 @@ export default function DocumentsTab({
   documents = [],
   currentRoom,
   onDocumentAdded,
-  onDocumentDeleted
+  onDocumentDeleted,
+  isLoading = false
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -195,10 +196,10 @@ export default function DocumentsTab({
                         <PrintOutlined sx={{ fontSize: 16 }} />
                       </button>
 
-                      {doc.id && doc.id.startsWith('DOC-') && (
+                      {(doc.id || doc._id) && (
                         <button
                           onClick={() => {
-                            if (onDocumentDeleted) onDocumentDeleted(doc.id);
+                            if (onDocumentDeleted) onDocumentDeleted(doc.id || doc._id);
                           }}
                           className="p-1 text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer"
                           title="Remove document"
@@ -212,7 +213,14 @@ export default function DocumentsTab({
                 </tr>
               ))}
 
-              {currentItems.length === 0 && (
+              {isLoading ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-gray-400 text-xs">
+                    <div className="w-5 h-5 border-2 border-[var(--primary-main)] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                    <p className="text-gray-500 font-medium">Loading documents from database...</p>
+                  </td>
+                </tr>
+              ) : currentItems.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center text-gray-400 text-xs">
                     <DescriptionOutlined sx={{ fontSize: 36 }} className="text-gray-300 mb-2" />
@@ -224,7 +232,7 @@ export default function DocumentsTab({
                     </p>
                   </td>
                 </tr>
-              )}
+              ) : null}
             </tbody>
           </table>
         </div>

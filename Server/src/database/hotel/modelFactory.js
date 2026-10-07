@@ -32,8 +32,13 @@ const ensureModelReady = (model) => {
  * @param {string} modelName - The name of the model to retrieve (must exist in SCHEMAS)
  * @returns {Promise<mongoose.Model>}
  */
-export const getModel = async (hotelId, modelName) => {
-  const connection = await getHotelConnection(hotelId);
+export const getModel = async (hotelIdOrConnection, modelName) => {
+  let connection;
+  if (hotelIdOrConnection && typeof hotelIdOrConnection === 'object' && hotelIdOrConnection.models) {
+    connection = hotelIdOrConnection;
+  } else {
+    connection = await getHotelConnection(hotelIdOrConnection);
+  }
 
   if (!SCHEMAS[modelName]) {
     throw new Error(`Schema for model '${modelName}' is not registered in schemaRegistry.`);
