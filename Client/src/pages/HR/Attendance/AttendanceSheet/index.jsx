@@ -1,30 +1,25 @@
-import React from'react';
-import { Link } from'react-router-dom';
+import React from 'react';
 import {
- TextField,
  MenuItem,
  Tooltip,
- IconButton,
  Select,
  FormControl,
  InputLabel,
  Snackbar,
  Alert
-} from'@mui/material';
+} from '@mui/material';
 
 // Icons
-import HomeOutlinedIcon from'@mui/icons-material/HomeOutlined';
-import CheckCircleOutlinedIcon from'@mui/icons-material/CheckCircleOutlined';
-import EventBusyOutlinedIcon from'@mui/icons-material/EventBusyOutlined';
-import CelebrationOutlinedIcon from'@mui/icons-material/CelebrationOutlined';
-import WeekendOutlinedIcon from'@mui/icons-material/WeekendOutlined';
-import FlashOnIcon from'@mui/icons-material/FlashOn';
-import CalendarTodayIcon from'@mui/icons-material/CalendarToday';
-import DateRangeIcon from'@mui/icons-material/DateRange';
-import InfoOutlinedIcon from'@mui/icons-material/InfoOutlined';
-import SearchIcon from'@mui/icons-material/Search';
-import FileDownloadOutlinedIcon from'@mui/icons-material/FileDownloadOutlined';
-import RefreshIcon from'@mui/icons-material/Refresh';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
+import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
+import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import DateRangeIcon from '@mui/icons-material/DateRange';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import SearchIcon from '@mui/icons-material/Search';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
 
 import { monthsList, yearsList } from'./constants';
 import { useAttendanceSheet } from'./useAttendanceSheet';
@@ -42,64 +37,74 @@ export default function AttendanceSheet() {
  stats,
  filteredStaff,
  handleUpdateSheet,
- handleCellClick,
- handleExportCSV
+ handleExportCSV,
+ loading,
+ error,
+ loadSheetData
  } = useAttendanceSheet();
 
  return (
- <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden">
+ <div className="p-0 w-full">
+  {error && (
+   <div className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-xs text-red-700">
+    <span>{error}</span>
+    <button
+     onClick={() => loadSheetData(appliedYear, appliedMonth)}
+     className="px-2.5 py-1 bg-red-600 text-white rounded font-medium hover:bg-red-700 cursor-pointer text-xs"
+    >
+     Retry
+    </button>
+   </div>
+  )}
+  {loading && !error && (
+   <div className="mb-2 p-2 bg-blue-50/70 border border-blue-100 rounded text-center text-xs text-blue-700 font-medium">
+    Loading attendance sheet records from server...
+   </div>
+  )}
 
  {/* 2. Top 4 Metric Summary Cards */}
- <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 mb-2">
+ <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1 mb-2">
  {/* Present Card */}
- <div className="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <h3 className="text-xl sm:text-lg font-bold text-slate-800 leading-none">
- {stats.present}
- </h3>
- <p className="text-xs text-slate-500 font-medium mt-1">Present</p>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.present}</div>
+ <div className="text-[13px] text-gray-500 font-medium">Present</div>
  </div>
- <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-500 flex items-center justify-center">
- <CheckCircleOutlinedIcon sx={{ fontSize: 22 }} />
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+ <CheckCircleOutlinedIcon sx={{ fontSize: 18 }} />
+ </div>
+ </div>
+
+ {/* Absent Card */}
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+ <div>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.absent}</div>
+ <div className="text-[13px] text-gray-500 font-medium">Absent</div>
+ </div>
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-rose-50 text-rose-600">
+ <PersonOffOutlinedIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
  {/* Leave Card */}
- <div className="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <h3 className="text-xl sm:text-lg font-bold text-slate-800 leading-none">
- {stats.leave}
- </h3>
- <p className="text-xs text-slate-500 font-medium mt-1">Leave</p>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.leave}</div>
+ <div className="text-[13px] text-gray-500 font-medium">Leave</div>
  </div>
- <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center">
- <EventBusyOutlinedIcon sx={{ fontSize: 22 }} />
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+ <EventBusyOutlinedIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
 
- {/* Holiday Card */}
- <div className="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
+ {/* Late Card */}
+ <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
  <div>
- <h3 className="text-xl sm:text-lg font-bold text-slate-800 leading-none">
- {stats.holiday}
- </h3>
- <p className="text-xs text-slate-500 font-medium mt-1">Holiday</p>
+ <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{stats.late || 0}</div>
+ <div className="text-[13px] text-gray-500 font-medium">Late</div>
  </div>
- <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-500 flex items-center justify-center">
- <CelebrationOutlinedIcon sx={{ fontSize: 22 }} />
- </div>
- </div>
-
- {/* Weekend Days Card */}
- <div className="bg-white rounded-xl p-2.5 sm:p-3 border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] flex items-center justify-between transition-all hover:shadow-md">
- <div>
- <h3 className="text-xl sm:text-lg font-bold text-slate-800 leading-none">
- {stats.weekend}
- </h3>
- <p className="text-xs text-slate-500 font-medium mt-1">Weekend Days</p>
- </div>
- <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
- <WeekendOutlinedIcon sx={{ fontSize: 22 }} />
+ <div className="w-8 h-8 rounded-full flex items-center justify-center bg-amber-50 text-amber-600">
+ <AccessTimeOutlinedIcon sx={{ fontSize: 18 }} />
  </div>
  </div>
  </div>
@@ -237,28 +242,28 @@ export default function AttendanceSheet() {
  <span className="text-slate-600 font-medium">Present</span>
  </div>
 
- {/* Legend L */}
+ {/* Legend A */}
  <div className="flex items-center gap-1.5">
  <span className="w-5 h-5 rounded-full bg-rose-100 text-rose-700 font-bold text-[10px] flex items-center justify-center">
+ A
+ </span>
+ <span className="text-slate-600 font-medium">Absent</span>
+ </div>
+
+ {/* Legend LT */}
+ <div className="flex items-center gap-1.5">
+ <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 font-bold text-[8.5px] tracking-tighter flex items-center justify-center">
+ LT
+ </span>
+ <span className="text-slate-600 font-medium">Late</span>
+ </div>
+
+ {/* Legend L */}
+ <div className="flex items-center gap-1.5">
+ <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold text-[10px] flex items-center justify-center">
  L
  </span>
  <span className="text-slate-600 font-medium">Leave</span>
- </div>
-
- {/* Legend H */}
- <div className="flex items-center gap-1.5">
- <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 font-bold text-[10px] flex items-center justify-center">
- H
- </span>
- <span className="text-slate-600 font-medium">Holiday</span>
- </div>
-
- {/* Legend W */}
- <div className="flex items-center gap-1.5">
- <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 font-bold text-[10px] flex items-center justify-center">
- W
- </span>
- <span className="text-slate-600 font-medium">Weekend</span>
  </div>
 
  {/* Export Action */}
@@ -274,14 +279,14 @@ export default function AttendanceSheet() {
  </div>
 
  {/* 5. Horizontal Calendar Matrix Table */}
- <div className="mt-4 rounded-lg border border-slate-200">
- <table className="w-full border-collapse text-left min-w-[900px]">
+ <div className="mt-4 rounded-lg border border-slate-200 overflow-x-auto">
+ <table className="w-full border-collapse text-left min-w-[880px]">
  <thead>
- <tr className="bg-slate-50/90 text-slate-500 uppercase text-[11px] font-bold tracking-wider select-none">
+ <tr className="bg-slate-50/90 text-slate-500 uppercase text-[10px] font-bold tracking-wider select-none">
  {/* Fixed Employee Column */}
  <th
  scope="col"
- className="py-3 px-4 sticky left-0 z-20 bg-slate-50 border-r border-b border-slate-200 min-w-[210px] max-w-[240px] shadow-[2px_0_5px_rgba(0,0,0,0.02)]"
+ className="py-2 px-3 sticky left-0 z-20 bg-slate-50 border-r border-b border-slate-200 min-w-[150px] max-w-[170px] shadow-[2px_0_5px_rgba(0,0,0,0.02)]"
  >
  Employee Detail
  </th>
@@ -294,7 +299,7 @@ export default function AttendanceSheet() {
  <th
  key={day}
  scope="col"
- className={`py-3 px-1 text-center font-bold text-xs border-r border-b border-slate-200 min-w-[36px] max-w-[42px] ${
+ className={`py-2 px-0.5 text-center font-bold text-[10px] border-r border-b border-slate-200 w-[24px] min-w-[22px] max-w-[26px] ${
  isWeekend ?'bg-slate-100/70 text-slate-700' :'text-slate-600'
  }`}
  >
@@ -312,7 +317,7 @@ export default function AttendanceSheet() {
  colSpan={daysArray.length + 1}
  className="py-12 text-center text-slate-400 font-medium text-sm"
  >
- No staff found matching"{searchEmployee}"
+ No staff found matching "{searchEmployee}"
  </td>
  </tr>
  ) : (
@@ -322,14 +327,14 @@ export default function AttendanceSheet() {
  className="hover:bg-slate-50/70 transition-colors group"
  >
  {/* Employee Profile Cell (Sticky Left) */}
- <td className="py-2.5 px-4 sticky left-0 z-10 bg-white group-hover:bg-slate-50/90 border-r border-slate-200 shadow-[2px_0_5px_rgba(0,0,0,0.02)] transition-colors">
- <div className="flex items-center gap-3">
+ <td className="py-1.5 px-3 sticky left-0 z-10 bg-white group-hover:bg-slate-50/90 border-r border-slate-200 shadow-[2px_0_5px_rgba(0,0,0,0.02)] transition-colors">
+ <div className="flex items-center gap-2">
  {/* Avatar with Online Green Dot */}
  <div className="relative shrink-0">
  <img
  src={staff.avatar}
  alt={staff.name}
- className="w-9 h-9 rounded-full object-cover border border-slate-100 shadow-xs"
+ className="w-7 h-7 rounded-full object-cover border border-slate-100 shadow-xs"
  onError={(e) => {
  e.target.onerror = null;
  e.target.src =`https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -338,16 +343,16 @@ export default function AttendanceSheet() {
  }}
  />
  {staff.online && (
- <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-white" />
+ <span className="absolute bottom-0 right-0 w-2 h-2 bg-emerald-500 rounded-full ring-1 ring-white" />
  )}
  </div>
 
  {/* Name & Role */}
  <div className="min-w-0 flex-1">
- <p className="text-xs sm:text-sm font-semibold text-slate-800 truncate hover:text-[#5d5fef] transition-colors cursor-pointer">
+ <p className="text-xs font-semibold text-slate-800 truncate hover:text-[#5d5fef] transition-colors cursor-pointer">
  {staff.name}
  </p>
- <p className="text-[11px] text-slate-400 font-normal leading-tight">
+ <p className="text-[10px] text-slate-400 font-normal leading-tight truncate">
  {staff.role}
  </p>
  </div>
@@ -356,40 +361,48 @@ export default function AttendanceSheet() {
 
  {/* Day Matrix Badges (1 to 28/29/30/31) */}
  {daysArray.map((day) => {
- const status = attendanceData[staff.id]?.[day] ||'P';
+ const status = attendanceData[staff.id]?.[day] ||'';
 
  let badgeClass ='';
  let statusText ='';
 
- if (status ==='P') {
- badgeClass ='bg-emerald-100 text-emerald-700 hover:bg-emerald-200';
- statusText ='Present';
- } else if (status ==='L') {
- badgeClass ='bg-rose-100 text-rose-700 hover:bg-rose-200';
- statusText ='Leave';
- } else if (status ==='H') {
- badgeClass ='bg-amber-100 text-amber-700 hover:bg-amber-200';
- statusText ='Holiday';
+ if (status === 'P') {
+ badgeClass = 'bg-emerald-100 text-emerald-700';
+ statusText = 'Present';
+ } else if (status === 'LT') {
+ badgeClass = 'bg-amber-100 text-amber-700 text-[8.5px] tracking-tighter';
+ statusText = 'Late (Present)';
+ } else if (status === 'A') {
+ badgeClass = 'bg-rose-100 text-rose-700';
+ statusText = 'Absent';
+ } else if (status === 'L') {
+ badgeClass = 'bg-blue-100 text-blue-700';
+ statusText = 'Leave';
+ } else if (status === 'H') {
+ badgeClass = 'bg-amber-100 text-amber-700';
+ statusText = 'Holiday';
+ } else if (status === 'W') {
+ badgeClass = 'bg-slate-100 text-slate-600';
+ statusText = 'Weekend';
  } else {
- badgeClass ='bg-slate-100 text-slate-600 hover:bg-slate-200';
- statusText ='Weekend';
+ badgeClass = 'bg-slate-50 text-slate-300 border border-dashed border-slate-200';
+ statusText = 'Not recorded';
  }
 
  return (
  <td
  key={day}
- className="py-2 px-1 text-center border-r border-slate-200/80 align-middle"
+ className="py-1 px-0.5 text-center border-r border-slate-200/80 align-middle w-[24px] min-w-[22px] max-w-[26px]"
  >
  <Tooltip
- title={`${staff.name} - Day ${day}: ${statusText} (Click to toggle)`}
+ title={`${staff.name} - Day ${day}: ${statusText}`}
  arrow
  >
- <button
- onClick={() => handleCellClick(staff.id, day)}
- className={`w-6 h-6 rounded-full font-bold text-[11px] inline-flex items-center justify-center transition-transform hover:scale-115 active:scale-95 cursor-pointer select-none shadow-2xs ${badgeClass}`}
+ <span
+ className={`w-5 h-5 rounded-full font-bold text-[10px] inline-flex items-center justify-center select-none shadow-2xs ${badgeClass}`}
  >
- {status}
- </button>
+ {status || '-'}
+ </span>
  </Tooltip>
  </td>
  );
@@ -404,7 +417,7 @@ export default function AttendanceSheet() {
  {/* Footer info note */}
  <div className="mt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
  <span>Showing {filteredStaff.length} employee records for {appliedMonth} {appliedYear}</span>
- <span className="italic">Tip: Click on any day badge to cycle status (P → L → H → W)</span>
+ <span className="italic">Tip: Records are synchronized automatically from Today's Attendance</span>
  </div>
  </div>
 

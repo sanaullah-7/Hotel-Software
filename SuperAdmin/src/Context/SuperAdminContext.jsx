@@ -40,6 +40,11 @@ export function SuperAdminProvider({ children }) {
     setUser(null);
   }, []);
 
+  useEffect(() => {
+    window.addEventListener('sa-session-expired', logout);
+    return () => window.removeEventListener('sa-session-expired', logout);
+  }, [logout]);
+
   // ── Theme ─────────────────────────────────────────────────────────────────
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) || 'dark');
 

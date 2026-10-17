@@ -12,9 +12,19 @@ import {
   CalendarTodayOutlined
 } from '@mui/icons-material';
 
-export default function ActivityLogTab({ activities = [], guest }) {
+export default function ActivityLogTab({ activities = [], guest, isLoading = false }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
+
+  const formatDate = (d) => {
+    if (!d) return 'Recent';
+    try {
+      const parsed = new Date(d);
+      return isNaN(parsed.getTime()) ? String(d) : parsed.toLocaleDateString();
+    } catch {
+      return String(d);
+    }
+  };
 
   // Filter activities
   const filtered = activities.filter((act) => {
@@ -121,10 +131,15 @@ export default function ActivityLogTab({ activities = [], guest }) {
 
         {/* Timeline Content */}
         <div className="p-6">
-          {filtered.length > 0 ? (
+          {isLoading ? (
+            <div className="py-12 text-center text-gray-400 text-xs">
+              <div className="w-5 h-5 border-2 border-[var(--primary-main)] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+              <p className="text-gray-500 font-medium">Loading audit history from database...</p>
+            </div>
+          ) : filtered.length > 0 ? (
             <div className="relative border-l-2 border-gray-100 ml-4 space-y-6">
               {filtered.map((act, idx) => (
-                <div key={idx} className="relative pl-6 group">
+                <div key={act.id || idx} className="relative pl-6 group">
                   {/* Timeline dot */}
                   <div className="absolute -left-[9px] top-1 w-4 h-4 rounded-full bg-white border-2 border-[#1b7f43] group-hover:bg-[#1b7f43] transition flex items-center justify-center">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#1b7f43] group-hover:bg-white transition" />
@@ -140,7 +155,7 @@ export default function ActivityLogTab({ activities = [], guest }) {
                       </div>
                       <div className="flex items-center gap-1 text-[11px] text-gray-400 font-medium">
                         <CalendarTodayOutlined sx={{ fontSize: 13 }} />
-                        {act.date}
+                        {formatDate(act.date)}
                       </div>
                     </div>
 

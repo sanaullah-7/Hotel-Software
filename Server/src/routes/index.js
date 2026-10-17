@@ -1,20 +1,14 @@
-import express from "express";
-import authRoutes from "../modules/auth/auth.routes.js";
+/**
+ * Main API route entry point.
+ * API versioning: /api/v1
+ */
+import { Router } from "express";
+import platformRouter from "./platform.routes.js";
+import hotelPmsRouter from "./hotel.routes.js";
 
-const router = express.Router();
+const router = Router();
 
-router.use("/auth", authRoutes);
-// aur modules ki routes yahan add hoti jayengi: hotels, bookings, payments, etc.
+router.use(platformRouter);
+router.use(hotelPmsRouter);
 
 export default router;
-
-// chagpt
-// import { Router } from "express";
-
-// import authRoutes from "../modules/auth/auth.routes.js";
-
-// const router = Router();
-
-// router.use("/auth", authRoutes);
-
-// export default router;

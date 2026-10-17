@@ -2,11 +2,24 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { Person } from '@mui/icons-material';
 
-// Store & Data imports
-import { getGuestById, updateGuest, GUESTS_UPDATED_EVENT } from '../state/guestStore';
+// Adapter & Service
+import { guestService } from '../../../services/guestService';
+import { toFrontendGuest, toBackendGuestPayload } from '../adapters/guestAdapter';
+import { complaintService } from '../../../services/complaintService';
+import { toFrontendComplaintList, toBackendComplaintPayload } from '../../front-office/adapters/complaintAdapter';
+import { roomService } from '../../../services/roomService';
+
+import { getGuestById, getGuests, syncGuestsFromBackend, updateGuest, GUESTS_UPDATED_EVENT } from '../state/guestStore';
 import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../../reservations/state/reservationStore';
 import { getInvoices, getPayments, getRefunds } from '../../payment-billing/pages/paymentBillingStore';
 import { getGuestCharges } from '../../inventory/pages/inventoryStore';
+import billingService from '../../../services/billingService';
+import {
+  toFrontendInvoiceList,
+  toFrontendPaymentList,
+  toFrontendRefundList,
+  toFrontendGuestChargeList,
+} from '../../payment-billing/adapters/billingAdapter';
 
 // Components
 import GuestProfileHeader from '../components/GuestProfileHeader';
@@ -22,27 +35,6 @@ import RequestsComplaintsTab from '../components/tabs/RequestsComplaintsTab';
 import DocumentsTab from '../components/tabs/DocumentsTab';
 import ActivityLogTab from '../components/tabs/ActivityLogTab';
 
-const INITIAL_COMPLAINTS = [
-  { id: 1, date: '2026-05-20', guestName: 'John Doe', roomNo: '101', type: 'Plumbing', description: 'Leaking tap in bathroom causing water accumulation on floor', priority: 'Medium', status: 'Open' },
-  { id: 2, date: '2026-05-19', guestName: 'Jane Smith', roomNo: '205', type: 'Housekeeping', description: 'Towels not replaced and bathroom amenities missing after cleaning', priority: 'Low', status: 'Resolved' },
-  { id: 3, date: '2026-05-18', guestName: 'Robert Brown', roomNo: '302', type: 'Electrical', description: 'Waitlight not functioning properly in master bedroom area', priority: 'High', status: 'In Progress' },
-  { id: 4, date: '2026-05-21', guestName: 'Emily Johnson', roomNo: '105', type: 'Noise', description: 'Loud noise from adjacent room late at night interrupting sleep', priority: 'Medium', status: 'Open' },
-  { id: 5, date: '2026-05-22', guestName: 'Michael Wilson', roomNo: '210', type: 'Air Conditioning', description: 'AC not cooling properly during daytime hours and makes noise', priority: 'High', status: 'In Progress' },
-  { id: 6, date: '2026-05-23', guestName: 'Sarah Miller', roomNo: '315', type: 'Housekeeping', description: 'Room not cleaned during regular morning housekeeping schedule', priority: 'Medium', status: 'Open' },
-  { id: 7, date: '2026-05-24', guestName: 'David Anderson', roomNo: '118', type: 'Plumbing', description: 'Shower drain draining very slowly and backing up into tub', priority: 'High', status: 'Resolved' },
-  { id: 8, date: '2026-05-20', guestName: 'John Smith', roomNo: '101', type: 'Housekeeping', description: 'Requested extra hypoallergenic pillows and fresh linen set.', priority: 'Low', status: 'Resolved' }
-];
-
-const INITIAL_DOCS = [
-  { id: 'DOC-1', formNo: 'REG-2026-089', guest: 'Kamran Akmal', idType: 'CNIC', idNumber: '42101-1122334-1', room: '101', date: '2026-05-10', status: 'Signed & Verified' },
-  { id: 'DOC-2', formNo: 'REG-2026-088', guest: 'Cara Stevens', idType: 'Passport', idNumber: 'USA-9988221', room: '102', date: '2026-05-01', status: 'Signed & Verified' },
-  { id: 'DOC-3', formNo: 'REG-2026-087', guest: 'Airi Satou', idType: 'Passport', idNumber: 'JPN-4455112', room: '105', date: '2026-05-02', status: 'Pending Signature' },
-  { id: 'DOC-4', formNo: 'REG-2026-086', guest: 'Mahira Khan', idType: 'CNIC', idNumber: '42201-6655443-2', room: '201', date: '2026-05-09', status: 'Signed & Verified' },
-  { id: 'DOC-5', formNo: 'REG-2026-085', guest: 'Jens Brincker', idType: 'Passport', idNumber: 'GER-8833119', room: '302', date: '2026-05-03', status: 'Signed & Verified' },
-  { id: 'DOC-6', formNo: 'REG-2026-001', guest: 'John Smith', idType: 'Passport', idNumber: 'USA-4491028', room: '101', date: '2026-05-20', status: 'Signed & Verified' },
-  { id: 'DOC-7', formNo: 'REG-2026-002', guest: 'Sarah Johnson', idType: 'Passport', idNumber: 'UK-8891002', room: '205', date: '2026-05-19', status: 'Signed & Verified' }
-];
-
 export default function GuestProfile() {
   const { id } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -54,16 +46,69 @@ export default function GuestProfile() {
 
   // Profile data states
   const [guest, setGuest] = useState(null);
+  const [isLoading, setIsLoading] = useState(Boolean(id));
+  const [error, setError] = useState(null);
+  const [notFound, setNotFound] = useState(false);
+
   const [reservations, setReservations] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [charges, setCharges] = useState([]);
   const [payments, setPayments] = useState([]);
   const [refunds, setRefunds] = useState([]);
   const [complaints, setComplaints] = useState([]);
+  const [isComplaintsLoading, setIsComplaintsLoading] = useState(false);
+  const [complaintsError, setComplaintsError] = useState(null);
+  const [availableRooms, setAvailableRooms] = useState([]);
   const [documents, setDocuments] = useState([]);
+  const [isDocumentsLoading, setIsDocumentsLoading] = useState(false);
+  const [backendActivities, setBackendActivities] = useState([]);
+  const [isActivitiesLoading, setIsActivitiesLoading] = useState(false);
   
   // Modals state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Authoritative Complaints Fetcher
+  const fetchGuestComplaints = useCallback(async (guestId) => {
+    if (!guestId) {
+      setComplaints([]);
+      setIsComplaintsLoading(false);
+      return;
+    }
+
+    setIsComplaintsLoading(true);
+    setComplaintsError(null);
+
+    try {
+      const res = await complaintService.getComplaints({ guest_id: guestId });
+      const adapted = toFrontendComplaintList(res);
+      setComplaints(adapted);
+      setComplaintsError(null);
+    } catch (err) {
+      console.error('Backend getComplaints failed in profile:', err);
+      const errMsg =
+        err?.response?.data?.message ||
+        err?.data?.message ||
+        err?.message ||
+        'Failed to load guest complaints.';
+      setComplaintsError(errMsg);
+      setComplaints([]);
+    } finally {
+      setIsComplaintsLoading(false);
+    }
+  }, []);
+
+  // Fetch available rooms for safe room lookup in complaints
+  useEffect(() => {
+    let isMounted = true;
+    roomService.getRooms()
+      .then((res) => {
+        if (!isMounted) return;
+        const list = Array.isArray(res?.data) ? res.data : (res?.data?.rooms || []);
+        if (list.length > 0) setAvailableRooms(list);
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Sync tab state with URL query parameter
   const handleTabChange = (tabId) => {
@@ -71,192 +116,472 @@ export default function GuestProfile() {
     setSearchParams({ tab: tabId }, { replace: true });
   };
 
-  const loadData = useCallback(() => {
-    const g = getGuestById(id);
-    setGuest(g);
-
+  const fetchBackendBillingData = useCallback(async (g) => {
     if (!g) return;
+    const gId = String(g._id || g.id || '').trim();
+    if (!gId) {
+      setInvoices([]);
+      setPayments([]);
+      setCharges([]);
+      setRefunds([]);
+      return;
+    }
+
+    try {
+      const isMongoId = /^[0-9a-fA-F]{24}$/.test(gId);
+      const guestParam = isMongoId ? { guest_id: gId } : undefined;
+
+      const [invRes, payRes, chgRes, refRes] = await Promise.all([
+        billingService.getInvoices(guestParam).catch(() => null),
+        billingService.getPayments(guestParam).catch(() => null),
+        billingService.getGuestCharges(guestParam).catch(() => null),
+        billingService.getRefunds().catch(() => null),
+      ]);
+
+      let adaptedInvoices = [];
+      if (invRes !== null) {
+        const rawInvoices = invRes?.data?.invoices || invRes?.data || invRes?.invoices || (Array.isArray(invRes) ? invRes : []);
+        adaptedInvoices = toFrontendInvoiceList(Array.isArray(rawInvoices) ? rawInvoices : []);
+      } else {
+        adaptedInvoices = getInvoices();
+      }
+
+      let adaptedPayments = [];
+      if (payRes !== null) {
+        const rawPayments = payRes?.data?.payments || payRes?.data || payRes?.payments || (Array.isArray(payRes) ? payRes : []);
+        adaptedPayments = toFrontendPaymentList(Array.isArray(rawPayments) ? rawPayments : []);
+      } else {
+        adaptedPayments = getPayments();
+      }
+
+      let adaptedCharges = [];
+      if (chgRes !== null) {
+        const rawCharges = chgRes?.data?.charges || chgRes?.data || chgRes?.charges || (Array.isArray(chgRes) ? chgRes : []);
+        adaptedCharges = toFrontendGuestChargeList(Array.isArray(rawCharges) ? rawCharges : []);
+      } else {
+        adaptedCharges = getGuestCharges();
+      }
+
+      let adaptedRefunds = [];
+      if (refRes !== null) {
+        const rawRefunds = refRes?.data?.refunds || refRes?.data || refRes?.refunds || (Array.isArray(refRes) ? refRes : []);
+        adaptedRefunds = toFrontendRefundList(Array.isArray(rawRefunds) ? rawRefunds : []);
+      } else {
+        adaptedRefunds = getRefunds();
+      }
+
+      const guestEmail = String(g.email || '').trim().toLowerCase();
+      const guestName = String(g.name || '').trim().toLowerCase();
+
+      const filteredInvoices = adaptedInvoices.filter((inv) => {
+        if (inv.guestId && (String(inv.guestId) === gId || String(inv.guest_id) === gId)) return true;
+        if (inv.guestId && String(inv.guestId) !== gId) return false;
+        const iEmail = String(inv.guestEmail || '').trim().toLowerCase();
+        const iName = String(inv.guestName || '').trim().toLowerCase();
+        if (guestEmail && iEmail && guestEmail === iEmail) return true;
+        if (guestName && iName && guestName === iName) return true;
+        return false;
+      });
+
+      const filteredPayments = adaptedPayments.filter((p) => {
+        if (p.guestId && (String(p.guestId) === gId || String(p.guest_id) === gId)) return true;
+        if (p.guestId && String(p.guestId) !== gId) return false;
+        const pEmail = String(p.guestEmail || '').trim().toLowerCase();
+        const pName = String(p.guestName || '').trim().toLowerCase();
+        if (guestEmail && pEmail && guestEmail === pEmail) return true;
+        if (guestName && pName && guestName === pName) return true;
+        return false;
+      });
+
+      const filteredCharges = adaptedCharges.filter((c) => {
+        if (c.guestId && (String(c.guestId) === gId || String(c.guest_id) === gId)) return true;
+        if (c.guestId && String(c.guestId) !== gId) return false;
+        const cName = String(c.guestName || '').trim().toLowerCase();
+        if (guestName && cName && guestName === cName) return true;
+        return false;
+      });
+
+      const paymentIds = new Set(filteredPayments.flatMap((p) => [String(p.id || ''), String(p.paymentId || '')].filter(Boolean)));
+      const filteredRefunds = adaptedRefunds.filter((r) => r.paymentId && paymentIds.has(String(r.paymentId)));
+
+      setInvoices(filteredInvoices);
+      setPayments(filteredPayments);
+      setCharges(filteredCharges);
+      setRefunds(filteredRefunds);
+    } catch (err) {
+      console.error('Backend billing fetch failed for guest profile:', err);
+      const guestEmail = String(g.email || '').trim().toLowerCase();
+      const guestName = String(g.name || '').trim().toLowerCase();
+      const filteredInvoices = getInvoices().filter((inv) => {
+        if (inv.guestId && (String(inv.guestId) === gId || String(inv.guest_id) === gId)) return true;
+        if (inv.guestId && String(inv.guestId) !== gId) return false;
+        const iEmail = String(inv.guestEmail || '').trim().toLowerCase();
+        const iName = String(inv.guestName || '').trim().toLowerCase();
+        if (guestEmail && iEmail && guestEmail === iEmail) return true;
+        if (guestName && iName && guestName === iName) return true;
+        return false;
+      });
+      setInvoices(filteredInvoices);
+      setPayments([]);
+      setCharges([]);
+      setRefunds([]);
+    }
+  }, []);
+
+  const fetchGuestDocuments = useCallback(async (guestId, currentGuest = null) => {
+    if (!guestId) {
+      setDocuments([]);
+      return;
+    }
+    setIsDocumentsLoading(true);
+    try {
+      const activeGuest = currentGuest || guest;
+      const res = await guestService.getGuestDocuments(guestId);
+      const rawList = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      
+      const mapped = rawList.map((d) => {
+        const idType = d.document_type || d.idType || 'Identity Document';
+        const isCnic = idType.toLowerCase().includes('cnic') || idType.toLowerCase().includes('national');
+        const fallbackId = isCnic
+          ? (activeGuest?.national_id || activeGuest?.nationalId || activeGuest?.cnic || 'N/A')
+          : 'N/A';
+        const idNumber = (d.document_number && d.document_number !== 'N/A')
+          ? d.document_number
+          : fallbackId;
+
+        return {
+          id: d._id || d.id,
+          _id: d._id || d.id,
+          formNo: d.form_no || `DOC-${String(d._id || d.id).slice(-4)}`,
+          name: d.name || idType,
+          idType: idType,
+          idNumber: idNumber,
+          room: d.room_number || '101',
+          status: d.status || 'Signed & Verified',
+          date: d.created_at ? new Date(d.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          notes: d.notes || '',
+          imageUrl: d.document_url || d.file_url || d.url || d.cnicImage || '',
+          raw: d,
+        };
+      });
+
+      // Synthesize Profile Picture document if guest has an avatar and no profile doc in the table
+      const avatarUrl = activeGuest?.avatar;
+      const guestName = activeGuest?.name || activeGuest?.full_name || 'Guest';
+      const guestCnic = activeGuest?.national_id || activeGuest?.nationalId || activeGuest?.cnic || 'N/A';
+
+      const hasProfileDoc = mapped.some(
+        (doc) => doc.idType?.toLowerCase().includes('profile') || (doc.imageUrl && doc.imageUrl === avatarUrl)
+      );
+
+      const isRealAvatar = Boolean(
+        avatarUrl &&
+        !avatarUrl.startsWith('blob:') &&
+        !avatarUrl.includes('ui-avatars.com') &&
+        (avatarUrl.includes('cloudinary') || avatarUrl.startsWith('http') || avatarUrl.startsWith('/api'))
+      );
+
+      if (!hasProfileDoc && isRealAvatar) {
+        mapped.unshift({
+          id: `profile-${guestId}`,
+          _id: `profile-${guestId}`,
+          formNo: `REG-${new Date().getFullYear()}-${String(guestId).slice(-3)}`,
+          name: `${guestName} Profile Picture`,
+          idType: 'Profile Picture',
+          idNumber: guestCnic,
+          room: '101',
+          status: 'Signed & Verified',
+          date: activeGuest?.created_at ? new Date(activeGuest.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          notes: 'Official guest avatar uploaded to Cloudinary',
+          imageUrl: avatarUrl,
+          raw: { document_url: avatarUrl, document_type: 'Profile Picture' },
+        });
+      }
+
+      setDocuments(mapped);
+    } catch (err) {
+      console.error('Failed to fetch guest documents:', err);
+      setDocuments([]);
+    } finally {
+      setIsDocumentsLoading(false);
+    }
+  }, []);
+
+  const fetchGuestActivities = useCallback(async (guestId) => {
+    if (!guestId) {
+      setBackendActivities([]);
+      return;
+    }
+    setIsActivitiesLoading(true);
+    try {
+      const res = await guestService.getGuestActivities(guestId);
+      const rawList = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      setBackendActivities(rawList);
+    } catch (err) {
+      console.error('Failed to fetch guest activities:', err);
+      setBackendActivities([]);
+    } finally {
+      setIsActivitiesLoading(false);
+    }
+  }, []);
+
+  const loadRelatedData = useCallback((g) => {
+    if (!g) return;
+
+    fetchBackendBillingData(g);
+
+    const guestName = String(g.name || '').trim().toLowerCase();
+    const guestEmail = String(g.email || '').trim().toLowerCase();
+    const guestId = String(g.id || g._id || '').trim();
 
     // 1. Reservations
     const allRes = getReservations();
-    const guestRes = allRes.filter((r) =>
-      (g.email && r.email && r.email.toLowerCase() === g.email.toLowerCase()) ||
-      (g.name && r.name && r.name.toLowerCase() === g.name.toLowerCase()) ||
-      `GST-${r.id}`.toLowerCase() === String(g.id).toLowerCase() ||
-      String(r.id) === String(g.id)
-    );
+    const guestRes = allRes.filter((r) => {
+      if (r.guestId && String(r.guestId).trim() === guestId) return true;
+      if (r.guestId && String(r.guestId).trim() !== guestId) return false;
+      const rEmail = String(r.email || r.guestEmail || '').trim().toLowerCase();
+      const rName = String(r.name || r.guestName || '').trim().toLowerCase();
+      if (guestEmail && rEmail && guestEmail === rEmail) return true;
+      if (guestName && rName && guestName === rName) return true;
+      return false;
+    });
     setReservations(guestRes);
 
-    const guestBookingIds = new Set(
-      guestRes.map((r) => String(r.id)).concat(guestRes.map((r) => String(r.bookingId || '')))
-    );
-    const guestRooms = new Set(
-      guestRes.map((r) => String(r.roomNumber || r.room || ''))
-    );
+    // 2. Complaints (Authoritative Backend)
+    fetchGuestComplaints(guestId);
 
-    // 2. Invoices
-    const allInv = getInvoices();
-    const guestInv = allInv.filter((inv) =>
-      (g.name && inv.guestName && inv.guestName.toLowerCase() === g.name.toLowerCase()) ||
-      (g.email && inv.guestEmail && inv.guestEmail.toLowerCase() === g.email.toLowerCase()) ||
-      (inv.bookingId && guestBookingIds.has(String(inv.bookingId).replace('BK-', '')))
-    );
-    setInvoices(guestInv);
+    // 3. Documents (Authoritative Backend)
+    fetchGuestDocuments(guestId, g);
 
-    // 3. Folio Charges
-    const allCharges = getGuestCharges();
-    const guestChargesList = allCharges.filter((c) =>
-      (g.name && c.guestName && c.guestName.toLowerCase() === g.name.toLowerCase()) ||
-      (c.roomNumber && guestRooms.has(String(c.roomNumber)))
-    );
-    setCharges(guestChargesList);
+    // 4. Activities (Authoritative Backend)
+    fetchGuestActivities(guestId);
+  }, [fetchBackendBillingData, fetchGuestComplaints, fetchGuestDocuments, fetchGuestActivities]);
 
-    // 4. Payments
-    const allPayments = getPayments();
-    const guestPaymentsList = allPayments.filter((p) =>
-      (g.name && p.guestName && p.guestName.toLowerCase() === g.name.toLowerCase()) ||
-      (g.email && p.guestEmail && p.guestEmail.toLowerCase() === g.email.toLowerCase()) ||
-      (p.bookingId && guestBookingIds.has(String(p.bookingId).replace('BK-', '')))
-    );
-    setPayments(guestPaymentsList);
-
-    // 5. Refunds
-    const allRefunds = getRefunds();
-    const guestRefundsList = allRefunds.filter((r) =>
-      (g.name && r.guestName && r.guestName.toLowerCase() === g.name.toLowerCase()) ||
-      (r.bookingId && guestBookingIds.has(String(r.bookingId).replace('BK-', '')))
-    );
-    setRefunds(guestRefundsList);
-
-    // 6. Complaints
-    let storedComplaints = [];
-    try {
-      const rawComp = localStorage.getItem('hotel_complaints');
-      storedComplaints = rawComp ? JSON.parse(rawComp) : INITIAL_COMPLAINTS;
-    } catch {
-      storedComplaints = INITIAL_COMPLAINTS;
+  const fetchGuestProfile = useCallback(async () => {
+    if (!id) {
+      setGuest(null);
+      setNotFound(true);
+      setIsLoading(false);
+      return;
     }
-    const guestComplaintsList = storedComplaints.filter((c) =>
-      (g.name && c.guestName && c.guestName.toLowerCase() === g.name.toLowerCase()) ||
-      (c.roomNo && guestRooms.has(String(c.roomNo)))
-    );
-    setComplaints(guestComplaintsList);
 
-    // 7. Documents & Registration Forms
-    let storedDocs = [];
+    setIsLoading(true);
+    setError(null);
+    setNotFound(false);
+
     try {
-      const rawDocs = localStorage.getItem('hotel_registration_forms');
-      storedDocs = rawDocs ? JSON.parse(rawDocs) : INITIAL_DOCS;
-    } catch {
-      storedDocs = INITIAL_DOCS;
+      const res = await guestService.getGuestById(String(id).trim());
+      const backendGuest = res?.data?.data || res?.data || res;
+      if (backendGuest) {
+        const adapted = toFrontendGuest(backendGuest);
+        setGuest(adapted);
+        setNotFound(false);
+        setError(null);
+
+        // Authoritative synchronization to compatibility store
+        const currentStore = getGuests();
+        const exists = currentStore.some(g => g.id === adapted.id || g._id === adapted._id);
+        const nextStore = exists
+          ? currentStore.map(g => (g.id === adapted.id || g._id === adapted._id) ? adapted : g)
+          : [adapted, ...currentStore];
+        syncGuestsFromBackend(nextStore);
+
+        loadRelatedData(adapted);
+        setIsLoading(false);
+        return;
+      } else {
+        setGuest(null);
+        setNotFound(true);
+        setIsLoading(false);
+        return;
+      }
+    } catch (err) {
+      const status = err?.response?.status || err?.status;
+      if (status === 404) {
+        setGuest(null);
+        setNotFound(true);
+        setIsLoading(false);
+        return;
+      }
+
+      // Authoritative error from backend
+      const errMsg = err?.response?.data?.message || err?.data?.message || err?.message || 'Failed to load guest profile.';
+      setError(errMsg);
+      setGuest(null);
+      setIsLoading(false);
     }
-    const guestDocsList = storedDocs.filter((d) =>
-      (g.name && d.guest && d.guest.toLowerCase() === g.name.toLowerCase()) ||
-      (d.room && guestRooms.has(String(d.room)))
-    );
-    setDocuments(guestDocsList);
-  }, [id]);
+  }, [id, loadRelatedData]);
 
   useEffect(() => {
-    loadData();
+    fetchGuestProfile();
+  }, [id]);
 
-    window.addEventListener(GUESTS_UPDATED_EVENT, loadData);
-    window.addEventListener(RESERVATIONS_UPDATED_EVENT, loadData);
-    window.addEventListener('guest_charges_update', loadData);
-    window.addEventListener('storage', loadData);
+  const guestIdKey = String(guest?._id || guest?.id || guest?.guestId || '').trim();
+  useEffect(() => {
+    if (!guestIdKey) return;
+
+    const handleRelatedDataReload = () => {
+      if (guest) loadRelatedData(guest);
+    };
+
+    window.addEventListener(RESERVATIONS_UPDATED_EVENT, handleRelatedDataReload);
+    window.addEventListener('guest_charges_update', handleRelatedDataReload);
+    window.addEventListener('invoices_update', handleRelatedDataReload);
+    window.addEventListener('payments_update', handleRelatedDataReload);
+    window.addEventListener('refunds_update', handleRelatedDataReload);
+    window.addEventListener('storage', handleRelatedDataReload);
 
     return () => {
-      window.removeEventListener(GUESTS_UPDATED_EVENT, loadData);
-      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, loadData);
-      window.removeEventListener('guest_charges_update', loadData);
-      window.removeEventListener('storage', loadData);
+      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, handleRelatedDataReload);
+      window.removeEventListener('guest_charges_update', handleRelatedDataReload);
+      window.removeEventListener('invoices_update', handleRelatedDataReload);
+      window.removeEventListener('payments_update', handleRelatedDataReload);
+      window.removeEventListener('refunds_update', handleRelatedDataReload);
+      window.removeEventListener('storage', handleRelatedDataReload);
     };
-  }, [id, loadData]);
+  }, [guestIdKey, loadRelatedData]);
 
   // Handle Edit Guest
-  const handleSaveGuest = (updatedFields) => {
+  const handleSaveGuest = async (updatedFields) => {
     if (!guest) return;
-    updateGuest(guest.id, updatedFields);
-    setGuest(updatedFields);
-    setIsEditModalOpen(false);
-    loadData();
-  };
-
-  // Handle Complaint additions/updates
-  const handleAddComplaint = (newComplaint) => {
-    let allComplaints = [];
+    const canonicalId = guest._id || guest.id || guest.guestId;
     try {
-      const raw = localStorage.getItem('hotel_complaints');
-      allComplaints = raw ? JSON.parse(raw) : INITIAL_COMPLAINTS;
-    } catch {
-      allComplaints = INITIAL_COMPLAINTS;
+      const fieldsToSend = { ...updatedFields };
+      if (fieldsToSend.name) {
+        const parts = fieldsToSend.name.trim().split(/\s+/);
+        fieldsToSend.first_name = parts[0] || '';
+        fieldsToSend.last_name = parts.slice(1).join(' ') || '';
+      }
+      const payload = toBackendGuestPayload(fieldsToSend, { isUpdate: true });
+      const res = await guestService.updateGuest(canonicalId, payload);
+      const backendGuest = res?.data?.data || res?.data || res;
+      const adapted = toFrontendGuest(backendGuest);
+      setGuest(adapted);
+      
+      const currentStore = getGuests();
+      const nextStore = currentStore.map(g => (g.id === adapted.id || g._id === canonicalId) ? adapted : g);
+      syncGuestsFromBackend(nextStore);
+      setIsEditModalOpen(false);
+      loadRelatedData(adapted);
+    } catch (err) {
+      console.error('Backend updateGuest failed in profile:', err);
+      const errMsg = err?.response?.data?.message || err?.data?.message || err?.message || 'Failed to update guest profile.';
+      setError(errMsg);
     }
-    const updated = [newComplaint, ...allComplaints];
-    localStorage.setItem('hotel_complaints', JSON.stringify(updated));
-    loadData();
   };
 
-  const handleUpdateComplaintStatus = (complaintId, newStatus) => {
-    let allComplaints = [];
+  // Handle Complaint additions/updates via Backend
+  const handleAddComplaint = async (newComplaint) => {
+    const canonicalGuestId = String(guest?._id || guest?.id || guest?.guestId || id || '').trim();
+    if (newComplaint && (newComplaint.description || newComplaint.type || newComplaint.category)) {
+      if (!newComplaint._id && !newComplaint.complaint_ref) {
+        let resolvedRoomId = null;
+        if (newComplaint.roomNo && availableRooms.length > 0) {
+          const matchRoom = availableRooms.find((r) => {
+            const rNum = String(r.room_number || r.roomNo || r.number || '').trim().toLowerCase();
+            const target = String(newComplaint.roomNo).trim().toLowerCase();
+            return rNum === target || r._id === newComplaint.roomNo;
+          });
+          if (matchRoom && /^[0-9a-fA-F]{24}$/.test(String(matchRoom._id))) {
+            resolvedRoomId = matchRoom._id;
+          }
+        }
+        const payload = toBackendComplaintPayload({
+          guestId: canonicalGuestId,
+          roomId: resolvedRoomId,
+          category: newComplaint.type || newComplaint.category,
+          severity: newComplaint.priority || newComplaint.severity,
+          description: newComplaint.description,
+        });
+        await complaintService.createComplaint(payload);
+      }
+    }
+    await fetchGuestComplaints(canonicalGuestId);
+  };
+
+  const handleUpdateComplaintStatus = async (complaintId, newStatus) => {
+    const canonicalGuestId = String(guest?._id || guest?.id || guest?.guestId || id || '').trim();
     try {
-      const raw = localStorage.getItem('hotel_complaints');
-      allComplaints = raw ? JSON.parse(raw) : INITIAL_COMPLAINTS;
-    } catch {
-      allComplaints = INITIAL_COMPLAINTS;
+      const updatePayload = toBackendComplaintPayload({
+        status: newStatus
+      }, { isUpdate: true });
+      await complaintService.updateComplaint(complaintId, updatePayload);
+      await fetchGuestComplaints(canonicalGuestId);
+    } catch (err) {
+      console.error('Backend updateComplaint failed in profile:', err);
+      const errMsg =
+        err?.response?.data?.message ||
+        err?.data?.message ||
+        err?.message ||
+        'Failed to update complaint status.';
+      setComplaintsError(errMsg);
     }
-    const updated = allComplaints.map((c) =>
-      c.id === complaintId ? { ...c, status: newStatus } : c
-    );
-    localStorage.setItem('hotel_complaints', JSON.stringify(updated));
-    loadData();
   };
 
-  // Handle Document additions/deletions
-  const handleAddDocument = (newDoc) => {
-    let allDocs = [];
+  // Handle Document additions/deletions (Authoritative Backend)
+  const handleAddDocument = async (newDoc) => {
+    const canonicalGuestId = String(guest?._id || guest?.id || id || '').trim();
+    if (!canonicalGuestId) return;
     try {
-      const raw = localStorage.getItem('hotel_registration_forms');
-      allDocs = raw ? JSON.parse(raw) : INITIAL_DOCS;
-    } catch {
-      allDocs = INITIAL_DOCS;
+      await guestService.createGuestDocument(canonicalGuestId, newDoc);
+      await Promise.all([
+        fetchGuestDocuments(canonicalGuestId, guest),
+        fetchGuestActivities(canonicalGuestId),
+      ]);
+    } catch (err) {
+      console.error('Backend add document failed:', err);
+      alert(err.message || 'Failed to add document to database.');
     }
-    const updated = [newDoc, ...allDocs];
-    localStorage.setItem('hotel_registration_forms', JSON.stringify(updated));
-    loadData();
   };
 
-  const handleDeleteDocument = (docId) => {
-    let allDocs = [];
+  const handleDeleteDocument = async (docId) => {
+    const canonicalGuestId = String(guest?._id || guest?.id || id || '').trim();
+    if (!canonicalGuestId || !docId) return;
+    if (!window.confirm('Are you sure you want to delete this document from the database?')) return;
     try {
-      const raw = localStorage.getItem('hotel_registration_forms');
-      allDocs = raw ? JSON.parse(raw) : INITIAL_DOCS;
-    } catch {
-      allDocs = INITIAL_DOCS;
+      await guestService.deleteGuestDocument(canonicalGuestId, docId);
+      await Promise.all([
+        fetchGuestDocuments(canonicalGuestId, guest),
+        fetchGuestActivities(canonicalGuestId),
+      ]);
+    } catch (err) {
+      console.error('Backend delete document failed:', err);
+      alert(err.message || 'Failed to delete document from database.');
     }
-    const updated = allDocs.filter((d) => d.id !== docId && d.formNo !== docId);
-    localStorage.setItem('hotel_registration_forms', JSON.stringify(updated));
-    loadData();
   };
 
-  // Financial totals
+  // Financial totals (authoritative from backend invoice balances)
   const totalInvoiced = useMemo(
-    () => invoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0),
-    [invoices]
+    () => {
+      if (invoices.length > 0) {
+        return invoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0);
+      }
+      return reservations.reduce((sum, res) => sum + (Number(res.dues ?? res.folio_balance ?? 0)), 0);
+    },
+    [invoices, reservations]
   );
   const totalPaid = useMemo(
-    () => invoices.reduce((sum, inv) => sum + (Number(inv.paidAmount) || 0), 0),
+    () => invoices.reduce((sum, inv) => sum + (Number(inv.amountPaid ?? inv.effectivePaid ?? 0)), 0),
     [invoices]
   );
   const totalDues = useMemo(
-    () => invoices.reduce((sum, inv) => sum + (Number(inv.balanceDue) || 0), 0),
-    [invoices]
+    () => {
+      if (invoices.length > 0) {
+        return invoices.reduce((sum, inv) => sum + (Number(inv.balanceDue ?? inv.effectiveDue ?? 0)), 0);
+      }
+      return reservations.reduce((sum, res) => sum + (Number(res.dues ?? res.folio_balance ?? 0)), 0);
+    },
+    [invoices, reservations]
   );
 
   const currentStay = reservations[0] || null;
   const currentRoom = currentStay?.roomNumber || currentStay?.room || '101';
 
-  // Real audit activities derived from guest lifecycle
+  // Real audit activities from database with derived fallback
   const activities = useMemo(() => {
+    if (backendActivities && backendActivities.length > 0) {
+      return backendActivities;
+    }
     if (!guest) return [];
     const list = [];
 
@@ -337,7 +662,7 @@ export default function GuestProfile() {
 
     // Sort newest first
     return list.sort((a, b) => (b.date > a.date ? 1 : -1));
-  }, [guest, reservations, invoices, payments, charges, complaints, documents]);
+  }, [backendActivities, guest, reservations, invoices, payments, charges, complaints, documents]);
 
   // Tab Badge counts
   const tabCounts = {
@@ -349,15 +674,51 @@ export default function GuestProfile() {
     activities: activities.length
   };
 
-  if (!guest) {
+  if (isLoading && !guest) {
+    return (
+      <div className="p-8 text-center bg-white rounded-2xl border border-gray-100 shadow-2xs mt-4 flex flex-col items-center justify-center gap-2">
+        <div className="w-5 h-5 border-2 border-[var(--primary-main)] border-t-transparent rounded-full animate-spin"></div>
+        <span className="text-xs text-gray-500 font-medium">Loading guest...</span>
+      </div>
+    );
+  }
+
+  if (error && !guest) {
+    return (
+      <div className="p-8 text-center bg-white rounded-2xl border border-rose-100 shadow-2xs mt-4 animate-fade-in">
+        <Person sx={{ fontSize: 48 }} className="text-rose-300 mb-2" />
+        <h2 className="text-lg font-bold text-rose-700">Error Loading Guest Profile</h2>
+        <p className="text-xs text-gray-500 mt-1 mb-4">{error}</p>
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={fetchGuestProfile}
+            className="px-4 py-2 bg-[#1b7f43] text-white rounded-lg text-xs font-semibold hover:brightness-105 transition cursor-pointer"
+          >
+            Retry
+          </button>
+          <button
+            type="button"
+            onClick={() => navigate('/guests')}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-xs font-semibold hover:bg-gray-200 transition cursor-pointer"
+          >
+            View All Guests
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (notFound || !guest) {
     return (
       <div className="p-8 text-center bg-white rounded-2xl border border-gray-100 shadow-2xs mt-4 animate-fade-in">
         <Person sx={{ fontSize: 48 }} className="text-gray-300 mb-2" />
         <h2 className="text-lg font-bold text-gray-800">Guest Record Not Located</h2>
         <p className="text-xs text-gray-500 mt-1 mb-4">
-          The requested guest profile identifier ({id}) was not found in the system registry.
+          Guest not found. The requested guest profile identifier ({id}) was not found in the system registry.
         </p>
         <button
+          type="button"
           onClick={() => navigate('/guests')}
           className="px-4 py-2 bg-[#1b7f43] text-white rounded-lg text-xs font-semibold hover:brightness-105 transition cursor-pointer"
         >
@@ -386,7 +747,13 @@ export default function GuestProfile() {
       />
 
       {/* 3. Focused Tab Content Area */}
-      <div className="pt-1">
+      <div
+        id={`guest-profile-panel-${activeTab}`}
+        role="tabpanel"
+        aria-labelledby={`guest-profile-tab-${activeTab}`}
+        tabIndex={0}
+        className="pt-1"
+      >
         {activeTab === 'overview' && (
           <OverviewTab
             guest={guest}
@@ -419,7 +786,7 @@ export default function GuestProfile() {
             totalInvoiced={totalInvoiced}
             totalPaid={totalPaid}
             totalDues={totalDues}
-            onChargeAdded={loadData}
+            onChargeAdded={fetchGuestProfile}
           />
         )}
 
@@ -427,10 +794,13 @@ export default function GuestProfile() {
           <InvoicesTab
             guest={guest}
             invoices={invoices}
+            charges={charges}
+            payments={payments}
+            reservations={reservations}
             totalInvoiced={totalInvoiced}
             totalPaid={totalPaid}
             totalDues={totalDues}
-            onInvoicesUpdated={loadData}
+            onInvoicesUpdated={fetchGuestProfile}
           />
         )}
 
@@ -439,6 +809,13 @@ export default function GuestProfile() {
             guest={guest}
             complaints={complaints}
             currentRoom={currentRoom}
+            isLoading={isComplaintsLoading}
+            error={complaintsError}
+            onRetry={() => {
+              const canonicalGuestId = String(guest?._id || guest?.id || guest?.guestId || id || '').trim();
+              fetchGuestComplaints(canonicalGuestId);
+            }}
+            availableRooms={availableRooms}
             onComplaintAdded={handleAddComplaint}
             onComplaintStatusUpdate={handleUpdateComplaintStatus}
           />
@@ -449,6 +826,7 @@ export default function GuestProfile() {
             guest={guest}
             documents={documents}
             currentRoom={currentRoom}
+            isLoading={isDocumentsLoading}
             onDocumentAdded={handleAddDocument}
             onDocumentDeleted={handleDeleteDocument}
           />
@@ -458,6 +836,7 @@ export default function GuestProfile() {
           <ActivityLogTab
             activities={activities}
             guest={guest}
+            isLoading={isActivitiesLoading}
           />
         )}
       </div>

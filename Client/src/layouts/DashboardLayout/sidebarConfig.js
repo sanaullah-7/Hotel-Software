@@ -14,16 +14,17 @@ export const reservationSubItems = [
 
 export const roomsSubItems = [
   { label: 'All Rooms', id: 'all-rooms', path: '/rooms' },
+  { label: 'Tape Chart', id: 'tape-chart', path: '/occupancy/tape-chart' },
   { label: 'Room Types', id: 'room-types', path: '/rooms/room-types' },
-  { label: 'Rate & Pricing', id: 'rate-pricing', path: '/rooms/rate-pricing' },
   { label: 'Add Room', id: 'add-room', path: '/rooms/new' },
 ];
 
 export const housekeepingSubItems = [
   { label: 'Room Cleaning', id: 'rooms-cleaning', path: '/housekeeping/rooms-cleaning' },
-  { label: 'Cleaning Schedule', id: 'cleaning-schedule', path: '/housekeeping/cleaning-schedule' },
   { label: 'Lost and Found', id: 'lost-and-found', path: '/housekeeping/lost-and-found' },
   { label: 'Inspection Checklist', id: 'inspection-checklist', path: '/housekeeping/inspection-checklist' },
+  { label: 'Inspection', id: 'inspection', path: '/housekeeping/inspection' },
+  { label: 'Staff Assignment', id: 'staff-assignment', path: '/housekeeping/staff-assignment' },
 ];
 
 export const inventorySubItems = [
@@ -43,6 +44,7 @@ export const paymentBillingSubItems = [
   { label: 'Payment History', id: 'payment-history', path: '/payment-billing/payment-history' },
   { label: 'Pending Payments', id: 'pending-payments', path: '/payment-billing/pending-payments' },
   { label: 'Refunds', id: 'refunds', path: '/payment-billing/refunds' },
+  { label: 'Shift Handover', id: 'shift-handover', path: '/payment-billing/shift-handover' },
 ];
 
 export const hrSubItems = [
@@ -69,7 +71,7 @@ export const reportsSubItems = [
 export const eventsSubItems = [
   { label: 'All Events', id: 'all-events', path: '/events/all-events' },
   { label: 'Add Event', id: 'add-event', path: '/events/add-event' },
-  { label: 'Banquet Manager', id: 'banquet-manager', path: '/events/banquet-manager' },
+  { label: 'Event Plans', id: 'banquet-manager', path: '/events/banquet-manager' },
 ];
 
 export const settingsSubItems = [

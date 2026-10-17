@@ -57,38 +57,48 @@ export default function TodaysAttendance() {
         handleOpenDeleteDialog,
         handleConfirmDelete,
         attendanceStats,
+        employees,
+        loading,
+        error,
+        loadAttendance,
     } = useTodaysAttendance();
 
     return (
-        <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden flex flex-col gap-2">
+        <div className="animate-fade-in">
+            {error && (
+                <div className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center justify-between text-xs text-red-700">
+                    <span>{error}</span>
+                    <button
+                        onClick={loadAttendance}
+                        className="px-2.5 py-1 bg-red-600 text-white rounded font-medium hover:bg-red-700 cursor-pointer text-xs"
+                    >
+                        Retry
+                    </button>
+                </div>
+            )}
+            {loading && !error && (
+                <div className="mb-2 p-2 bg-blue-50/70 border border-blue-100 rounded text-center text-xs text-blue-700 font-medium">
+                    Loading today's attendance records from server...
+                </div>
+            )}
             {/* 1. Attendance Summary Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full mt-1">
                 {attendanceStats.map((card) => {
                     const IconComp = card.icon;
+                    const bg = card.iconBg || 'bg-blue-50';
+                    const color = card.iconColor || 'text-blue-600';
+                    const colorClass = `${bg} ${color}`;
                     return (
                         <div
                             key={card.id}
-                            className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
+                            className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between"
                         >
-                            <div className="flex items-center gap-1.5 min-w-0">
-                                <div
-                                    className={`p-1 rounded-md ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}
-                                >
-                                    <IconComp sx={{ fontSize: 15 }} />
-                                </div>
-                                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
-                                    {card.title}
-                                </span>
+                            <div>
+                                <div className="text-xl font-bold text-gray-900 leading-none mb-1">{card.value}</div>
+                                <div className="text-[11px] text-gray-500 font-medium">{card.title}</div>
                             </div>
-                            <div className="flex items-baseline justify-between mt-1">
-                                <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
-                                    {card.value}
-                                </span>
-                                {card.subtext && (
-                                    <span className="text-[10px] text-[var(--text-secondary)] font-normal hidden xl:inline">
-                                        {card.subtext}
-                                    </span>
-                                )}
+                            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
+                                <IconComp sx={{ fontSize: 16 }} />
                             </div>
                         </div>
                     );
@@ -133,6 +143,7 @@ export default function TodaysAttendance() {
 
             {/* 3. Attendance Modals */}
             <AttendanceModals
+                employees={employees}
                 isAddModalOpen={isAddModalOpen}
                 setIsAddModalOpen={setIsAddModalOpen}
                 handleSaveNewAttendance={handleSaveNewAttendance}
@@ -163,12 +174,6 @@ export default function TodaysAttendance() {
                     {toast.message}
                 </Alert>
             </Snackbar>
-
-            {/* 5. Footer Copyright Note */}
-            <div className="text-center text-xs text-slate-400 py-3">
-                Copyright © 2026 Design By{" "}
-                <span className="text-[#5d5fef] font-medium">Luxuria</span>
-            </div>
         </div>
     );
 }

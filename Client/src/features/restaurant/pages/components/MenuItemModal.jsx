@@ -22,58 +22,70 @@ const EMPTY_FORM = {
  * onSave — fn(formData)
  * initialData — item object for edit mode, null for add
  */
-export default function MenuItemModal({ isOpen, onClose, onSave, initialData }) {
- const isEdit = Boolean(initialData);
- const [form, setForm] = useState(EMPTY_FORM);
- const [errors, setErrors] = useState({});
- const [isAnimating, setIsAnimating] = useState(false);
+export default function MenuItemModal({ isOpen, onClose, onSave, initialData, categories = CATEGORIES }) {
+  const isEdit = Boolean(initialData);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [errors, setErrors] = useState({});
+  const [serverError, setServerError] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
- // Pre-fill form when editing
- useEffect(() => {
- if (isOpen) {
- setForm(initialData
- ? { name: initialData.name, categoryId: initialData.categoryId, price: String(initialData.price),
- description: initialData.description ||'', dietary: initialData.dietary ||'Veg',
- availability: initialData.availability ||'Available' }
- : EMPTY_FORM
- );
- setErrors({});
- // Trigger entrance animation
- setTimeout(() => setIsAnimating(true), 10);
- } else {
- setIsAnimating(false);
- }
- }, [isOpen, initialData]);
+  // Pre-fill form when editing
+  useEffect(() => {
+    if (isOpen) {
+      setForm(initialData
+        ? { name: initialData.name, categoryId: initialData.categoryId, price: String(initialData.price),
+            description: initialData.description || '', dietary: initialData.dietary || 'Veg',
+            availability: initialData.availability || 'Available' }
+        : EMPTY_FORM
+      );
+      setErrors({});
+      setServerError('');
+      // Trigger entrance animation
+      setTimeout(() => setIsAnimating(true), 10);
+    } else {
+      setIsAnimating(false);
+    }
+  }, [isOpen, initialData]);
 
- if (!isOpen) return null;
+  if (!isOpen) return null;
 
- const set = (key, val) => {
- setForm(prev => ({ ...prev, [key]: val }));
- setErrors(prev => ({ ...prev, [key]:'' }));
- };
+  const set = (key, val) => {
+    setForm(prev => ({ ...prev, [key]: val }));
+    setErrors(prev => ({ ...prev, [key]: '' }));
+    setServerError('');
+  };
 
- const validate = () => {
- const e = {};
- if (!form.name.trim()) e.name ='Item name is required';
- if (!form.categoryId) e.categoryId ='Please select a category';
- if (!form.price || isNaN(Number(form.price)) || Number(form.price) <= 0)
- e.price ='Enter a valid price';
- setErrors(e);
- return Object.keys(e).length === 0;
- };
+  const validate = () => {
+    const e = {};
+    if (!form.name.trim()) e.name = 'Item name is required';
+    if (!form.categoryId) e.categoryId = 'Please select a category';
+    if (!form.price || isNaN(Number(form.price)) || Number(form.price) <= 0)
+      e.price = 'Enter a valid price';
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
 
- const handleSave = () => {
- if (!validate()) return;
- onSave({
- name: form.name.trim(),
- categoryId: form.categoryId,
- price: Number(form.price),
- description: form.description.trim(),
- dietary: form.dietary,
- availability: form.availability,
- });
- onClose();
- };
+  const handleSave = async () => {
+    if (!validate()) return;
+    setServerError('');
+    setIsSaving(true);
+    try {
+      await onSave({
+        name: form.name.trim(),
+        categoryId: form.categoryId,
+        price: Number(form.price),
+        description: form.description.trim(),
+        dietary: form.dietary,
+        availability: form.availability,
+      });
+      onClose();
+    } catch (err) {
+      setServerError(err.response?.data?.message || err.message || 'Failed to save menu item');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
  const handleBackdropClick = (e) => {
  if (e.target === e.currentTarget) onClose();
@@ -121,6 +133,12 @@ export default function MenuItemModal({ isOpen, onClose, onSave, initialData }) 
  {/* ── Modal Body */}
  <div className="p-6 space-y-4">
 
+ {serverError && (
+ <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-2.5 text-[12px] font-semibold">
+ ⚠ {serverError}
+ </div>
+ )}
+
  {/* Image Upload */}
  <fieldset className={`border rounded-md px-3 pb-2 pt-1 transition-all ${errors.image ?'border-red-400' :'border-gray-300 focus-within:border-[var(--primary-main)] focus-within:ring-1 focus-within:ring-[var(--primary-main)]'}`}>
  <legend className="text-[11px] text-gray-500 px-1">Upload Image</legend>
@@ -158,8 +176,8 @@ export default function MenuItemModal({ isOpen, onClose, onSave, initialData }) 
  className="w-full outline-none text-[13px] bg-transparent text-gray-800 appearance-none cursor-pointer"
  >
  <option value="">Select category</option>
- {CATEGORIES.map(cat => (
- <option key={cat.id} value={cat.id}>{cat.label}</option>
+ {(categories || CATEGORIES).map(cat => (
+ <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.label || cat.name}</option>
  ))}
  </select>
  </fieldset>
@@ -220,13 +238,15 @@ export default function MenuItemModal({ isOpen, onClose, onSave, initialData }) 
  <div className="px-6 pb-6 flex items-center justify-start gap-3">
  <button
  onClick={handleSave}
- className="px-6 py-2 rounded-[20px] text-[13px] font-bold text-gray-400 bg-gray-100 hover:bg-gray-200 transition-all"
+ disabled={isSaving}
+ className="px-6 py-2 rounded-[20px] text-[13px] font-bold text-white bg-[var(--primary-main)] hover:brightness-110 transition-all cursor-pointer shadow-sm disabled:opacity-50"
  >
- Save
+ {isSaving ? 'Saving...' : (isEdit ? 'Update Item' : 'Save Item')}
  </button>
  <button
  onClick={onClose}
- className="px-6 py-2 rounded-[20px] text-[13px] font-bold text-red-500 border border-red-200 hover:bg-red-50 transition-all"
+ disabled={isSaving}
+ className="px-6 py-2 rounded-[20px] text-[13px] font-bold text-red-500 border border-red-200 hover:bg-red-50 transition-all cursor-pointer disabled:opacity-50"
  >
  Cancel
  </button>

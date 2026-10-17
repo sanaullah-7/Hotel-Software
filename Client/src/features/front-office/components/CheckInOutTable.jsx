@@ -36,6 +36,7 @@ export default function CheckInOutTable({
   guests = [],
   filteredGuests = [],
   currentRows = [],
+  loading = false,
   searchQuery,
   onSearchChange,
   totalGuests,
@@ -54,18 +55,18 @@ export default function CheckInOutTable({
   onDeleteGuest
 }) {
   return (
-    <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden mt-2">
+    <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1">
       {/* Header */}
-      <div className="p-3 border-b border-gray-100 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-[12px] bg-[#ecfdf5] flex items-center justify-center shrink-0">
-            <ChecklistRtlIcon style={{ color: PRIMARY }} sx={{ fontSize: 20 }} />
+      <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-[6px] bg-[#ecfdf5] flex items-center justify-center shrink-0">
+            <ChecklistRtlIcon style={{ color: PRIMARY }} sx={{ fontSize: 16 }} />
           </div>
           <div>
-            <h3 className="text-gray-900 font-bold text-[15px] leading-tight">
+            <h3 className="text-gray-900 font-bold text-[13px] leading-tight">
               Check-in / Check-out Management
             </h3>
-            <p className="text-[11.5px] text-gray-400">
+            <p className="text-[10px] text-gray-400">
               Manage current guests, check-ins, and departures
             </p>
           </div>
@@ -73,18 +74,18 @@ export default function CheckInOutTable({
       </div>
 
       {/* Search */}
-      <div className="p-2 border-b border-gray-100 flex items-center gap-3">
+      <div className="px-3 py-1.5 border-b border-gray-100 flex items-center gap-2">
         <SearchInput
           value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={onSearchChange}
           placeholder="Search by guest name, room, or booking ID..."
           iconPosition="left"
           variant="pill"
-          size="md"
+          size="sm"
           className="flex-1"
         />
         <span
-          className="text-[11px] font-bold px-3 py-1.5 rounded-full shrink-0"
+          className="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0"
           style={{ backgroundColor: '#eef2ff', color: PRIMARY }}
         >
           {filteredGuests.length} of {totalGuests} guests
@@ -92,133 +93,131 @@ export default function CheckInOutTable({
       </div>
 
       {/* Table */}
-      <div className="w-full overflow-x-auto min-w-0">
-        <table className="w-full text-left border-collapse min-w-[750px]">
+      <div className="w-full overflow-hidden">
+        <table className="w-full table-fixed text-left border-collapse">
+          <colgroup>
+            <col className="w-[12%]" />
+            <col className="w-[26%]" />
+            <col className="w-[14%]" />
+            <col className="w-[20%]" />
+            <col className="w-[14%]" />
+            <col className="w-[14%]" />
+          </colgroup>
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/50">
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
-                Booking ID
-              </th>
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
-                Guest Name/Email
-              </th>
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
-                Room
-              </th>
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
-                Stay Period
-              </th>
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide">
-                Status
-              </th>
-              <th className="py-3 px-3 text-[10.5px] font-bold text-gray-500 uppercase tracking-wide text-center">
-                Actions
-              </th>
+            <tr className="border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-wider select-none bg-slate-50/50">
+              <th className="py-2 px-1.5 truncate">Booking ID</th>
+              <th className="py-2 px-1.5 truncate">Guest Name/Email</th>
+              <th className="py-2 px-1.5 truncate">Room</th>
+              <th className="py-2 px-1.5 truncate">Stay Period</th>
+              <th className="py-2 px-1.5 truncate">Status</th>
+              <th className="py-2 px-1 text-center whitespace-nowrap">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {currentRows.length > 0 ? (
+          <tbody className="divide-y divide-gray-50 text-[11px]">
+            {loading && currentRows.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="py-8 text-center text-gray-400 text-xs animate-pulse">
+                  Loading Front Office records...
+                </td>
+              </tr>
+            ) : currentRows.length > 0 ? (
               currentRows.map((guest) => {
                 const StatusIcon = STATUS_ICONS[guest.status];
+                const canCheckIn = !guest.isLegacyUnmapped && ['Booked', 'Reserved'].includes(guest.status);
+                const canCheckOut = !guest.isLegacyUnmapped && guest.status === 'Checked In';
                 return (
                   <tr
                     key={guest.id}
-                    className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                    className="hover:bg-slate-50/70 transition-colors"
                   >
-                    <td className="py-3 px-3">
-                      <span className="font-mono text-[11.5px] font-semibold text-gray-500">
+                    <td className="py-1.5 px-1.5">
+                      <span className="font-mono text-[11px] font-semibold text-gray-600 block truncate" title={String(guest.bookingId || guest.id)}>
                         {guest.bookingId || guest.id}
                       </span>
+                      {guest.isLegacyUnmapped && <span className="block text-[9px] text-amber-700">Legacy</span>}
                     </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2.5">
+                    <td className="py-1.5 px-1.5">
+                      <div className="flex items-center gap-1.5 min-w-0">
                         <img
                           src={guest.avatar || avatarUrl(guest.name)}
                           alt={guest.name}
-                          className="w-8 h-8 rounded-full object-cover shrink-0"
+                          className="w-5.5 h-5.5 rounded-full object-cover shrink-0 border border-gray-200"
                         />
-                        <div className="min-w-0">
-                          <p className="font-bold text-[12.5px] text-gray-800 leading-tight truncate">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-[11px] text-gray-800 leading-tight truncate" title={guest.name}>
                             {guest.name}
                           </p>
-                          <p className="text-[11px] text-gray-400 truncate">{guest.email}</p>
+                          <p className="text-[9.5px] text-gray-400 truncate" title={guest.email}>{guest.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-3">
-                      <p className="font-bold text-[12px] text-gray-800 leading-tight">
+                    <td className="py-1.5 px-1.5">
+                      <p className="font-bold text-[11px] text-gray-800 leading-tight truncate">
                         {guest.room}
                       </p>
-                      <p className="text-[10.5px] text-gray-400 capitalize">{guest.roomType}</p>
+                      <p className="text-[9.5px] text-gray-400 capitalize truncate">{guest.roomType}</p>
                     </td>
-                    <td className="py-2.5 px-3">
-                      <div className="flex flex-col gap-1">
-                        <div>
-                          <div className="flex items-center gap-1 text-[11.5px] text-[var(--primary-dark)] font-semibold">
-                            <LoginIcon sx={{ fontSize: 13 }} /> {guest.checkIn}
-                          </div>
-                          <span className="text-[10px] text-gray-400 font-normal pl-4 block">
-                            {guest.checkInTime || '02:00 PM'}
-                          </span>
+                    <td className="py-1.5 px-1.5">
+                      <div className="flex flex-col gap-0.5 leading-tight">
+                        <div className="flex items-center gap-1 text-[10.5px] text-[var(--primary-dark)] font-semibold truncate">
+                          <LoginIcon sx={{ fontSize: 11 }} /> <span className="truncate">{guest.checkIn}</span>
                         </div>
-                        <div>
-                          <div className="flex items-center gap-1 text-[11.5px] text-blue-600 font-semibold">
-                            <LogoutIcon sx={{ fontSize: 13 }} /> {guest.checkOut}
-                          </div>
-                          <span className="text-[10px] text-gray-400 font-normal pl-4 block">
-                            {guest.checkOutTime || '11:00 AM'}
-                          </span>
+                        <div className="flex items-center gap-1 text-[10.5px] text-blue-600 font-semibold truncate">
+                          <LogoutIcon sx={{ fontSize: 11 }} /> <span className="truncate">{guest.checkOut}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
                       <StatusBadge
                         status={guest.status}
                         stylesMap={STATUS_STYLES}
                         icon={StatusIcon}
                         size="xs"
-                        className="rounded-full px-2.5 py-1"
+                        className="rounded-full px-2 py-0.5 text-[10px]"
                       />
                     </td>
-                    <td className="py-3 px-3 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        {guest.status === 'Checked In' ? (
+                    <td className="py-1.5 px-1 text-center">
+                      <div className="flex items-center justify-center gap-0.5">
+                        {canCheckOut ? (
                           <button
                             onClick={() => onCheckOutAction(guest)}
                             title="Check Out"
-                            className="text-gray-400 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 cursor-pointer"
+                            className="text-gray-400 hover:text-blue-600 p-1 rounded-md hover:bg-blue-50 cursor-pointer"
                           >
-                            <LogoutIcon sx={{ fontSize: 16 }} />
+                            <LogoutIcon sx={{ fontSize: 15 }} />
                           </button>
                         ) : (
                           <button
+                            disabled={!canCheckIn}
                             onClick={() => onCheckInAction(guest)}
-                            title="Check In"
-                            className="text-gray-400 hover:text-[var(--primary-dark)] p-1.5 rounded-lg hover:bg-emerald-50 cursor-pointer"
+                            title={canCheckIn ? 'Check In' : 'Only a linked Booked reservation can be checked in'}
+                            className="text-gray-400 hover:text-[var(--primary-dark)] p-1 rounded-md hover:bg-emerald-50 cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
                           >
-                            <LoginIcon sx={{ fontSize: 16 }} />
+                            <LoginIcon sx={{ fontSize: 15 }} />
                           </button>
                         )}
                         <button
                           onClick={() => onViewGuest(guest)}
                           title="View"
-                          className="text-gray-400 hover:text-[var(--primary-dark)] p-1.5 rounded-lg hover:bg-emerald-50 cursor-pointer"
+                          className="text-gray-400 hover:text-[var(--primary-dark)] p-1 rounded-md hover:bg-emerald-50 cursor-pointer"
                         >
-                          <VisibilityIcon sx={{ fontSize: 16 }} />
+                          <VisibilityIcon sx={{ fontSize: 15 }} />
                         </button>
                         <button
+                          disabled
                           onClick={() => onEditGuest(guest)}
-                          title="Edit"
-                          className="text-gray-400 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 cursor-pointer"
+                          title="Edit canonical booking details in Reservations"
+                          className="text-gray-400 p-1 rounded-md cursor-not-allowed opacity-40"
                         >
-                          <EditIcon sx={{ fontSize: 16 }} />
+                          <EditIcon sx={{ fontSize: 15 }} />
                         </button>
                         <button
+                          disabled
                           onClick={() => onDeleteGuest(guest)}
-                          title="Delete"
-                          className="text-gray-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 cursor-pointer"
+                          title="Bookings cannot be deleted from Front Office"
+                          className="text-gray-400 p-1 rounded-md cursor-not-allowed opacity-40"
                         >
-                          <DeleteIcon sx={{ fontSize: 16 }} />
+                          <DeleteIcon sx={{ fontSize: 15 }} />
                         </button>
                       </div>
                     </td>
@@ -227,7 +226,7 @@ export default function CheckInOutTable({
               })
             ) : (
               <tr>
-                <td colSpan="6" className="py-10 text-center text-gray-400 text-[12.5px]">
+                <td colSpan="6" className="py-8 text-center text-gray-400 text-xs">
                   No guests found matching your search.
                 </td>
               </tr>
@@ -247,7 +246,7 @@ export default function CheckInOutTable({
         onRowsPerPageChange={onRowsPerPageChange}
         indexOfFirstRow={indexOfFirstRow}
         indexOfLastRow={indexOfLastRow}
-        variant="standard"
+        variant="compact"
       />
     </div>
   );

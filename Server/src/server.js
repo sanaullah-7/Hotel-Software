@@ -3,7 +3,7 @@ import connectDB from './config/db.js';
 import { ENV } from "./config/env.js";
 import logger from "./config/logger.js";
 
-//  const  PORT = process.env.PORT || 7000;
+// Cloudinary configuration synced and active
  
 // 1. Pehle Database Connect karein
 connectDB()

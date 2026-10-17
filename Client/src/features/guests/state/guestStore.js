@@ -1,174 +1,197 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
-import { getReservations, RESERVATIONS_UPDATED_EVENT } from '../../reservations/state/reservationStore';
+import { toFrontendGuest } from '../adapters/guestAdapter.js';
 
 const STORAGE_KEY = 'hotel_guests_v1';
 export const GUESTS_UPDATED_EVENT = 'guests_update';
-
-const INITIAL_GUESTS = [
-  { id: 'GST64188', name: 'John Smith', email: 'john.smith@example.com', phone: '+1234567890', city: 'New York', totalStays: 15, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=1' },
-  { id: 'GST6419F', name: 'Sarah Johnson', email: 'sarah.johnson@example.com', phone: '+1234567893', city: 'London', totalStays: 28, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=2' },
-  { id: 'GST64198', name: 'Carlos Rodriguez', email: 'carlos.rodriguez@example.com', phone: '+1234567895', city: 'Madrid', totalStays: 8, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=3' },
-  { id: 'GST64197', name: 'Emma Davis', email: 'emma.davis@example.com', phone: '+1234567897', city: 'Toronto', totalStays: 5, status: 'Active', avatar: 'https://i.pravatar.cc/150?u=4' },
-];
+// Kept as an event contract for existing reservation consumers.
+export const RESERVATIONS_UPDATED_EVENT = 'reservations_update';
 
 function readGuests() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_GUESTS));
+    if (stored !== null) {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    }
   } catch {
-    return INITIAL_GUESTS;
+    return [];
   }
-  return INITIAL_GUESTS;
+  return [];
 }
 
-export function getGuests() {
-  const savedGuests = readGuests();
-  const guestMap = new Map();
+/**
+ * Synchronous compatibility read of cached guests.
+ * Populated authoritatively via syncGuestsFromBackend() or legacy compatibility cache.
+ * @returns {Array<Object>}
+ */
+export const getGuests = () => readGuests();
 
-  // 1. Seed with all saved guests (they take absolute priority)
-  savedGuests.forEach((g) => {
-    guestMap.set(String(g.id).toLowerCase(), { ...g });
-  });
+/**
+ * Synchronous lookup of a single guest by canonical MongoDB ID or frontend ID alias.
+ * @param {string} id
+ * @returns {Object|null}
+ */
+export function getGuestById(id) {
+  if (id === undefined || id === null || id === '') return null;
+  const idStr = String(id).trim();
+  return (
+    readGuests().find((guest) =>
+      String(guest.id) === idStr ||
+      String(guest._id) === idStr ||
+      String(guest.guestId) === idStr
+    ) || null
+  );
+}
 
-  // Helper maps for matching reservations to saved guests
-  const byId = new Map(savedGuests.map((g) => [String(g.id).toLowerCase(), g]));
-  const byEmail = new Map(savedGuests.filter((g) => g.email).map((g) => [g.email.toLowerCase(), g]));
+/**
+ * Finds a guest by matching exact full name and email address.
+ * @param {string} name
+ * @param {string} email
+ * @param {Array<Object>} [guests]
+ * @returns {Object|null}
+ */
+export function findGuestByExactIdentity(name, email, guests = readGuests()) {
+  if (!name?.trim() || !email?.trim()) return null;
+  const targetName = name.trim().toLowerCase();
+  const targetEmail = email.trim().toLowerCase();
 
-  // 2. Merge reservations
-  getReservations().forEach((reservation) => {
-    const resGuestId = reservation.guestId
-      ? String(reservation.guestId).toLowerCase()
-      : `gst-${reservation.id}`.toLowerCase();
-    const email = (reservation.email || `${reservation.id}@guest.local`).toLowerCase();
+  const matches = guests.filter((guest) =>
+    String(guest.name || '').trim().toLowerCase() === targetName &&
+    String(guest.email || '').trim().toLowerCase() === targetEmail
+  );
+  return matches.length === 1 ? matches[0] : null;
+}
 
-    // Check if matching saved guest exists by ID or email
-    const existing = byId.get(resGuestId) || byEmail.get(email) || guestMap.get(resGuestId);
+/**
+ * Resolves the guest record associated with a booking/reservation.
+ * Matches by explicit guest ID first, then falls back to exact name + email match.
+ * @param {Object} booking
+ * @returns {Object|null}
+ */
+export function resolveGuestForBooking(booking) {
+  if (!booking) return null;
+  const guests = readGuests();
 
-    if (existing) {
-      const key = String(existing.id).toLowerCase();
-      const current = guestMap.get(key) || existing;
-      // Keep saved guest's edited fields! Do NOT let reservation defaults overwrite them.
-      guestMap.set(key, {
-        id: current.id,
-        name: current.name || reservation.name || 'Guest',
-        email: current.email || reservation.email || `${reservation.id}@guest.local`,
-        phone: current.phone || reservation.mobile || '',
-        city: current.city || '',
-        totalStays: current.totalStays !== undefined ? current.totalStays : 1,
-        status: current.status || 'Active',
-        avatar: current.avatar || reservation.avatar || 'https://i.pravatar.cc/150?u=guest',
-      });
-    } else {
-      const newGuestId = reservation.guestId || `GST-${reservation.id}`;
-      const key = String(newGuestId).toLowerCase();
-      if (!guestMap.has(key)) {
-        guestMap.set(key, {
-          id: newGuestId,
-          name: reservation.name || 'Guest',
-          email: reservation.email || `${reservation.id}@guest.local`,
-          phone: reservation.mobile || '',
-          city: '',
-          totalStays: 1,
-          status: 'Active',
-          avatar: reservation.avatar || 'https://i.pravatar.cc/150?u=guest',
-        });
+  const rawGuestId = booking.guestId ?? booking.primary_guest_id ?? booking.guest?._id ?? booking.guest?.id;
+  if (rawGuestId !== undefined && rawGuestId !== null && String(rawGuestId).trim() !== '') {
+    const targetId = String(rawGuestId).trim();
+    return (
+      guests.find((guest) =>
+        String(guest.id) === targetId ||
+        String(guest._id) === targetId ||
+        String(guest.guestId) === targetId
+      ) || null
+    );
+  }
+
+  const name = booking.name || booking.guestName || (booking.guest?.name);
+  const email = booking.email || booking.guestEmail || (booking.guest?.email);
+  return findGuestByExactIdentity(name, email, guests);
+}
+
+/**
+ * Updates localStorage compatibility cache and dispatches the update event.
+ * @param {Array<Object>} guests
+ */
+export function saveGuests(guests) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.isArray(guests) ? guests : []));
+  } catch {
+    // Ignore storage quota or private-mode errors
+  }
+  try {
+    window.dispatchEvent(new Event(GUESTS_UPDATED_EVENT));
+  } catch {
+    // Ignore environments without DOM window
+  }
+}
+
+/**
+ * Authoritatively synchronizes backend Guest records into the transitional compatibility store.
+ * Adapts raw backend documents into frontend models and updates the localStorage compatibility cache.
+ * @param {Array<Object>} backendGuests - Array of MongoDB guest documents or populated objects
+ */
+export function syncGuestsFromBackend(backendGuests) {
+  if (!Array.isArray(backendGuests)) {
+    return;
+  }
+
+  const adaptedList = [];
+  const seenIds = new Set();
+
+  for (const raw of backendGuests) {
+    const adapted = toFrontendGuest(raw);
+    if (adapted && (adapted.id || adapted._id)) {
+      const idStr = String(adapted.id || adapted._id);
+      if (!seenIds.has(idStr)) {
+        seenIds.add(idStr);
+        adaptedList.push(adapted);
       }
     }
-  });
+  }
 
-  return Array.from(guestMap.values());
+  saveGuests(adaptedList);
 }
 
-export function saveGuests(guests) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(guests));
-  window.dispatchEvent(new Event(GUESTS_UPDATED_EVENT));
-}
+// ─── Transitional Local Mutations (Kept for downstream compatibility) ────────
 
 export function addGuest(guest) {
-  const nextGuest = { ...guest, id: guest.id || `GST-${Date.now()}`, status: guest.status || 'Active', totalStays: Number(guest.totalStays) || 0 };
+  const nextGuest = {
+    ...guest,
+    id: guest.id || guest._id || `GST-${Date.now()}`,
+    status: guest.status || (guest.vip_status ? 'VIP' : 'Active'),
+    totalStays: Number(guest.totalStays) || 0,
+  };
   saveGuests([nextGuest, ...readGuests()]);
   try {
-    addAuditLog({ module: 'Guests', action: 'Added Guest', recordId: nextGuest.id, description: `Guest ${nextGuest.name} was added.`, importance: 'Important' });
-  } catch(e) {}
+    addAuditLog({
+      module: 'Guests',
+      action: 'Added Guest',
+      recordId: nextGuest.id,
+      description: `Guest ${nextGuest.name || nextGuest.first_name || 'Guest'} was added.`,
+      importance: 'Important',
+    });
+  } catch {}
   return nextGuest;
 }
 
 export function updateGuest(id, updates) {
-  const normalizedId = String(id).toLowerCase();
-  const currentGuests = readGuests();
-  const index = currentGuests.findIndex((guest) =>
-    String(guest.id).toLowerCase() === normalizedId ||
-    String(guest.id).toLowerCase() === `gst-${normalizedId}` ||
-    (normalizedId.startsWith('gst-') && String(guest.id).toLowerCase() === normalizedId.replace('gst-', ''))
+  const guests = readGuests();
+  const idStr = String(id);
+  const index = guests.findIndex((guest) =>
+    String(guest.id) === idStr || String(guest._id) === idStr
   );
-
-  let updatedList;
-  let updatedGuest;
-  if (index >= 0) {
-    updatedGuest = { ...currentGuests[index], ...updates };
-    updatedList = [...currentGuests];
-    updatedList[index] = updatedGuest;
-  } else {
-    // If not previously in saved guests list, fetch full guest object and merge updates
-    const existingFull = getGuestById(id) || {};
-    updatedGuest = { ...existingFull, ...updates, id };
-    updatedList = [updatedGuest, ...currentGuests];
-  }
-
-  saveGuests(updatedList);
-  if (updatedGuest) {
-    try {
-      addAuditLog({ module: 'Guests', action: 'Updated Guest', recordId: id, description: `Guest ${updatedGuest.name} was updated.`, importance: 'Normal' });
-    } catch(e) {}
-  }
+  if (index < 0) return null;
+  const updatedGuest = { ...guests[index], ...updates, id: guests[index].id };
+  guests[index] = updatedGuest;
+  saveGuests(guests);
+  try {
+    addAuditLog({
+      module: 'Guests',
+      action: 'Updated Guest',
+      recordId: id,
+      description: `Guest ${updatedGuest.name || updatedGuest.first_name || 'Guest'} was updated.`,
+      importance: 'Normal',
+    });
+  } catch {}
   return updatedGuest;
 }
 
 export function deleteGuest(id) {
-  const normalizedId = String(id).toLowerCase();
-  const guestToDelete = readGuests().find((guest) => String(guest.id).toLowerCase() === normalizedId);
-  saveGuests(readGuests().filter((guest) => String(guest.id).toLowerCase() !== normalizedId));
-  if (guestToDelete) {
-    try {
-      addAuditLog({ module: 'Guests', action: 'Deleted Guest', recordId: id, description: `Guest ${guestToDelete.name} was deleted.`, importance: 'Critical' });
-    } catch(e) {}
-  }
-}
-
-export function getGuestById(id) {
-  if (!id) return null;
-  const allGuests = getGuests();
-  const normalizedId = String(id).toLowerCase();
-
-  let guest = allGuests.find((g) =>
-    String(g.id).toLowerCase() === normalizedId ||
-    String(g.id).toLowerCase() === `gst-${normalizedId}` ||
-    (normalizedId.startsWith('gst-') && String(g.id).toLowerCase() === normalizedId.replace('gst-', ''))
+  const guests = readGuests();
+  const idStr = String(id);
+  const updated = guests.filter((guest) =>
+    String(guest.id) !== idStr && String(guest._id) !== idStr
   );
-
-  if (!guest) {
-    const reservations = getReservations();
-    const res = reservations.find((r) =>
-      String(r.id) === String(id) ||
-      `GST-${r.id}`.toLowerCase() === normalizedId ||
-      (r.name && r.name.toLowerCase() === normalizedId)
-    );
-    if (res) {
-      guest = {
-        id: `GST-${res.id}`,
-        name: res.name || 'Guest',
-        email: res.email || `${res.id}@guest.local`,
-        phone: res.mobile || '',
-        city: 'New York',
-        totalStays: 1,
-        status: 'Active',
-        avatar: res.avatar || 'https://i.pravatar.cc/150?u=guest',
-      };
-    }
+  if (updated.length !== guests.length) {
+    saveGuests(updated);
+    try {
+      addAuditLog({
+        module: 'Guests',
+        action: 'Deleted Guest',
+        recordId: id,
+        importance: 'Critical',
+      });
+    } catch {}
   }
-
-  return guest || null;
 }
-
-export { RESERVATIONS_UPDATED_EVENT };

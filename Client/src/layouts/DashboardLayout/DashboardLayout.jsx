@@ -1,16 +1,33 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Navigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
 export default function DashboardLayout({ children }) {
   const location = useLocation();
+  const { isAuthenticated, isLoading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Auto-close mobile drawer on route navigation
   useEffect(() => {
     setMobileOpen(false);
   }, [location.pathname]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[var(--bg-default)]">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-[var(--primary-main)] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-sm font-medium text-gray-500">Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
 
   return (
     <div className="flex h-screen w-full overflow-hidden font-sans bg-[var(--bg-default)] text-[var(--text-primary)]">
@@ -31,7 +48,7 @@ export default function DashboardLayout({ children }) {
         <Topbar onMobileNavToggle={() => setMobileOpen((prev) => !prev)} />
 
         {/* Page Content Wrapper */}
-        <div className="flex-1 min-h-0 px-1.5 sm:px-3 pb-2 overflow-y-auto overflow-x-hidden">
+        <div className="flex-1 min-h-0 px-1.5 sm:px-2.5 pb-1 overflow-y-auto overflow-x-hidden">
           {children}
         </div>
       </main>

@@ -5,7 +5,8 @@ import {
   People as PeopleIcon,
   VisibilityOutlined as ViewIcon,
   EditOutlined as EditIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  PaymentsOutlined as PaymentsIcon
 } from '@mui/icons-material';
 import { getTypeBadgeStyle, getStatusBadgeStyle } from './EventsTableView';
 
@@ -13,12 +14,23 @@ export default function EventsGridView({
   events = [],
   onView,
   onEdit,
-  onDelete
+  onDelete,
+  onOpenAddModal,
+  onCollectPayment
 }) {
   if (events.length === 0) {
     return (
-      <div className="p-8 text-center text-slate-400 text-sm">
-        No events found matching your search or filters.
+      <div className="py-12 px-4 text-center text-slate-500 flex flex-col items-center justify-center gap-2">
+        <p className="text-sm font-semibold text-slate-700">No events found. Create your first event.</p>
+        <p className="text-xs text-slate-400">All registered bookings and venues will appear here.</p>
+        {onOpenAddModal && (
+          <button
+            onClick={onOpenAddModal}
+            className="mt-1 px-3.5 py-1.5 bg-[#1b7f43] hover:bg-[#12572e] text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+          >
+            + Create First Event
+          </button>
+        )}
       </div>
     );
   }
@@ -76,19 +88,36 @@ export default function EventsGridView({
             </div>
           </div>
 
-          <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between">
+          <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between">
             <div>
-              <span className="text-[11px] text-slate-400 block">Total Contract</span>
-              <span className="text-sm font-bold text-slate-900">
-                ${evt.amount.toLocaleString()}
-              </span>
+              <span className="text-[11px] text-slate-400 block">Total: ${evt.amount.toLocaleString()}</span>
+              {evt.balanceAmount > 0 ? (
+                <span className="text-xs font-bold text-rose-600">
+                  Due: ${evt.balanceAmount.toLocaleString()}
+                </span>
+              ) : (
+                <span className="text-xs font-semibold text-emerald-600">
+                  Fully Paid
+                </span>
+              )}
             </div>
 
             <div className="flex items-center gap-1">
+              {evt.balanceAmount > 0 && (
+                <button
+                  onClick={() => onCollectPayment && onCollectPayment(evt)}
+                  className="px-2 py-1 bg-emerald-50 hover:bg-[#1b7f43] text-[#1b7f43] hover:text-white border border-emerald-200 rounded font-bold text-[10px] transition-colors flex items-center gap-0.5 cursor-pointer shadow-2xs mr-1"
+                  title="Collect remaining balance"
+                >
+                  <PaymentsIcon sx={{ fontSize: 13 }} />
+                  <span>Collect</span>
+                </button>
+              )}
               <button
                 onClick={() => onView(evt)}
                 className="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
                 title="View Details"
+                aria-label="View event details"
               >
                 <ViewIcon sx={{ fontSize: 16 }} />
               </button>
@@ -96,6 +125,7 @@ export default function EventsGridView({
                 onClick={() => onEdit(evt)}
                 className="p-1 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
                 title="Edit Event"
+                aria-label="Edit event"
               >
                 <EditIcon sx={{ fontSize: 16 }} />
               </button>
@@ -103,6 +133,7 @@ export default function EventsGridView({
                 onClick={() => onDelete(evt)}
                 className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
                 title="Delete Event"
+                aria-label="Delete event"
               >
                 <DeleteIcon sx={{ fontSize: 16 }} />
               </button>

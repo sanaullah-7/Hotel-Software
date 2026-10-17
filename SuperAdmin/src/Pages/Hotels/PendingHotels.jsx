@@ -27,9 +27,10 @@ export default function PendingHotels() {
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (background = false) => {
      
-    setLoading(true); setError('');
+    if (!background) setLoading(true);
+    setError('');
     try {
       const res = await ApprovalService.getApprovals({ status: 'PENDING', page, limit: DEFAULT_PAGE_SIZE, search });
       setData(res.data); setTotal(res.total);
@@ -41,6 +42,26 @@ export default function PendingHotels() {
   useEffect(() => { fetchData(); }, [fetchData]);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(1); }, [search]);
+
+  useEffect(() => {
+    let active = true;
+    let timer;
+    const refresh = async () => {
+      if (document.visibilityState === 'visible') await fetchData(true);
+      if (active) timer = window.setTimeout(refresh, 15000);
+    };
+    const onFocus = () => { if (document.visibilityState === 'visible') fetchData(true); };
+    timer = window.setTimeout(refresh, 15000);
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+  }, [fetchData]);
+
 
   const handleAction = async () => {
     if (!confirm) return;
@@ -115,7 +136,7 @@ export default function PendingHotels() {
                       <div style={{ fontSize: 13 }}>{item.managerName}</div>
                       <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>{item.managerEmail}</div>
                     </td>
-                    <td style={{ fontSize: 13 }}>{item.city}, {item.province}</td>
+                    <td style={{ fontSize: 13 }}>{item.city}{item.province ? `, ${item.province}` : ''}</td>
                     <td>
                       <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 6, background: 'var(--color-primary-light)', color: 'var(--color-primary)', fontWeight: 500 }}>
                         {item.subscriptionPlan}
@@ -174,7 +195,7 @@ export default function PendingHotels() {
             <div style={{ marginBottom: 20 }}>
               {infoItem(Building2, 'Hotel Name',  selected.hotelName)}
               {infoItem(MapPin,   'Address',      selected.address)}
-              {infoItem(MapPin,   'City',         `${selected.city}, ${selected.province}`)}
+              {infoItem(MapPin,   'City',         selected.province ? `${selected.city}, ${selected.province}` : selected.city)}
               {infoItem(Phone,    'Phone',        selected.phone)}
               {infoItem(Mail,     'Email',        selected.email)}
             </div>

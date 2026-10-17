@@ -24,13 +24,11 @@ import GroupReservations from '../features/reservations/pages/GroupReservations'
 import Rooms from '../features/rooms/pages/Rooms';
 import AddRoom from '../features/rooms/pages/AddRoom';
 import RoomTypes from '../features/rooms/pages/RoomTypes';
-import RatePricing from '../features/rooms/pages/RatePricing';
 
 // Housekeeping Module Pages
 import RoomsAndCleaning from '../features/housekeeping/pages/RoomsAndCleaning';
 import Inspection from '../features/housekeeping/pages/Inspection';
 import StaffAssignment from '../features/housekeeping/pages/StaffAssignment';
-import CleaningSchedule from '../features/housekeeping/pages/CleaningSchedule';
 import LostAndFound from '../features/housekeeping/pages/LostAndFound';
 import InspectionChecklist from '../features/housekeeping/pages/InspectionChecklist';
 
@@ -49,6 +47,7 @@ import Invoices from '../features/payment-billing/pages/Invoices';
 import PaymentHistory from '../features/payment-billing/pages/PaymentHistory';
 import PendingPayments from '../features/payment-billing/pages/PendingPayments';
 import Refunds from '../features/payment-billing/pages/Refunds';
+import ShiftHandover from '../features/payment-billing/pages/ShiftHandover';
 
 // Guests Module
 import Guests from '../features/guests/pages/Guests';
@@ -56,6 +55,7 @@ import GuestProfile from '../features/guests/pages/GuestProfile';
 
 // Occupancy Module
 import Occupancy from '../features/occupancy/pages/Occupancy';
+import TapeChart from '../features/occupancy/pages/TapeChart';
 import CarParking from '../features/car-parking/pages/CarParking';
 
 // HR Module Pages
@@ -95,7 +95,7 @@ export default function AppRoutes() {
         
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
 
         {/* Front Office Sub-Routes */}
@@ -127,14 +127,13 @@ export default function AppRoutes() {
         <Route path="/rooms/new" element={<DashboardLayout><AddRoom /></DashboardLayout>} />
         <Route path="/rooms/add" element={<DashboardLayout><AddRoom /></DashboardLayout>} />
         <Route path="/rooms/room-types" element={<DashboardLayout><RoomTypes /></DashboardLayout>} />
-        <Route path="/rooms/rate-pricing" element={<DashboardLayout><RatePricing /></DashboardLayout>} />
 
         {/* Housekeeping Sub-Routes */}
         <Route path="/housekeeping" element={<Navigate to="/housekeeping/rooms-cleaning" replace />} />
         <Route path="/housekeeping/rooms-cleaning" element={<DashboardLayout><RoomsAndCleaning /></DashboardLayout>} />
         <Route path="/housekeeping/inspection" element={<DashboardLayout><Inspection /></DashboardLayout>} />
         <Route path="/housekeeping/staff-assignment" element={<DashboardLayout><StaffAssignment /></DashboardLayout>} />
-        <Route path="/housekeeping/cleaning-schedule" element={<DashboardLayout><CleaningSchedule /></DashboardLayout>} />
+        <Route path="/housekeeping/cleaning-schedule" element={<Navigate to="/housekeeping/rooms-cleaning" replace />} />
         <Route path="/housekeeping/lost-and-found" element={<DashboardLayout><LostAndFound /></DashboardLayout>} />
         <Route path="/housekeeping/inspection-checklist" element={<DashboardLayout><InspectionChecklist /></DashboardLayout>} />
 
@@ -143,6 +142,8 @@ export default function AppRoutes() {
         
         {/* Occupancy Module */}
         <Route path="/occupancy" element={<DashboardLayout><Occupancy /></DashboardLayout>} />
+        <Route path="/occupancy/tape-chart" element={<DashboardLayout><TapeChart /></DashboardLayout>} />
+        <Route path="/rooms/tape-chart" element={<DashboardLayout><TapeChart /></DashboardLayout>} />
         
         {/* Car Parking Route */}
         <Route path="/car-parking" element={<DashboardLayout><CarParking /></DashboardLayout>} />
@@ -171,6 +172,7 @@ export default function AppRoutes() {
         <Route path="/payment-billing/payment-history" element={<DashboardLayout><PaymentHistory /></DashboardLayout>} />
         <Route path="/payment-billing/pending-payments" element={<DashboardLayout><PendingPayments /></DashboardLayout>} />
         <Route path="/payment-billing/refunds" element={<DashboardLayout><Refunds /></DashboardLayout>} />
+        <Route path="/payment-billing/shift-handover" element={<DashboardLayout><ShiftHandover /></DashboardLayout>} />
         <Route path="/payments" element={<Navigate to="/payment-billing/invoices" replace />} />
         <Route path="/billing" element={<Navigate to="/payment-billing/invoices" replace />} />
 
@@ -181,6 +183,8 @@ export default function AppRoutes() {
 
         {/* Occupancy Sub-Routes */}
         <Route path="/occupancy" element={<DashboardLayout><Occupancy /></DashboardLayout>} />
+        <Route path="/occupancy/tape-chart" element={<DashboardLayout><TapeChart /></DashboardLayout>} />
+        <Route path="/rooms/tape-chart" element={<DashboardLayout><TapeChart /></DashboardLayout>} />
 
         {/* HR Sub-Routes */}
         <Route path="/hr" element={<Navigate to="/hr/staff" replace />} />

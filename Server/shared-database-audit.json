@@ -1,0 +1,225 @@
+{
+  "database": "explore_pakistan",
+  "hotels": 1,
+  "collections": [
+    {
+      "collection": "hotelprofiles",
+      "count": 1
+    },
+    {
+      "collection": "hotelpolicies",
+      "count": 1
+    },
+    {
+      "collection": "departments",
+      "count": 1
+    },
+    {
+      "collection": "employees",
+      "count": 0
+    },
+    {
+      "collection": "employeedocuments",
+      "count": 0
+    },
+    {
+      "collection": "roomtypes",
+      "count": 1
+    },
+    {
+      "collection": "amenities",
+      "count": 1
+    },
+    {
+      "collection": "rooms",
+      "count": 0
+    },
+    {
+      "collection": "guests",
+      "count": 0
+    },
+    {
+      "collection": "guestdocuments",
+      "count": 0
+    },
+    {
+      "collection": "reservationgroups",
+      "count": 0
+    },
+    {
+      "collection": "reservations",
+      "count": 0
+    },
+    {
+      "collection": "reservationrooms",
+      "count": 0
+    },
+    {
+      "collection": "reservationstatushistories",
+      "count": 0
+    },
+    {
+      "collection": "stays",
+      "count": 0
+    },
+    {
+      "collection": "stayrooms",
+      "count": 0
+    },
+    {
+      "collection": "registrationforms",
+      "count": 0
+    },
+    {
+      "collection": "rateplans",
+      "count": 0
+    },
+    {
+      "collection": "ratecalendars",
+      "count": 0
+    },
+    {
+      "collection": "discounts",
+      "count": 0
+    },
+    {
+      "collection": "taxes",
+      "count": 0
+    },
+    {
+      "collection": "fees",
+      "count": 0
+    },
+    {
+      "collection": "folios",
+      "count": 0
+    },
+    {
+      "collection": "guestcharges",
+      "count": 0
+    },
+    {
+      "collection": "invoices",
+      "count": 0
+    },
+    {
+      "collection": "payments",
+      "count": 0
+    },
+    {
+      "collection": "refunds",
+      "count": 0
+    },
+    {
+      "collection": "expenses",
+      "count": 0
+    },
+    {
+      "collection": "housekeepingtasks",
+      "count": 0
+    },
+    {
+      "collection": "housekeepinginspections",
+      "count": 0
+    },
+    {
+      "collection": "housekeepingchecklists",
+      "count": 0
+    },
+    {
+      "collection": "lostfounditems",
+      "count": 0
+    },
+    {
+      "collection": "maintenancetickets",
+      "count": 0
+    },
+    {
+      "collection": "inventoryitems",
+      "count": 0
+    },
+    {
+      "collection": "inventorymovements",
+      "count": 0
+    },
+    {
+      "collection": "inventoryincidents",
+      "count": 0
+    },
+    {
+      "collection": "parkingspaces",
+      "count": 0
+    },
+    {
+      "collection": "parkingrecords",
+      "count": 0
+    },
+    {
+      "collection": "complaints",
+      "count": 0
+    },
+    {
+      "collection": "operationsalerts",
+      "count": 0
+    },
+    {
+      "collection": "attendancerecords",
+      "count": 0
+    },
+    {
+      "collection": "leaverequests",
+      "count": 0
+    },
+    {
+      "collection": "payrollruns",
+      "count": 0
+    },
+    {
+      "collection": "payrollitems",
+      "count": 0
+    },
+    {
+      "collection": "restaurantcategories",
+      "count": 0
+    },
+    {
+      "collection": "restaurantmenuitems",
+      "count": 0
+    },
+    {
+      "collection": "restauranttables",
+      "count": 0
+    },
+    {
+      "collection": "restaurantorders",
+      "count": 0
+    },
+    {
+      "collection": "events",
+      "count": 0
+    },
+    {
+      "collection": "beos",
+      "count": 0
+    },
+    {
+      "collection": "eventresources",
+      "count": 0
+    },
+    {
+      "collection": "notifications",
+      "count": 0
+    },
+    {
+      "collection": "filerecords",
+      "count": 0
+    },
+    {
+      "collection": "auditlogs",
+      "count": 0
+    }
+  ],
+  "errors": [],
+  "accounts": 1,
+  "pass": true
+}

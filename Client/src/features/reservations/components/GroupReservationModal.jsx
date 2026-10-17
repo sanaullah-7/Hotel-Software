@@ -32,6 +32,10 @@ export default function GroupReservationModal({
   setForm,
   setIsModalOpen,
   handleSaveModal,
+  isCancelModalOpen,
+  groupToCancel,
+  setIsCancelModalOpen,
+  handleCancelGroup,
   isDeleteModalOpen,
   groupToDelete,
   setIsDeleteModalOpen,
@@ -41,6 +45,13 @@ export default function GroupReservationModal({
   setIsViewModalOpen,
   openEditModal
 }) {
+  const isCancelOpen = isCancelModalOpen ?? isDeleteModalOpen;
+  const targetGroup = groupToCancel ?? groupToDelete;
+  const onCancel = handleCancelGroup ?? handleDelete;
+  const closeCancelModal = () => {
+    if (setIsCancelModalOpen) setIsCancelModalOpen(false);
+    if (setIsDeleteModalOpen) setIsDeleteModalOpen(false);
+  };
   return (
     <>
       {/* Edit/New Booking Modal */}
@@ -139,22 +150,28 @@ export default function GroupReservationModal({
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && groupToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[360px] p-6 text-center" onClick={e => e.stopPropagation()}>
-            <h3 className="text-2xl font-semibold text-gray-800 mb-6 text-left">Are you sure?</h3>
-            <div className="text-left space-y-3 mb-8">
-              <p className="text-sm text-gray-600 font-medium grid grid-cols-[100px_1fr]"><span className="text-gray-500">Group Name:</span> <span className="text-gray-800">{groupToDelete.groupName}</span></p>
-              <p className="text-sm text-gray-600 font-medium grid grid-cols-[100px_1fr]"><span className="text-gray-500">Contact Person:</span> <span className="text-gray-800">{groupToDelete.contactPerson}</span></p>
+      {/* Cancel Confirmation Modal */}
+      {isCancelOpen && targetGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={closeCancelModal}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-[380px] p-6 text-center" onClick={e => e.stopPropagation()}>
+            <h3 className="text-xl font-bold text-gray-800 mb-2 text-left">Cancel Group Reservation?</h3>
+            <p className="text-xs text-gray-500 mb-5 text-left">
+              Are you sure you want to cancel this group booking? The booking will remain in the system for auditing with status CANCELLED.
+            </p>
+            <div className="text-left space-y-2 mb-6 bg-gray-50 p-3.5 rounded-xl border border-gray-100">
+              <p className="text-xs text-gray-600 font-medium grid grid-cols-[100px_1fr]"><span className="text-gray-400">Group Name:</span> <span className="text-gray-800 font-semibold">{targetGroup.groupName}</span></p>
+              <p className="text-xs text-gray-600 font-medium grid grid-cols-[100px_1fr]"><span className="text-gray-400">Contact:</span> <span className="text-gray-800 font-semibold">{targetGroup.contactPerson}</span></p>
+              {targetGroup.groupRef && (
+                <p className="text-xs text-gray-600 font-medium grid grid-cols-[100px_1fr]"><span className="text-gray-400">Reference:</span> <span className="text-gray-800 font-semibold">{targetGroup.groupRef}</span></p>
+              )}
             </div>
             
-            <div className="flex justify-center gap-3">
-              <button onClick={handleDelete} className="px-5 py-2.5 rounded-full bg-[#c0392b] text-white font-bold text-sm hover:bg-[#a93226] transition-colors cursor-pointer">
-                Delete
+            <div className="flex justify-end gap-2.5">
+              <button onClick={closeCancelModal} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-600 font-medium text-xs hover:bg-gray-50 transition-colors cursor-pointer">
+                Back
               </button>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-5 py-2.5 rounded-full bg-[#1b7f43] text-white font-bold text-sm hover:bg-[#156736] transition-colors cursor-pointer">
-                Cancel
+              <button onClick={onCancel} className="px-4 py-2 rounded-lg bg-[#c0392b] text-white font-semibold text-xs hover:bg-[#a93226] transition-colors cursor-pointer">
+                Confirm Cancellation
               </button>
             </div>
           </div>

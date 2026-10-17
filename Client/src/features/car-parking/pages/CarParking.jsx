@@ -1,13 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Box,
   Typography,
   TextField,
   InputAdornment,
   MenuItem,
-  FormControl,
-  Select,
-  InputLabel,
   Button,
   Grid,
   Card,
@@ -16,12 +13,13 @@ import {
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
   TableRow,
   Paper,
   Chip,
   IconButton,
   Menu,
+  CircularProgress,
+  Alert,
 } from '@mui/material';
 import {
   Search as SearchIcon,
@@ -32,25 +30,24 @@ import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
   MoreVert as MoreVertIcon,
+  Refresh as RefreshIcon,
 } from '@mui/icons-material';
 
-import { 
-  getParkingRecords, 
-  getParkingSpaces, 
-  deleteParkingRecord,
-  PARKING_UPDATED_EVENT 
-} from '../state/carParkingStore';
+import { parkingService } from '../../../services/parkingService';
+import { toFrontendRecords, toFrontendSpaces } from '../adapters/parkingAdapter';
+import { PARKING_UPDATED_EVENT } from '../state/carParkingStore';
 
 import AddEditCarModal from '../components/AddEditCarModal';
 import CheckoutCarModal from '../components/CheckoutCarModal';
 import ManageSpacesModal from '../components/ManageSpacesModal';
+import Dropdown from '../../../components/ui/Dropdown';
 
 const muiSelectSx = {
   '& .MuiOutlinedInput-root': {
     borderRadius: '8px',
     backgroundColor: '#ffffff',
-    fontSize: '12px',
-    height: '32px',
+    fontSize: '11px',
+    height: '28px',
     color: '#1f2937',
     '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' },
     '&:hover fieldset': { borderColor: '#9ca3af' },
@@ -60,34 +57,16 @@ const muiSelectSx = {
     padding: '0 8px',
     display: 'flex',
     alignItems: 'center',
-    height: '32px',
+    height: '28px',
   },
   '& .MuiInputLabel-root': {
-    fontSize: '13px',
+    fontSize: '11.5px',
     color: '#6b7280',
-    transform: 'translate(14px, 7px) scale(1)',
+    transform: 'translate(12px, 5px) scale(1)',
     '&.Mui-focused': { color: '#1b7f43' }
   },
   '& .MuiInputLabel-root.MuiInputLabel-shrink': {
-    transform: 'translate(14px, -9px) scale(0.75)',
-  }
-};
-
-const dateFieldSx = {
-  '& .MuiOutlinedInput-root': {
-    borderRadius: '8px',
-    backgroundColor: '#ffffff',
-    fontSize: '12px',
-    height: '32px',
-    color: '#1f2937',
-    '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' },
-    '&:hover fieldset': { borderColor: '#9ca3af' },
-    '&.Mui-focused fieldset': { borderColor: '#1b7f43', borderWidth: '1.5px' },
-  },
-  '& .MuiOutlinedInput-input': {
-    padding: '0px 8px',
-    boxSizing: 'border-box',
-    height: '32px',
+    transform: 'translate(12px, -8px) scale(0.75)',
   }
 };
 
@@ -99,6 +78,8 @@ const DATE_PERIODS = ['All Time', 'Daily', 'Weekly', 'Monthly', 'Yearly'];
 export default function CarParking() {
   const [records, setRecords] = useState([]);
   const [spaces, setSpaces] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   
   // Modals state
   const [addEditModalOpen, setAddEditModalOpen] = useState(false);
@@ -111,7 +92,7 @@ export default function CarParking() {
 
   // Filters state
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('Parked'); // Default to showing only parked cars
+  const [statusFilter, setStatusFilter] = useState('Parked');
   const [paymentFilter, setPaymentFilter] = useState('All');
   const [typeFilter, setTypeFilter] = useState('All');
   const [datePeriod, setDatePeriod] = useState('All Time');
@@ -120,16 +101,29 @@ export default function CarParking() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
-  const fetchData = () => {
-    setRecords(getParkingRecords());
-    setSpaces(getParkingSpaces());
-  };
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const [backendSpaces, backendRecords] = await Promise.all([
+        parkingService.getSpaces(),
+        parkingService.getRecords(),
+      ]);
+      setSpaces(toFrontendSpaces(backendSpaces));
+      setRecords(toFrontendRecords(backendRecords));
+    } catch (err) {
+      console.error('Failed to fetch car parking data from backend:', err);
+      setError(err?.message || 'Failed to load car parking records. Please check backend connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     fetchData();
     window.addEventListener(PARKING_UPDATED_EVENT, fetchData);
     return () => window.removeEventListener(PARKING_UPDATED_EVENT, fetchData);
-  }, []);
+  }, [fetchData]);
 
   const handleClear = () => {
     setSearchQuery('');
@@ -138,6 +132,16 @@ export default function CarParking() {
     setTypeFilter('All');
     setDatePeriod('All Time');
     setCurrentPage(1);
+  };
+
+  const handleMenuOpen = (event, record) => {
+    setActionAnchorEl(event.currentTarget);
+    setMenuRecord(record);
+  };
+
+  const handleMenuClose = () => {
+    setActionAnchorEl(null);
+    setMenuRecord(null);
   };
 
   const handleOpenAdd = () => {
@@ -157,48 +161,42 @@ export default function CarParking() {
     handleMenuClose();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this parking record?')) {
-      deleteParkingRecord(id);
-      fetchData(); // Trigger immediate visual update
+      try {
+        await parkingService.deleteRecord(id);
+        window.dispatchEvent(new Event(PARKING_UPDATED_EVENT));
+        fetchData();
+      } catch (err) {
+        alert(err?.message || 'Failed to delete parking record');
+      }
     }
     handleMenuClose();
   };
 
-  const handleMenuOpen = (event, record) => {
-    setActionAnchorEl(event.currentTarget);
-    setMenuRecord(record);
-  };
-
-  const handleMenuClose = () => {
-    setActionAnchorEl(null);
-    setMenuRecord(null);
-  };
-
-  // Calculations
+  // Metrics
   const totalSpaces = spaces.length;
   const parkedCars = records.filter(r => r.status === 'Parked').length;
-  const availableSpaces = spaces.filter(s => s.status === 'Available').length;
+  const availableSpaces = Math.max(0, totalSpaces - parkedCars);
   
-  const todaysCharges = records.reduce((sum, record) => {
-    const today = new Date().toISOString().split('T')[0];
-    if (record.entryDate === today) {
-      return sum + Number(record.chargeAmount || 0);
-    }
-    return sum;
-  }, 0);
+  const todaysCharges = useMemo(() => {
+    const today = new Date().toDateString();
+    return records
+      .filter(r => new Date(r.entryDate).toDateString() === today)
+      .reduce((sum, r) => sum + (Number(r.chargeAmount) || 0), 0);
+  }, [records]);
 
-  // Filtering
+  // Filter logic
   const filteredRecords = useMemo(() => {
     return records.filter(record => {
       // Search
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
+      if (searchQuery.trim() !== '') {
+        const q = searchQuery.toLowerCase();
         const matchesSearch = 
-          record.guestName?.toLowerCase().includes(query) ||
-          record.carNumber?.toLowerCase().includes(query) ||
-          record.roomNumber?.toLowerCase().includes(query) ||
-          record.parkingSpace?.toLowerCase().includes(query);
+          (record.carNumber && record.carNumber.toLowerCase().includes(q)) ||
+          (record.guestName && record.guestName.toLowerCase().includes(q)) ||
+          (record.roomNumber && String(record.roomNumber).toLowerCase().includes(q)) ||
+          (record.parkingSpace && record.parkingSpace.toLowerCase().includes(q));
         if (!matchesSearch) return false;
       }
       
@@ -236,106 +234,132 @@ export default function CarParking() {
   const totalPages = Math.ceil(filteredRecords.length / itemsPerPage);
   const paginatedRecords = filteredRecords.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Reset to page 1 if filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, paymentFilter, typeFilter, datePeriod]);
 
   return (
-    <div className="animate-fade-in">
+    <div className="w-full space-y-2.5 pb-3 flex flex-col">
+      {/* ERROR BANNER */}
+      {error && (
+        <Alert
+          severity="error"
+          sx={{ mb: 1, fontSize: '12px', alignItems: 'center' }}
+          action={
+            <Button color="inherit" size="small" onClick={fetchData} startIcon={<RefreshIcon sx={{ fontSize: 14 }} />}>
+              Retry
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
+      )}
+
       {/* SUMMARY CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
-        <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
+        <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between gap-2.5">
           <div>
-            <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{totalSpaces}</div>
-            <div className="text-[13px] text-gray-500 font-medium">Total Spaces</div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{totalSpaces}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Total Spaces</div>
           </div>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
-            <ParkingIcon sx={{ fontSize: 18 }} />
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-blue-50 text-blue-600">
+            <ParkingIcon sx={{ fontSize: 16 }} />
           </div>
         </div>
         
-        <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between gap-2.5">
           <div>
-            <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{parkedCars}</div>
-            <div className="text-[13px] text-gray-500 font-medium">Parked Cars</div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{parkedCars}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Parked Cars</div>
           </div>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-yellow-50 text-yellow-600">
-            <CarIcon sx={{ fontSize: 18 }} />
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-amber-50 text-amber-600">
+            <CarIcon sx={{ fontSize: 16 }} />
           </div>
         </div>
         
-        <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between gap-2.5">
           <div>
-            <div className="text-2xl font-bold text-gray-900 leading-none mb-1">{availableSpaces}</div>
-            <div className="text-[13px] text-gray-500 font-medium">Available Spaces</div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">{availableSpaces}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Available Spaces</div>
           </div>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-50 text-green-600">
-            <CheckCircleIcon sx={{ fontSize: 18 }} />
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-emerald-50 text-emerald-600">
+            <CheckCircleIcon sx={{ fontSize: 16 }} />
           </div>
         </div>
         
-        <div className="bg-white p-5 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between">
+        <div className="bg-white p-2.5 sm:p-3 rounded-lg shadow-xs border border-gray-100 flex items-center justify-between gap-2.5">
           <div>
-            <div className="text-2xl font-bold text-gray-900 leading-none mb-1">Rs. {todaysCharges.toLocaleString()}</div>
-            <div className="text-[13px] text-gray-500 font-medium">Today's Charges</div>
+            <div className="text-lg sm:text-xl font-bold text-gray-900 leading-tight mb-0.5">Rs. {todaysCharges.toLocaleString()}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Today's Charges</div>
           </div>
-          <div className="w-8 h-8 rounded-full flex items-center justify-center bg-purple-50 text-purple-600">
-            <AttachMoneyIcon sx={{ fontSize: 18 }} />
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-purple-50 text-purple-600">
+            <AttachMoneyIcon sx={{ fontSize: 16 }} />
           </div>
         </div>
       </div>
 
       {/* FILTER & TABLE */}
-      <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm mt-1.5">
-        <div className="p-3 border-b border-gray-100">
-          <div className="flex flex-wrap items-end gap-2.5 w-full">
+      <div className="bg-white rounded-lg shadow-xs border border-gray-100 flex-1 flex flex-col overflow-hidden">
+        <div className="p-2 sm:p-2.5 border-b border-gray-100">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full">
             <TextField
               placeholder="Search car, guest, room..."
               size="small"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               InputProps={{
-                startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 18, color: '#94a3b8' }}/></InputAdornment>,
+                startAdornment: <InputAdornment position="start"><SearchIcon sx={{ fontSize: 15, color: '#94a3b8' }}/></InputAdornment>,
               }}
-              sx={{ minWidth: 140, flexGrow: 1, maxWidth: { xs: '100%', sm: 180 }, '& .MuiInputBase-root': { height: '32px', backgroundColor: 'white', fontSize: '12px', borderRadius: '8px' }, '& .MuiOutlinedInput-input': { padding: '0 8px' }, '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' }, '&:hover fieldset': { borderColor: '#9ca3af' }, '& .Mui-focused fieldset': { borderColor: '#1b7f43 !important', borderWidth: '1.5px !important' } }}
+              sx={{ minWidth: 120, flexGrow: 1, maxWidth: { xs: '100%', sm: 180 }, '& .MuiInputBase-root': { height: '28px', backgroundColor: 'white', fontSize: '11px', borderRadius: '6px' }, '& .MuiOutlinedInput-input': { padding: '0 6px' }, '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1px' }, '&:hover fieldset': { borderColor: '#9ca3af' }, '& .Mui-focused fieldset': { borderColor: '#1b7f43 !important', borderWidth: '1.5px !important' } }}
             />
             
-            <FormControl size="small" sx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
-              <InputLabel>Status</InputLabel>
-              <Select value={statusFilter} label="Status" onChange={(e) => setStatusFilter(e.target.value)}>
-                {STATUS_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: '13px' }}>{opt}</MenuItem>)}
-              </Select>
-            </FormControl>
+            <Dropdown
+              label="Status"
+              options={STATUS_OPTIONS}
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              fullWidth={false}
+              formControlSx={{ minWidth: 80, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}
+              optionSx={{ fontSize: '11px' }}
+            />
             
-            <FormControl size="small" sx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
-              <InputLabel>Payment</InputLabel>
-              <Select value={paymentFilter} label="Payment" onChange={(e) => setPaymentFilter(e.target.value)}>
-                {PAYMENT_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: '13px' }}>{opt}</MenuItem>)}
-              </Select>
-            </FormControl>
+            <Dropdown
+              label="Payment"
+              options={PAYMENT_OPTIONS}
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+              fullWidth={false}
+              formControlSx={{ minWidth: 80, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}
+              optionSx={{ fontSize: '11px' }}
+            />
             
-            <FormControl size="small" sx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
-              <InputLabel>Car Type</InputLabel>
-              <Select value={typeFilter} label="Car Type" onChange={(e) => setTypeFilter(e.target.value)}>
-                {TYPE_OPTIONS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: '13px' }}>{opt}</MenuItem>)}
-              </Select>
-            </FormControl>
+            <Dropdown
+              label="Car Type"
+              options={TYPE_OPTIONS}
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value)}
+              fullWidth={false}
+              formControlSx={{ minWidth: 80, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}
+              optionSx={{ fontSize: '11px' }}
+            />
 
-            <FormControl size="small" sx={{ minWidth: 95, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}>
-              <InputLabel>Date</InputLabel>
-              <Select value={datePeriod} label="Date" onChange={(e) => setDatePeriod(e.target.value)}>
-                {DATE_PERIODS.map(opt => <MenuItem key={opt} value={opt} sx={{ fontSize: '13px' }}>{opt}</MenuItem>)}
-              </Select>
-            </FormControl>
+            <Dropdown
+              label="Date"
+              options={DATE_PERIODS}
+              value={datePeriod}
+              onChange={(e) => setDatePeriod(e.target.value)}
+              fullWidth={false}
+              formControlSx={{ minWidth: 80, flexGrow: { xs: 1, sm: 0 }, ...muiSelectSx }}
+              optionSx={{ fontSize: '11px' }}
+            />
 
             <Button 
               variant="outlined"
-              startIcon={<FilterAltOffIcon sx={{ fontSize: 16 }} />}
+              startIcon={<FilterAltOffIcon sx={{ fontSize: 13 }} />}
               onClick={handleClear}
               sx={{ 
                 borderColor: '#e2e8f0', color: '#64748b', textTransform: 'none', 
-                height: '32px', fontSize: '13px', borderRadius: '8px',
+                height: '28px', fontSize: '10.5px', borderRadius: '6px', px: 1.2,
                 '&:hover': { bgcolor: '#f8fafc', borderColor: '#cbd5e1' }
               }}
             >
@@ -345,142 +369,184 @@ export default function CarParking() {
             <Box sx={{ flexGrow: 1 }} />
 
             {/* ACTION BUTTONS ON THE RIGHT */}
-            <Button 
-              variant="outlined"
-              startIcon={<ParkingIcon />}
-              onClick={() => setManageSpacesModalOpen(true)}
-              sx={{
-                color: '#1e293b',
-                borderColor: '#e2e8f0',
-                bgcolor: 'white',
-                textTransform: 'none',
-                fontWeight: 500,
-                px: 2,
-                height: '32px',
-                fontSize: '13px',
-                borderRadius: '8px',
-                '&:hover': { bgcolor: '#f1f5f9', borderColor: '#cbd5e1' }
-              }}
-            >
-              Manage Spaces
-            </Button>
-            <Button 
-              variant="contained" 
-              startIcon={<CarIcon />} 
-              onClick={handleOpenAdd}
-              sx={{ 
-                bgcolor: '#1b7f43', 
-                textTransform: 'none', 
-                fontWeight: 500,
-                px: 3, 
-                height: '32px',
-                fontSize: '13px',
-                borderRadius: '8px',
-                boxShadow: 'none',
-                '&:hover': { bgcolor: '#166534', boxShadow: 'none' }
-              }}
-            >
-              + Add Car
-            </Button>
+            <div className="flex items-center gap-1.5 ml-auto">
+              <Button 
+                variant="outlined"
+                startIcon={<ParkingIcon sx={{ fontSize: 14 }} />}
+                onClick={() => setManageSpacesModalOpen(true)}
+                sx={{
+                  color: '#1e293b',
+                  borderColor: '#e2e8f0',
+                  bgcolor: 'white',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  px: 1.5,
+                  height: '28px',
+                  fontSize: '11px',
+                  borderRadius: '6px',
+                  '&:hover': { bgcolor: '#f1f5f9', borderColor: '#cbd5e1' }
+                }}
+              >
+                Manage Spaces
+              </Button>
+              <Button 
+                variant="contained" 
+                startIcon={<CarIcon sx={{ fontSize: 14 }} />} 
+                onClick={handleOpenAdd}
+                sx={{ 
+                  bgcolor: '#1b7f43', 
+                  textTransform: 'none', 
+                  fontWeight: 600,
+                  px: 1.5, 
+                  height: '28px',
+                  fontSize: '11px',
+                  borderRadius: '6px',
+                  boxShadow: 'none',
+                  '&:hover': { bgcolor: '#166534', boxShadow: 'none' }
+                }}
+              >
+                + Add Car
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Main Table */}
-        <TableContainer sx={{ overflowX: 'auto' }}>
-          <Table stickyHeader size="small" sx={{ minWidth: 1000 }}>
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ py: 1.5, fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Car Number</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Guest</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Room</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Space</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Type</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Entry Time</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Exit Time</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Charge</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Payment</TableCell>
-                <TableCell sx={{ fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Status</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 600, color: '#475569', borderBottom: '1px solid #e2e8f0', bgcolor: '#f9fafb' }}>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedRecords.length > 0 ? paginatedRecords.map((record) => (
-                <TableRow key={record.id} sx={{ '&:last-child td, &:last-child th': { border: 0 }, '&:hover': { bgcolor: '#f8fafc' } }}>
-                  <TableCell sx={{ py: 1.5, fontWeight: 500, color: '#1e293b' }}>{record.carNumber}</TableCell>
-                  <TableCell sx={{ color: '#475569' }}>{record.guestName}</TableCell>
-                  <TableCell sx={{ color: '#475569' }}>{record.roomNumber || '-'}</TableCell>
-                  <TableCell>
-                    <Chip size="small" label={record.parkingSpace} sx={{ bgcolor: '#e2e8f0', color: '#334155', fontWeight: 600, borderRadius: 1 }} />
-                  </TableCell>
-                  <TableCell sx={{ color: '#475569' }}>{record.carType}</TableCell>
-                  <TableCell sx={{ color: '#475569' }}>
-                    {record.entryTime}<br/><span style={{ fontSize: '11px', color: '#94a3b8' }}>{record.entryDate}</span>
-                  </TableCell>
-                  <TableCell sx={{ color: '#475569' }}>
-                    {record.exitTime ? (
-                      <>{record.exitTime}<br/><span style={{ fontSize: '11px', color: '#94a3b8' }}>{record.exitDate}</span></>
-                    ) : '-'}
-                  </TableCell>
-                  <TableCell sx={{ color: '#475569' }}>Rs. {record.chargeAmount}</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={record.paymentStatus} 
-                      size="small"
-                      sx={{ 
-                        height: '22px', fontSize: '11px', fontWeight: 600,
-                        bgcolor: record.paymentStatus === 'Paid' ? '#dcfce7' : '#fef08a',
-                        color: record.paymentStatus === 'Paid' ? '#166534' : '#854d0e',
-                      }}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      {record.status === 'Parked' ? (
-                        <CheckCircleIcon sx={{ fontSize: 16, color: '#1b7f43' }} />
-                      ) : (
-                        <CancelIcon sx={{ fontSize: 16, color: '#94a3b8' }} />
-                      )}
-                      <Typography variant="body2" sx={{ 
-                        fontSize: '12px', fontWeight: 600,
-                        color: record.status === 'Parked' ? '#1b7f43' : '#94a3b8' 
-                      }}>
-                        {record.status}
-                      </Typography>
-                    </Box>
-                  </TableCell>
-                  <TableCell align="right">
-                    <IconButton size="small" onClick={(e) => handleMenuOpen(e, record)}>
-                      <MoreVertIcon fontSize="small" />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              )) : (
-                <TableRow>
-                  <TableCell colSpan={11} align="center" sx={{ py: 6, color: '#94a3b8' }}>
-                    No parking records found matching your filters.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <div className="w-full overflow-hidden">
+          {isLoading ? (
+            <div className="py-16 flex flex-col items-center justify-center gap-2">
+              <CircularProgress size={28} sx={{ color: '#1b7f43' }} />
+              <span className="text-xs text-gray-500 font-medium">Loading parking records from server...</span>
+            </div>
+          ) : (
+            <table className="table-fixed w-full text-left border-collapse">
+              <colgroup>
+                <col style={{ width: '10.5%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '5.5%' }} />
+                <col style={{ width: '5.5%' }} />
+                <col style={{ width: '6.5%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '14%' }} />
+                <col style={{ width: '8%' }} />
+                <col style={{ width: '7.5%' }} />
+                <col style={{ width: '7.5%' }} />
+                <col style={{ width: '7%' }} />
+              </colgroup>
+              <thead>
+                <tr className="border-b border-gray-100 bg-slate-50/50">
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Car Number</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Guest</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Room</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Space</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Type</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Entry Time</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Exit Time</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Charge</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Payment</th>
+                  <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                  <th className="py-2 px-1 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider text-center whitespace-nowrap">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {paginatedRecords.length > 0 ? paginatedRecords.map((record) => (
+                  <tr key={record.id} className="hover:bg-slate-50/60 transition-colors border-b border-gray-50">
+                    <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-900 whitespace-nowrap truncate" title={record.carNumber}>
+                      {record.carNumber}
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-700 truncate" title={record.guestName}>
+                      {record.guestName || '-'}
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
+                      {record.roomNumber || '-'}
+                    </td>
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700">
+                        {record.parkingSpace}
+                      </span>
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">
+                      {record.carType}
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600 whitespace-nowrap truncate" title={`${record.entryTime} (${record.entryDate})`}>
+                      {record.entryTime} <span className="text-[9.5px] text-gray-400">({record.entryDate})</span>
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600 whitespace-nowrap truncate" title={record.exitTime ? `${record.exitTime} (${record.exitDate})` : '-'}>
+                      {record.exitTime ? (
+                        <>{record.exitTime} <span className="text-[9.5px] text-gray-400">({record.exitDate})</span></>
+                      ) : '-'}
+                    </td>
+                    <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-800 whitespace-nowrap">
+                      Rs. {record.chargeAmount}
+                    </td>
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
+                      <span 
+                        className={`px-1.5 py-0.5 rounded text-[9.5px] font-semibold inline-block ${
+                          record.paymentStatus === 'Paid' 
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                            : 'bg-amber-50 text-amber-700 border border-amber-200'
+                        }`}
+                      >
+                        {record.paymentStatus}
+                      </span>
+                    </td>
+                    <td className="py-1.5 px-1.5 whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        {record.status === 'Parked' ? (
+                          <CheckCircleIcon sx={{ fontSize: 13, color: '#1b7f43' }} />
+                        ) : (
+                          <CancelIcon sx={{ fontSize: 13, color: '#94a3b8' }} />
+                        )}
+                        <span className={`text-[10.5px] font-semibold ${record.status === 'Parked' ? 'text-[#1b7f43]' : 'text-gray-400'}`}>
+                          {record.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-1.5 px-1 text-center whitespace-nowrap">
+                      <IconButton size="small" onClick={(e) => handleMenuOpen(e, record)} sx={{ p: 0.5 }}>
+                        <MoreVertIcon sx={{ fontSize: 15 }} />
+                      </IconButton>
+                    </td>
+                  </tr>
+                )) : (
+                  <tr>
+                    <td colSpan={11} className="py-8 text-center text-gray-400 text-[11.5px]">
+                      No parking records found matching your filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
 
         {/* Footer Pagination */}
-        <div className="p-3 mt-auto flex items-center justify-between text-[12px] text-gray-600 border-t border-gray-100 bg-gray-50/30 rounded-b-[6px]">
+        <div className="px-3 py-1.5 sm:py-2 mt-auto flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 bg-slate-50/40">
           <span>Showing {paginatedRecords.length} of {filteredRecords.length} records</span>
-          <div className="flex items-center gap-4">
-            <span 
-              className={`cursor-pointer ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'hover:text-gray-900'}`}
+          <div className="flex items-center gap-2">
+            <button 
+              type="button"
+              className={`px-2 py-0.5 text-xs rounded border border-gray-200 bg-white transition-colors ${
+                currentPage === 1 ? 'text-gray-300 cursor-not-allowed border-gray-100' : 'text-gray-700 hover:bg-gray-50 font-medium'
+              }`}
               onClick={() => currentPage > 1 && setCurrentPage(prev => prev - 1)}
+              disabled={currentPage === 1}
             >
-              {'< Prev'}
+              Previous
+            </button>
+            <span className="text-xs font-semibold text-gray-700 px-1">
+              Page {currentPage} of {totalPages || 1}
             </span>
-            <span 
-              className={`cursor-pointer ${currentPage === totalPages || totalPages === 0 ? 'text-gray-400 cursor-not-allowed' : 'hover:text-gray-900'}`}
+            <button 
+              type="button"
+              className={`px-2 py-0.5 text-xs rounded border border-gray-200 bg-white transition-colors ${
+                currentPage === totalPages || totalPages === 0 ? 'text-gray-300 cursor-not-allowed border-gray-100' : 'text-gray-700 hover:bg-gray-50 font-medium'
+              }`}
               onClick={() => currentPage < totalPages && setCurrentPage(prev => prev + 1)}
+              disabled={currentPage === totalPages || totalPages === 0}
             >
-              {'Next >'}
-            </span>
+              Next
+            </button>
           </div>
         </div>
       </div>
@@ -492,15 +558,15 @@ export default function CarParking() {
         onClose={handleMenuClose}
         transformOrigin={{ horizontal: 'right', vertical: 'top' }}
         anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-        PaperProps={{ elevation: 2, sx: { minWidth: 150, borderRadius: 2 } }}
+        PaperProps={{ elevation: 2, sx: { minWidth: 130, borderRadius: '6px' } }}
       >
         {menuRecord?.status === 'Parked' && (
-          <MenuItem onClick={() => handleOpenCheckout(menuRecord)} sx={{ fontSize: '13px', color: '#d97706', fontWeight: 500 }}>
+          <MenuItem onClick={() => handleOpenCheckout(menuRecord)} sx={{ fontSize: '11px', color: '#d97706', fontWeight: 600, py: 0.75 }}>
             Check Out Car
           </MenuItem>
         )}
-        <MenuItem onClick={() => handleOpenEdit(menuRecord)} sx={{ fontSize: '13px' }}>Edit Record</MenuItem>
-        <MenuItem onClick={() => handleDelete(menuRecord.id)} sx={{ fontSize: '13px', color: '#ef4444' }}>Delete Record</MenuItem>
+        <MenuItem onClick={() => handleOpenEdit(menuRecord)} sx={{ fontSize: '11px', py: 0.75 }}>Edit Record</MenuItem>
+        <MenuItem onClick={() => handleDelete(menuRecord.id)} sx={{ fontSize: '11px', color: '#ef4444', py: 0.75 }}>Delete Record</MenuItem>
       </Menu>
 
       {/* Modals */}
@@ -508,15 +574,18 @@ export default function CarParking() {
         open={addEditModalOpen} 
         onClose={() => setAddEditModalOpen(false)} 
         editRecord={selectedRecord}
+        onSuccess={fetchData}
       />
       <CheckoutCarModal 
         open={checkoutModalOpen} 
         onClose={() => setCheckoutModalOpen(false)} 
         record={selectedRecord}
+        onSuccess={fetchData}
       />
       <ManageSpacesModal 
         open={manageSpacesModalOpen} 
         onClose={() => setManageSpacesModalOpen(false)} 
+        onSuccess={fetchData}
       />
     </div>
   );

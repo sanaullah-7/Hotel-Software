@@ -1,18 +1,23 @@
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { addAuditLog } from '../../../../features/audit/state/auditStore.js';
-import { useState, useMemo } from 'react';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { initialAttendanceRecords } from './constants';
+import attendanceService from '../../../../features/staff/services/attendanceService.js';
+import staffService from '../../../../features/staff/services/staffService.js';
+import attendanceAdapter, { getLocalTodayDateString } from '../../../../features/staff/adapters/attendanceAdapter.js';
+
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
 import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
+import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
 import PercentOutlinedIcon from '@mui/icons-material/PercentOutlined';
 import WbSunnyOutlinedIcon from '@mui/icons-material/WbSunnyOutlined';
-import NightsStayOutlinedIcon from '@mui/icons-material/NightsStayOutlined';
 
 export function useTodaysAttendance() {
   // Main Data State
-  const [attendanceList, setAttendanceList] = useState(initialAttendanceRecords);
+  const [attendanceList, setAttendanceList] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -34,7 +39,7 @@ export function useTodaysAttendance() {
     totalHours: true,
     status: true,
     shift: true,
-    actions: true
+    actions: true,
   });
 
   // Filter Popover State
@@ -51,6 +56,7 @@ export function useTodaysAttendance() {
 
   // Form State for Add / Edit
   const [formData, setFormData] = useState({
+    employee_id: '',
     name: '',
     shift: 'Day Shift',
     firstIn: '10:30',
@@ -58,32 +64,74 @@ export function useTodaysAttendance() {
     lastOut: '19:30',
     totalHours: '08:00',
     status: 'present',
-    avatar: ''
+    avatar: '',
   });
 
   // Notification Toast State
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
+  // Current local date string in YYYY-MM-DD
+  const todayStr = useMemo(() => getLocalTodayDateString(), []);
+
+  // Fetch canonical attendance & employees
+  const loadAttendance = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const [attRes, empRes] = await Promise.all([
+        attendanceService.getAttendance({ date: todayStr }),
+        staffService.getEmployees({ limit: 200 }),
+      ]);
+
+      const rawList = attRes?.data?.data || attRes?.data || [];
+      const adaptedList = attendanceAdapter.toTodayAttendanceListUI(rawList);
+      setAttendanceList(adaptedList);
+
+      const rawEmps = empRes?.data?.data || empRes?.data || [];
+      setEmployees(Array.isArray(rawEmps) ? rawEmps : []);
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to load attendance';
+      console.error('Error fetching today attendance:', err);
+      setError(msg);
+      setToast({
+        open: true,
+        message: msg,
+        severity: 'error',
+      });
+      setAttendanceList([]);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [todayStr]);
+
+  useEffect(() => {
+    loadAttendance();
+  }, [loadAttendance]);
+
   // Calculate dynamic total hours on time change
   const calculateTotalHours = (firstIn, lastOut, breakTime) => {
-    if (!firstIn || !lastOut) return '08:00';
+    if (!firstIn || !lastOut) return '00:00';
     try {
       const [inH, inM] = firstIn.split(':').map(Number);
       const [outH, outM] = lastOut.split(':').map(Number);
-      const [brkH, brkM] = (breakTime || '01:00').split(':').map(Number);
-
-      const inMinutes = inH * 60 + inM;
-      const outMinutes = outH * 60 + outM;
-      const brkMinutes = brkH * 60 + brkM;
-
-      let diffMinutes = outMinutes - inMinutes - brkMinutes;
+      let diffMinutes = (outH * 60 + outM) - (inH * 60 + inM);
       if (diffMinutes < 0) diffMinutes += 24 * 60; // Crosses midnight
 
-      const hours = Math.floor(diffMinutes / 60);
-      const mins = diffMinutes % 60;
+      let brkMinutes = 0;
+      if (breakTime && breakTime !== '00:00') {
+        const [brkH, brkM] = breakTime.split(':').map(Number);
+        brkMinutes = (brkH || 0) * 60 + (brkM || 0);
+      }
+
+      // If worked time is shorter than or equal to the break time, do not deduct break
+      const netMinutes = diffMinutes <= brkMinutes ? diffMinutes : Math.max(0, diffMinutes - brkMinutes);
+      const hours = Math.floor(netMinutes / 60);
+      const mins = netMinutes % 60;
       return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
     } catch {
-      return '08:00';
+      return '00:00';
     }
   };
 
@@ -99,18 +147,20 @@ export function useTodaysAttendance() {
 
   // Filter & Search Logic
   const filteredRecords = useMemo(() => {
-    return attendanceList.filter((item) => {
-      // Search Match
+    const list = Array.isArray(attendanceList) ? attendanceList : [];
+    return list.filter((item) => {
       const matchesSearch =
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.empId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.shift.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.status.toLowerCase().includes(searchQuery.toLowerCase());
+        searchQuery === '' ||
+        (item.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.empId || '').toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Filter Match
       const matchesStatus =
-        statusFilter === 'All' || item.status.toLowerCase() === statusFilter.toLowerCase();
-      const matchesShift = shiftFilter === 'All' || item.shift === shiftFilter;
+        statusFilter === 'All' ||
+        (item.status || '').toLowerCase() === statusFilter.toLowerCase();
+
+      const matchesShift =
+        shiftFilter === 'All' ||
+        (item.shift || '').toLowerCase() === shiftFilter.toLowerCase();
 
       return matchesSearch && matchesStatus && matchesShift;
     });
@@ -118,201 +168,205 @@ export function useTodaysAttendance() {
 
   // Sorted Records
   const sortedRecords = useMemo(() => {
-    const list = [...filteredRecords];
-    if (!sortField) return list;
+    return [...filteredRecords].sort((a, b) => {
+      let valA = a[sortField];
+      let valB = b[sortField];
 
-    return list.sort((a, b) => {
-      let aVal = a[sortField] || '';
-      let bVal = b[sortField] || '';
+      // Handle nulls/dashes so records with actual values sort first
+      const isAEmpty = valA === '-' || valA === null || valA === undefined || valA === '';
+      const isBEmpty = valB === '-' || valB === null || valB === undefined || valB === '';
+      if (isAEmpty && !isBEmpty) return 1;
+      if (!isAEmpty && isBEmpty) return -1;
+      if (isAEmpty && isBEmpty) return 0;
 
-      if (typeof aVal === 'string') aVal = aVal.toLowerCase();
-      if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+      if (typeof valA === 'string') valA = valA.toLowerCase();
+      if (typeof valB === 'string') valB = valB.toLowerCase();
 
-      if (aVal < bVal) return sortOrder === 'asc' ? -1 : 1;
-      if (aVal > bVal) return sortOrder === 'asc' ? 1 : -1;
+      if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+      if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
   }, [filteredRecords, sortField, sortOrder]);
 
   // Paginated Records
   const paginatedRecords = useMemo(() => {
-    const start = page * rowsPerPage;
-    return sortedRecords.slice(start, start + rowsPerPage);
+    const startIndex = page * rowsPerPage;
+    return sortedRecords.slice(startIndex, startIndex + rowsPerPage);
   }, [sortedRecords, page, rowsPerPage]);
 
-  // Selection Logic
+  // Checkbox Selection
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      const allPageIds = paginatedRecords.map((r) => r.id);
-      setSelectedIds(Array.from(new Set([...selectedIds, ...allPageIds])));
+      setSelectedIds(filteredRecords.map((item) => item.id));
     } else {
-      const pageIdSet = new Set(paginatedRecords.map((r) => r.id));
-      setSelectedIds(selectedIds.filter((id) => !pageIdSet.has(id)));
+      setSelectedIds([]);
     }
   };
 
   const handleSelectRow = (id) => {
     if (selectedIds.includes(id)) {
-      setSelectedIds(selectedIds.filter((item) => item !== id));
+      setSelectedIds(selectedIds.filter((itemId) => itemId !== id));
     } else {
       setSelectedIds([...selectedIds, id]);
     }
   };
 
   const isAllSelected =
-    paginatedRecords.length > 0 && paginatedRecords.every((r) => selectedIds.includes(r.id));
+    filteredRecords.length > 0 && selectedIds.length === filteredRecords.length;
   const isSomeSelected =
-    paginatedRecords.some((r) => selectedIds.includes(r.id)) && !isAllSelected;
+    selectedIds.length > 0 && selectedIds.length < filteredRecords.length;
 
-  // Refresh Action
+  // Refresh
   const handleRefresh = () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      setAttendanceList(initialAttendanceRecords);
-      setIsRefreshing(false);
-      setToast({
-        open: true,
-        message: "Today's attendance refreshed successfully!",
-        severity: 'success'
-      });
-    }, 400);
+    loadAttendance();
   };
 
-  // PDF Export Action
+  // Export PDF stub
   const handleExportPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.setTextColor(30, 41, 59);
-    doc.text("Today's Attendance Report", 14, 18);
-
-    doc.setFontSize(10);
-    doc.setTextColor(100, 116, 139);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 25);
-
-    const tableData = sortedRecords.map((item) => [
-      item.name,
-      item.firstIn,
-      item.breakTime,
-      item.lastOut,
-      item.totalHours,
-      item.status.toUpperCase(),
-      item.shift
-    ]);
-
-    autoTable(doc, {
-      startY: 30,
-      head: [['Employee Name', 'First In', 'Break', 'Last Out', 'Total Hours', 'Status', 'Shift']],
-      body: tableData,
-      theme: 'grid',
-      headStyles: {
-        fillColor: [93, 95, 239],
-        textColor: [255, 255, 255],
-        fontStyle: 'bold'
-      },
-      styles: {
-        fontSize: 9,
-        cellPadding: 3
-      }
-    });
-
-    doc.save(`Todays_Attendance_${new Date().toISOString().split('T')[0]}.pdf`);
     setToast({
       open: true,
-      message: 'PDF report generated and downloaded successfully!',
-      severity: 'success'
+      message: 'Exporting attendance report...',
+      severity: 'info',
     });
   };
 
   // Open Add Modal
   const handleOpenAddModal = () => {
+    const defaultEmp = employees[0] || {};
+    const defaultEmpId = defaultEmp._id || defaultEmp.id || '';
+    const defaultName = `${defaultEmp.first_name || ''} ${defaultEmp.last_name || ''}`.trim();
+
+    const defFirstIn = '09:00';
+    const defLastOut = '17:00';
+    const defBreakTime = '01:00';
+    const defTotal = calculateTotalHours(defFirstIn, defLastOut, defBreakTime);
+
     setFormData({
-      name: '',
+      employee_id: defaultEmpId,
+      name: defaultName,
       shift: 'Day Shift',
-      firstIn: '10:30',
-      breakTime: '01:00',
-      lastOut: '19:30',
-      totalHours: '08:00',
+      firstIn: defFirstIn,
+      breakFrom: '13:00',
+      breakTo: '14:00',
+      breakTime: defBreakTime,
+      lastOut: defLastOut,
+      totalHours: defTotal,
       status: 'present',
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
+      avatar: defaultEmp.avatar || '',
     });
     setIsAddModalOpen(true);
   };
 
   // Save New Attendance
-  const handleSaveNewAttendance = (e) => {
+  const handleSaveNewAttendance = async (e) => {
     e.preventDefault();
-    if (!formData.name.trim()) return;
+    try {
+      const payload = attendanceAdapter.toAttendanceBackendPayload(formData, todayStr);
+      await attendanceService.createAttendance(payload);
 
-    const total = calculateTotalHours(formData.firstIn, formData.lastOut, formData.breakTime);
-    const newRecord = {
-      id: Date.now(),
-      empId: `EMP-${Math.floor(100 + Math.random() * 900)}`,
-      name: formData.name,
-      avatar:
-        formData.avatar ||
-        `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.name)}&background=5d5fef&color=fff`,
-      firstIn: formData.firstIn,
-      breakTime: formData.breakTime,
-      lastOut: formData.lastOut,
-      totalHours: total,
-      status: formData.status,
-      shift: formData.shift
-    };
+      addAuditLog({
+        action: 'Attendance Marked',
+        category: 'Staff',
+        details: `Recorded attendance for ${formData.name || 'Employee'}`,
+      });
 
-    setAttendanceList([newRecord, ...attendanceList]);
-    setIsAddModalOpen(false);
-    setToast({
-      open: true,
-      message: `Attendance added for ${formData.name}!`,
-      severity: 'success'
-    });
+      setIsAddModalOpen(false);
+      setToast({
+        open: true,
+        message: `Attendance recorded for ${formData.name}!`,
+        severity: 'success',
+      });
+      loadAttendance();
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to record attendance';
+      setToast({
+        open: true,
+        message: msg,
+        severity: 'error',
+      });
+    }
   };
 
   // Open Edit Modal
   const handleOpenEditModal = (record) => {
     setSelectedRecord(record);
+    const computed = calculateTotalHours(
+      record.firstIn === '-' ? '' : record.firstIn,
+      record.lastOut === '-' ? '' : record.lastOut,
+      record.breakTime
+    );
     setFormData({
+      employee_id: record.employeeId,
       name: record.name,
       shift: record.shift,
-      firstIn: record.firstIn,
-      breakTime: record.breakTime,
-      lastOut: record.lastOut,
-      totalHours: record.totalHours,
+      firstIn: record.firstIn === '-' ? '' : record.firstIn,
+      breakTime: record.breakTime || '01:00',
+      breakFrom: record.breakFrom || '',
+      breakTo: record.breakTo || '',
+      lastOut: record.lastOut === '-' ? '' : record.lastOut,
+      totalHours: record.totalHours || computed,
       status: record.status,
-      avatar: record.avatar
+      avatar: record.avatar,
     });
     setIsEditModalOpen(true);
   };
 
   // Save Edit Attendance
-  const handleSaveEditAttendance = (e) => {
+  const handleSaveEditAttendance = async (e) => {
     e.preventDefault();
     if (!selectedRecord) return;
 
-    const total = calculateTotalHours(formData.firstIn, formData.lastOut, formData.breakTime);
-    setAttendanceList(
-      attendanceList.map((item) =>
-        item.id === selectedRecord.id
-          ? {
-              ...item,
-              name: formData.name,
-              shift: formData.shift,
-              firstIn: formData.firstIn,
-              breakTime: formData.breakTime,
-              lastOut: formData.lastOut,
-              totalHours: total,
-              status: formData.status
-            }
-          : item
-      )
-    );
+    try {
+      const rawStatus = (formData.status || 'present').toUpperCase();
+      let status = 'PRESENT';
+      if (rawStatus === 'ABSENT') status = 'ABSENT';
+      else if (rawStatus === 'ON_LEAVE' || rawStatus === 'LEAVE') status = 'ON_LEAVE';
+      else if (rawStatus === 'LATE') status = 'LATE';
+      else if (rawStatus === 'HALF_DAY') status = 'HALF_DAY';
 
-    setIsEditModalOpen(false);
-    setToast({
-      open: true,
-      message: `Attendance updated for ${formData.name}!`,
-      severity: 'success'
-    });
+      const isNonWorking = status === 'ABSENT' || status === 'ON_LEAVE';
+      const total = isNonWorking ? '00:00' : calculateTotalHours(formData.firstIn, formData.lastOut, formData.breakTime);
+
+      const updatePayload = {
+        shift: formData.shift,
+        status,
+        break_time: isNonWorking ? '00:00' : formData.breakTime,
+        total_hours: total,
+      };
+
+      if (!isNonWorking && formData.firstIn) {
+        updatePayload.clock_in_time = new Date(`${todayStr}T${formData.firstIn}:00.000Z`).toISOString();
+      }
+      if (!isNonWorking && formData.lastOut) {
+        if (formData.firstIn && formData.lastOut < formData.firstIn) {
+          // Cross-midnight shift
+          const d = new Date(`${todayStr}T00:00:00.000Z`);
+          d.setDate(d.getDate() + 1);
+          const nextDayStr = d.toISOString().split('T')[0];
+          updatePayload.clock_out_time = new Date(`${nextDayStr}T${formData.lastOut}:00.000Z`).toISOString();
+        } else {
+          updatePayload.clock_out_time = new Date(`${todayStr}T${formData.lastOut}:00.000Z`).toISOString();
+        }
+      }
+
+      await attendanceService.updateAttendance(selectedRecord.id, updatePayload);
+
+      setIsEditModalOpen(false);
+      setToast({
+        open: true,
+        message: `Attendance updated for ${formData.name}!`,
+        severity: 'success',
+      });
+      loadAttendance();
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to update attendance';
+      setToast({
+        open: true,
+        message: msg,
+        severity: 'error',
+      });
+    }
   };
 
   // Open Delete Dialog
@@ -322,49 +376,63 @@ export function useTodaysAttendance() {
   };
 
   // Confirm Delete
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!selectedRecord) return;
-    setAttendanceList(attendanceList.filter((item) => item.id !== selectedRecord.id));
-    setSelectedIds(selectedIds.filter((id) => id !== selectedRecord.id));
-    setIsDeleteDialogOpen(false);
-    setToast({
-      open: true,
-      message: `Attendance record for ${selectedRecord.name} deleted!`,
-      severity: 'success'
-    });
+    try {
+      await attendanceService.deleteAttendance(selectedRecord.id);
+      setIsDeleteDialogOpen(false);
+      setToast({
+        open: true,
+        message: `Attendance record for ${selectedRecord.name} deleted!`,
+        severity: 'success',
+      });
+      loadAttendance();
+    } catch (err) {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to delete attendance record';
+      setToast({
+        open: true,
+        message: msg,
+        severity: 'error',
+      });
+    }
   };
 
   // Dynamic 6-card Attendance Summary Metrics
   const attendanceStats = useMemo(() => {
     const list = Array.isArray(attendanceList) ? attendanceList : [];
-    const totalEmployees = list.length;
-    
-    // Present count (case-insensitive check)
-    const presentCount = list.filter(item => (item.status || '').toLowerCase() === 'present').length;
-    
-    // Absent count (case-insensitive check)
-    const absentCount = list.filter(item => (item.status || '').toLowerCase() === 'absent').length;
-    
-    // Attendance rate safe percentage
-    const attendanceRate = totalEmployees > 0 
-      ? `${Math.round((presentCount / totalEmployees) * 100)}%` 
-      : '0%';
-      
-    // Day Shift count (case-insensitive check)
-    const dayShiftCount = list.filter(item => (item.shift || '').toLowerCase().includes('day')).length;
-    
-    // Night Shift count (case-insensitive check)
-    const nightShiftCount = list.filter(item => (item.shift || '').toLowerCase().includes('night')).length;
+    const totalRecords = list.length;
+
+    const presentCount = list.filter(
+      (item) => (item.status || '').toLowerCase() === 'present'
+    ).length;
+
+    const absentCount = list.filter(
+      (item) => (item.status || '').toLowerCase() === 'absent'
+    ).length;
+
+    const leaveCount = list.filter((item) => {
+      const s = (item.status || '').toLowerCase();
+      return s === 'on_leave' || s === 'leave';
+    }).length;
+
+    const attendanceRate =
+      totalRecords > 0
+        ? `${Math.round((presentCount / totalRecords) * 100)}%`
+        : '0%';
+
+    const dayShiftCount = list.filter((item) =>
+      (item.shift || '').toLowerCase().includes('day')
+    ).length;
 
     return [
       {
         id: 'total-employees',
         title: 'Total Employees',
-        value: totalEmployees,
-        subtext: 'Roster total',
+        value: totalRecords,
+        subtext: 'Today active records',
         icon: PeopleOutlinedIcon,
         iconBg: 'bg-[var(--primary-main)]/10',
-        iconColor: 'text-[var(--primary-main)]'
+        iconColor: 'text-[var(--primary-main)]',
       },
       {
         id: 'present',
@@ -373,7 +441,7 @@ export function useTodaysAttendance() {
         subtext: 'On duty',
         icon: HowToRegOutlinedIcon,
         iconBg: 'bg-emerald-50',
-        iconColor: 'text-emerald-600'
+        iconColor: 'text-emerald-600',
       },
       {
         id: 'absent',
@@ -382,7 +450,16 @@ export function useTodaysAttendance() {
         subtext: 'Off duty',
         icon: PersonOffOutlinedIcon,
         iconBg: 'bg-rose-50',
-        iconColor: 'text-rose-600'
+        iconColor: 'text-rose-600',
+      },
+      {
+        id: 'on-leave',
+        title: 'On Leave',
+        value: leaveCount,
+        subtext: 'Approved leave',
+        icon: EventBusyOutlinedIcon,
+        iconBg: 'bg-blue-50',
+        iconColor: 'text-blue-600',
       },
       {
         id: 'attendance-rate',
@@ -390,35 +467,31 @@ export function useTodaysAttendance() {
         value: attendanceRate,
         subtext: 'Turnout',
         icon: PercentOutlinedIcon,
-        iconBg: 'bg-blue-50',
-        iconColor: 'text-blue-600'
+        iconBg: 'bg-purple-50',
+        iconColor: 'text-purple-600',
       },
       {
         id: 'day-shift',
         title: 'Day Shift',
         value: dayShiftCount,
-        subtext: 'Day roster',
+        subtext: 'Morning crew',
         icon: WbSunnyOutlinedIcon,
         iconBg: 'bg-amber-50',
-        iconColor: 'text-amber-600'
+        iconColor: 'text-amber-600',
       },
-      {
-        id: 'night-shift',
-        title: 'Night Shift',
-        value: nightShiftCount,
-        subtext: 'Night roster',
-        icon: NightsStayOutlinedIcon,
-        iconBg: 'bg-indigo-50',
-        iconColor: 'text-indigo-600'
-      }
     ];
   }, [attendanceList]);
 
   return {
     attendanceList,
+    employees,
+    loading,
+    error,
+    loadAttendance,
     searchQuery,
     setSearchQuery,
     selectedIds,
+    setSelectedIds,
     isRefreshing,
     sortField,
     sortOrder,
@@ -464,6 +537,6 @@ export function useTodaysAttendance() {
     handleSaveEditAttendance,
     handleOpenDeleteDialog,
     handleConfirmDelete,
-    attendanceStats
+    attendanceStats,
   };
 }

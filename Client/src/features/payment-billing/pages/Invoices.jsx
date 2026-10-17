@@ -26,10 +26,12 @@ import {
   Person as PersonIcon,
 } from '@mui/icons-material';
 import {
-  getInvoices,
-  getPayments,
-  recordInvoicePayment,
+  syncInvoicesFromBackend,
+  dispatchFinancialEvent,
+  PAYMENTS_UPDATED_EVENT,
 } from './paymentBillingStore';
+import { billingService } from '../../../services/billingService';
+import { toFrontendInvoiceList, toBackendPaymentPayload } from '../adapters/billingAdapter';
 import InvoiceDetailModal from './components/InvoiceDetailModal';
 import RecordPaymentModal from './components/RecordPaymentModal';
 
@@ -38,9 +40,43 @@ export default function Invoices() {
   const location = useLocation();
 
   const queryGuest = searchParams.get('guest') || searchParams.get('search') || location.state?.search || location.state?.guestName || '';
-  const [invoices, setInvoices] = useState(() => getInvoices());
+  const [invoices, setInvoices] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState(queryGuest);
   const [statusFilter, setStatusFilter] = useState('All');
+
+  // Backend authoritative data fetching
+  const fetchInvoices = React.useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await billingService.getInvoices();
+      const rawList = Array.isArray(res?.data?.invoices)
+        ? res.data.invoices
+        : (Array.isArray(res?.data)
+          ? res.data
+          : (Array.isArray(res?.invoices) ? res.invoices : null));
+      if (Array.isArray(rawList)) {
+        const adapted = toFrontendInvoiceList(rawList);
+        setInvoices(adapted);
+        syncInvoicesFromBackend(adapted);
+      } else {
+        setInvoices([]);
+      }
+    } catch (err) {
+      console.warn('Backend invoices fetch failed:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to fetch invoices from server.';
+      setError(errMsg);
+      setInvoices([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchInvoices();
+  }, [fetchInvoices]);
 
   useEffect(() => {
     const q = searchParams.get('guest') || searchParams.get('search') || location.state?.search || location.state?.guestName || '';
@@ -49,403 +85,423 @@ export default function Invoices() {
     }
   }, [searchParams, location.state]);
  
- // Modals state
- const [selectedInvoiceForDetail, setSelectedInvoiceForDetail] = useState(null);
- const [isDetailOpen, setIsDetailOpen] = useState(false);
- 
- const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState(null);
- const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
+  // Modals state
+  const [selectedInvoiceForDetail, setSelectedInvoiceForDetail] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  
+  const [selectedInvoiceForPayment, setSelectedInvoiceForPayment] = useState(null);
+  const [isRecordPaymentOpen, setIsRecordPaymentOpen] = useState(false);
 
- // Snackbar
- const [snackbar, setSnackbar] = useState({ open: false, message:'', severity:'success' });
+  // Snackbar
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
- // Sync state helper
- const reloadData = () => {
- setInvoices(getInvoices());
- };
+  // Sync state helper
+  const reloadData = () => {
+    fetchInvoices();
+  };
 
- // Status Chip Renderer
- const renderStatusBadge = (status) => {
- switch (status) {
- case'Paid':
- return (
- <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
- Paid
- </span>
- );
- case'Partially Paid':
- return (
- <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
- Partially Paid
- </span>
- );
- case'Unpaid':
- return (
- <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
- Unpaid
- </span>
- );
- case'Overdue':
- return (
- <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 border border-red-200 animate-pulse">
- Overdue
- </span>
- );
- case'Draft':
- return (
- <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700 border border-gray-300">
- Draft
- </span>
- );
- default:
- return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 text-gray-700">{status}</span>;
- }
- };
+  // Status Chip Renderer
+  const renderStatusBadge = (status) => {
+    switch (status) {
+      case 'Paid':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+            Paid
+          </span>
+        );
+      case 'Partially Paid':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+            Partially Paid
+          </span>
+        );
+      case 'Unpaid':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+            Unpaid
+          </span>
+        );
+      case 'Overdue':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-red-100 text-red-800 border border-red-200 animate-pulse">
+            Overdue
+          </span>
+        );
+      case 'Draft':
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-gray-100 text-gray-700 border border-gray-300">
+            Draft
+          </span>
+        );
+      default:
+        return <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-gray-100 text-gray-700">{status}</span>;
+    }
+  };
 
- // Metrics Calculations
- const metrics = useMemo(() => {
- let totalInvoiced = 0;
- let totalPaid = 0;
- let totalBalanceDue = 0;
- let overdueCount = 0;
- let overdueAmount = 0;
+  // Metrics Calculations
+  const metrics = useMemo(() => {
+    let totalInvoiced = 0;
+    let totalPaid = 0;
+    let totalBalanceDue = 0;
+    let overdueCount = 0;
+    let overdueAmount = 0;
 
- invoices.forEach((inv) => {
- totalInvoiced += inv.totalAmount || 0;
- totalPaid += inv.paidAmount || 0;
- totalBalanceDue += inv.balanceDue || 0;
- if (inv.status ==='Overdue') {
- overdueCount += 1;
- overdueAmount += inv.balanceDue || 0;
- }
- });
+    invoices.forEach((inv) => {
+      totalInvoiced += inv.totalAmount || 0;
+      totalPaid += inv.paidAmount || 0;
+      totalBalanceDue += inv.balanceDue || 0;
+      if (inv.status === 'Overdue') {
+        overdueCount += 1;
+        overdueAmount += inv.balanceDue || 0;
+      }
+    });
 
- return {
- totalInvoiced,
- totalPaid,
- totalBalanceDue,
- overdueCount,
- overdueAmount,
- collectionRate: totalInvoiced > 0 ? ((totalPaid / totalInvoiced) * 100).toFixed(1) : 0,
- };
- }, [invoices]);
+    return {
+      totalInvoiced,
+      totalPaid,
+      totalBalanceDue,
+      overdueCount,
+      overdueAmount,
+      collectionRate: totalInvoiced > 0 ? ((totalPaid / totalInvoiced) * 100).toFixed(1) : 0,
+    };
+  }, [invoices]);
 
- // Filtered list
- const filteredInvoices = useMemo(() => {
- return invoices.filter((inv) => {
- const term = (searchTerm || '').trim().toLowerCase();
- if (!term && statusFilter === 'All') return true;
+  // Filtered list
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter((inv) => {
+      const term = (searchTerm || '').trim().toLowerCase();
+      if (!term && statusFilter === 'All') return true;
 
- const matchesSearch = !term ||
- inv.id.toLowerCase().includes(term) ||
- inv.guestName.toLowerCase().includes(term) ||
- inv.bookingId.toLowerCase().includes(term) ||
- (inv.guestEmail && inv.guestEmail.toLowerCase().includes(term)) ||
- String(inv.roomNumber).includes(term);
+      const matchesSearch = !term ||
+        inv.id.toLowerCase().includes(term) ||
+        inv.guestName.toLowerCase().includes(term) ||
+        inv.bookingId.toLowerCase().includes(term) ||
+        String(inv.roomNumber).includes(term);
 
- const matchesStatus = statusFilter ==='All' || inv.status === statusFilter;
+      const matchesStatus = statusFilter === 'All' || inv.status === statusFilter;
 
- return matchesSearch && matchesStatus;
- });
- }, [invoices, searchTerm, statusFilter]);
+      return matchesSearch && matchesStatus;
+    });
+  }, [invoices, searchTerm, statusFilter]);
 
- const handleRecordPayment = (paymentData) => {
- try {
- recordInvoicePayment(paymentData);
- reloadData();
- setSnackbar({
- open: true,
- message:`Payment of $${paymentData.amount.toFixed(2)} recorded successfully for ${paymentData.invoiceId}!`,
- severity:'success',
- });
- } catch (err) {
- setSnackbar({
- open: true,
- message: err.message ||'Failed to record payment.',
- severity:'error',
- });
- }
- };
+  const handleRecordPayment = async (paymentData) => {
+    try {
+      const matched = invoices.find(
+        (inv) => inv.id === paymentData.invoiceId || inv.invoiceNumber === paymentData.invoiceId
+      );
+      const backendPayload = toBackendPaymentPayload(paymentData);
+      if (matched?._id) {
+        backendPayload.invoice_id = matched._id;
+      }
+      if (matched?.folioId && /^[0-9a-fA-F]{24}$/.test(matched.folioId)) {
+        backendPayload.folio_id = matched.folioId;
+      }
+      if (matched?.guestId && /^[0-9a-fA-F]{24}$/.test(matched.guestId)) {
+        backendPayload.guest_id = matched.guestId;
+      }
 
- return (
- <div className="space-y-2 pb-2 animate-fade-in pt-1">
+      await billingService.createPayment(backendPayload);
 
- {searchTerm && (
- <div className="bg-[#e5f4eb] border border-[#1b7f43]/30 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs text-[#1b7f43] shadow-xs">
- <div className="flex items-center gap-2">
- <PersonIcon sx={{ fontSize: 18 }} className="text-[#1b7f43]" />
- <span>
- Showing invoices for guest: <strong className="text-gray-900 font-bold">{searchTerm}</strong>
- </span>
- </div>
- <button
- onClick={() => {
- setSearchTerm('');
- setSearchParams({});
- }}
- className="px-2.5 py-1 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-md border border-gray-200 transition text-[11px] cursor-pointer shadow-xs"
- >
- Clear Filter / Show All Invoices
- </button>
- </div>
- )}
+      await fetchInvoices();
+      dispatchFinancialEvent(PAYMENTS_UPDATED_EVENT, {
+        domain: 'payments',
+        action: 'record_payment',
+        invoiceId: paymentData.invoiceId,
+        amount: paymentData.amount,
+      });
 
- {/* Metric Cards */}
- <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
- {/* Total Invoiced */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Total Invoiced</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-gray-900">${metrics.totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
- <span className="text-[10px] text-gray-400 font-medium">{invoices.length} Folios</span>
- </div>
- </div>
+      setSnackbar({
+        open: true,
+        message: `Payment of $${paymentData.amount.toFixed(2)} recorded successfully for ${paymentData.invoiceId}!`,
+        severity: 'success',
+      });
+    } catch (err) {
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to record payment.';
+      setSnackbar({
+        open: true,
+        message: errMsg,
+        severity: 'error',
+      });
+      throw err;
+    }
+  };
 
- {/* Collected Revenue */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Collected Revenue</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-emerald-700">${metrics.totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
- <span className="text-[10px] text-emerald-600 font-semibold">{metrics.collectionRate}%</span>
- </div>
- </div>
+  return (
+    <div className="space-y-2 pb-2 animate-fade-in pt-1">
+      {/* Contextual Banner if filtered by URL parameter */}
+      {queryGuest && searchTerm === queryGuest && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between text-xs text-emerald-800 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <PersonIcon className="text-[#1b7f43]" sx={{ fontSize: 18 }} />
+            <span>
+              Showing invoices for guest: <strong className="text-gray-900 font-bold">{searchTerm}</strong>
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setSearchParams({});
+            }}
+            className="px-2 py-0.5 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-md border border-gray-200 transition text-[10.5px] cursor-pointer shadow-xs"
+          >
+            Clear Filter / Show All Invoices
+          </button>
+        </div>
+      )}
 
- {/* Outstanding Balance */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Outstanding Balance</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-gray-900">${metrics.totalBalanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
- <span className="text-[10px] text-amber-600 font-medium">Pending</span>
- </div>
- </div>
+      {/* Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-1">
+        <div className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xl font-bold text-gray-900 leading-none mb-1">${metrics.totalInvoiced.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Total Invoiced ({invoices.length} Folios)</div>
+          </div>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center bg-blue-50 text-blue-600">
+            <InvoiceIcon sx={{ fontSize: 16 }} />
+          </div>
+        </div>
+        <div className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xl font-bold text-gray-900 leading-none mb-1">${metrics.totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Collected Revenue ({metrics.collectionRate}%)</div>
+          </div>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center bg-green-50 text-green-600">
+            <PaidIcon sx={{ fontSize: 16 }} />
+          </div>
+        </div>
+        <div className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xl font-bold text-gray-900 leading-none mb-1">${metrics.totalBalanceDue.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Outstanding Balance</div>
+          </div>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center bg-amber-50 text-amber-600">
+            <PendingIcon sx={{ fontSize: 16 }} />
+          </div>
+        </div>
+        <div className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between gap-3">
+          <div>
+            <div className="text-xl font-bold text-gray-900 leading-none mb-1">${metrics.overdueAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+            <div className="text-[11px] text-gray-500 font-medium">Overdue Invoices ({metrics.overdueCount} Past Due)</div>
+          </div>
+          <div className="w-7 h-7 rounded-full flex items-center justify-center bg-red-50 text-red-600">
+            <WarningIcon sx={{ fontSize: 16 }} />
+          </div>
+        </div>
+      </div>
 
- {/* Overdue Invoices */}
- <div className="bg-white p-3 rounded-xl shadow-xs border border-gray-100 flex flex-col justify-between">
- <div className="flex justify-between items-center mb-0.5">
- <span className="text-gray-500 font-semibold text-[11px] truncate">Overdue Invoices</span>
- </div>
- <div className="flex items-baseline justify-between">
- <span className="text-base font-bold text-red-600">${metrics.overdueAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
- <span className="text-[10px] text-red-500 font-medium">{metrics.overdueCount} Past Due</span>
- </div>
- </div>
- </div>
+      {/* Filter and Search Bar */}
+      <div className="bg-white rounded-xl p-2.5 border border-gray-100 shadow-xs flex flex-col md:flex-row items-center justify-between gap-2">
+        <div className="relative w-full sm:w-60 shrink-0">
+          <SearchIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" sx={{ fontSize: 15 }} />
+          <input
+            type="text"
+            placeholder="Search invoice #, guest, room..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-7 pr-7 py-1 bg-white border border-gray-200 rounded-lg text-[11px] focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-shadow placeholder-gray-400 text-gray-800"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <ClearIcon sx={{ fontSize: 13 }} />
+            </button>
+          )}
+        </div>
 
- {/* Filter and Search Bar */}
- <div className="bg-white rounded-xl p-3 border border-gray-100 shadow-xs flex flex-col md:flex-row items-center justify-between gap-3">
- <div className="relative w-full sm:w-64 shrink-0">
- <SearchIcon className="absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" sx={{ fontSize: 16 }} />
- <input
- type="text"
- placeholder="Search invoice #, guest, room..."
- value={searchTerm}
- onChange={(e) => setSearchTerm(e.target.value)}
- className="w-full pl-8 pr-7 py-1.5 bg-white border border-gray-200 rounded-xl text-xs focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-shadow placeholder-gray-400 text-gray-800"
- />
- {searchTerm && (
- <button
- onClick={() => setSearchTerm('')}
- className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
- >
- <ClearIcon sx={{ fontSize: 14 }} />
- </button>
- )}
- </div>
+        {/* Status Filter Buttons */}
+        <div className="flex items-center gap-1 w-full md:w-auto pb-0.5 md:pb-0">
+          {['All', 'Paid', 'Partially Paid', 'Unpaid', 'Overdue'].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status)}
+              className={`px-2.5 py-1 rounded-md text-[10.5px] font-semibold transition-colors cursor-pointer ${
+                statusFilter === status
+                  ? 'bg-[#1b7f43] text-white shadow-xs'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {status}
+            </button>
+          ))}
+        </div>
+        <button
+          className="px-2.5 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-[11px] font-semibold shadow-xs transition cursor-pointer"
+          onClick={() => {
+            setSelectedInvoiceForPayment(null);
+            setIsRecordPaymentOpen(true);
+          }}
+        >
+          + Record Payment
+        </button>
+      </div>
 
- {/* Status Filter Buttons */}
- <div className="flex items-center gap-1 w-full md:w-auto pb-0.5 md:pb-0">
- {['All','Paid','Partially Paid','Unpaid','Overdue'].map((status) => (
- <button
- key={status}
- onClick={() => setStatusFilter(status)}
- className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
- statusFilter === status
- ?'bg-[#1b7f43] text-white shadow-xs'
- :'bg-gray-100 text-gray-600 hover:bg-gray-200'
- }`}
- >
- {status}
- </button>
- ))}
- </div>
- <button
- className="px-3 py-1 bg-[#1b7f43] hover:bg-[#156736] text-white rounded text-xs font-semibold shadow-xs transition cursor-pointer"
- onClick={() => {
- setSelectedInvoiceForPayment(null);
- setIsRecordPaymentOpen(true);
- }}
- >
- + Record Payment
- </button>
- </div>
+      {/* Invoices Table Container - Strictly 100% width with NO horizontal scroll */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden w-full">
+        <div className="w-full max-lg:overflow-x-auto lg:overflow-x-hidden min-w-0">
+          <table className="w-full table-fixed text-left border-collapse max-lg:min-w-[850px]">
+            <colgroup>
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '5%' }} />
+            </colgroup>
+            <thead>
+              <tr className="bg-gray-50/75 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
+                <th className="py-2 px-2">Invoice #</th>
+                <th className="py-2 px-1.5">Issue / Due</th>
+                <th className="py-2 px-2">Guest Details</th>
+                <th className="py-2 px-1.5">Room</th>
+                <th className="py-2 px-1 text-right">Subtotal</th>
+                <th className="py-2 px-1 text-right">Tax & Fee</th>
+                <th className="py-2 px-1 text-right">Total</th>
+                <th className="py-2 px-1 text-right">Paid</th>
+                <th className="py-2 px-1 text-right">Balance</th>
+                <th className="py-2 px-1 text-center">Status</th>
+                <th className="py-2 px-1 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 text-xs">
+              {filteredInvoices.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="py-8 text-center text-gray-400">
+                    <InvoiceIcon className="!text-3xl text-gray-300 mb-1" />
+                    <p className="text-[12px] font-semibold text-gray-600">
+                      {invoices.length === 0 ? 'No invoices found' : 'No invoices match your criteria'}
+                    </p>
+                    <p className="text-[10.5px] text-gray-400">
+                      {invoices.length === 0 ? 'No billing invoices recorded yet' : 'Try adjusting your search query or status filter'}
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredInvoices.map((inv) => (
+                  <tr key={inv.id} className="hover:bg-gray-50/80 transition-colors">
+                    <td className="py-1.5 px-2">
+                      <span className="font-mono font-bold text-[#1b7f43] block text-[11px] truncate">
+                        {inv.id}
+                      </span>
+                      <span className="block text-[9.5px] font-mono text-gray-400 truncate leading-tight">
+                        {inv.bookingId}
+                      </span>
+                    </td>
+                    <td className="py-1.5 px-1.5">
+                      <span className="font-medium text-gray-900 block text-[11px] truncate">{inv.issueDate}</span>
+                      <span className="text-[9.5px] text-gray-400 block truncate leading-tight">Due: {inv.dueDate}</span>
+                    </td>
+                    <td className="py-1.5 px-2">
+                      <div className="min-w-0">
+                        <span className="font-bold text-gray-900 block text-[11px] leading-tight break-words">{inv.guestName}</span>
+                        <span className="text-[9.5px] text-gray-500 block truncate" title={inv.guestEmail || 'Direct Check-in'}>{inv.guestEmail || 'Direct Check-in'}</span>
+                      </div>
+                    </td>
+                    <td className="py-1.5 px-1.5">
+                      <span className="font-semibold text-gray-800 block text-[11px] truncate">Room {inv.roomNumber}</span>
+                      <span className="text-[9.5px] text-gray-400 block truncate leading-tight">{inv.roomType}</span>
+                    </td>
+                    <td className="py-1.5 px-1 text-right font-medium text-gray-600 font-mono text-[11px] truncate">
+                      ${inv.subtotal?.toFixed(2)}
+                    </td>
+                    <td className="py-1.5 px-1 text-right font-medium text-gray-600 font-mono text-[11px] truncate">
+                      ${inv.taxesAndFees?.toFixed(2)}
+                    </td>
+                    <td className="py-1.5 px-1 text-right font-bold text-gray-900 font-mono text-[11px] truncate">
+                      ${inv.totalAmount?.toFixed(2)}
+                    </td>
+                    <td className="py-1.5 px-1 text-right font-bold text-emerald-600 font-mono text-[11px] truncate" title={inv.financialIssue || ''}>
+                      {inv.financialIntegrity === 'verified' ? `$${inv.paidAmount.toFixed(2)}` : 'Unresolved'}
+                    </td>
+                    <td className="py-1.5 px-1 text-right font-bold text-red-600 font-mono text-[11px] truncate" title={inv.financialIssue || ''}>
+                      {inv.financialIntegrity === 'verified' ? `$${inv.balanceDue.toFixed(2)}` : 'Unresolved'}
+                    </td>
+                    <td className="py-1.5 px-1 text-center">
+                      {renderStatusBadge(inv.status)}
+                    </td>
+                    <td className="py-1.5 px-1 text-center">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <Tooltip title="View Folio / Print">
+                          <IconButton
+                            size="small"
+                            sx={{ padding: '2px' }}
+                            className="!text-gray-500 hover:!text-[#1b7f43] hover:!bg-emerald-50"
+                            onClick={() => {
+                              setSelectedInvoiceForDetail(inv);
+                              setIsDetailOpen(true);
+                            }}
+                          >
+                            <ViewIcon sx={{ fontSize: 15 }} />
+                          </IconButton>
+                        </Tooltip>
+                        {inv.financialIntegrity === 'verified' && inv.balanceDue > 0 && (
+                          <Tooltip title="Record Payment">
+                            <IconButton
+                              size="small"
+                              title="Record Payment"
+                              aria-label="Record Payment"
+                              sx={{ padding: '2px' }}
+                              className="!text-emerald-600 hover:!bg-emerald-50"
+                              onClick={() => {
+                                setSelectedInvoiceForPayment(inv);
+                                setIsRecordPaymentOpen(true);
+                              }}
+                            >
+                              <PaymentIcon sx={{ fontSize: 15 }} />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
- 
+      {/* Modals */}
+      <InvoiceDetailModal
+        open={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        invoice={selectedInvoiceForDetail}
+        onRecordPaymentClick={(inv) => {
+          setSelectedInvoiceForPayment(inv);
+          setIsRecordPaymentOpen(true);
+        }}
+      />
 
- {/* Invoices Table Container - Strictly 100% width with NO horizontal scroll */}
- <div className="bg-white rounded-xl border border-gray-100 shadow-xs overflow-hidden w-full">
- <div className="w-full max-lg:overflow-x-auto lg:overflow-x-hidden min-w-0">
- <table className="w-full table-fixed text-left border-collapse max-lg:min-w-[850px]">
- <colgroup>
- <col style={{ width:'11%' }} />
- <col style={{ width:'10%' }} />
- <col style={{ width:'16%' }} />
- <col style={{ width:'10%' }} />
- <col style={{ width:'8%' }} />
- <col style={{ width:'8%' }} />
- <col style={{ width:'8%' }} />
- <col style={{ width:'8%' }} />
- <col style={{ width:'8%' }} />
- <col style={{ width:'8%' }} />
- <col style={{ width:'5%' }} />
- </colgroup>
- <thead>
- <tr className="bg-gray-50/75 border-b border-gray-100 text-[10px] font-bold text-gray-500 uppercase tracking-tight">
- <th className="py-2.5 px-2">Invoice #</th>
- <th className="py-2.5 px-1.5">Issue / Due</th>
- <th className="py-2.5 px-2">Guest Details</th>
- <th className="py-2.5 px-1.5">Room</th>
- <th className="py-2.5 px-1 text-right">Subtotal</th>
- <th className="py-2.5 px-1 text-right">Tax & Fee</th>
- <th className="py-2.5 px-1 text-right">Total</th>
- <th className="py-2.5 px-1 text-right">Paid</th>
- <th className="py-2.5 px-1 text-right">Balance</th>
- <th className="py-2.5 px-1 text-center">Status</th>
- <th className="py-2.5 px-1 text-center">Actions</th>
- </tr>
- </thead>
- <tbody className="divide-y divide-gray-100 text-xs">
- {filteredInvoices.length === 0 ? (
- <tr>
- <td colSpan={11} className="py-12 text-center text-gray-400">
- <InvoiceIcon className="!text-4xl text-gray-300 mb-2" />
- <p className="text-sm font-semibold text-gray-600">No invoices match your criteria</p>
- <p className="text-[11px] text-gray-400">Try adjusting your search query or status filter</p>
- </td>
- </tr>
- ) : (
- filteredInvoices.map((inv) => (
- <tr key={inv.id} className="hover:bg-gray-50/80 transition-colors">
- <td className="py-2 px-2">
- <span className="font-mono font-bold text-[#1b7f43] block text-xs truncate">
- {inv.id}
- </span>
- <span className="block text-[10px] font-mono text-gray-400 truncate leading-tight">
- {inv.bookingId}
- </span>
- </td>
- <td className="py-2 px-1.5">
- <span className="font-medium text-gray-900 block text-xs truncate">{inv.issueDate}</span>
- <span className="text-[10px] text-gray-400 block truncate leading-tight">Due: {inv.dueDate}</span>
- </td>
- <td className="py-2 px-2">
- <div className="min-w-0">
- <span className="font-bold text-gray-900 block text-xs leading-tight break-words">{inv.guestName}</span>
- <span className="text-[10px] text-gray-500 block truncate" title={inv.guestEmail ||'Direct Check-in'}>{inv.guestEmail ||'Direct Check-in'}</span>
- </div>
- </td>
- <td className="py-2 px-1.5">
- <span className="font-semibold text-gray-800 block text-xs truncate">Room {inv.roomNumber}</span>
- <span className="text-[10px] text-gray-400 block truncate leading-tight">{inv.roomType}</span>
- </td>
- <td className="py-2 px-1 text-right font-medium text-gray-600 font-mono text-xs truncate">
- ${inv.subtotal?.toFixed(2)}
- </td>
- <td className="py-2 px-1 text-right font-medium text-gray-600 font-mono text-xs truncate">
- ${inv.taxesAndFees?.toFixed(2)}
- </td>
- <td className="py-2 px-1 text-right font-bold text-gray-900 font-mono text-xs truncate">
- ${inv.totalAmount?.toFixed(2)}
- </td>
- <td className="py-2 px-1 text-right font-bold text-emerald-600 font-mono text-xs truncate">
- ${inv.paidAmount?.toFixed(2)}
- </td>
- <td className="py-2 px-1 text-right font-bold text-red-600 font-mono text-xs truncate">
- ${inv.balanceDue?.toFixed(2)}
- </td>
- <td className="py-2 px-1 text-center">
- {renderStatusBadge(inv.status)}
- </td>
- <td className="py-2 px-1 text-center">
- <div className="flex items-center justify-center gap-0.5">
- <Tooltip title="View Folio / Print">
- <IconButton
- size="small"
- sx={{ padding:'2px' }}
- className="!text-gray-500 hover:!text-[#1b7f43] hover:!bg-emerald-50"
- onClick={() => {
- setSelectedInvoiceForDetail(inv);
- setIsDetailOpen(true);
- }}
- >
- <ViewIcon sx={{ fontSize: 16 }} />
- </IconButton>
- </Tooltip>
- {inv.balanceDue > 0 && (
- <Tooltip title="Record Payment">
- <IconButton
- size="small"
- sx={{ padding:'2px' }}
- className="!text-emerald-600 hover:!bg-emerald-50"
- onClick={() => {
- setSelectedInvoiceForPayment(inv);
- setIsRecordPaymentOpen(true);
- }}
- >
- <PaymentIcon sx={{ fontSize: 16 }} />
- </IconButton>
- </Tooltip>
- )}
- </div>
- </td>
- </tr>
- ))
- )}
- </tbody>
- </table>
- </div>
- </div>
+      <RecordPaymentModal
+        open={isRecordPaymentOpen}
+        onClose={() => setIsRecordPaymentOpen(false)}
+        invoice={selectedInvoiceForPayment}
+        invoices={invoices}
+        onRecordPayment={handleRecordPayment}
+      />
 
- {/* Modals */}
- <InvoiceDetailModal
- open={isDetailOpen}
- onClose={() => setIsDetailOpen(false)}
- invoice={selectedInvoiceForDetail}
- onRecordPaymentClick={(inv) => {
- setSelectedInvoiceForPayment(inv);
- setIsRecordPaymentOpen(true);
- }}
- />
-
- <RecordPaymentModal
- open={isRecordPaymentOpen}
- onClose={() => setIsRecordPaymentOpen(false)}
- invoice={selectedInvoiceForPayment}
- invoices={invoices}
- onRecordPayment={handleRecordPayment}
- />
-
- {/* Notification Snackbar */}
- <Snackbar
- open={snackbar.open}
- autoHideDuration={4500}
- onClose={() => setSnackbar({ ...snackbar, open: false })}
- anchorOrigin={{ vertical:'bottom', horizontal:'right' }}
- >
- <Alert
- onClose={() => setSnackbar({ ...snackbar, open: false })}
- severity={snackbar.severity}
- variant="filled"
- className="!font-medium !rounded-xl shadow-lg"
- >
- {snackbar.message}
- </Alert>
- </Snackbar>
- </div>
- );
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4500}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+          severity={snackbar.severity}
+          variant="filled"
+          className="!font-medium !rounded-xl shadow-lg"
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </div>
+  );
 }

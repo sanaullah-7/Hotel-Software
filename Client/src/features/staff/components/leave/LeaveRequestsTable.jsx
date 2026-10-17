@@ -9,7 +9,7 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import AddIcon from '@mui/icons-material/Add';
+import AddCircleIcon from "@mui/icons-material/AddCircle";
 import RefreshIcon from '@mui/icons-material/Refresh';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -43,13 +43,13 @@ export const LeaveRequestsTable = ({
   toggleColumn
 }) => {
   return (
-    <div className="bg-white rounded-xl border border-gray-200/80 shadow-[0_1px_6px_rgba(0,0,0,0.03)] p-2 sm:p-2.5">
+    <div className="bg-white rounded-[6px] border border-gray-100 shadow-sm p-2 sm:p-2.5 mt-1.5">
       {/* Toolbar Header (Title + Search + Actions) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 pb-2 border-b border-gray-100">
         {/* Left: Table Title & Search input */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full md:w-auto">
-          <h2 className="text-[17px] font-bold text-gray-800 shrink-0">Leave Requests</h2>
-          <div className="relative w-full sm:w-64">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full md:w-auto">
+          <h2 className="text-sm font-bold text-gray-800 shrink-0">Leave Requests</h2>
+          <div className="relative w-full sm:w-56">
             <input
               type="text"
               placeholder="Search..."
@@ -58,61 +58,55 @@ export const LeaveRequestsTable = ({
                 setSearchTerm(e.target.value);
                 setPage(0);
               }}
-              className="w-full h-9 pl-3.5 pr-9 text-sm text-gray-700 bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#5d5fef] focus:ring-2 focus:ring-[#5d5fef]/15 transition-all"
+              className="w-full h-[28px] pl-3 pr-8 text-xs text-gray-700 bg-white border border-gray-200 rounded focus:outline-none focus:border-[#5d5fef] transition-all"
             />
             <SearchIcon
-              sx={{ fontSize: 18, color: '#94a3b8' }}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+              sx={{ fontSize: 16, color: '#94a3b8' }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"
             />
           </div>
         </div>
 
         {/* Right Toolbar Action Icons */}
-        <div className="assigned-table-toolbar flex items-center gap-1.5 sm:gap-2 self-end md:self-auto">
+        <div className="assigned-table-toolbar flex items-center gap-1 sm:gap-1.5 self-end md:self-auto">
           {selectedIds.length > 0 && (
             <Tooltip title={`Delete ${selectedIds.length} Selected`}>
               <IconButton
                 size="small"
                 onClick={handleBulkDelete}
                 className="!bg-red-50 !text-red-600 hover:!bg-red-100"
-                sx={{ width: 34, height: 34, borderRadius: '8px' }}
+                sx={{ width: 28, height: 28, borderRadius: '6px' }}
               >
                 <DeleteOutlinedIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           )}
 
-          <Tooltip title="Show/Hide Column">
+          <Tooltip title="Filter Columns">
             <IconButton
               size="small"
               onClick={(e) => setFilterAnchorEl(e.currentTarget)}
               sx={{
-                width: 34,
-                height: 34,
-                borderRadius: '8px',
-                backgroundColor: '#22c55e',
-                color: '#22c55e',
-                '&:hover': { backgroundColor: '#e2e8f0' }
+                color: "#1b7f43",
+                padding: "4px",
+                "&:hover": { backgroundColor: "#f0fdf4" }
               }}
             >
-              <FilterListIcon fontSize="small" />
+              <FilterListIcon sx={{ fontSize: 22 }} />
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Add Leave Request">
+          <Tooltip title="Apply Leave">
             <IconButton
               size="small"
               onClick={handleOpenAddModal}
               sx={{
-                width: 34,
-                height: 34,
-                borderRadius: '8px',
-                backgroundColor: '#22c55e',
-                color: '#10b981',
-                '&:hover': { backgroundColor: '#16a34a' }
+                color: "#1b7f43",
+                padding: "4px",
+                "&:hover": { backgroundColor: "#f0fdf4" }
               }}
             >
-              <AddIcon fontSize="small" />
+              <AddCircleIcon sx={{ fontSize: 22 }} />
             </IconButton>
           </Tooltip>
 
@@ -121,51 +115,40 @@ export const LeaveRequestsTable = ({
               size="small"
               onClick={handleRefresh}
               sx={{
-                width: 34,
-                height: 34,
-                borderRadius: '8px',
-                backgroundColor: '#475569',
-                color: '#475569',
-                '&:hover': { backgroundColor: '#e2e8f0' }
+                color: "#1b7f43",
+                padding: "4px",
+                "&:hover": { backgroundColor: "#f0fdf4" }
               }}
             >
-              <RefreshIcon fontSize="small" />
+              <RefreshIcon sx={{ fontSize: 22 }} />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Export to Excel">
             <IconButton
-              className="toolbar-export-icon"
               size="small"
               onClick={handleExportExcel}
               sx={{
-                width: 34,
-                height: 34,
-                borderRadius: '8px',
-                backgroundColor: '#0284c7',
-                color: '#3b82f6',
-                '&:hover': { backgroundColor: '#0369a1' }
+                color: "#0284c7",
+                padding: "4px",
+                "&:hover": { backgroundColor: "#f0f9ff" }
               }}
             >
-              <TableChartIcon fontSize="small" />
+              <TableChartIcon sx={{ fontSize: 22 }} />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Export to PDF">
             <IconButton
-              className="toolbar-export-icon"
               size="small"
               onClick={handleExportPdf}
               sx={{
-                width: 34,
-                height: 34,
-                borderRadius: '8px',
-                backgroundColor: '#ef4444',
-                color: '#ef4444',
-                '&:hover': { backgroundColor: '#dc2626' }
+                color: "#ef4444",
+                padding: "4px",
+                "&:hover": { backgroundColor: "#fef2f2" }
               }}
             >
-              <PictureAsPdfIcon fontSize="small" />
+              <PictureAsPdfIcon sx={{ fontSize: 22 }} />
             </IconButton>
           </Tooltip>
         </div>
@@ -175,9 +158,9 @@ export const LeaveRequestsTable = ({
       <div className="w-full mt-2 overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[860px]">
           <thead>
-            <tr className="border-b border-gray-100 text-xs font-bold text-gray-700 tracking-wider">
+            <tr className="border-b border-gray-100 bg-slate-50/80 text-[10.5px] font-bold text-gray-700 tracking-wide uppercase">
               {visibleColumns.select && (
-                <th className="py-3 px-2.5 w-10">
+                <th className="py-2 px-2.5 w-10">
                   <Checkbox
                     size="small"
                     checked={
@@ -192,31 +175,32 @@ export const LeaveRequestsTable = ({
                     sx={{
                       color: '#cbd5e1',
                       '&.Mui-checked': { color: '#5d5fef' },
-                      '&.MuiCheckbox-indeterminate': { color: '#5d5fef' }
+                      '&.MuiCheckbox-indeterminate': { color: '#5d5fef' },
+                      padding: 0
                     }}
                   />
                 </th>
               )}
-              {visibleColumns.id && <th className="py-3 px-3">ID</th>}
-              {visibleColumns.empId && <th className="py-3 px-3">Emp ID</th>}
-              {visibleColumns.name && <th className="py-3 px-3">Name</th>}
-              {visibleColumns.department && <th className="py-3 px-3">Department</th>}
-              {visibleColumns.designation && <th className="py-3 px-3">Designation</th>}
-              {visibleColumns.leaveType && <th className="py-3 px-3">Leave Type</th>}
-              {visibleColumns.status && <th className="py-3 px-3">Status</th>}
-              {visibleColumns.from && <th className="py-3 px-3">From</th>}
-              {visibleColumns.to && <th className="py-3 px-3">To</th>}
-              {visibleColumns.days && <th className="py-3 px-3">No of Days</th>}
-              {visibleColumns.approvedBy && <th className="py-3 px-3">Approved By</th>}
-              {visibleColumns.reason && <th className="py-3 px-3">Reason</th>}
-              {visibleColumns.actions && <th className="py-3 px-3 text-right pr-4">Actions</th>}
+              {visibleColumns.id && <th className="py-2 px-2.5">ID</th>}
+              {visibleColumns.empId && <th className="py-2 px-2.5">Emp ID</th>}
+              {visibleColumns.name && <th className="py-2 px-2.5">Name</th>}
+              {visibleColumns.department && <th className="py-2 px-2.5">Department</th>}
+              {visibleColumns.designation && <th className="py-2 px-2.5">Designation</th>}
+              {visibleColumns.leaveType && <th className="py-2 px-2.5">Leave Type</th>}
+              {visibleColumns.status && <th className="py-2 px-2.5">Status</th>}
+              {visibleColumns.from && <th className="py-2 px-2.5">From</th>}
+              {visibleColumns.to && <th className="py-2 px-2.5">To</th>}
+              {visibleColumns.days && <th className="py-2 px-2.5">No of Days</th>}
+              {visibleColumns.approvedBy && <th className="py-2 px-2.5">Approved By</th>}
+              {visibleColumns.reason && <th className="py-2 px-2.5">Reason</th>}
+              {visibleColumns.actions && <th className="py-2 px-2.5 text-right pr-3">Actions</th>}
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-gray-50 text-sm">
+          <tbody className="divide-y divide-gray-50 text-[11px] text-gray-700">
             {paginatedData.length === 0 ? (
               <tr>
-                <td colSpan={14} className="py-10 text-center text-gray-400 font-medium">
+                <td colSpan={14} className="py-8 text-center text-gray-400 font-medium text-xs">
                   No leave requests found matching your search.
                 </td>
               </tr>
@@ -231,53 +215,54 @@ export const LeaveRequestsTable = ({
                     }`}
                   >
                     {visibleColumns.select && (
-                      <td className="py-2.5 px-2.5">
+                      <td className="py-1.5 px-2.5">
                         <Checkbox
                           size="small"
                           checked={isSelected}
                           onChange={() => handleSelectRow(row.id)}
                           sx={{
                             color: '#cbd5e1',
-                            '&.Mui-checked': { color: '#5d5fef' }
+                            '&.Mui-checked': { color: '#5d5fef' },
+                            padding: 0
                           }}
                         />
                       </td>
                     )}
                     {visibleColumns.id && (
-                      <td className="py-2.5 px-3 text-gray-500 font-medium text-xs">#{row.id}</td>
+                      <td className="py-1.5 px-2.5 text-gray-500 font-medium text-xs">#{row.id}</td>
                     )}
                     {visibleColumns.empId && (
-                      <td className="py-2.5 px-3 text-gray-600 font-medium text-xs">{row.empId}</td>
+                      <td className="py-1.5 px-2.5 text-gray-600 font-medium text-xs">{row.empId}</td>
                     )}
                     {visibleColumns.name && (
-                      <td className="py-2.5 px-3">
-                        <div className="flex items-center gap-2.5">
+                      <td className="py-1.5 px-2.5">
+                        <div className="flex items-center gap-2">
                           <img
                             src={row.avatar}
                             alt={row.name}
-                            className="w-8 h-8 rounded-full object-cover border border-gray-100 shrink-0"
+                            className="w-6 h-6 rounded-full object-cover border border-gray-100 shrink-0"
                           />
-                          <span className="font-semibold text-gray-800 text-[13.5px]">
+                          <span className="font-semibold text-gray-800 text-xs">
                             {row.name}
                           </span>
                         </div>
                       </td>
                     )}
                     {visibleColumns.department && (
-                      <td className="py-2.5 px-3 text-gray-600 text-[13.5px]">{row.department}</td>
+                      <td className="py-1.5 px-2.5 text-gray-600">{row.department}</td>
                     )}
                     {visibleColumns.designation && (
-                      <td className="py-2.5 px-3 text-gray-500 text-xs">{row.designation}</td>
+                      <td className="py-1.5 px-2.5 text-gray-500 text-[10.5px]">{row.designation}</td>
                     )}
                     {visibleColumns.leaveType && (
-                      <td className="py-2.5 px-3 text-gray-700 font-medium text-[13.5px]">
+                      <td className="py-1.5 px-2.5 text-gray-700 font-medium">
                         {row.leaveType}
                       </td>
                     )}
                     {visibleColumns.status && (
-                      <td className="py-2.5 px-3">
+                      <td className="py-1.5 px-2.5">
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold tracking-wide ${
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold tracking-wide ${
                             row.status === 'Approved'
                               ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
                               : row.status === 'Pending'
@@ -290,53 +275,55 @@ export const LeaveRequestsTable = ({
                       </td>
                     )}
                     {visibleColumns.from && (
-                      <td className="py-2.5 px-3 text-gray-600 text-[13px]">
-                        <div className="flex items-center gap-1.5">
-                          <CalendarTodayIcon sx={{ fontSize: 14, color: '#1e293b' }} />
+                      <td className="py-1.5 px-2.5 text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <CalendarTodayIcon sx={{ fontSize: 13, color: '#1e293b' }} />
                           <span>{row.from}</span>
                         </div>
                       </td>
                     )}
                     {visibleColumns.to && (
-                      <td className="py-2.5 px-3 text-gray-600 text-[13px]">
-                        <div className="flex items-center gap-1.5">
-                          <CalendarTodayIcon sx={{ fontSize: 14, color: '#1e293b' }} />
+                      <td className="py-1.5 px-2.5 text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <CalendarTodayIcon sx={{ fontSize: 13, color: '#1e293b' }} />
                           <span>{row.to}</span>
                         </div>
                       </td>
                     )}
                     {visibleColumns.days && (
-                      <td className="py-2.5 px-3 text-gray-700 font-semibold text-[13.5px]">
+                      <td className="py-1.5 px-2.5 text-gray-700 font-semibold">
                         {row.days}
                       </td>
                     )}
                     {visibleColumns.approvedBy && (
-                      <td className="py-2.5 px-3 text-gray-600 text-[13px]">{row.approvedBy || '-'}</td>
+                      <td className="py-1.5 px-2.5 text-gray-600">{row.approvedBy || '-'}</td>
                     )}
                     {visibleColumns.reason && (
-                      <td className="py-2.5 px-3 text-gray-500 text-xs max-w-xs truncate">
+                      <td className="py-1.5 px-2.5 text-gray-500 text-[10.5px] max-w-xs truncate">
                         {row.reason || '-'}
                       </td>
                     )}
                     {visibleColumns.actions && (
-                      <td className="py-2.5 px-3 text-right pr-4">
-                        <div className="flex items-center justify-end gap-1">
+                      <td className="py-1.5 px-2.5 text-right pr-3">
+                        <div className="flex items-center justify-end gap-0.5">
                           <Tooltip title="Edit">
                             <IconButton
+                              aria-label="Edit leave request"
                               size="small"
                               onClick={() => handleOpenEditModal(row)}
-                              sx={{ color: '#3b82f6', '&:hover': { backgroundColor: '#eff6ff' } }}
+                              sx={{ color: '#3b82f6', '&:hover': { backgroundColor: '#eff6ff' }, padding: '3px' }}
                             >
-                              <EditIcon sx={{ fontSize: 18 }} />
+                              <EditIcon sx={{ fontSize: 16 }} />
                             </IconButton>
                           </Tooltip>
                           <Tooltip title="Delete">
                             <IconButton
+                              aria-label="Delete leave request"
                               size="small"
                               onClick={() => handleDeleteRow(row.id)}
-                              sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fef2f2' } }}
+                              sx={{ color: '#ef4444', '&:hover': { backgroundColor: '#fef2f2' }, padding: '3px' }}
                             >
-                              <DeleteOutlinedIcon sx={{ fontSize: 18 }} />
+                              <DeleteOutlinedIcon sx={{ fontSize: 16 }} />
                             </IconButton>
                           </Tooltip>
                         </div>
@@ -351,7 +338,7 @@ export const LeaveRequestsTable = ({
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 mt-2 border-t border-gray-100 text-xs text-gray-500">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-2.5 mt-2 border-t border-gray-100 text-[11px] text-gray-500">
         <div className="flex items-center gap-2">
           <span>Items per page:</span>
           <select
@@ -360,7 +347,7 @@ export const LeaveRequestsTable = ({
               setRowsPerPage(Number(e.target.value));
               setPage(0);
             }}
-            className="h-8 px-2 bg-white border border-gray-200 rounded text-xs text-gray-700 focus:outline-none focus:border-[#5d5fef]"
+            className="h-7 px-1.5 bg-white border border-gray-200 rounded text-xs text-gray-700 focus:outline-none focus:border-[#5d5fef]"
           >
             <option value={5}>5</option>
             <option value={10}>10</option>
@@ -369,7 +356,7 @@ export const LeaveRequestsTable = ({
           </select>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <span>
             {filteredData.length === 0
               ? '0 – 0 of 0'
@@ -379,22 +366,22 @@ export const LeaveRequestsTable = ({
                 )} of ${filteredData.length}`}
           </span>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-0.5">
             <IconButton
               size="small"
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
-              sx={{ borderRadius: '6px' }}
+              sx={{ borderRadius: '4px', p: '2px' }}
             >
-              <ChevronLeftIcon sx={{ fontSize: 18 }} />
+              <ChevronLeftIcon sx={{ fontSize: 16 }} />
             </IconButton>
             <IconButton
               size="small"
               disabled={(page + 1) * rowsPerPage >= filteredData.length}
               onClick={() => setPage((p) => p + 1)}
-              sx={{ borderRadius: '6px' }}
+              sx={{ borderRadius: '4px', p: '2px' }}
             >
-              <ChevronRightIcon sx={{ fontSize: 18 }} />
+              <ChevronRightIcon sx={{ fontSize: 16 }} />
             </IconButton>
           </div>
         </div>
@@ -409,14 +396,14 @@ export const LeaveRequestsTable = ({
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         PaperProps={{
           sx: {
-            p: 2,
-            width: 210,
-            borderRadius: '12px',
+            p: 1.5,
+            width: 200,
+            borderRadius: '8px',
             boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
           }
         }}
       >
-        <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wider pb-2 mb-2 border-b border-gray-100">
+        <h4 className="text-[11px] font-bold text-gray-700 uppercase tracking-wider pb-1.5 mb-1.5 border-b border-gray-100">
           Show/Hide Column
         </h4>
         <div className="flex flex-col gap-0.5 max-h-60 overflow-y-auto pr-1">
@@ -443,13 +430,13 @@ export const LeaveRequestsTable = ({
                   checked={visibleColumns[col.key]}
                   onChange={() => toggleColumn(col.key)}
                   sx={{
-                    p: 0.5,
+                    p: 0.25,
                     color: '#cbd5e1',
                     '&.Mui-checked': { color: '#5d5fef' }
                   }}
                 />
               }
-              label={<span className="text-xs font-medium text-gray-700">{col.label}</span>}
+              label={<span className="text-[11px] font-medium text-gray-700">{col.label}</span>}
               sx={{ m: 0 }}
             />
           ))}

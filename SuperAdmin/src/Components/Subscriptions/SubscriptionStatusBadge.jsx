@@ -2,6 +2,7 @@ const STATUS_MAP = {
   ACTIVE: { label: 'Active', bg: 'rgba(16, 185, 129, 0.12)', color: '#10b981', border: 'rgba(16, 185, 129, 0.3)' },
   TRIAL: { label: 'Free Trial', bg: 'rgba(59, 130, 246, 0.12)', color: '#3b82f6', border: 'rgba(59, 130, 246, 0.3)' },
   EXPIRED: { label: 'Expired', bg: 'rgba(239, 68, 68, 0.12)', color: '#ef4444', border: 'rgba(239, 68, 68, 0.3)' },
+  SUSPENDED: { label: 'Suspended', bg: 'rgba(245, 158, 11, 0.12)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.3)' },
   CANCELLED: { label: 'Cancelled', bg: 'rgba(100, 116, 139, 0.12)', color: '#94a3b8', border: 'rgba(100, 116, 139, 0.3)' },
 };
 

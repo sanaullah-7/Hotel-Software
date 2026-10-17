@@ -1,16 +1,22 @@
-import React, { useState } from 'react';
-import { Popover } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Popover, CircularProgress, Alert } from '@mui/material';
 import {
   Search, AddCircleOutlined, Refresh,
   TableChart, PictureAsPdf
 } from '@mui/icons-material';
 
-import { initialGroups } from '../data/groupReservationsDemoData';
+import reservationService from '../../../services/reservationService';
+import {
+  toFrontendGroupReservation,
+  toBackendGroupReservationPayload
+} from '../adapters/reservationAdapter';
 import GroupReservationsTable from '../components/GroupReservationsTable';
 import GroupReservationModal from '../components/GroupReservationModal';
 
 export default function GroupReservations() {
-  const [groups, setGroups] = useState(initialGroups);
+  const [groups, setGroups] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   
   // Date filter state
@@ -22,9 +28,10 @@ export default function GroupReservations() {
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [groupToDelete, setGroupToDelete] = useState(null);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [groupToCancel, setGroupToCancel] = useState(null);
 
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingGroup, setViewingGroup] = useState(null);
@@ -35,6 +42,25 @@ export default function GroupReservations() {
     checkIn: '', checkOut: '', rooms: 0, guests: 0,
     roomTypes: '', status: 'Pending', totalPrice: 0, specialRequests: ''
   });
+
+  const fetchGroups = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const res = await reservationService.getGroupReservations();
+      const rawList = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
+      setGroups(rawList.map(toFrontendGroupReservation));
+    } catch (err) {
+      console.error('Failed to fetch group reservations:', err);
+      setError(err?.message || 'Failed to load group reservations');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
 
   const getRecordDate = (res) => {
     const str = res.checkIn;
@@ -53,7 +79,7 @@ export default function GroupReservations() {
     return isNaN(d.getTime()) ? null : d;
   };
 
-  const maxDatasetTime = Math.max(...groups.map(r => getRecordDate(r)?.getTime() || 0));
+  const maxDatasetTime = Math.max(...(groups.map(r => getRecordDate(r)?.getTime() || 0)), 0);
   const anchorDate = new Date(maxDatasetTime > 0 ? maxDatasetTime : Date.now());
 
   const filterByDate = (res) => {
@@ -115,7 +141,7 @@ export default function GroupReservations() {
     setDateFilter('Daily');
     setCustomStartDate('');
     setCustomEndDate('');
-    setGroups(initialGroups);
+    fetchGroups();
   };
 
   const filteredGroups = groups.filter(g => {
@@ -241,46 +267,73 @@ export default function GroupReservations() {
     setIsViewModalOpen(true);
   };
 
-  const handleSaveModal = (e) => {
+  const handleSaveModal = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      setGroups(groups.map(g => g.id === editingId ? { ...g, ...form } : g));
-    } else {
-      setGroups([...groups, { ...form, id: groups.length + 1 }]);
+    try {
+      setSubmitting(true);
+      setError(null);
+      const payload = toBackendGroupReservationPayload(form);
+      if (editingId) {
+        await reservationService.updateGroupReservation(editingId, payload);
+      } else {
+        await reservationService.createGroupReservation(payload);
+      }
+      setIsModalOpen(false);
+      await fetchGroups();
+    } catch (err) {
+      console.error('Failed to save group reservation:', err);
+      setError(err?.message || 'Failed to save group reservation');
+    } finally {
+      setSubmitting(false);
     }
-    setIsModalOpen(false);
   };
 
-  const confirmDelete = (group) => {
-    setGroupToDelete(group);
-    setIsDeleteModalOpen(true);
+  const confirmCancel = (group) => {
+    setGroupToCancel(group);
+    setIsCancelModalOpen(true);
   };
 
-  const handleDelete = () => {
-    setGroups(groups.filter(g => g.id !== groupToDelete.id));
-    setIsDeleteModalOpen(false);
-    setGroupToDelete(null);
+  const handleCancelGroup = async () => {
+    if (!groupToCancel?.id) return;
+    try {
+      setSubmitting(true);
+      setError(null);
+      await reservationService.cancelGroupReservation(groupToCancel.id, 'Cancelled via Group Reservations console');
+      setIsCancelModalOpen(false);
+      setGroupToCancel(null);
+      await fetchGroups();
+    } catch (err) {
+      console.error('Failed to cancel group reservation:', err);
+      setError(err?.message || 'Failed to cancel group reservation');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="w-full flex flex-col pt-1">
+    <div className="w-full space-y-2.5 pb-3">
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 1 }}>
+          {error}
+        </Alert>
+      )}
       {/* Top Header */}
-      <div className="bg-white rounded-[6px] p-2 flex flex-col xl:flex-row xl:items-center justify-between border-b border-gray-100 gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-[16px] font-bold text-gray-700 whitespace-nowrap">Group Booking</h1>
+      <div className="bg-white rounded-lg p-2 sm:p-2.5 flex flex-col xl:flex-row xl:items-center justify-between border border-gray-100 shadow-xs gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h1 className="text-sm sm:text-base font-bold text-gray-800 tracking-tight whitespace-nowrap">Group Booking</h1>
           <div className="relative">
             <input 
               type="text" 
               placeholder="Search..." 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-3 pr-10 py-1.5 border border-gray-200 rounded-md text-[13px] w-[180px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)] transition-colors"
+              className="pl-7.5 pr-2 py-1 border border-gray-200 rounded-md text-xs w-[140px] sm:w-[180px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)] transition-colors bg-white"
             />
-            <Search className="absolute right-2.5 top-2 text-gray-400" sx={{ fontSize: 18 }} />
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" sx={{ fontSize: 15 }} />
           </div>
 
           {/* Daily / Weekly / Monthly Date Filter */}
-          <div className="flex items-center bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+          <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-2xs overflow-hidden">
             {['Daily', 'Weekly', 'Monthly', 'Yearly', 'Custom'].map((filter) => (
               <button
                 key={filter}
@@ -293,7 +346,7 @@ export default function GroupReservations() {
                     setCustomAnchorEl(null);
                   }
                 }}
-                className={`px-3 py-1.5 text-[12px] md:text-[13px] font-medium transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
+                className={`px-2.5 py-1 text-[11px] sm:text-xs font-semibold transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
                   dateFilter === filter
                     ? 'bg-[#e5f4eb] text-[#1b7f43] font-semibold'
                     : 'text-gray-600 hover:bg-gray-50'
@@ -309,26 +362,26 @@ export default function GroupReservations() {
               anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
               transformOrigin={{ vertical: 'top', horizontal: 'center' }}
             >
-              <div className="p-4 w-[280px]">
-                <h3 className="font-bold text-gray-700 text-sm mb-3">Custom Date Range</h3>
-                <div className="space-y-4">
+              <div className="p-3 w-[260px]">
+                <h3 className="font-bold text-gray-700 text-xs mb-2.5">Custom Date Range</h3>
+                <div className="space-y-3">
                   <div>
-                    <label className="block text-[11px] font-semibold text-gray-500 mb-1">From</label>
+                    <label className="block text-[10px] font-semibold text-gray-500 mb-1">From</label>
                     <input
                       type="date"
                       value={customStartDate}
                       onChange={(e) => setCustomStartDate(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg text-sm px-3 py-2 text-gray-700 focus:outline-none focus:border-[#1b7f43]"
+                      className="w-full border border-gray-300 rounded-md text-xs px-2.5 py-1.5 text-gray-700 focus:outline-none focus:border-[#1b7f43]"
                     />
                   </div>
-                  <div className="text-center text-gray-400 font-semibold text-xs">TO</div>
+                  <div className="text-center text-gray-400 font-semibold text-[10px]">TO</div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-gray-500 mb-1">To</label>
+                    <label className="block text-[10px] font-semibold text-gray-500 mb-1">To</label>
                     <input
                       type="date"
                       value={customEndDate}
                       onChange={(e) => setCustomEndDate(e.target.value)}
-                      className="w-full border border-gray-300 rounded-lg text-sm px-3 py-2 text-gray-700 focus:outline-none focus:border-[#1b7f43]"
+                      className="w-full border border-gray-300 rounded-md text-xs px-2.5 py-1.5 text-gray-700 focus:outline-none focus:border-[#1b7f43]"
                     />
                   </div>
                 </div>
@@ -337,29 +390,35 @@ export default function GroupReservations() {
           </div>
         </div>
         
-        <div className="flex items-center gap-2">
-          <button onClick={openNewModal} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="New Group Booking">
-            <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+        <div className="flex items-center gap-1.5">
+          <button onClick={openNewModal} className="w-7.5 h-7.5 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="New Group Booking">
+            <AddCircleOutlined sx={{ fontSize: 19 }} className="text-[var(--primary-main)]" />
           </button>
-          <button onClick={handleRefresh} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
-            <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
+          <button onClick={handleRefresh} className="w-7.5 h-7.5 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
+            <Refresh sx={{ fontSize: 19 }} className="text-[var(--primary-main)]" />
           </button>
-          <button onClick={handleExportCSV} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Export CSV">
-            <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
+          <button onClick={handleExportCSV} className="w-7.5 h-7.5 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Export CSV">
+            <TableChart sx={{ fontSize: 17 }} className="text-[#0ea5e9]" />
           </button>
-          <button onClick={handleExportPDF} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" title="Export PDF">
-            <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
+          <button onClick={handleExportPDF} className="w-7.5 h-7.5 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" title="Export PDF">
+            <PictureAsPdf sx={{ fontSize: 17 }} className="text-[#ef4444]" />
           </button>
         </div>
       </div>
 
       {/* Table Section */}
-      <GroupReservationsTable
-        filteredGroups={filteredGroups}
-        openViewModal={openViewModal}
-        openEditModal={openEditModal}
-        confirmDelete={confirmDelete}
-      />
+      {loading ? (
+        <div className="bg-white rounded-lg border border-gray-200/80 p-8 flex justify-center items-center">
+          <CircularProgress size={28} sx={{ color: 'var(--primary-main)' }} />
+        </div>
+      ) : (
+        <GroupReservationsTable
+          filteredGroups={filteredGroups}
+          openViewModal={openViewModal}
+          openEditModal={openEditModal}
+          confirmCancel={confirmCancel}
+        />
+      )}
 
       {/* Modals */}
       <GroupReservationModal
@@ -369,10 +428,10 @@ export default function GroupReservations() {
         setForm={setForm}
         setIsModalOpen={setIsModalOpen}
         handleSaveModal={handleSaveModal}
-        isDeleteModalOpen={isDeleteModalOpen}
-        groupToDelete={groupToDelete}
-        setIsDeleteModalOpen={setIsDeleteModalOpen}
-        handleDelete={handleDelete}
+        isCancelModalOpen={isCancelModalOpen}
+        groupToCancel={groupToCancel}
+        setIsCancelModalOpen={setIsCancelModalOpen}
+        handleCancelGroup={handleCancelGroup}
         isViewModalOpen={isViewModalOpen}
         viewingGroup={viewingGroup}
         setIsViewModalOpen={setIsViewModalOpen}

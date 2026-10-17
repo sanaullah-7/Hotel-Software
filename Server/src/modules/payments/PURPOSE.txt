@@ -1,1 +1,0 @@
-Payment process karne ka logic — JazzCash, Easypaisa, Stripe teenon gateways se payment lena yahan handle hota hai.

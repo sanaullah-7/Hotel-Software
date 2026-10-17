@@ -1,12 +1,19 @@
-import { mockSalaries } from '../../../../utils/mockData';
-
 export const departmentsList = ['All', 'Management', 'Front Office', 'Housekeeping', 'Kitchen'];
 export const rolesList = ['Manager', 'Receptionist', 'Housekeeper', 'Chef', 'Staff'];
 
-export const initialSalaryList = mockSalaries.map((salary) => ({
-  ...salary,
-  role: salary.designation || 'Staff',
-  salary: salary.salary ?? salary.basicSalary ?? 0,
-  bonus: salary.bonus ?? salary.allowances ?? 0,
-  avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(salary.name)}&background=5d5fef&color=fff`
-}));
+export const monthsList = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+];
+
+export const yearsList = [2026, 2025, 2024, 2023, 2022];
+
+export const paymentMethodsList = [
+  { value: 'BANK_TRANSFER', label: 'Bank Transfer' },
+  { value: 'CASH', label: 'Cash' },
+  { value: 'CHECK', label: 'Check' },
+  { value: 'ONLINE', label: 'Online / UPI' },
+];
+
+export const initialSalaryList = [];
+

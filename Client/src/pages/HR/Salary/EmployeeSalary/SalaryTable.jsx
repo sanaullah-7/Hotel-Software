@@ -1,17 +1,18 @@
 import React from 'react';
 import {
   Checkbox,
+  CircularProgress,
+  FormControl,
   FormControlLabel,
   IconButton,
+  InputLabel,
+  MenuItem,
   Popover,
-  Tooltip
+  Select,
+  Tooltip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
@@ -19,54 +20,51 @@ import FilterListIcon from '@mui/icons-material/FilterList';
 import MailOutlineOutlinedIcon from '@mui/icons-material/MailOutlineOutlined';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import TableChartOutlinedIcon from '@mui/icons-material/TableChartOutlined';
+import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined';
+import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
+import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
+import HourglassBottomOutlinedIcon from '@mui/icons-material/HourglassBottomOutlined';
+import PendingOutlinedIcon from '@mui/icons-material/PendingOutlined';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import DateRangeIcon from '@mui/icons-material/DateRange';
 
-import { departmentsList } from './constants';
+import CustomPagination from '../../../../components/CustomPagination';
+import { monthsList, yearsList } from './constants';
 
 export const SalaryTable = ({
   searchQuery,
   setSearchQuery,
   setPage,
-  setFilterAnchorEl,
   handleOpenAddModal,
   handleRefresh,
-  isRefreshing,
   setColumnAnchorEl,
   handleExportPDF,
-  isAllSelected,
-  isSomeSelected,
-  handleSelectAll,
   visibleColumns,
-  handleSort,
-  sortField,
-  sortOrder,
   paginatedSalaries,
-  selectedIds,
-  handleSelectRow,
   handleDownloadPayslip,
+  handleOpenPaymentModal,
+  handleOpenHistoryModal,
   handleOpenEditModal,
   handleOpenDeleteDialog,
-  rowsPerPage,
-  setRowsPerPage,
   filteredSalaries,
   page,
-  filterAnchorEl,
-  departmentFilter,
-  setDepartmentFilter,
   columnAnchorEl,
-  setVisibleColumns
+  setVisibleColumns,
+  isRefreshing,
+  isLoading,
+  // Month / Year filter props in middle of table
+  selectedYear,
+  selectedMonth,
+  handleYearChange,
+  handleMonthChange,
 }) => {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] p-2 sm:p-2.5 mb-2">
+    <div className="bg-white rounded-[6px] border border-gray-100 shadow-sm p-2 sm:p-2.5 mb-2 mt-1.5">
       {/* Card Toolbar */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 pb-2 border-b border-slate-100">
-        {/* Left: Card Title & Search Input */}
-        <div className="flex items-center gap-3.5 w-full md:w-auto flex-wrap sm:flex-nowrap">
-          <h2 className="text-base sm:text-lg font-bold text-slate-800 shrink-0">
-            Employee Salary
-          </h2>
-
-          <div className="relative w-full sm:w-64">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pb-2 border-b border-gray-100">
+        {/* Left: Search Input (heading removed as requested) */}
+        <div className="flex items-center w-full sm:w-auto">
+          <div className="relative w-full sm:w-56">
             <input
               type="text"
               placeholder="Search..."
@@ -75,103 +73,160 @@ export const SalaryTable = ({
                 setSearchQuery(e.target.value);
                 setPage(0);
               }}
-              className="w-full pl-3.5 pr-9 py-1.5 text-xs sm:text-sm rounded-lg border border-slate-200 focus:outline-none focus:border-[#5d5fef] text-slate-700 placeholder-slate-400 transition-all bg-white"
+              className="w-full pl-3 pr-8 py-1 text-xs rounded border border-slate-200 focus:outline-none focus:border-[#5d5fef] text-slate-700 placeholder-slate-400 transition-all bg-white h-[30px]"
             />
             <SearchIcon
               sx={{
                 position: 'absolute',
-                right: 10,
+                right: 8,
                 top: '50%',
                 transform: 'translateY(-50%)',
-                fontSize: 18,
-                color: '#64748b'
+                fontSize: 15,
+                color: '#64748b',
               }}
             />
           </div>
         </div>
 
+        {/* Center: Clean Year & Month Filter Controls */}
+        <div className="flex items-center gap-2 justify-center">
+          {/* Year Select */}
+          <div className="w-24">
+            <FormControl fullWidth size="small">
+              <InputLabel id="table-year-label" sx={{ fontSize: '0.75rem' }}>
+                Year
+              </InputLabel>
+              <Select
+                labelId="table-year-label"
+                value={selectedYear}
+                label="Year"
+                onChange={(e) => handleYearChange(e.target.value)}
+                startAdornment={
+                  <CalendarTodayIcon
+                    sx={{ fontSize: 13, color: '#94a3b8', marginRight: '3px' }}
+                  />
+                }
+                sx={{
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  height: '30px',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#e2e8f0',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#cbd5e1',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#5d5fef',
+                  },
+                }}
+              >
+                {yearsList.map((yr) => (
+                  <MenuItem key={yr} value={yr} sx={{ fontSize: '0.75rem' }}>
+                    {yr}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+
+          {/* Month Select */}
+          <div className="w-32">
+            <FormControl fullWidth size="small">
+              <InputLabel id="table-month-label" sx={{ fontSize: '0.75rem' }}>
+                Month
+              </InputLabel>
+              <Select
+                labelId="table-month-label"
+                value={selectedMonth}
+                label="Month"
+                onChange={(e) => handleMonthChange(e.target.value)}
+                startAdornment={
+                  <DateRangeIcon
+                    sx={{ fontSize: 13, color: '#94a3b8', marginRight: '3px' }}
+                  />
+                }
+                sx={{
+                  borderRadius: '6px',
+                  fontSize: '0.75rem',
+                  height: '30px',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#e2e8f0',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#cbd5e1',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#5d5fef',
+                  },
+                }}
+              >
+                {monthsList.map((m) => (
+                  <MenuItem key={m} value={m} sx={{ fontSize: '0.75rem' }}>
+                    {m}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
+        </div>
+
         {/* Right: Action Buttons */}
-        <div className="flex items-center gap-1.5 sm:gap-2 self-end md:self-auto">
-          <Tooltip title="Filter by Department">
+        <div className="flex items-center gap-1 self-end sm:self-auto">
+          <Tooltip title="Add Staff Salary">
             <IconButton
-              onClick={(e) => setFilterAnchorEl(e.currentTarget)}
+              onClick={handleOpenAddModal}
               size="small"
               sx={{
-                color: '#5d5fef',
-                backgroundColor: '#f5f5ff',
-                '&:hover': { backgroundColor: '#eceeff' },
-                borderRadius: '8px',
-                padding: '7px'
+                color: '#1b7f43',
+                backgroundColor: 'transparent',
+                '&:hover': { backgroundColor: '#f0fdf4' },
+                padding: '3px',
+              }}
+            >
+              <AddCircleIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Refresh Current Cycle">
+            <IconButton
+              onClick={handleRefresh}
+              size="small"
+              sx={{
+                color: '#1b7f43',
+                backgroundColor: 'transparent',
+                '&:hover': { backgroundColor: '#f0fdf4' },
+                padding: '3px',
+              }}
+            >
+              <RefreshIcon sx={{ fontSize: 20 }} />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Toggle Columns">
+            <IconButton
+              onClick={(e) => setColumnAnchorEl(e.currentTarget)}
+              size="small"
+              sx={{
+                color: '#1b7f43',
+                backgroundColor: 'transparent',
+                '&:hover': { backgroundColor: '#f0fdf4' },
+                padding: '3px',
               }}
             >
               <FilterListIcon sx={{ fontSize: 20 }} />
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Add Employee Salary">
-            <IconButton
-              onClick={handleOpenAddModal}
-              size="small"
-              sx={{
-                color: '#10b981',
-                backgroundColor: '#ecfdf5',
-                '&:hover': { backgroundColor: '#d1fae5' },
-                borderRadius: '8px',
-                padding: '7px'
-              }}
-            >
-              <AddCircleOutlineOutlinedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="Refresh Data">
-            <IconButton
-              onClick={handleRefresh}
-              size="small"
-              sx={{
-                color: '#475569',
-                backgroundColor: '#f8fafc',
-                '&:hover': { backgroundColor: '#f1f5f9' },
-                borderRadius: '8px',
-                padding: '7px'
-              }}
-            >
-              <RefreshIcon
-                sx={{
-                  fontSize: 20,
-                  transition: 'transform 0.4s ease',
-                  transform: isRefreshing ? 'rotate(360deg)' : 'none'
-                }}
-              />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="Show / Hide Columns">
-            <IconButton
-              onClick={(e) => setColumnAnchorEl(e.currentTarget)}
-              size="small"
-              sx={{
-                color: '#3b82f6',
-                backgroundColor: '#eff6ff',
-                '&:hover': { backgroundColor: '#dbeafe' },
-                borderRadius: '8px',
-                padding: '7px'
-              }}
-            >
-              <TableChartOutlinedIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          </Tooltip>
-
-          <Tooltip title="Export Full Report (PDF)">
+          <Tooltip title="Export Monthly Report (PDF)">
             <IconButton
               onClick={handleExportPDF}
               size="small"
               sx={{
                 color: '#ef4444',
-                backgroundColor: '#fef2f2',
-                '&:hover': { backgroundColor: '#fee2e2' },
-                borderRadius: '8px',
-                padding: '7px'
+                backgroundColor: 'transparent',
+                '&:hover': { backgroundColor: '#fef2f2' },
+                padding: '3px',
               }}
             >
               <PictureAsPdfIcon sx={{ fontSize: 20 }} />
@@ -180,226 +235,112 @@ export const SalaryTable = ({
         </div>
       </div>
 
-      {/* Table Content */}
-      <div className="mt-3 rounded-lg border border-slate-100 overflow-x-auto">
-        <table className="w-full border-collapse text-left min-w-[1050px]">
-          <thead>
-            <tr className="bg-slate-50/80 text-slate-600 text-xs font-bold select-none border-b border-slate-200/80">
-              <th scope="col" className="py-3.5 px-3 w-12 text-center">
-                <Checkbox
-                  size="small"
-                  checked={isAllSelected}
-                  indeterminate={isSomeSelected}
-                  onChange={handleSelectAll}
-                  sx={{
-                    color: '#94a3b8',
-                    '&.Mui-checked': { color: '#5d5fef' },
-                    '&.MuiCheckbox-indeterminate': { color: '#5d5fef' },
-                    padding: 0
-                  }}
-                />
-              </th>
+      {/* Loading feedback banner */}
+      {(isLoading || isRefreshing) && (
+        <div className="py-1 px-3 bg-blue-50/70 border-b border-blue-100 flex items-center justify-center gap-2 text-[11px] text-blue-700 font-medium">
+          <CircularProgress size={11} sx={{ color: '#5d5fef' }} />
+          <span>Updating records for {selectedMonth} {selectedYear}...</span>
+        </div>
+      )}
 
+      {/* Table Content - Fitted without overflow */}
+      <div className="mt-1.5 rounded border border-slate-100 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+        <table className="w-full border-collapse text-left">
+          <thead>
+            <tr className="bg-slate-50/80 text-slate-600 text-[10px] font-bold select-none border-b border-slate-200/80 uppercase tracking-wide">
               {visibleColumns.name && (
-                <th
-                  scope="col"
-                  onClick={() => handleSort('name')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Employee Name</span>
-                    {sortField === 'name' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                <th scope="col" className="py-1.5 px-2 whitespace-nowrap">
+                  <span>Employee Name</span>
                 </th>
               )}
 
               {visibleColumns.email && (
-                <th
-                  scope="col"
-                  onClick={() => handleSort('email')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Email</span>
-                    {sortField === 'email' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                <th scope="col" className="py-1.5 px-2 whitespace-nowrap">
+                  <span>Email</span>
                 </th>
               )}
 
               {visibleColumns.department && (
-                <th
-                  scope="col"
-                  onClick={() => handleSort('department')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Department</span>
-                    {sortField === 'department' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                <th scope="col" className="py-1.5 px-2 whitespace-nowrap">
+                  <span>Department</span>
                 </th>
               )}
 
               {visibleColumns.salary && (
-                <th
-                  scope="col"
-                  onClick={() => handleSort('salary')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Salary</span>
-                    {sortField === 'salary' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                <th scope="col" className="py-1.5 px-2 whitespace-nowrap">
+                  <span>Basic Salary</span>
                 </th>
               )}
 
               {visibleColumns.bonus && (
-                <th
-                  scope="col"
-                  onClick={() => handleSort('bonus')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Bonus</span>
-                    {sortField === 'bonus' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                <th scope="col" className="py-1.5 px-2 whitespace-nowrap">
+                  <span>Bonus</span>
                 </th>
               )}
 
               {visibleColumns.deductions && (
-                <th
-                  scope="col"
-                  onClick={() => handleSort('deductions')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Deductions</span>
-                    {sortField === 'deductions' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                <th scope="col" className="py-1.5 px-2 whitespace-nowrap">
+                  <span>Deductions</span>
                 </th>
               )}
 
               {visibleColumns.netSalary && (
-                <th
-                  scope="col"
-                  onClick={() => handleSort('netSalary')}
-                  className="py-3.5 px-3 cursor-pointer hover:text-[#5d5fef] transition-colors"
-                >
-                  <div className="flex items-center gap-1">
-                    <span>Net Salary</span>
-                    {sortField === 'netSalary' ? (
-                      sortOrder === 'asc' ? (
-                        <ArrowUpwardIcon sx={{ fontSize: 15 }} />
-                      ) : (
-                        <ArrowDownwardIcon sx={{ fontSize: 15 }} />
-                      )
-                    ) : (
-                      <span className="text-slate-300 text-xs">↕</span>
-                    )}
-                  </div>
+                <th scope="col" className="py-1.5 px-2 whitespace-nowrap">
+                  <span>Net Salary</span>
+                </th>
+              )}
+
+              {visibleColumns.paidAmount && (
+                <th scope="col" className="py-1.5 px-2 whitespace-nowrap">
+                  <span>Paid Amount</span>
+                </th>
+              )}
+
+              {visibleColumns.paymentStatus && (
+                <th scope="col" className="py-1.5 px-2 text-center whitespace-nowrap">
+                  <span>Payment Status</span>
                 </th>
               )}
 
               {visibleColumns.payslip && (
-                <th scope="col" className="py-3.5 px-3 text-center">
-                  Payslip
+                <th scope="col" className="py-1.5 px-1.5 text-center whitespace-nowrap">
+                  <span>Payslip</span>
                 </th>
               )}
 
               {visibleColumns.actions && (
-                <th scope="col" className="py-3.5 px-3 text-right">
-                  Actions
+                <th scope="col" className="py-1.5 px-2 text-right whitespace-nowrap">
+                  <span>Actions</span>
                 </th>
               )}
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-slate-100 text-slate-700 text-xs sm:text-sm">
+          <tbody className="divide-y divide-slate-100 text-slate-700 text-[10.5px]">
             {paginatedSalaries.length === 0 ? (
               <tr>
-                <td colSpan={10} className="py-12 text-center text-slate-400 font-medium text-sm">
+                <td colSpan={11} className="py-8 text-center text-slate-400 font-medium text-xs">
                   No employee salary records found matching your filters.
                 </td>
               </tr>
             ) : (
               paginatedSalaries.map((row) => {
-                const isSelected = selectedIds.includes(row.id);
                 const netSalary = (row.salary || 0) + (row.bonus || 0) - (row.deductions || 0);
+                const paidAmount = Number(row.paidAmount || 0);
+                const remaining = Math.max(0, netSalary - paidAmount);
 
                 return (
                   <tr
                     key={row.id}
-                    className={`hover:bg-slate-50/80 transition-colors ${
-                      isSelected ? 'bg-indigo-50/40' : ''
-                    }`}
+                    className="hover:bg-slate-50/80 transition-colors"
                   >
-                    <td className="py-2.5 px-3 text-center">
-                      <Checkbox
-                        size="small"
-                        checked={isSelected}
-                        onChange={() => handleSelectRow(row.id)}
-                        sx={{
-                          color: '#cbd5e1',
-                          '&.Mui-checked': { color: '#5d5fef' },
-                          padding: 0
-                        }}
-                      />
-                    </td>
-
                     {visibleColumns.name && (
-                      <td className="py-2.5 px-3 font-medium text-slate-800">
-                        <div className="flex items-center gap-3">
+                      <td className="py-1.5 px-2 font-medium text-slate-800 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
                           <img
                             src={row.avatar}
                             alt={row.name}
-                            className="w-8 h-8 rounded-full object-cover border border-slate-100 shadow-2xs shrink-0"
+                            className="w-5 h-5 rounded-full object-cover border border-slate-100 shadow-2xs shrink-0"
                             onError={(e) => {
                               e.target.onerror = null;
                               e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
@@ -407,52 +348,92 @@ export const SalaryTable = ({
                               )}&background=5d5fef&color=fff`;
                             }}
                           />
-                          <span className="truncate hover:text-[#5d5fef] transition-colors">
+                          <span className="font-semibold text-slate-800 hover:text-[#5d5fef] transition-colors">
                             {row.name}
+                          </span>
+                          <span className="text-[9.5px] text-slate-400 font-normal">
+                            ({row.empId})
                           </span>
                         </div>
                       </td>
                     )}
 
                     {visibleColumns.email && (
-                      <td className="py-2.5 px-3 text-slate-600">
-                        <div className="flex items-center gap-1.5">
-                          <MailOutlineOutlinedIcon sx={{ fontSize: 16, color: '#ef4444' }} />
-                          <span>{row.email}</span>
+                      <td className="py-1.5 px-2 text-slate-600 whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-[10px]">
+                          <MailOutlineOutlinedIcon sx={{ fontSize: 12, color: '#ef4444' }} />
+                          <span>{row.email || 'N/A'}</span>
                         </div>
                       </td>
                     )}
 
                     {visibleColumns.department && (
-                      <td className="py-2.5 px-3 text-slate-600">{row.department}</td>
+                      <td className="py-1.5 px-2 text-slate-600 whitespace-nowrap">
+                        <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[9.5px] font-medium">
+                          {row.department}
+                        </span>
+                      </td>
                     )}
 
                     {visibleColumns.salary && (
-                      <td className="py-2.5 px-3 text-slate-700 font-medium">
+                      <td className="py-1.5 px-2 text-slate-700 font-medium whitespace-nowrap">
                         ${Number(row.salary).toLocaleString()}
                       </td>
                     )}
 
                     {visibleColumns.bonus && (
-                      <td className="py-2.5 px-3 text-slate-600">
-                        ${Number(row.bonus || 0).toLocaleString()}
+                      <td className="py-1.5 px-2 text-emerald-600 whitespace-nowrap">
+                        +${Number(row.bonus || 0).toLocaleString()}
                       </td>
                     )}
 
                     {visibleColumns.deductions && (
-                      <td className="py-2.5 px-3 text-slate-600">
-                        ${Number(row.deductions || 0).toLocaleString()}
+                      <td className="py-1.5 px-2 text-rose-500 whitespace-nowrap">
+                        -${Number(row.deductions || 0).toLocaleString()}
                       </td>
                     )}
 
                     {visibleColumns.netSalary && (
-                      <td className="py-2.5 px-3 text-slate-800 font-semibold">
+                      <td className="py-1.5 px-2 text-slate-900 font-bold whitespace-nowrap">
                         ${netSalary.toLocaleString()}
                       </td>
                     )}
 
+                    {visibleColumns.paidAmount && (
+                      <td className="py-1.5 px-2 whitespace-nowrap">
+                        <div className="flex items-center gap-1 text-[10.5px]">
+                          <span className="font-semibold text-emerald-600">
+                            ${paidAmount.toLocaleString()}
+                          </span>
+                          {remaining > 0 && (
+                            <span className="text-[9.5px] text-amber-600 font-medium">
+                              (Due: ${remaining.toLocaleString()})
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    )}
+
+                    {visibleColumns.paymentStatus && (
+                      <td className="py-1.5 px-2 text-center whitespace-nowrap">
+                        {row.paymentStatus === 'Paid' ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircleOutlinedIcon sx={{ fontSize: 11 }} /> Paid
+                          </span>
+                        ) : row.paymentStatus === 'Partial' ? (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-amber-50 text-amber-700 border border-amber-200">
+                            <HourglassBottomOutlinedIcon sx={{ fontSize: 11 }} /> Partial
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                            <PendingOutlinedIcon sx={{ fontSize: 11 }} /> Pending
+                          </span>
+                        )}
+                      </td>
+                    )}
+
                     {visibleColumns.payslip && (
-                      <td className="py-2.5 px-3 text-center">
+                      <td className="py-1.5 px-1.5 text-center whitespace-nowrap">
                         <Tooltip title="Download Payslip (PDF)">
                           <IconButton
                             size="small"
@@ -460,43 +441,83 @@ export const SalaryTable = ({
                             sx={{
                               color: '#1e293b',
                               '&:hover': { color: '#5d5fef', backgroundColor: '#f1f5f9' },
-                              padding: '5px'
+                              padding: '2px',
                             }}
                           >
-                            <FileDownloadOutlinedIcon sx={{ fontSize: 18 }} />
+                            <FileDownloadOutlinedIcon sx={{ fontSize: 15 }} />
                           </IconButton>
                         </Tooltip>
                       </td>
                     )}
 
                     {visibleColumns.actions && (
-                      <td className="py-2.5 px-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <Tooltip title="Edit Salary">
+                      <td className="py-1.5 px-2 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-0.5">
+                          {/* 1. Record Payment */}
+                          <Tooltip
+                            title={
+                              remaining <= 0
+                                ? 'Salary fully paid (Click to adjust)'
+                                : 'Record Salary Payment'
+                            }
+                          >
+                            <IconButton
+                              size="small"
+                              onClick={() => handleOpenPaymentModal(row)}
+                              sx={{
+                                color: remaining <= 0 ? '#10b981' : '#5d5fef',
+                                backgroundColor: remaining <= 0 ? '#f0fdf4' : '#f5f3ff',
+                                '&:hover': { backgroundColor: '#e0e7ff' },
+                                padding: '2px',
+                              }}
+                            >
+                              <PaymentsOutlinedIcon sx={{ fontSize: 15 }} />
+                            </IconButton>
+                          </Tooltip>
+
+                          {/* 2. Salary History Ledger */}
+                          <Tooltip title="View Past Salary Ledger">
+                            <IconButton
+                              size="small"
+                              onClick={() => handleOpenHistoryModal(row)}
+                              sx={{
+                                color: '#0284c7',
+                                backgroundColor: '#f0f9ff',
+                                '&:hover': { backgroundColor: '#e0f2fe' },
+                                padding: '2px',
+                              }}
+                            >
+                              <HistoryOutlinedIcon sx={{ fontSize: 15 }} />
+                            </IconButton>
+                          </Tooltip>
+
+                          {/* 3. Edit Base Salary */}
+                          <Tooltip title="Edit Base Salary">
                             <IconButton
                               size="small"
                               onClick={() => handleOpenEditModal(row)}
                               sx={{
-                                color: '#3b82f6',
-                                '&:hover': { backgroundColor: '#eff6ff' },
-                                padding: '5px'
+                                color: '#64748b',
+                                '&:hover': { backgroundColor: '#f1f5f9' },
+                                padding: '2px',
                               }}
                             >
-                              <EditOutlinedIcon sx={{ fontSize: 18 }} />
+                              <EditOutlinedIcon sx={{ fontSize: 15 }} />
                             </IconButton>
                           </Tooltip>
 
-                          <Tooltip title="Delete Record">
+                          {/* 4. Reset / Delete Record */}
+                          <Tooltip title="Reset Salary Record">
                             <IconButton
                               size="small"
                               onClick={() => handleOpenDeleteDialog(row)}
                               sx={{
-                                color: '#f97316',
-                                '&:hover': { backgroundColor: '#fff7ed' },
-                                padding: '5px'
+                                color: '#f43f5e',
+                                '&:hover': { backgroundColor: '#fff1f2' },
+                                padding: '2px',
                               }}
                             >
-                              <DeleteOutlinedIcon sx={{ fontSize: 18 }} />
+                              <DeleteOutlinedIcon sx={{ fontSize: 15 }} />
                             </IconButton>
                           </Tooltip>
                         </div>
@@ -511,113 +532,11 @@ export const SalaryTable = ({
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 text-xs sm:text-sm text-slate-600 mt-2">
-        <div className="flex items-center gap-2">
-          <span className="text-slate-500">Items per page:</span>
-          <select
-            value={rowsPerPage}
-            onChange={(e) => {
-              setRowsPerPage(Number(e.target.value));
-              setPage(0);
-            }}
-            className="px-2 py-1 border border-slate-200 rounded-md focus:outline-none focus:border-[#5d5fef] bg-white text-slate-700 cursor-pointer font-medium"
-          >
-            <option value={5}>5</option>
-            <option value={10}>10</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-          </select>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <span className="text-slate-600 font-medium">
-            {filteredSalaries.length === 0
-              ? '0 – 0 of 0'
-              : `${page * rowsPerPage + 1} – ${Math.min(
-                  (page + 1) * rowsPerPage,
-                  filteredSalaries.length
-                )} of ${filteredSalaries.length}`}
-          </span>
-
-          <div className="flex items-center gap-1">
-            <IconButton
-              size="small"
-              disabled={page === 0}
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
-              sx={{
-                color: '#64748b',
-                '&.Mui-disabled': { color: '#cbd5e1' },
-                padding: '4px'
-              }}
-            >
-              <ChevronLeftIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-
-            <IconButton
-              size="small"
-              disabled={(page + 1) * rowsPerPage >= filteredSalaries.length}
-              onClick={() => setPage((p) => p + 1)}
-              sx={{
-                color: '#64748b',
-                '&.Mui-disabled': { color: '#cbd5e1' },
-                padding: '4px'
-              }}
-            >
-              <ChevronRightIcon sx={{ fontSize: 20 }} />
-            </IconButton>
-          </div>
-        </div>
-      </div>
-
-      {/* Popover: Filter by Department */}
-      <Popover
-        open={Boolean(filterAnchorEl)}
-        anchorEl={filterAnchorEl}
-        onClose={() => setFilterAnchorEl(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'right' }}
-        PaperProps={{
-          sx: {
-            p: 2.5,
-            width: 250,
-            borderRadius: '12px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
-          }
-        }}
-      >
-        <h4 className="text-sm font-bold text-slate-800 mb-3">Filter Salary</h4>
-        <div className="space-y-3 text-xs">
-          <div>
-            <label className="block text-slate-500 font-medium mb-1">Department</label>
-            <select
-              value={departmentFilter}
-              onChange={(e) => {
-                setDepartmentFilter(e.target.value);
-                setPage(0);
-              }}
-              className="w-full px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-[#5d5fef] text-slate-700 bg-white"
-            >
-              {departmentsList.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept === 'All' ? 'All Departments' : dept}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="pt-2 flex justify-end">
-            <button
-              onClick={() => {
-                setDepartmentFilter('All');
-                setFilterAnchorEl(null);
-              }}
-              className="text-xs text-[#5d5fef] hover:underline font-semibold"
-            >
-              Reset Filters
-            </button>
-          </div>
-        </div>
-      </Popover>
+      <CustomPagination
+        count={Math.ceil(filteredSalaries.length / 10) || 1}
+        page={page + 1}
+        onChange={(e, p) => setPage(p - 1)}
+      />
 
       {/* Popover: Show / Hide Columns */}
       <Popover
@@ -628,15 +547,15 @@ export const SalaryTable = ({
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         PaperProps={{
           sx: {
-            p: 2,
-            width: 210,
-            borderRadius: '12px',
-            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'
-          }
+            p: 1.5,
+            width: 220,
+            borderRadius: '8px',
+            boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+          },
         }}
       >
-        <h4 className="text-sm font-bold text-slate-800 mb-2">Toggle Columns</h4>
-        <div className="flex flex-col space-y-1">
+        <h4 className="text-xs font-bold text-slate-800 mb-1.5">Toggle Columns</h4>
+        <div className="flex flex-col space-y-0.5">
           {Object.keys(visibleColumns).map((colKey) => (
             <FormControlLabel
               key={colKey}
@@ -647,18 +566,18 @@ export const SalaryTable = ({
                   onChange={(e) =>
                     setVisibleColumns({
                       ...visibleColumns,
-                      [colKey]: e.target.checked
+                      [colKey]: e.target.checked,
                     })
                   }
                   sx={{
                     color: '#cbd5e1',
                     '&.Mui-checked': { color: '#5d5fef' },
-                    padding: '3px'
+                    padding: '2px',
                   }}
                 />
               }
               label={
-                <span className="text-xs text-slate-700 font-medium capitalize">
+                <span className="text-[11px] text-slate-700 font-medium capitalize">
                   {colKey.replace(/([A-Z])/g, ' $1').trim()}
                 </span>
               }
@@ -669,3 +588,5 @@ export const SalaryTable = ({
     </div>
   );
 };
+
+export default SalaryTable;

@@ -5,7 +5,8 @@ import {
   TextField,
   MenuItem,
   IconButton,
-  InputAdornment
+  InputAdornment,
+  Alert
 } from '@mui/material';
 import PersonOutlinedIcon from '@mui/icons-material/PersonOutlined';
 import CloseIcon from '@mui/icons-material/Close';
@@ -54,8 +55,27 @@ export const ApplyLeaveModal = ({
   editingItem,
   modalForm,
   setModalForm,
-  handleSaveModal
+  handleSaveModal,
+  employees = [],
+  isSubmitting = false,
+  error = null
 }) => {
+  const handleDateChange = (field, val) => {
+    setModalForm((prev) => {
+      const next = { ...prev, [field]: val };
+      if (next.from && next.to) {
+        try {
+          const d1 = new Date(next.from);
+          const d2 = new Date(next.to);
+          if (!isNaN(d1) && !isNaN(d2) && d2 >= d1) {
+            next.days = Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1;
+          }
+        } catch {}
+      }
+      return next;
+    });
+  };
+
   return (
     <Dialog
       className="assigned-form-surface"
@@ -95,40 +115,67 @@ export const ApplyLeaveModal = ({
 
       {/* Modal Body Form */}
       <DialogContent sx={{ p: { xs: 2.5, sm: 3.5 } }}>
+        {error && (
+          <div className="mb-4">
+            <Alert severity="error">{error}</Alert>
+          </div>
+        )}
+
         <form onSubmit={handleSaveModal} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Employee Name */}
+            {/* Employee Selection */}
             <div>
-              <TextField
-                fullWidth
-                label="Employee Name*"
-                placeholder="Enter employee name"
-                value={modalForm.name}
-                onChange={(e) => setModalForm(prev => ({ ...prev, name: e.target.value }))}
-                required
-                sx={modalInputStyle}
-              />
+              {editingItem ? (
+                <TextField
+                  fullWidth
+                  label="Employee"
+                  value={modalForm.name || ''}
+                  disabled
+                  sx={modalInputStyle}
+                />
+              ) : (
+                <TextField
+                  fullWidth
+                  select
+                  label="Employee*"
+                  value={modalForm.employee_id || ''}
+                  onChange={(e) => {
+                    const empId = e.target.value;
+                    const selectedEmp = employees.find(
+                      (emp) => String(emp.id) === String(empId) || String(emp._id) === String(empId)
+                    );
+                    setModalForm((prev) => ({
+                      ...prev,
+                      employee_id: empId,
+                      name: selectedEmp?.name || prev.name,
+                      department: selectedEmp?.department || prev.department,
+                      designation: selectedEmp?.designation || prev.designation,
+                    }));
+                  }}
+                  required
+                  sx={modalInputStyle}
+                >
+                  <MenuItem value="" disabled>
+                    Select Employee
+                  </MenuItem>
+                  {employees.map((emp) => (
+                    <MenuItem key={emp.id || emp._id} value={emp.id || emp._id}>
+                      {emp.name} ({emp.empId || emp.employee_ref}) — {emp.designation || 'Staff'}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
             </div>
 
             {/* Department */}
             <div>
               <TextField
                 fullWidth
-                select
-                label="Department*"
-                value={modalForm.department}
-                onChange={(e) => setModalForm(prev => ({ ...prev, department: e.target.value }))}
+                label="Department"
+                value={modalForm.department || ''}
+                disabled
                 sx={modalInputStyle}
-              >
-                <MenuItem value="HR">HR</MenuItem>
-                <MenuItem value="Finance">Finance</MenuItem>
-                <MenuItem value="House Keeping">House Keeping</MenuItem>
-                <MenuItem value="Marketing">Marketing</MenuItem>
-                <MenuItem value="Sales">Sales</MenuItem>
-                <MenuItem value="Kitchen">Kitchen</MenuItem>
-                <MenuItem value="Front Office">Front Office</MenuItem>
-                <MenuItem value="Management">Management</MenuItem>
-              </TextField>
+              />
             </div>
 
             {/* Leave Type */}
@@ -138,16 +185,16 @@ export const ApplyLeaveModal = ({
                 select
                 label="Leave Type*"
                 value={modalForm.leaveType}
-                onChange={(e) => setModalForm(prev => ({ ...prev, leaveType: e.target.value }))}
+                onChange={(e) => setModalForm((prev) => ({ ...prev, leaveType: e.target.value }))}
                 sx={modalInputStyle}
               >
                 <MenuItem value="Special Leave">Special Leave</MenuItem>
                 <MenuItem value="Personal Leave">Personal Leave</MenuItem>
                 <MenuItem value="Sick Leave">Sick Leave</MenuItem>
                 <MenuItem value="Annual Leave">Annual Leave</MenuItem>
-                <MenuItem value="Medical Leave">Medical Leave</MenuItem>
                 <MenuItem value="Casual Leave">Casual Leave</MenuItem>
                 <MenuItem value="Maternity Leave">Maternity Leave</MenuItem>
+                <MenuItem value="Unpaid Leave">Unpaid Leave</MenuItem>
               </TextField>
             </div>
 
@@ -158,12 +205,13 @@ export const ApplyLeaveModal = ({
                 select
                 label="Status*"
                 value={modalForm.status}
-                onChange={(e) => setModalForm(prev => ({ ...prev, status: e.target.value }))}
+                onChange={(e) => setModalForm((prev) => ({ ...prev, status: e.target.value }))}
                 sx={modalInputStyle}
               >
                 <MenuItem value="Pending">Pending</MenuItem>
                 <MenuItem value="Approved">Approved</MenuItem>
                 <MenuItem value="Rejected">Rejected</MenuItem>
+                <MenuItem value="Cancelled">Cancelled</MenuItem>
               </TextField>
             </div>
 
@@ -174,7 +222,7 @@ export const ApplyLeaveModal = ({
                 label="Start Date*"
                 type="date"
                 value={modalForm.from}
-                onChange={(e) => setModalForm(prev => ({ ...prev, from: e.target.value }))}
+                onChange={(e) => handleDateChange('from', e.target.value)}
                 InputLabelProps={{ shrink: true }}
                 InputProps={{
                   endAdornment: (
@@ -183,18 +231,7 @@ export const ApplyLeaveModal = ({
                     </InputAdornment>
                   ),
                 }}
-                sx={{
-                  ...modalInputStyle,
-                  '& input::-webkit-calendar-picker-indicator': {
-                    opacity: 0,
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '100%',
-                    height: '100%',
-                    cursor: 'pointer'
-                  }
-                }}
+                sx={modalInputStyle}
               />
             </div>
 
@@ -205,7 +242,7 @@ export const ApplyLeaveModal = ({
                 label="End Date*"
                 type="date"
                 value={modalForm.to}
-                onChange={(e) => setModalForm(prev => ({ ...prev, to: e.target.value }))}
+                onChange={(e) => handleDateChange('to', e.target.value)}
                 InputLabelProps={{ shrink: true }}
                 InputProps={{
                   endAdornment: (
@@ -214,18 +251,7 @@ export const ApplyLeaveModal = ({
                     </InputAdornment>
                   ),
                 }}
-                sx={{
-                  ...modalInputStyle,
-                  '& input::-webkit-calendar-picker-indicator': {
-                    opacity: 0,
-                    position: 'absolute',
-                    right: 0,
-                    top: 0,
-                    width: '100%',
-                    height: '100%',
-                    cursor: 'pointer'
-                  }
-                }}
+                sx={modalInputStyle}
               />
             </div>
 
@@ -236,7 +262,7 @@ export const ApplyLeaveModal = ({
                 label="No of days*"
                 type="number"
                 value={modalForm.days}
-                onChange={(e) => setModalForm(prev => ({ ...prev, days: Number(e.target.value) }))}
+                onChange={(e) => setModalForm((prev) => ({ ...prev, days: Number(e.target.value) }))}
                 sx={modalInputStyle}
               />
             </div>
@@ -245,12 +271,29 @@ export const ApplyLeaveModal = ({
             <div>
               <TextField
                 fullWidth
-                label="Approved By"
-                placeholder="Approver name"
-                value={modalForm.approvedBy}
-                onChange={(e) => setModalForm(prev => ({ ...prev, approvedBy: e.target.value }))}
+                select
+                label="Approved By (Optional)"
+                value={modalForm.approved_by || ''}
+                onChange={(e) => {
+                  const approverId = e.target.value;
+                  const approverEmp = employees.find(
+                    (emp) => String(emp.id) === String(approverId) || String(emp._id) === String(approverId)
+                  );
+                  setModalForm((prev) => ({
+                    ...prev,
+                    approved_by: approverId,
+                    approvedBy: approverEmp?.name || ''
+                  }));
+                }}
                 sx={modalInputStyle}
-              />
+              >
+                <MenuItem value="">None / Pending</MenuItem>
+                {employees.map((emp) => (
+                  <MenuItem key={emp.id || emp._id} value={emp.id || emp._id}>
+                    {emp.name} ({emp.empId || emp.employee_ref})
+                  </MenuItem>
+                ))}
+              </TextField>
             </div>
           </div>
 
@@ -263,7 +306,7 @@ export const ApplyLeaveModal = ({
               label="Reason*"
               placeholder="Specify the reason for leave..."
               value={modalForm.reason}
-              onChange={(e) => setModalForm(prev => ({ ...prev, reason: e.target.value }))}
+              onChange={(e) => setModalForm((prev) => ({ ...prev, reason: e.target.value }))}
               required
               sx={{
                 ...modalInputStyle,
@@ -285,14 +328,16 @@ export const ApplyLeaveModal = ({
           <div className="flex items-center gap-3 pt-3">
             <button
               type="submit"
-              className="assigned-primary-button px-6 py-2 text-sm font-medium rounded-full shadow-sm transition-all cursor-pointer"
+              disabled={isSubmitting}
+              className="assigned-primary-button px-6 py-2 text-sm font-medium rounded-full shadow-sm transition-all cursor-pointer disabled:opacity-50"
             >
-              Save
+              {isSubmitting ? 'Saving...' : 'Save'}
             </button>
             <button
               type="button"
+              disabled={isSubmitting}
               onClick={onClose}
-              className="assigned-secondary-button px-6 py-2 text-sm font-medium rounded-full transition-all cursor-pointer"
+              className="assigned-secondary-button px-6 py-2 text-sm font-medium rounded-full transition-all cursor-pointer disabled:opacity-50"
             >
               Cancel
             </button>

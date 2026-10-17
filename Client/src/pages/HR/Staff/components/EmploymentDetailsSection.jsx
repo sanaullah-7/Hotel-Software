@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   TextField,
   MenuItem,
   InputAdornment,
-  IconButton
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  CircularProgress,
+  Alert
 } from '@mui/material';
 import WorkHistoryOutlinedIcon from '@mui/icons-material/WorkHistoryOutlined';
 import BusinessIcon from '@mui/icons-material/Business';
@@ -13,7 +20,10 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
 import SupervisorAccountOutlinedIcon from '@mui/icons-material/SupervisorAccountOutlined';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
 
+import staffService from '../../../../features/staff/services/staffService';
 import {
   SectionHeader,
   inputStyle,
@@ -25,8 +35,95 @@ export default function EmploymentDetailsSection({
   formErrors,
   onChange,
   joiningFocused,
-  setJoiningFocused
+  setJoiningFocused,
+  departments = [],
+  onDepartmentAdded
 }) {
+  const [isAddDeptOpen, setIsAddDeptOpen] = useState(false);
+  const [newDeptName, setNewDeptName] = useState('');
+  const [newDeptCode, setNewDeptCode] = useState('');
+  const [newDeptDescription, setNewDeptDescription] = useState('');
+  const [isCodeManuallyEdited, setIsCodeManuallyEdited] = useState(false);
+  const [modalErrors, setModalErrors] = useState({});
+  const [isSubmittingDept, setIsSubmittingDept] = useState(false);
+  const [serverError, setServerError] = useState(null);
+
+  const handleNameChange = (e) => {
+    const val = e.target.value;
+    setNewDeptName(val);
+    if (modalErrors.name) setModalErrors((prev) => ({ ...prev, name: null }));
+    if (!isCodeManuallyEdited) {
+      const words = val.trim().split(/\s+/).filter(Boolean);
+      let autoCode = '';
+      if (words.length > 1) {
+        autoCode = words.map((w) => w[0]).join('').toUpperCase().slice(0, 6);
+      } else if (words.length === 1) {
+        autoCode = words[0].replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase();
+      }
+      setNewDeptCode(autoCode);
+    }
+  };
+
+  const handleCodeChange = (e) => {
+    setIsCodeManuallyEdited(true);
+    setNewDeptCode(e.target.value.toUpperCase());
+    if (modalErrors.code) setModalErrors((prev) => ({ ...prev, code: null }));
+  };
+
+  const handleCloseModal = () => {
+    if (isSubmittingDept) return;
+    setIsAddDeptOpen(false);
+    setNewDeptName('');
+    setNewDeptCode('');
+    setNewDeptDescription('');
+    setIsCodeManuallyEdited(false);
+    setModalErrors({});
+    setServerError(null);
+  };
+
+  const handleCreateDepartment = async (e) => {
+    e.preventDefault();
+    const errors = {};
+    const trimmedName = newDeptName.trim();
+    let trimmedCode = newDeptCode.trim().toUpperCase();
+
+    if (!trimmedName) {
+      errors.name = 'Department Name is required';
+    }
+
+    if (!trimmedCode) {
+      trimmedCode = trimmedName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 4).toUpperCase() || 'DEPT';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setModalErrors(errors);
+      return;
+    }
+
+    setIsSubmittingDept(true);
+    setServerError(null);
+
+    try {
+      const res = await staffService.createDepartment({
+        name: trimmedName,
+        code: trimmedCode,
+        description: newDeptDescription.trim()
+      });
+
+      const created = res?.data;
+      if (created && onDepartmentAdded) {
+        onDepartmentAdded(created);
+      }
+      handleCloseModal();
+    } catch (err) {
+      console.error('Failed to create department:', err);
+      const msg = err?.response?.data?.message || err?.message || 'Failed to create department';
+      setServerError(msg);
+    } finally {
+      setIsSubmittingDept(false);
+    }
+  };
+
   return (
     <>
       <SectionHeader
@@ -84,7 +181,13 @@ export default function EmploymentDetailsSection({
             label="Department*"
             name="department"
             value={formData.department}
-            onChange={onChange}
+            onChange={(e) => {
+              if (e.target.value === '__add_new__') {
+                setIsAddDeptOpen(true);
+                return;
+              }
+              onChange(e);
+            }}
             error={Boolean(formErrors.department)}
             helperText={formErrors.department}
             InputProps={{
@@ -99,16 +202,39 @@ export default function EmploymentDetailsSection({
             <MenuItem value="" disabled className="text-gray-400">
               Select Department
             </MenuItem>
-            <MenuItem value="Management">Management</MenuItem>
-            <MenuItem value="Front Office">Front Office</MenuItem>
-            <MenuItem value="Housekeeping">Housekeeping</MenuItem>
-            <MenuItem value="Food & Beverage">Food & Beverage</MenuItem>
-            <MenuItem value="Kitchen">Kitchen</MenuItem>
-            <MenuItem value="Security">Security</MenuItem>
-            <MenuItem value="Maintenance">Maintenance</MenuItem>
-            <MenuItem value="Accounts & Finance">Accounts & Finance</MenuItem>
-            <MenuItem value="Human Resources">Human Resources</MenuItem>
-            <MenuItem value="Spa & Wellness">Spa & Wellness</MenuItem>
+            {departments && departments.length > 0 ? (
+              departments.map((dept) => (
+                <MenuItem key={dept._id} value={dept._id}>
+                  <div className="flex items-center justify-between w-full">
+                    <span>{dept.name}</span>
+                    {dept.code && (
+                      <span className="text-[11px] bg-gray-100 text-gray-600 font-mono px-1.5 py-0.5 rounded ml-2">
+                        {dept.code}
+                      </span>
+                    )}
+                  </div>
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem value="" disabled>
+                No departments available
+              </MenuItem>
+            )}
+            <MenuItem
+              value="__add_new__"
+              sx={{
+                borderTop: '1px solid #f1f5f9',
+                color: '#059669',
+                fontWeight: 600,
+                fontSize: '13px',
+                py: 1,
+                mt: 0.5,
+                '&:hover': { backgroundColor: '#ecfdf5' },
+              }}
+            >
+              <AddIcon sx={{ fontSize: 16, mr: 1, color: '#059669' }} />
+              + Add New Department...
+            </MenuItem>
           </TextField>
         </div>
 
@@ -287,6 +413,138 @@ export default function EmploymentDetailsSection({
           />
         </div>
       </div>
+
+      {/* Quick Add Department Modal */}
+      <Dialog
+        open={isAddDeptOpen}
+        onClose={handleCloseModal}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+            p: 1,
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          }
+        }}
+      >
+        <DialogTitle sx={{ m: 0, p: 2, pb: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <BusinessIcon sx={{ fontSize: 18 }} />
+            </div>
+            <div>
+              <h4 className="text-[16px] font-bold text-gray-800 leading-tight">Add New Department</h4>
+              <p className="text-[12px] text-gray-500 mt-0.5">Define a department for staff assignment</p>
+            </div>
+          </div>
+          <IconButton
+            aria-label="close"
+            onClick={handleCloseModal}
+            size="small"
+            sx={{ color: '#94a3b8' }}
+          >
+            <CloseIcon sx={{ fontSize: 18 }} />
+          </IconButton>
+        </DialogTitle>
+
+        <form onSubmit={handleCreateDepartment} noValidate autoComplete="off">
+          <DialogContent sx={{ p: 2, pt: 1.5 }}>
+            {serverError && (
+              <Alert severity="error" sx={{ mb: 2, borderRadius: '8px', fontSize: '13px' }}>
+                {serverError}
+              </Alert>
+            )}
+
+            <div className="space-y-3.5">
+              <div>
+                <TextField
+                  fullWidth
+                  label="Department Name*"
+                  placeholder="e.g. Concierge & Guest Experience"
+                  value={newDeptName}
+                  onChange={handleNameChange}
+                  error={Boolean(modalErrors.name)}
+                  helperText={modalErrors.name}
+                  autoFocus
+                  sx={inputStyle}
+                />
+              </div>
+
+              <div>
+                <TextField
+                  fullWidth
+                  label="Department Code*"
+                  placeholder="e.g. CGE"
+                  value={newDeptCode}
+                  onChange={handleCodeChange}
+                  error={Boolean(modalErrors.code)}
+                  helperText={modalErrors.code || "Unique short code (e.g., FD, HK, SEC)"}
+                  inputProps={{ maxLength: 10, style: { textTransform: 'uppercase' } }}
+                  sx={inputStyle}
+                />
+              </div>
+
+              <div>
+                <TextField
+                  fullWidth
+                  label="Description (Optional)"
+                  placeholder="Brief note about the department responsibilities"
+                  value={newDeptDescription}
+                  onChange={(e) => setNewDeptDescription(e.target.value)}
+                  multiline
+                  rows={2}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: '7px',
+                      fontSize: '14px',
+                      '& fieldset': { borderColor: '#d1d5db' },
+                      '&:hover fieldset': { borderColor: 'var(--primary-main)' },
+                      '&.Mui-focused fieldset': { borderColor: 'var(--primary-main)' }
+                    }
+                  }}
+                />
+              </div>
+            </div>
+          </DialogContent>
+
+          <DialogActions sx={{ px: 2, pb: 2, pt: 1, gap: 1 }}>
+            <Button
+              onClick={handleCloseModal}
+              disabled={isSubmittingDept}
+              sx={{
+                color: '#64748b',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '13.5px',
+                borderRadius: '8px',
+                px: 2
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isSubmittingDept || !newDeptName.trim()}
+              startIcon={isSubmittingDept ? <CircularProgress size={16} color="inherit" /> : <AddIcon sx={{ fontSize: 18 }} />}
+              sx={{
+                backgroundColor: 'var(--primary-main, #059669)',
+                '&:hover': { backgroundColor: '#047857' },
+                color: '#ffffff',
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '13.5px',
+                borderRadius: '8px',
+                px: 2.5,
+                boxShadow: 'none'
+              }}
+            >
+              {isSubmittingDept ? 'Creating...' : 'Create Department'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </>
   );
 }

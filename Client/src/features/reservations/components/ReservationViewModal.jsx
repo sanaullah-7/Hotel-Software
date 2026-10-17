@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   EditOutlined,
   SubjectOutlined,
@@ -11,6 +11,13 @@ import {
 import ModalShell from '../../../components/common/ModalShell';
 import StatusBadge from '../../../components/common/StatusBadge';
 import { statusStyles, paymentStyles } from './ReservationTable';
+import {
+  getCanonicalBookingPaymentStatus,
+  INVOICES_UPDATED_EVENT,
+  PAYMENTS_UPDATED_EVENT,
+  REFUNDS_UPDATED_EVENT
+} from '../../payment-billing/pages/paymentBillingStore';
+import { toStandardRoomType } from '../../rooms/state/roomStore';
 
 export default function ReservationViewModal({
   open,
@@ -18,6 +25,32 @@ export default function ReservationViewModal({
   onClose,
   onEdit
 }) {
+  const [canonicalPaymentStatus, setCanonicalPaymentStatus] = useState(null);
+
+  const refreshStatus = useCallback(() => {
+    if (booking?.id !== undefined && booking?.id !== null) {
+      setCanonicalPaymentStatus(getCanonicalBookingPaymentStatus(booking.id));
+    } else {
+      setCanonicalPaymentStatus(null);
+    }
+  }, [booking?.id]);
+
+  useEffect(() => {
+    refreshStatus();
+  }, [refreshStatus]);
+
+  // Job 23: respond to canonical billing mutations so open modal updates immediately
+  useEffect(() => {
+    window.addEventListener(INVOICES_UPDATED_EVENT, refreshStatus);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, refreshStatus);
+    window.addEventListener(REFUNDS_UPDATED_EVENT, refreshStatus);
+    return () => {
+      window.removeEventListener(INVOICES_UPDATED_EVENT, refreshStatus);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, refreshStatus);
+      window.removeEventListener(REFUNDS_UPDATED_EVENT, refreshStatus);
+    };
+  }, [refreshStatus]);
+
   if (!open || !booking) return null;
 
   const headerContent = (
@@ -41,6 +74,7 @@ export default function ReservationViewModal({
           }}
           className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
           title="Edit Booking"
+          aria-label="Edit booking"
         >
           <EditOutlined sx={{ fontSize: 16 }} />
         </button>
@@ -53,6 +87,7 @@ export default function ReservationViewModal({
       open={open}
       onClose={onClose}
       maxWidth="max-w-[800px]"
+      ariaLabel={`Reservation details for ${booking.name}`}
       headerContent={headerContent}
       showCloseButton={true}
     >
@@ -67,7 +102,7 @@ export default function ReservationViewModal({
               Assigned Room
             </span>
             <span className="text-[14px] font-bold text-gray-800">
-              Room {booking.roomNo || booking.room || '101'} ({booking.roomType || 'Standard'})
+              Room {booking.roomNo || booking.room || '101'} ({toStandardRoomType(booking.roomType)})
             </span>
           </div>
         </div>
@@ -94,7 +129,7 @@ export default function ReservationViewModal({
             <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
               Room Type
             </span>
-            <span className="text-[14px] font-bold text-gray-800">{booking.roomType}</span>
+            <span className="text-[14px] font-bold text-gray-800">{toStandardRoomType(booking.roomType)}</span>
           </div>
         </div>
 
@@ -151,12 +186,16 @@ export default function ReservationViewModal({
             <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-0.5">
               Payment
             </span>
-            <StatusBadge
-              status={booking.payment}
-              stylesMap={paymentStyles}
-              size="md"
-              className="mt-0.5"
-            />
+            {canonicalPaymentStatus !== null && canonicalPaymentStatus !== undefined ? (
+              <StatusBadge
+                status={canonicalPaymentStatus}
+                stylesMap={paymentStyles}
+                size="md"
+                className="mt-0.5"
+              />
+            ) : (
+              <span className="text-gray-400 text-[13px]">—</span>
+            )}
           </div>
         </div>
 

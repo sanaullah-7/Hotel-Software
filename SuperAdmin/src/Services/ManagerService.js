@@ -2,15 +2,12 @@ import { UserService } from './UserService.js';
 import { API_BASE_URL, AUTH_TOKEN_KEY } from '../utils/constants.js';
 
 function getHeaders() {
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+  const token = typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem(AUTH_TOKEN_KEY) : null;
   return {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
-
-const USE_MOCK = true;
-const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export const ManagerService = {
   /**
@@ -52,36 +49,26 @@ export const ManagerService = {
    * @param {string} hotelId
    */
   async assignHotel(managerId, hotelId) {
-    if (USE_MOCK) {
-      await delay(500);
-      return { success: true, managerId, hotelId, message: 'Hotel assigned successfully' };
-    }
-    const res = await fetch(`${API_BASE_URL}/managers/${managerId}/assign-hotel`, {
+    const res = await fetch(`${API_BASE_URL}/users/${managerId}/assign-hotel`, {
       method: 'POST',
       headers: getHeaders(),
       body: JSON.stringify({ hotelId }),
     });
-    if (!res.ok) throw new Error('Failed to assign hotel to manager');
-    return res.json();
+    const json = await res.json().catch(() => ({ message: res.statusText }));
+    if (!res.ok) throw new Error(json.message || 'Failed to assign hotel to manager');
+    return json?.data || json;
   },
 
   /**
-   * Get manager metrics / overview stats
+   * Get manager metrics from live database
    */
   async getManagerStats() {
-    if (USE_MOCK) {
-      await delay(400);
-      return {
-        totalManagers: 6,
-        activeManagers: 4,
-        pendingManagers: 2,
-        suspendedManagers: 1,
-      };
-    }
-    const res = await fetch(`${API_BASE_URL}/managers/stats`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error('Failed to fetch manager stats');
-    return res.json();
+    const stats = await UserService.getStats();
+    return {
+      totalManagers: stats?.totalManagers || 0,
+      activeManagers: stats?.activeUsers || 0,
+      pendingManagers: stats?.pendingUsers || 0,
+      suspendedManagers: stats?.suspendedUsers || 0,
+    };
   }
 };

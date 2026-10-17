@@ -1,21 +1,80 @@
 import { Link } from 'react-router-dom';
-import { CheckSquare, AlertTriangle, Clock } from 'lucide-react';
+import { CheckSquare, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 
-const ACTIONS = [
-  { id: 1, icon: Clock,        color: '#f59e0b', title: 'Pending Hotel Approval', desc: 'Pearl Continental (Lahore) is awaiting KYC verification.', meta: 'Submitted 2h ago', to: '/approvals/pending', label: 'Review Now' },
-  { id: 2, icon: AlertTriangle,color: '#ef4444', title: 'Subscription Expiring',  desc: 'Serena Hotel Premium plan expires in 2 days.',             meta: 'Auto-renew failed', to: '/subscriptions',    label: 'Send Reminder'  },
-  { id: 3, icon: CheckSquare,  color: '#10b981', title: 'Manager Onboarding',     desc: 'Ali Khan (Avari Towers) uploaded missing ID documents.',   meta: 'Action required',   to: '/users',           label: 'Verify Docs'},
-  { id: 4, icon: AlertTriangle,color: '#eab308', title: 'Payment Dispute',        desc: 'Hotel One raised a dispute for the recent commission fee.',meta: 'Amount: PKR 15,000',to: '/billing',         label: 'Resolve Issue' },
-  { id: 5, icon: CheckSquare,  color: '#3b82f6', title: 'Payout Required',        desc: 'Monthly payout for Marriott Karachi is ready for transfer.',meta: 'Amount: PKR 8.2M', to: '/payouts',         label: 'Initiate' }
-];
+export default function PendingActions({ pendingCount = 0, hotelStats = null }) {
+  const pendingApprovals = pendingCount || hotelStats?.pending || 0;
+  const suspendedCount = hotelStats?.suspended || 0;
 
-export default function PendingActions({ pendingCount = 0 }) {
+  const actions = [];
+
+  if (pendingApprovals > 0) {
+    actions.push({
+      id: 'pending-hotels',
+      icon: Clock,
+      color: '#f59e0b',
+      title: `${pendingApprovals} Pending Hotel Approval${pendingApprovals > 1 ? 's' : ''}`,
+      desc: 'New property applications require verification and database provisioning.',
+      meta: 'Action Required',
+      to: '/hotels/pending',
+      label: 'Review Now',
+    });
+  }
+
+  if (suspendedCount > 0) {
+    actions.push({
+      id: 'suspended-hotels',
+      icon: AlertTriangle,
+      color: '#ef4444',
+      title: `${suspendedCount} Suspended Hotel${suspendedCount > 1 ? 's' : ''}`,
+      desc: 'Hotels currently disabled due to overdue subscription dues or admin review.',
+      meta: 'Attention',
+      to: '/hotels?status=SUSPENDED',
+      label: 'Inspect',
+    });
+  }
+
+  // If no urgent actions, show clean all-clear status
+  if (actions.length === 0) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        padding: '28px 16px', 
+        textAlign: 'center',
+        background: 'var(--color-surface-2)',
+        borderRadius: 8,
+        border: '1px solid var(--color-border)'
+      }}>
+        <div style={{ 
+          width: 40, 
+          height: 40, 
+          borderRadius: '50%', 
+          background: 'var(--color-success-bg, #10b98120)', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          marginBottom: 10
+        }}>
+          <CheckCircle size={22} style={{ color: '#10b981' }} />
+        </div>
+        <p style={{ fontSize: 14, fontWeight: 700, margin: '0 0 4px', color: 'var(--color-text-primary)' }}>
+          All Systems Operational
+        </p>
+        <p style={{ fontSize: 12, color: 'var(--color-text-muted)', margin: 0, maxWidth: 300 }}>
+          No pending hotel applications or critical platform alerts awaiting review.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {ACTIONS.map((action) => {
+      {actions.map((action) => {
         const Icon = action.icon;
         return (
-          <div key={action.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface-2)', transition: 'border-color var(--transition-fast)' }}>
+          <div key={action.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface-2)', transition: 'border-color var(--transition-fast)' }}>
             <div style={{ width: 32, height: 32, borderRadius: 6, background: `${action.color}1a`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Icon size={18} style={{ color: action.color }} />
             </div>

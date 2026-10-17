@@ -17,6 +17,7 @@ export default function AppBreadcrumbs() {
     'cancelled': 'Canceled Booking',
     'group': 'Group Booking',
     'new': 'Add New Booking',
+    'edit': 'Edit Booking',
     'rates-pricing': 'Rates & Pricing',
     'rate-plans': 'Rate Plans',
     'taxes-fees': 'Taxes & Fees',
@@ -45,10 +46,10 @@ export default function AppBreadcrumbs() {
     'today': "Today's Attendance",
     'employee-salary': 'Employee Salary',
     'reports': 'Reports',
-    'events': 'Events & Banquets',
+    'events': 'Events & Bookings',
     'all-events': 'All Events',
     'add-event': 'Add Event',
-    'banquet-manager': 'Banquet Manager',
+    'banquet-manager': 'Event Plans',
     'settings': 'Settings',
     'hotel-settings': 'Hotel Settings',
     'policies': 'Policies'
@@ -56,6 +57,7 @@ export default function AppBreadcrumbs() {
 
   const formatName = (name) => {
     if (customSegmentLabels[name]) return customSegmentLabels[name];
+    if (/^[0-9a-fA-F]{24}$/.test(name)) return 'Details';
     return name
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -81,12 +83,17 @@ export default function AppBreadcrumbs() {
         {pathnames.map((value, index) => {
           const isLast = index === pathnames.length - 1;
           const to = `/${pathnames.slice(0, index + 1).join('/')}`;
+          const isHexId = /^[0-9a-fA-F]{24}$/.test(value);
           const label =
-            pathnames[0] === 'hr' && pathnames[1] === 'staff' && index === 2
-              ? 'Staff Profile'
-              : pathnames[0] === 'hr' && pathnames[1] === 'staff' && index === 3
-                ? 'Edit Staff'
-                : formatName(value);
+            pathnames[0] === 'guests' && index === 1
+              ? 'Guest Profile'
+              : pathnames[0] === 'hr' && pathnames[1] === 'staff' && index === 2
+                ? 'Staff Profile'
+                : pathnames[0] === 'hr' && pathnames[1] === 'staff' && index === 3
+                  ? 'Edit Staff'
+                  : isHexId
+                    ? 'Details'
+                    : formatName(value);
 
           return isLast ? (
             <Typography key={to} sx={{ color: 'text.primary', fontSize: '13px', fontWeight: 600 }}>

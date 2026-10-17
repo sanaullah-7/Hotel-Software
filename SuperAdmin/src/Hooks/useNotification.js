@@ -13,9 +13,10 @@ export function useNotification() {
     setLoading(true);
     setError(null);
     try {
-      const data = await NotificationService.getNotifications();
-      setNotifications(data || []);
-      const unread = (data || []).filter((n) => !n.isRead).length;
+      const res = await NotificationService.getNotifications();
+      const list = res?.data || (Array.isArray(res) ? res : []);
+      setNotifications(list);
+      const unread = res?.unreadCount !== undefined ? res.unreadCount : list.filter((n) => !n.read && !n.isRead).length;
       setUnreadCount(unread);
     } catch (err) {
       setError(err.message || 'Failed to load notifications');

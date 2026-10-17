@@ -1,0 +1,122 @@
+import asyncHandler from "../../../utils/asyncHandler.js";
+import ApiResponse from "../../../utils/apiResponse.js";
+// Yahan auth.service.js ke saare named exports authService ke andar aa jayenge.
+import * as authService from "./auth.service.js";
+import logger from "../../../config/logger.js";
+import { HTTP_STATUS } from "../../../constants/httpStatusCodes.js";
+import { ENV } from "../../../config/env.js";
+import Hotel from "../../../database/platform/models/hotel.model.js";
+
+
+export const register = asyncHandler(async (req, res) => {
+  const account = await authService.registerAccount(req.body);
+
+  const safeAccount = account.toObject();
+  delete safeAccount.password;//Response mein password nahi bhejna.
+
+  // Server-side log
+  logger.info(
+    `Account registered successfully: ${account.email}`
+  );
+
+  res
+    .status(HTTP_STATUS.CREATED)
+    .json(new ApiResponse(HTTP_STATUS.CREATED, safeAccount, "Account created successfully"));
+});
+
+export const registerHotel = asyncHandler(async (req, res) => {
+  const result = await authService.registerHotelAccount(req.body);
+  logger.info(`Hotel registration application submitted: ${result.hotelName} (${result.ownerEmail})`);
+  res
+    .status(HTTP_STATUS.CREATED)
+    .json(new ApiResponse(HTTP_STATUS.CREATED, result, result.message));
+});
+
+export const login = asyncHandler(async (req, res) => {
+  const { account, accessToken, refreshToken } = await authService.loginAccount(
+    req.body,
+  );
+
+  const safeAccount = account.toObject();
+  delete safeAccount.password;
+
+  if (account.hotelId) {
+    const hotel = await Hotel.findById(account.hotelId).select("property_name").lean();
+    if (hotel?.property_name) {
+      safeAccount.hotelName = hotel.property_name;
+    }
+  }
+
+
+// Browser mein refreshToken naam ki cookie set kar do aur uske andar ye refresh token rakh do.
+// Browser is cookie ko store kar lega.  
+res.cookie("refreshToken", refreshToken, {
+    // Iska matlab browser ka JavaScript normally cookie ko read nahi kar sakta.
+      httpOnly: true,
+    // Production mein cookie sirf HTTPS par jayegi.
+      secure: ENV.NODE_ENV === "production",
+    // Cross-site request situations mein cookie sending ko restrict karta hai.
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    })
+    .status(HTTP_STATUS.OK)
+    .json(
+      new ApiResponse(
+        HTTP_STATUS.OK,
+        { account: safeAccount, accessToken },
+        "Login successful",
+      ),
+    );
+
+
+    //  Login successful hone ka server-side log.
+  logger.info(
+    `Account logged in successfully: ${account.email}`
+  );
+});
+
+export const logout = asyncHandler(async (req, res) => {
+  // Revoke every token issued so far for this account, then clear the cookie.
+  await authService.logoutAccount(req.user.id);
+  res.clearCookie("refreshToken");
+  //Logout ka server-side log.
+    logger.info(
+    `Account logged out: ${req.user.email}`
+  );
+
+  res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, null, "Logged out successfully"));
+});
+
+export const refresh = asyncHandler(async (req, res) => {
+  const token = req.cookies?.refreshToken || req.body.refreshToken;
+  const { newAccessToken, newRefreshToken } = await authService.refreshAuthToken(token);
+
+  res.cookie("refreshToken", newRefreshToken, {
+    httpOnly: true,
+    secure: ENV.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  })
+  .status(HTTP_STATUS.OK)
+  .json(new ApiResponse(HTTP_STATUS.OK, { accessToken: newAccessToken }, "Token refreshed successfully"));
+});
+
+export const getMe = asyncHandler(async (req, res) => {
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, req.user, "Current account fetched"));
+});
+
+export const forgotPassword = asyncHandler(async (req, res) => {
+  await authService.forgotPassword(req.body.email);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, null, "If that email exists, an OTP has been sent."));
+});
+
+export const resetPassword = asyncHandler(async (req, res) => {
+  await authService.resetPassword(req.body);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, null, "Password has been successfully reset."));
+});

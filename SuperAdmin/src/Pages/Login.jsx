@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSuperAdmin } from '../Context/SuperAdminContext.jsx';
+import { API_BASE_URL } from '../utils/constants.js';
 import {
   Building2,
   Lock,
@@ -85,20 +86,37 @@ export default function Login() {
 
     setLoading(true);
     try {
-      // Simulated secure authentication verification
-      await new Promise((r) => setTimeout(r, 650));
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+      });
 
-      if (email.trim().toLowerCase() === 'admin@explorepakistan.com' && password === 'admin123') {
-        login('mock-jwt-token-super-admin', {
-          name: 'Super Admin',
-          email: email.trim(),
-          role: 'SUPER_ADMIN',
-          rememberMe,
-        });
-        navigate('/dashboard', { replace: true });
-      } else {
-        setError('Invalid credentials. Please use admin@explorepakistan.com / admin123');
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.message || 'Invalid credentials');
       }
+
+      const token = data?.data?.accessToken;
+      const account = data?.data?.account;
+
+      if (!token || !account) {
+        throw new Error('Authentication response missing access token or account info');
+      }
+
+      if (account.role !== 'PLATFORM_ADMIN' && account.role !== 'SUPER_ADMIN') {
+        throw new Error('Access denied. Only Platform / Super Admins can access this console.');
+      }
+
+      login(token, {
+        name: account.fullName || 'Super Admin',
+        email: account.email,
+        role: 'SUPER_ADMIN',
+        rememberMe,
+      });
+
+      navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err.message || 'Unable to connect to authentication gateway.');
     } finally {

@@ -1,4 +1,4 @@
-import React, { useState } from'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
  HomeOutlined as HomeIcon,
  Gavel as GavelIcon,
@@ -24,7 +24,10 @@ import {
  KeyboardArrowDown as ArrowDownIcon,
  Close as CloseIcon
 } from'@mui/icons-material';
+import { CircularProgress, Alert } from '@mui/material';
 import ToggleSwitch from '../components/ToggleSwitch';
+import hotelConfigService from '../../../services/hotelConfigService';
+import configAdapter from '../adapters/configAdapter';
 import '../../assigned-ui/formStyles.css';
 
 export default function Policies() {
@@ -32,6 +35,15 @@ export default function Policies() {
  const [openCancellation, setOpenCancellation] = useState(true);
  const [openProperty, setOpenProperty] = useState(true);
  const [openGuestId, setOpenGuestId] = useState(true);
+
+ // Backend integration states
+ const [isLoading, setIsLoading] = useState(true);
+ const [isSaving, setIsSaving] = useState(false);
+ const [serverError, setServerError] = useState(null);
+
+ // Operating times
+ const [checkInTime, setCheckInTime] = useState('14:00');
+ const [checkOutTime, setCheckOutTime] = useState('11:00');
 
  // Cancellation Policy Rules
  const [cancellationRules, setCancellationRules] = useState([
@@ -131,11 +143,40 @@ export default function Policies() {
  const [toastMessage, setToMessage] = useState(null);
 
  const showToast = (message) => {
- setToMessage(message);
- setTimeout(() => {
- setToMessage(null);
- }, 3500);
+  setToMessage(message);
+  setTimeout(() => {
+  setToMessage(null);
+  }, 3500);
  };
+
+ const loadPolicies = useCallback(async () => {
+   setIsLoading(true);
+   setServerError(null);
+   try {
+     const res = await hotelConfigService.getPolicies();
+     const backendPolicies = res?.data || res;
+     if (backendPolicies && (backendPolicies.check_in_time || backendPolicies._id)) {
+       const adapted = configAdapter.toFrontendPolicies(backendPolicies, {
+         cancellationRules,
+         propertyRules,
+         guestIdRules,
+       });
+       if (adapted.checkInTime) setCheckInTime(adapted.checkInTime);
+       if (adapted.checkOutTime) setCheckOutTime(adapted.checkOutTime);
+       if (adapted.propertyRules) setPropertyRules(adapted.propertyRules);
+       if (adapted.guestIdRules) setGuestIdRules(adapted.guestIdRules);
+     }
+   } catch (err) {
+     console.warn('[Policies] Failed to load backend policies:', err);
+     setServerError(err?.message || 'Failed to fetch policies from server');
+   } finally {
+     setIsLoading(false);
+   }
+ }, []);
+
+ useEffect(() => {
+   loadPolicies();
+ }, [loadPolicies]);
 
  const toggleCancellationRule = (id) => {
  setCancellationRules((prev) =>
@@ -188,8 +229,31 @@ export default function Policies() {
  showToast(`New ${modalCategory} rule added successfully!`);
  };
 
- const handleApplyConfiguration = () => {
- showToast('Policy configuration applied successfully!');
+ const handleApplyConfiguration = async () => {
+   setIsSaving(true);
+   setServerError(null);
+   try {
+     const petRule = propertyRules.find((r) => r.id === 'pet');
+     const idRule = guestIdRules.find((r) => r.id === 'id-required');
+     const activeCancellation = cancellationRules.filter((r) => r.active).map((r) => r.title).join('; ');
+
+     const payload = configAdapter.toBackendPoliciesPayload({
+       checkInTime,
+       checkOutTime,
+       petsAllowed: petRule ? petRule.active : false,
+       idVerificationRequired: idRule ? idRule.active : true,
+       cancellationPolicyText: activeCancellation || 'Standard 24-hour cancellation',
+     });
+
+     await hotelConfigService.updatePolicies(payload);
+     showToast('Policy configuration applied successfully!');
+   } catch (err) {
+     console.error('[Policies] Failed to update policies:', err);
+     setServerError(err?.message || 'Failed to save policies configuration');
+     showToast('Error applying policy configuration');
+   } finally {
+     setIsSaving(false);
+   }
  };
 
  const activeCancellationCount = cancellationRules.filter((r) => r.active).length;
@@ -224,6 +288,59 @@ export default function Policies() {
  </p>
  </div>
  </div>
+
+ {serverError && (
+   <div className="my-2">
+     <Alert
+       severity="error"
+       action={
+         <button
+           onClick={loadPolicies}
+           className="text-xs font-bold underline cursor-pointer text-red-800"
+         >
+           Retry
+         </button>
+       }
+     >
+       {serverError}
+     </Alert>
+   </div>
+ )}
+
+ {isLoading ? (
+   <div className="flex flex-col items-center justify-center py-12 gap-3" data-testid="hotel-policies-loading">
+     <CircularProgress size={32} sx={{ color: '#2563eb' }} />
+     <span className="text-xs text-gray-500">Loading hotel policies from server...</span>
+   </div>
+ ) : (
+   <>
+     {/* Operating Times Section */}
+     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-gray-50/70 rounded-xl border border-gray-100 mb-2">
+       <div>
+         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+           Standard Check-In Time (HH:mm)*
+         </label>
+         <input
+           type="text"
+           value={checkInTime}
+           onChange={(e) => setCheckInTime(e.target.value)}
+           placeholder="14:00"
+           className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:border-[#4f46e5]"
+         />
+       </div>
+       <div>
+         <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+           Standard Check-Out Time (HH:mm)*
+         </label>
+         <input
+           type="text"
+           value={checkOutTime}
+           onChange={(e) => setCheckOutTime(e.target.value)}
+           placeholder="11:00"
+           className="w-full px-3 py-1.5 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:border-[#4f46e5]"
+         />
+       </div>
+     </div>
 
  {/* Accordion 1: Cancellation Policy */}
  <div className="border border-gray-100 rounded-xl overflow-hidden bg-white">
@@ -449,6 +566,8 @@ export default function Policies() {
  </div>
  )}
  </div>
+ </>
+ )}
  </div>
 
  {/* 3. Card 2: Deposit Requirements */}
@@ -531,11 +650,21 @@ export default function Policies() {
  <div className="pt-1">
  <button
  type="button"
+ disabled={isSaving}
  onClick={handleApplyConfiguration}
- className="assigned-primary-button px-4 py-2 rounded-full font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+ className="assigned-primary-button px-4 py-2 rounded-full font-bold text-xs sm:text-sm shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
  >
- <CheckIcon sx={{ fontSize: 16 }} />
- Apply Policy Configuration
+ {isSaving ? (
+   <>
+     <CircularProgress size={16} sx={{ color: 'white' }} />
+     <span>Applying...</span>
+   </>
+ ) : (
+   <>
+     <CheckIcon sx={{ fontSize: 16 }} />
+     <span>Apply Policy Configuration</span>
+   </>
+ )}
  </button>
  </div>
 

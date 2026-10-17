@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Close as CloseIcon } from '@mui/icons-material';
+import useModalFocus from './useModalFocus';
 
 /**
  * Standard Modal Shell providing backdrop, smooth animation, header with title/close button,
@@ -16,19 +17,18 @@ export default function ModalShell({
   children,
   footer,
   showCloseButton = true,
+  ariaLabel,
   className = '',
-  bodyClassName = 'p-6'
+  bodyClassName = 'p-6',
+  closeOnEscape = true,
+  initialFocusRef
 }) {
-  useEffect(() => {
-    if (!open) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && typeof onClose === 'function') {
-        onClose();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [open, onClose]);
+  const { dialogRef, titleId } = useModalFocus({
+    open,
+    onClose,
+    initialFocusRef,
+    closeOnEscape
+  });
 
   if (!open) return null;
 
@@ -38,6 +38,12 @@ export default function ModalShell({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? titleId : undefined}
+        aria-label={!title ? ariaLabel || 'Dialog' : undefined}
+        tabIndex={-1}
         className={`bg-white rounded-xl shadow-2xl w-full ${maxWidth} overflow-hidden flex flex-col animate-scale-in border border-gray-100 ${className}`}
         onClick={(e) => e.stopPropagation()}
       >
@@ -47,7 +53,7 @@ export default function ModalShell({
             {headerContent ? (
               headerContent
             ) : (
-              <h2 className={`${headerTextColor} text-[18px] font-bold leading-tight`}>
+              <h2 id={titleId} className={`${headerTextColor} text-[18px] font-bold leading-tight`}>
                 {title}
               </h2>
             )}
@@ -56,8 +62,8 @@ export default function ModalShell({
               <button
                 type="button"
                 onClick={onClose}
+                aria-label="Close dialog"
                 className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 text-white flex items-center justify-center transition-colors cursor-pointer"
-                title="Close"
               >
                 <CloseIcon sx={{ fontSize: 18 }} />
               </button>

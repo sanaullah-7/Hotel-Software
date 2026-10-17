@@ -9,18 +9,27 @@ import {
 
 import {
   getReservations,
-  resetReservations,
   saveReservations,
+  syncReservationsFromBackend,
   RESERVATIONS_UPDATED_EVENT
 } from '../../../features/reservations/state/reservationStore';
-import { getGuests } from '../../../features/guests/state/guestStore';
-import { getBookingDues } from '../../../features/payment-billing/pages/paymentBillingStore';
+import reservationService from '../../../services/reservationService';
+import stayService from '../../../services/stayService';
+import { toFrontendReservation } from '../../../features/reservations/adapters/reservationAdapter';
+import { resolveGuestForBooking } from '../../../features/guests/state/guestStore';
+import { normalizeBookingStatus } from '../../../features/reservations/state/bookingRules';
+import {
+  getBookingDues,
+  getCanonicalBookingPaymentStatus,
+  INVOICES_UPDATED_EVENT,
+  PAYMENTS_UPDATED_EVENT,
+  REFUNDS_UPDATED_EVENT
+} from '../../../features/payment-billing/pages/paymentBillingStore';
 import SearchInput from '../../../components/common/SearchInput';
 import RefreshButton from '../../../components/common/RefreshButton';
 import PaginationControls from '../../../components/common/PaginationControls';
 
 import ReservationViewModal from '../../../features/reservations/components/ReservationViewModal';
-import ReservationFormModal from '../../../features/reservations/components/ReservationFormModal';
 import ReservationDeleteModal from '../../../features/reservations/components/ReservationDeleteModal';
 import ReservationCancelModal from '../../../features/reservations/components/ReservationCancelModal';
 import { initialBookings, parseDate } from '../data/currentBookingsData';
@@ -28,36 +37,55 @@ import BookingsGridTable from './BookingsGridTable';
 
 export default function CurrentBookingsTable({
   title = 'Current Booking',
-  showDateFilter = true
+  showDateFilter = true,
+  onMutationSuccess
 }) {
   const navigate = useNavigate();
-  const [bookings, setBookings] = useState(() => {
-    const existing = getReservations();
-    if (existing && existing.length > 0) return existing;
-    saveReservations(initialBookings);
-    return initialBookings;
-  });
+  const [bookings, setBookings] = useState(() => getReservations(initialBookings));
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState('All');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [customAnchorEl, setCustomAnchorEl] = useState(null);
 
-  const getGuestIdForBooking = (booking) => {
-    if (booking.guestId) return booking.guestId;
-    const allGuests = getGuests();
-    const found = allGuests.find((g) =>
-      (booking.email && g.email && g.email.toLowerCase() === booking.email.toLowerCase()) ||
-      (booking.name && g.name && g.name.toLowerCase() === booking.name.toLowerCase()) ||
-      String(g.id).toLowerCase() === `gst-${booking.id}`.toLowerCase() ||
-      String(g.id).toLowerCase() === String(booking.id).toLowerCase()
-    );
-    return found?.id || `GST-${booking.id}`;
-  };
+  const fetchBackendBookings = React.useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await reservationService.getReservations({ limit: 100 });
+      const rawList = Array.isArray(res?.data?.reservations)
+        ? res.data.reservations
+        : Array.isArray(res?.data)
+          ? res.data
+          : Array.isArray(res?.reservations)
+            ? res.reservations
+            : (Array.isArray(res) ? res : null);
+
+      if (rawList !== null) {
+        const adapted = rawList.map(toFrontendReservation).filter(Boolean);
+        setBookings(adapted);
+        syncReservationsFromBackend(rawList);
+      }
+    } catch (err) {
+      console.warn('[CurrentBookings] Backend fetch warning:', err);
+      const errMsg = err?.message || 'Failed to load bookings from server';
+      setError(errMsg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   const handleRowClick = (booking) => {
-    const guestId = getGuestIdForBooking(booking);
-    navigate(`/guests/${guestId}`);
+    const guestId = booking.guestId || booking.primary_guest_id || booking.guest?._id || booking.guest?.id;
+    if (guestId) {
+      navigate(`/guests/${guestId}`);
+      return;
+    }
+    const guest = resolveGuestForBooking(booking);
+    if (guest) navigate(`/guests/${guest.id || guest._id}`);
+    else openViewModal(booking);
   };
 
   // Pagination state
@@ -68,9 +96,6 @@ export default function CurrentBookingsTable({
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewingBooking, setViewingBooking] = useState(null);
 
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [bookingToDelete, setBookingToDelete] = useState(null);
 
@@ -80,56 +105,29 @@ export default function CurrentBookingsTable({
   // Action Menu state
   const [activeMenuId, setActiveMenuId] = useState(null);
 
-  // Booking Form State
-  const [form, setForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    gender: '',
-    mobile: '',
-    city: '',
-    passport: '',
-    nationality: '',
-    checkIn: '',
-    checkOut: '',
-    package: 'All inclusive',
-    totalPerson: '1',
-    numRooms: '1',
-    roomType: 'Delux',
-    roomNo: '101',
-    arrivalTime: 'Morning',
-    purpose: 'Leisure',
-    paymentMethod: 'Paid',
-    discountCode: '',
-    bookingRef: '',
-    emergencyName: '',
-    emergencyPhone: '',
-    address: '',
-    specialRequests: '',
-    note: '',
-    avatar: '',
-    avatarFileName: ''
-  });
-
-  const isFormValid = (form.firstName || '').trim() !== '';
-
-  const handleFormChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
   useEffect(() => {
-    const existing = getReservations();
-    if (!existing || existing.length === 0) {
-      saveReservations(initialBookings);
-    }
-    const syncReservations = () => setBookings(getReservations(initialBookings));
-    window.addEventListener('storage', syncReservations);
-    window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
-    return () => {
-      window.removeEventListener('storage', syncReservations);
-      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+    fetchBackendBookings();
+    const handleLocalReservationsUpdate = () => {
+      const local = getReservations([]);
+      setBookings(local);
     };
-  }, []);
+    const handleFinancialUpdate = () => {
+      fetchBackendBookings();
+    };
+    window.addEventListener('storage', handleLocalReservationsUpdate);
+    window.addEventListener(RESERVATIONS_UPDATED_EVENT, handleLocalReservationsUpdate);
+    // Refresh booking list on financial mutations so payment display and dues stay current
+    window.addEventListener(INVOICES_UPDATED_EVENT, handleFinancialUpdate);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, handleFinancialUpdate);
+    window.addEventListener(REFUNDS_UPDATED_EVENT, handleFinancialUpdate);
+    return () => {
+      window.removeEventListener('storage', handleLocalReservationsUpdate);
+      window.removeEventListener(RESERVATIONS_UPDATED_EVENT, handleLocalReservationsUpdate);
+      window.removeEventListener(INVOICES_UPDATED_EVENT, handleFinancialUpdate);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, handleFinancialUpdate);
+      window.removeEventListener(REFUNDS_UPDATED_EVENT, handleFinancialUpdate);
+    };
+  }, [fetchBackendBookings]);
 
   const persistBookings = (nextBookings) => {
     setBookings(nextBookings);
@@ -141,8 +139,9 @@ export default function CurrentBookingsTable({
     setDateFilter('All');
     setCustomStartDate('');
     setCustomEndDate('');
-    resetReservations(initialBookings);
-    setBookings(initialBookings);
+    fetchBackendBookings();
+    if (onMutationSuccess) onMutationSuccess();
+    setCurrentPage(1);
   };
 
   const handleCustomClick = (event) => {
@@ -154,8 +153,15 @@ export default function CurrentBookingsTable({
     setCustomAnchorEl(null);
   };
 
-  // Functional Date + Search Filter
-  const filteredBookings = bookings.filter((b) => {
+  // Canonical active-booking filter: Current Bookings = Pending + Booked + Checked In
+  // Excludes Checked Out and Cancelled as they are no longer operationally active.
+  const activeBookings = bookings.filter((b) => {
+    const s = normalizeBookingStatus(b.status);
+    return s === 'Pending' || s === 'Booked' || s === 'Checked In';
+  });
+
+  // Functional Date + Search Filter (applied on top of active-booking filter)
+  const filteredBookings = activeBookings.filter((b) => {
     const q = search.toLowerCase().trim();
     if (q) {
       const matchName = b.name && b.name.toLowerCase().includes(q);
@@ -173,14 +179,28 @@ export default function CurrentBookingsTable({
     const checkInDate = parseDate(b.checkIn);
     if (!checkInDate) return true;
 
+    const now = new Date();
+    const todayY = now.getFullYear();
+    const todayM = now.getMonth();
+    const todayD = now.getDate();
+
     const refYear = checkInDate.getFullYear();
     const refMonth = checkInDate.getMonth();
     const refDay = checkInDate.getDate();
 
-    if (dateFilter === 'Daily') return refDay >= 20 && refDay <= 28;
-    if (dateFilter === 'Weekly') return refDay >= 10 && refDay <= 20;
-    if (dateFilter === 'Monthly') return refMonth === 1 || refMonth === new Date().getMonth();
-    if (dateFilter === 'Yearly') return refYear === 2023 || refYear === new Date().getFullYear();
+    // Daily: check-in date is today
+    if (dateFilter === 'Daily') return refYear === todayY && refMonth === todayM && refDay === todayD;
+    // Weekly: check-in date falls within the current calendar week (Mon–Sun)
+    if (dateFilter === 'Weekly') {
+      const dayOfWeek = now.getDay(); // 0=Sun
+      const startOfWeek = new Date(todayY, todayM, todayD - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      const endOfWeek = new Date(startOfWeek.getTime() + 7 * 24 * 60 * 60 * 1000);
+      return checkInDate >= startOfWeek && checkInDate < endOfWeek;
+    }
+    // Monthly: check-in date is in the current calendar month
+    if (dateFilter === 'Monthly') return refYear === todayY && refMonth === todayM;
+    // Yearly: check-in date is in the current calendar year
+    if (dateFilter === 'Yearly') return refYear === todayY;
 
     if (dateFilter === 'Custom') {
       if (!customStartDate && !customEndDate) return true;
@@ -195,6 +215,33 @@ export default function CurrentBookingsTable({
     return true;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filteredBookings.length / (rowsPerPage || 10)));
+  const effectivePage = Math.min(Math.max(1, currentPage), totalPages);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const handlePageChange = (newPage) => {
+    if (activeMenuId) {
+      setActiveMenuId(null);
+    }
+    setCurrentPage(Math.min(Math.max(1, newPage), totalPages));
+  };
+
+  const handleRowsPerPageChange = (newRowsPerPage) => {
+    if (activeMenuId) {
+      setActiveMenuId(null);
+    }
+    setRowsPerPage(newRowsPerPage);
+    setCurrentPage(1);
+  };
+
+  const startIndex = (effectivePage - 1) * rowsPerPage;
+  const paginatedBookings = filteredBookings.slice(startIndex, startIndex + rowsPerPage);
+
   const toggleMenu = (e, id) => {
     e.stopPropagation();
     setActiveMenuId(activeMenuId === id ? null : id);
@@ -206,140 +253,11 @@ export default function CurrentBookingsTable({
   };
 
   const openNewModal = () => {
-    setEditingId(null);
-    setForm({
-      firstName: '',
-      lastName: '',
-      email: '',
-      gender: '',
-      mobile: '',
-      city: '',
-      passport: '',
-      nationality: '',
-      checkIn: '',
-      checkOut: '',
-      package: 'All inclusive',
-      totalPerson: '1',
-      numRooms: '1',
-      roomType: 'Delux',
-      roomNo: '101',
-      arrivalTime: 'Morning',
-      purpose: 'Leisure',
-      paymentMethod: 'Paid',
-      discountCode: '',
-      bookingRef: '',
-      emergencyName: '',
-      emergencyPhone: '',
-      address: '',
-      specialRequests: '',
-      note: '',
-      avatar: '',
-      avatarFileName: ''
-    });
-    setIsBookingModalOpen(true);
+    navigate('/reservation/new');
   };
 
   const openEditModal = (booking) => {
-    setEditingId(booking.id);
-    const [firstName, ...lastNames] = (booking.name || '').split(' ');
-    setForm({
-      firstName: firstName || '',
-      lastName: lastNames.join(' ') || '',
-      email: booking.email || '',
-      gender: booking.gender || '',
-      mobile: booking.mobile || '',
-      city: booking.city || '',
-      passport: booking.passport || '',
-      nationality: booking.nationality || '',
-      checkIn: booking.checkIn || '',
-      checkOut: booking.checkOut || '',
-      package: booking.package || 'All inclusive',
-      totalPerson: booking.totalPerson || '1',
-      numRooms: booking.numRooms || '1',
-      roomType: booking.roomType || 'Delux',
-      roomNo: booking.roomNo || booking.room || '101',
-      arrivalTime: booking.arrivalTime || 'Morning',
-      purpose: booking.purpose || 'Leisure',
-      paymentMethod: booking.payment || 'Paid',
-      discountCode: booking.discountCode || '',
-      bookingRef: booking.bookingRef || `BK-${booking.id}`,
-      emergencyName: booking.emergencyName || '',
-      emergencyPhone: booking.emergencyPhone || '',
-      address: booking.address || '',
-      specialRequests: booking.specialRequests || '',
-      note: booking.note || '',
-      avatar: booking.avatar || '',
-      avatarFileName: ''
-    });
-    setIsBookingModalOpen(true);
-  };
-
-  const handleSaveBooking = (e) => {
-    if (e && e.preventDefault) e.preventDefault();
-    if (!isFormValid) return;
-
-    if (editingId) {
-      const updated = bookings.map((b) =>
-        b.id === editingId
-          ? {
-              ...b,
-              name: `${form.firstName || ''} ${form.lastName || ''}`.trim() || b.name,
-              avatar: form.avatar || b.avatar,
-              email: form.email,
-              gender: form.gender,
-              mobile: form.mobile,
-              city: form.city,
-              passport: form.passport,
-              nationality: form.nationality,
-              package: form.package,
-              roomType: form.roomType,
-              roomNo: form.roomNo || b.roomNo || '101',
-              checkIn: form.checkIn,
-              checkOut: form.checkOut,
-              payment: form.paymentMethod,
-              arrivalTime: form.arrivalTime,
-              purpose: form.purpose,
-              discountCode: form.discountCode,
-              bookingRef: form.bookingRef,
-              emergencyName: form.emergencyName,
-              emergencyPhone: form.emergencyPhone,
-              address: form.address,
-              specialRequests: form.specialRequests,
-              note: form.note
-            }
-          : b
-      );
-      persistBookings(updated);
-    } else {
-      const newBooking = {
-        id: Date.now(),
-        name: `${form.firstName || ''} ${form.lastName || ''}`.trim() || 'Guest',
-        avatar: form.avatar || ('https://i.pravatar.cc/150?img=' + Math.floor(Math.random() * 50 + 1)),
-        roomNo: form.roomNo || '101',
-        package: form.package || 'All inclusive',
-        roomType: form.roomType || 'Delux',
-        status: 'Booked',
-        checkIn: form.checkIn || new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
-        checkOut: form.checkOut || new Date(Date.now() + 86400000 * 2).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }),
-        payment: form.paymentMethod || 'Paid',
-        email: form.email || '',
-        mobile: form.mobile || '',
-        city: form.city || '',
-        passport: form.passport || '',
-        nationality: form.nationality || '',
-        arrivalTime: form.arrivalTime || 'Morning',
-        purpose: form.purpose || 'Leisure',
-        discountCode: form.discountCode || '',
-        bookingRef: form.bookingRef || `BK-${Date.now().toString().slice(-6)}`,
-        emergencyName: form.emergencyName || '',
-        emergencyPhone: form.emergencyPhone || '',
-        address: form.address || '',
-        specialRequests: form.specialRequests || '',
-        note: form.note || ''
-      };
-      persistBookings([newBooking, ...bookings]);
-    }
-    setIsBookingModalOpen(false);
+    navigate(`/reservation/edit/${booking.id}`);
   };
 
   const confirmDelete = (booking) => {
@@ -347,11 +265,34 @@ export default function CurrentBookingsTable({
     setIsDeleteModalOpen(true);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (bookingToDelete) {
-      persistBookings(bookings.filter((b) => b.id !== bookingToDelete.id));
-      setIsDeleteModalOpen(false);
-      setBookingToDelete(null);
+      if (normalizeBookingStatus(bookingToDelete.status) === 'Checked In') {
+        window.alert('Check out this booking before cancelling it.');
+        return;
+      }
+      try {
+        const canonicalId = bookingToDelete._id || bookingToDelete.canonicalBookingId || bookingToDelete.id;
+        const res = await reservationService.cancelReservation(canonicalId, 'Cancelled from dashboard');
+        const updatedBackend = res?.data?.reservation || res?.data || res;
+        const adapted = toFrontendReservation(updatedBackend) || { ...bookingToDelete, status: 'Cancelled' };
+
+        const currentStored = getReservations([]);
+        const updatedList = currentStored.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        );
+        syncReservationsFromBackend(updatedList);
+        setBookings((current) => current.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        ));
+
+        setIsDeleteModalOpen(false);
+        setBookingToDelete(null);
+        await fetchBackendBookings();
+        if (onMutationSuccess) onMutationSuccess();
+      } catch (error) {
+        window.alert(error?.message || 'Failed to cancel reservation');
+      }
     }
   };
 
@@ -360,20 +301,66 @@ export default function CurrentBookingsTable({
     setIsCancelModalOpen(true);
   };
 
-  const handleCancelBooking = () => {
+  const handleCancelBooking = async () => {
     if (bookingToCancel) {
-      const updated = bookings.map((b) =>
-        b.id === bookingToCancel.id ? { ...b, status: 'Cancelled' } : b
-      );
-      persistBookings(updated);
-      setIsCancelModalOpen(false);
-      setBookingToCancel(null);
+      try {
+        const canonicalId = bookingToCancel._id || bookingToCancel.canonicalBookingId || bookingToCancel.id;
+        const res = await reservationService.cancelReservation(canonicalId, 'Cancelled from dashboard');
+        const updatedBackend = res?.data?.reservation || res?.data || res;
+        const adapted = toFrontendReservation(updatedBackend) || { ...bookingToCancel, status: 'Cancelled' };
+
+        const currentStored = getReservations([]);
+        const updatedList = currentStored.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        );
+        syncReservationsFromBackend(updatedList);
+        setBookings((current) => current.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        ));
+
+        setIsCancelModalOpen(false);
+        setBookingToCancel(null);
+        await fetchBackendBookings();
+        if (onMutationSuccess) onMutationSuccess();
+      } catch (error) {
+        window.alert(error?.message || 'Failed to cancel reservation');
+      }
     }
   };
 
-  const handleCheckout = (id) => {
-    const updated = bookings.map((b) => (b.id === id ? { ...b, status: 'CheckOut' } : b));
-    persistBookings(updated);
+  const handleCheckout = async (id) => {
+    try {
+      const booking = bookings.find((b) => String(b.id) === String(id) || String(b._id) === String(id));
+      if (!booking) throw new Error('Booking not found');
+      if (normalizeBookingStatus(booking.status) !== 'Checked In') {
+        throw new Error('Only a checked-in booking can be checked out.');
+      }
+      const canonicalId = booking._id || booking.canonicalBookingId || booking.id || id;
+      const payload = {
+        reservation_id: canonicalId,
+        notes: 'Checked out from Current Bookings'
+      };
+      if (booking.stayId && /^[0-9a-fA-F]{24}$/.test(String(booking.stayId).trim())) {
+        payload.stay_id = String(booking.stayId).trim();
+      }
+      const res = await stayService.checkOut(payload);
+      const updatedBackend = res?.data?.reservation || res?.reservation;
+      if (updatedBackend) {
+        const adapted = toFrontendReservation(updatedBackend);
+        setBookings((current) => current.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        ));
+        const currentStored = getReservations([]);
+        const updatedList = currentStored.map((b) =>
+          (String(b.id) === String(adapted.id) || String(b._id) === String(adapted.id) || String(b.bookingId) === String(adapted.bookingId)) ? adapted : b
+        );
+        syncReservationsFromBackend(updatedList);
+      }
+      await fetchBackendBookings();
+      if (onMutationSuccess) onMutationSuccess();
+    } catch (error) {
+      window.alert(error?.message || 'Check-out failed');
+    }
   };
 
   const handleExportCSV = () => {
@@ -381,7 +368,10 @@ export default function CurrentBookingsTable({
     let csvContent = cols.join(',') + '\n';
 
     filteredBookings.forEach((b) => {
-      const duesAmt = getBookingDues(b);
+      const canonical = getBookingDues(b);
+      const duesAmt = canonical !== null
+        ? canonical
+        : (b.folio_balance !== undefined && b.folio_balance !== null ? Number(b.folio_balance) : 0);
       const row = [
         `"${b.name || ''}"`,
         `"Room ${b.roomNo || b.room || '101'}"`,
@@ -390,7 +380,7 @@ export default function CurrentBookingsTable({
         `"${b.status || ''}"`,
         `"${b.checkIn || ''}"`,
         `"${b.checkOut || ''}"`,
-        `"${b.payment || ''}"`,
+        `"${getCanonicalBookingPaymentStatus(b.id) ?? b.payment ?? ''}"`,
         `"${duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0'}"`,
         `"${b.mobile || ''}"`
       ];
@@ -429,7 +419,10 @@ export default function CurrentBookingsTable({
           <tbody>`;
 
     filteredBookings.forEach((b) => {
-      const duesAmt = getBookingDues(b);
+      const canonical = getBookingDues(b);
+      const duesAmt = canonical !== null
+        ? canonical
+        : (b.folio_balance !== undefined && b.folio_balance !== null ? Number(b.folio_balance) : 0);
       html += `<tr>
         <td>${b.name || ''}</td>
         <td>Room ${b.roomNo || b.room || '101'}</td>
@@ -438,7 +431,7 @@ export default function CurrentBookingsTable({
         <td>${b.status || ''}</td>
         <td>${b.checkIn || ''}</td>
         <td>${b.checkOut || ''}</td>
-        <td>${b.payment || ''}</td>
+        <td>${getCanonicalBookingPaymentStatus(b.id) ?? b.payment ?? ''}</td>
         <td>${duesAmt > 0 ? `$${duesAmt.toLocaleString()}` : '$0'}</td>
         <td>${b.mobile || ''}</td>
       </tr>`;
@@ -459,16 +452,16 @@ export default function CurrentBookingsTable({
   };
 
   return (
-    <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+    <div className="bg-white rounded-[6px] flex flex-col border border-gray-100 shadow-sm">
       {/* Dashboard Toolbar */}
-      <div className="p-3 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-[15px] font-bold text-gray-800 whitespace-nowrap">{title}</h2>
+      <div className="px-3.5 py-2 flex flex-col md:flex-row md:items-center justify-between border-b border-gray-100 gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <h2 className="text-sm font-bold text-gray-800 whitespace-nowrap">{title}</h2>
 
           <SearchInput
             placeholder="Search..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={setSearch}
             width="w-[140px] sm:w-[170px]"
             size="sm"
             inputClassName="border-gray-300"
@@ -480,7 +473,7 @@ export default function CurrentBookingsTable({
                 <button
                   key={filter}
                   onClick={(e) => (filter === 'Custom' ? handleCustomClick(e) : setDateFilter(filter))}
-                  className={`px-2.5 py-1 text-[11.5px] font-medium transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
+                  className={`px-2.5 py-1 text-xs font-medium transition-colors border-r border-gray-200 last:border-r-0 cursor-pointer ${
                     dateFilter === filter
                       ? 'bg-[#e5f4eb] text-[#1b7f43] font-bold'
                       : 'text-gray-600 hover:bg-gray-50'
@@ -497,9 +490,9 @@ export default function CurrentBookingsTable({
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
                 transformOrigin={{ vertical: 'top', horizontal: 'center' }}
               >
-                <div className="p-3.5 w-[260px]">
+                <div className="p-3.5 w-[250px]">
                   <h3 className="font-bold text-gray-700 text-xs mb-2.5">Custom Date Range</h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2.5">
                     <div>
                       <span className="text-[10.5px] text-gray-500 font-semibold block mb-0.5">Start Date</span>
                       <input
@@ -531,6 +524,7 @@ export default function CurrentBookingsTable({
             onClick={openNewModal}
             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
             title="Add Booking"
+            aria-label="Add booking"
           >
             <AddCircleOutlined sx={{ fontSize: 18 }} className="text-[#1b7f43]" />
           </button>
@@ -544,6 +538,7 @@ export default function CurrentBookingsTable({
             onClick={handleExportCSV}
             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer"
             title="Export CSV"
+            aria-label="Export CSV"
           >
             <TableChart sx={{ fontSize: 16 }} className="text-[#0ea5e9]" />
           </button>
@@ -551,15 +546,31 @@ export default function CurrentBookingsTable({
             onClick={handleExportPDF}
             className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer"
             title="Export PDF"
+            aria-label="Export PDF"
           >
             <PictureAsPdf sx={{ fontSize: 16 }} className="text-[#ef4444]" />
           </button>
         </div>
       </div>
 
+      {/* Backend Error Banner */}
+      {error && (
+        <div className="px-3.5 py-2">
+          <div role="alert" className="flex items-center justify-between p-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
+            <span>{error}</span>
+            <button
+              onClick={handleRefresh}
+              className="px-2 py-0.5 bg-red-100 hover:bg-red-200 text-red-800 font-semibold rounded text-xs cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Grid Table */}
       <BookingsGridTable
-        filteredBookings={filteredBookings}
+        filteredBookings={paginatedBookings}
         handleRowClick={handleRowClick}
         activeMenuId={activeMenuId}
         toggleMenu={toggleMenu}
@@ -574,10 +585,13 @@ export default function CurrentBookingsTable({
       {/* Compact Pagination */}
       <PaginationControls
         variant="compact"
+        currentPage={effectivePage}
+        totalPages={totalPages}
         totalRecords={filteredBookings.length}
         rowsPerPage={rowsPerPage}
         rowsPerPageOptions={[5, 10, 20]}
-        onRowsPerPageChange={setRowsPerPage}
+        onPageChange={handlePageChange}
+        onRowsPerPageChange={handleRowsPerPageChange}
       />
 
       {/* Modals */}
@@ -589,16 +603,6 @@ export default function CurrentBookingsTable({
           setIsViewModalOpen(false);
           openEditModal(b);
         }}
-      />
-
-      <ReservationFormModal
-        open={isBookingModalOpen}
-        editingId={editingId}
-        form={form}
-        onFormChange={handleFormChange}
-        onClose={() => setIsBookingModalOpen(false)}
-        onSave={handleSaveBooking}
-        onSubmit={handleSaveBooking}
       />
 
       <ReservationDeleteModal

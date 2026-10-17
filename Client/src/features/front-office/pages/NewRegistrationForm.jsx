@@ -11,11 +11,14 @@ import {
  Select, 
  MenuItem, 
  InputLabel, 
- FormControl 
-} from'@mui/material';
+ FormControl,
+ CircularProgress 
+} from '@mui/material';
+import { registrationFormService } from '../../../services/registrationFormService';
 
 export default function NewRegistrationForm() {
  const navigate = useNavigate();
+ const [submitting, setSubmitting] = useState(false);
 
  // Initial Form State
  const initialFormState = {
@@ -46,44 +49,47 @@ export default function NewRegistrationForm() {
  setFormData(initialFormState);
  };
 
- const handleRegisterGuest = (e) => {
+ const handleRegisterGuest = async (e) => {
  e.preventDefault();
  if (!formData.firstName.trim() || !formData.lastName.trim()) {
  alert('Please fill in required fields (First Name, Last Name).');
  return;
  }
 
- const newForm = {
- formNo:`REG-2023-0${Math.floor(100 + Math.random() * 900)}`,
- guest:`${formData.firstName} ${formData.lastName}`,
- idType: formData.idType ||'National ID / Doc',
- idNumber: formData.idNumber ||'Verified on arrival',
- room: formData.roomType ?`${formData.roomType} Suite` :'Allocating',
- date: formData.arrivalDate || new Date().toISOString().split('T')[0],
- status:'Signed & Verified'
+ setSubmitting(true);
+ try {
+ const payload = {
+ firstName: formData.firstName.trim(),
+ lastName: formData.lastName.trim(),
+ guestName: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+ email: formData.email.trim() || null,
+ phone: formData.phone.trim() || null,
+ gender: formData.gender || null,
+ address: formData.address || null,
+ city: formData.city || null,
+ country: formData.country || null,
+ arrivalDate: formData.arrivalDate ? new Date(formData.arrivalDate) : null,
+ departureDate: formData.departureDate ? new Date(formData.departureDate) : null,
+ roomType: formData.roomType || null,
+ room: formData.roomType ? `${formData.roomType} Suite` : 'Allocating',
+ numberOfGuests: Number(formData.numberOfGuests) || 1,
+ idType: formData.idType || 'National ID / Doc',
+ idNumber: formData.idNumber || 'Verified on arrival',
+ specialRequests: formData.specialRequests || '',
+ status: 'Signed & Verified',
+ termsAccepted: true
  };
 
- // Persist to localStorage for table synchronization
- const initialForms = [
- { formNo:'REG-2023-089', guest:'Kamran Akmal', idType:'CNIC', idNumber:'42101-1122334-1', room:'101', date:'10/08/2023', status:'Signed & Verified' },
- { formNo:'REG-2023-088', guest:'Cara Stevens', idType:'Passport', idNumber:'USA-9988221', room:'102', date:'10/01/2023', status:'Signed & Verified' },
- { formNo:'REG-2023-087', guest:'Airi Satou', idType:'Passport', idNumber:'JPN-4455112', room:'105', date:'10/02/2023', status:'Pending Signature' },
- { formNo:'REG-2023-086', guest:'Mahira Khan', idType:'CNIC', idNumber:'42201-6655443-2', room:'201', date:'10/09/2023', status:'Signed & Verified' },
- { formNo:'REG-2023-085', guest:'Jens Brincker', idType:'Passport', idNumber:'GER-8833119', room:'302', date:'10/03/2023', status:'Signed & Verified' },
- ];
-
- try {
- const existing = localStorage.getItem('hotel_registration_forms');
- const parsedList = existing ? JSON.parse(existing) : initialForms;
- const updatedList = [newForm, ...parsedList];
- localStorage.setItem('hotel_registration_forms', JSON.stringify(updatedList));
- } catch (err) {
- console.error('Error saving to localStorage:', err);
- }
-
- alert(`Guest ${newForm.guest} successfully registered!`);
+ await registrationFormService.createRegistrationForm(payload);
+ alert(`Guest ${payload.guestName} successfully registered in database!`);
  handleResetForm();
  navigate('/front-office/registration-forms');
+ } catch (err) {
+ console.error('Error saving registration form to server:', err);
+ alert(err.message || 'Failed to register guest. Please try again.');
+ } finally {
+ setSubmitting(false);
+ }
  };
 
  // Material-UI SX styling with native smooth floating label animation
@@ -356,10 +362,20 @@ export default function NewRegistrationForm() {
 
  <button
  type="submit"
- className="px-5 py-2 rounded-lg bg-[var(--primary-main)] hover:brightness-110 text-white text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-sm"
+ disabled={submitting}
+ className="px-5 py-2 rounded-lg bg-[var(--primary-main)] hover:brightness-110 text-white text-xs font-bold transition-all flex items-center justify-center cursor-pointer shadow-sm disabled:opacity-50"
  >
- <CheckCircle sx={{ fontSize: 15 }} className="mr-1.5" />
- Register Guest
+ {submitting ? (
+   <>
+     <CircularProgress size={14} sx={{ color: 'white', mr: 1 }} />
+     Registering...
+   </>
+ ) : (
+   <>
+     <CheckCircle sx={{ fontSize: 15 }} className="mr-1.5" />
+     Register Guest
+   </>
+ )}
  </button>
  </div>
  </form>

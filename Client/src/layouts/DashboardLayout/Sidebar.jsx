@@ -41,22 +41,45 @@ import { DropdownSection } from './components/DropdownSection';
 import { NavGroupHeader } from './components/NavGroupHeader';
 
 export default function Sidebar({ mobileOpen = false, onMobileClose }) {
-  const [hotelNameState, setHotelNameState] = useState(localStorage.getItem('hotelName') || null);
+  const location = useLocation();
+  const pathname = location.pathname;
+
+  const resolveHotelName = () => {
+    let userObj = null;
+    try {
+      userObj = JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      userObj = null;
+    }
+    return (
+      localStorage.getItem('hotelName') ||
+      userObj?.hotelName ||
+      localStorage.getItem('hotelProperty') ||
+      userObj?.fullName ||
+      localStorage.getItem('fullName') ||
+      null
+    );
+  };
+
+  const [hotelNameState, setHotelNameState] = useState(resolveHotelName);
   const [hotelLogoState, setHotelLogoState] = useState(localStorage.getItem('hotelLogo') || null);
 
   useEffect(() => {
     const handleStorage = () => {
-      setHotelNameState(localStorage.getItem('hotelName') || null);
+      setHotelNameState(resolveHotelName());
       setHotelLogoState(localStorage.getItem('hotelLogo') || null);
     };
+    handleStorage();
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, []);
-  const location = useLocation();
-  const pathname = location.pathname;
+    window.addEventListener('hotelNameChanged', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('hotelNameChanged', handleStorage);
+    };
+  }, [pathname]);
 
   // Active paths
-  const isDashboardActive = pathname === '/';
+  const isDashboardActive = pathname === '/dashboard' || pathname === '/' || pathname === '/dashboard/';
   const isOccupancyActive = pathname.startsWith('/occupancy');
   const isFrontOfficeActive = pathname.startsWith('/front-office');
   const isReservationActive = pathname.startsWith('/reservation');
@@ -105,7 +128,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
   return (
     <aside
       className={`${
-        isOpen ? 'w-60' : 'w-20'
+        isOpen ? 'w-[215px]' : 'w-[68px]'
       } h-screen border-r border-gray-100 flex flex-col bg-white shadow-sm transition-all duration-300 relative z-40 shrink-0 select-none ${
         mobileOpen ? 'fixed top-0 left-0 z-50 shadow-2xl flex' : 'hidden md:flex md:sticky md:top-0'
       }`}
@@ -113,37 +136,53 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className="absolute -right-3.5 top-9 bg-white border-2 border-[#1b7f43] text-[#1b7f43] rounded-full w-7 h-7 flex items-center justify-center cursor-pointer shadow-sm hover:bg-gray-50 transition-colors z-50"
+        className="absolute -right-3 top-8 bg-white border-2 border-[#1b7f43] text-[#1b7f43] rounded-full w-6 h-6 flex items-center justify-center cursor-pointer shadow-xs hover:bg-gray-50 transition-colors z-50"
         aria-label={isOpen ? 'Collapse sidebar' : 'Expand sidebar'}
       >
         {isOpen ? (
-          <ChevronLeftIcon sx={{ fontSize: 18 }} />
+          <ChevronLeftIcon sx={{ fontSize: 16 }} />
         ) : (
-          <ChevronRightIcon sx={{ fontSize: 18 }} />
+          <ChevronRightIcon sx={{ fontSize: 16 }} />
         )}
       </button>
 
       {/* Logo */}
-      <div className="min-h-[4rem] py-2 flex flex-col items-center justify-center border-b border-transparent pt-0.5 px-2 text-center w-full overflow-hidden">
+      <div className="min-h-[3.2rem] py-1.5 flex flex-col items-center justify-center border-b border-transparent pt-0.5 px-2 text-center w-full overflow-hidden">
         {hotelLogoState && (
-          <img src={hotelLogoState} alt="Logo" className={`object-contain transition-all duration-300 ${isOpen ? 'w-10 h-10' : 'w-7 h-7'}`} />
+          <img src={hotelLogoState} alt="Logo" className={`object-contain transition-all duration-300 ${isOpen ? 'w-8 h-8' : 'w-6 h-6'}`} />
         )}
         <h1 className="font-bold tracking-wide text-gray-800 transition-all duration-300 flex items-center justify-center break-words w-full">
           {isOpen ? (
-            <span className="text-lg sm:text-xl flex flex-wrap items-center justify-center leading-tight">
+            <span className="text-base sm:text-lg flex flex-wrap items-center justify-center leading-tight">
               {hotelNameState ? (
-                <>
-                  <span className="mr-1">{hotelNameState.split(' ')[0]}</span>
-                  <span className="text-[#1b7f43]">{hotelNameState.split(' ').slice(1).join(' ')}</span>
-                </>
+                (() => {
+                  const parts = hotelNameState.trim().split(/\s+/);
+                  if (parts.length === 1) {
+                    return <span className="text-gray-800 font-bold">{parts[0]}</span>;
+                  }
+                  return (
+                    <>
+                      <span className="mr-1 text-gray-800 font-bold">{parts[0]}</span>
+                      <span className="text-[#1b7f43] font-bold">{parts.slice(1).join(' ')}</span>
+                    </>
+                  );
+                })()
               ) : (
                 <>Hotel<span className="text-[#1b7f43]">Admin</span></>
               )}
             </span>
           ) : (
             !hotelLogoState && (
-              <span className="text-xl text-[#1b7f43]">
-                HA
+              <span className="text-lg font-bold text-[#1b7f43]">
+                {hotelNameState
+                  ? hotelNameState
+                      .trim()
+                      .split(/\s+/)
+                      .map((w) => w[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()
+                  : 'HA'}
               </span>
             )
           )}
@@ -151,8 +190,8 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 -pt-0.5 pb-6 overflow-y-auto overflow-x-hidden hide-scrollbar">
-        <ul className="space-y-1.5">
+      <nav className="flex-1 px-2.5 pb-4 overflow-y-auto overflow-x-hidden hide-scrollbar">
+        <ul className="space-y-1">
 
           {/* GROUP 1: OPERATIONS & FRONT DESK */}
           <NavGroupHeader title="Operations" isOpen={isOpen} />
@@ -161,8 +200,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/"
+              aria-label="Dashboard"
+              aria-current={isDashboardActive ? 'page' : undefined}
               title={!isOpen ? 'Dashboard' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
                 isDashboardActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -170,17 +211,17 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 transition-colors ${
+                  className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 transition-colors ${
                     isDashboardActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
                   }`}
                 >
-                  <DashboardIcon sx={{ fontSize: 19 }} />
+                  <DashboardIcon sx={{ fontSize: 17 }} />
                 </div>
 
                 <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-2.5 text-[12.5px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isDashboardActive
@@ -198,8 +239,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/occupancy"
+              aria-label="Occupancy"
+              aria-current={isOccupancyActive ? 'page' : undefined}
               title={!isOpen ? 'Occupancy' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
                 isOccupancyActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -207,17 +250,17 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${
                     isOccupancyActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
                   }`}
                 >
-                  <OccupancyIcon sx={{ fontSize: 19 }} />
+                  <OccupancyIcon sx={{ fontSize: 17 }} />
                 </div>
 
                 <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-2.5 text-[12.5px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isOccupancyActive
@@ -274,8 +317,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/guests"
+              aria-label="Guests"
+              aria-current={isGuestsActive ? 'page' : undefined}
               title={!isOpen ? 'Guests' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
                 isGuestsActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -283,17 +328,17 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${
                     isGuestsActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
                   }`}
                 >
-                  <GuestsIcon sx={{ fontSize: 19 }} />
+                  <GuestsIcon sx={{ fontSize: 17 }} />
                 </div>
 
                 <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-2.5 text-[12.5px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isGuestsActive
@@ -311,8 +356,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/car-parking"
+              aria-label="Car Parking"
+              aria-current={isCarParkingActive ? 'page' : undefined}
               title={!isOpen ? 'Car Parking' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
                 isCarParkingActive
                   ? 'bg-[#f4f9f6] text-[#1b7f43]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -320,17 +367,17 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${
                     isCarParkingActive
                       ? 'bg-[#e5f4eb] text-[#1b7f43]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
                   }`}
                 >
-                  <CarParkingIcon sx={{ fontSize: 19 }} />
+                  <CarParkingIcon sx={{ fontSize: 17 }} />
                 </div>
 
                 <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-2.5 text-[12.5px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isCarParkingActive
@@ -383,7 +430,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             items={restaurantSubItems}
           />
 
-          {/* Events & Banquets */}
+          {/* Events & Bookings */}
           <DropdownSection
             isOpen={isOpen}
             pathname={pathname}
@@ -391,7 +438,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             open={isEventsOpen}
             toggle={() => toggleDropdown(setIsEventsOpen)}
             icon={EventsIcon}
-            label="Events & Banquets"
+            label="Events & Bookings"
             items={eventsSubItems}
           />
 
@@ -453,8 +500,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/audit-log"
+              aria-label="Audit Log"
+              aria-current={isAuditActive ? 'page' : undefined}
               title={!isOpen ? 'Audit Log' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
                 isAuditActive
                   ? 'bg-[#dcefe5] text-[var(--primary-main)]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -462,17 +511,17 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${
                     isAuditActive
                       ? 'bg-[#cce7d6] text-[var(--primary-main)]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
                   }`}
                 >
-                  <AuditIcon sx={{ fontSize: 19 }} />
+                  <AuditIcon sx={{ fontSize: 17 }} />
                 </div>
 
                 <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-2.5 text-[12.5px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isAuditActive
@@ -490,8 +539,10 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           <li>
             <Link
               to="/ai-assistant"
+              aria-label="AI Assistant"
+              aria-current={isAssistantActive ? 'page' : undefined}
               title={!isOpen ? 'AI Assistant' : undefined}
-              className={`flex items-center px-2.5 py-2 rounded-xl transition-all duration-200 group ${
+              className={`flex items-center px-2 py-1.5 rounded-lg transition-all duration-200 group ${
                 isAssistantActive
                   ? 'bg-[#dcefe5] text-[var(--primary-main)]'
                   : 'hover:bg-[#dcefe5] text-gray-600 hover:text-[#1b7f43]'
@@ -499,17 +550,17 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             >
               <div className="flex items-center min-w-0">
                 <div
-                  className={`flex items-center justify-center w-9 h-9 rounded-lg shrink-0 ${
+                  className={`flex items-center justify-center w-7 h-7 rounded-lg shrink-0 ${
                     isAssistantActive
                       ? 'bg-[#cce7d6] text-[var(--primary-main)]'
                       : 'text-gray-400 group-hover:bg-[#cce7d6] group-hover:text-[#1b7f43]'
                   }`}
                 >
-                  <AssistantIcon sx={{ fontSize: 19 }} />
+                  <AssistantIcon sx={{ fontSize: 17 }} />
                 </div>
 
                 <span
-                  className={`ml-3 text-[13.5px] whitespace-nowrap transition-opacity duration-200 ${
+                  className={`ml-2.5 text-[12.5px] whitespace-nowrap transition-opacity duration-200 ${
                     isOpen ? 'opacity-100 block truncate' : 'opacity-0 hidden'
                   } ${
                     isAssistantActive

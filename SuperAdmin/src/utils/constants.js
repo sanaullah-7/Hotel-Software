@@ -2,7 +2,7 @@
 // CONSTANTS — Explore Pakistan Super Admin
 // =============================================================================
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
 
 // Auth
 export const AUTH_TOKEN_KEY   = 'sa_token';
@@ -12,9 +12,10 @@ export const SIDEBAR_KEY      = 'sa_sidebar_collapsed';
 
 // Roles
 export const ROLES = {
-  SUPER_ADMIN:  'SUPER_ADMIN',
-  MANAGER:      'MANAGER',
-  RECEPTIONIST: 'RECEPTIONIST',
+  SUPER_ADMIN:    'SUPER_ADMIN',
+  PLATFORM_ADMIN: 'PLATFORM_ADMIN',
+  MANAGER:        'MANAGER',
+  RECEPTIONIST:   'RECEPTIONIST',
 };
 
 // Hotel / User Status

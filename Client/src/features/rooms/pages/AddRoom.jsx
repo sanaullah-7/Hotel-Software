@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Save, RestartAlt, Hotel, KingBed, 
@@ -6,18 +6,21 @@ import {
 } from '@mui/icons-material';
 import { 
   TextField, Select, MenuItem, InputLabel, FormControl, 
-  Switch, FormControlLabel 
+  Switch, FormControlLabel, Alert, CircularProgress, Snackbar
 } from '@mui/material';
-import { addRoom } from '../state/roomStore';
+import roomService from '../../../services/roomService';
+import { toFrontendRoom, toBackendRoomPayload, toFrontendRoomType } from '../adapters/roomAdapter';
+import { getRooms as getCachedRooms, syncRoomsFromBackend } from '../state/roomStore';
 
 const initialFormData = {
   roomNumber: '',
+  roomTypeId: '',
   roomType: '',
-  acNonAc: '',
-  mealPlan: '',
-  floorNumber: '',
+  acNonAc: 'AC',
+  mealPlan: 'None',
+  floorNumber: '1',
   rentPerNight: '',
-  roomStatus: '',
+  roomStatus: 'Available',
   capacity: '',
   bedType: '',
   numberOfBeds: '',
@@ -30,7 +33,7 @@ const initialFormData = {
   miniBarAvailable: false,
   petFriendly: false,
   accessibilityFeatures: 'None',
-  housekeepingStatus: '',
+  housekeepingStatus: 'Clean',
   maintenanceStatus: '',
   smokingPolicy: '',
   contactMobile: '',
@@ -41,8 +44,42 @@ export default function AddRoom() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState(initialFormData);
+  const [roomTypes, setRoomTypes] = useState([]);
+  const [loadingTypes, setLoadingTypes] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    async function fetchTypes() {
+      setLoadingTypes(true);
+      try {
+        const res = await roomService.getRoomTypes();
+        const rawTypes = Array.isArray(res?.data) ? res.data : [];
+        const adapted = rawTypes.map(toFrontendRoomType);
+        setRoomTypes(adapted);
+        if (adapted.length > 0) {
+          setFormData(prev => ({
+            ...prev,
+            roomTypeId: adapted[0]._id || adapted[0].id,
+            roomType: adapted[0].name,
+            rentPerNight: adapted[0].rent,
+            capacity: adapted[0].capacity,
+          }));
+        }
+      } catch (err) {
+        setNotification({
+          open: true,
+          message: err.message || 'Failed to load Room Types from server',
+          severity: 'error'
+        });
+      } finally {
+        setLoadingTypes(false);
+      }
+    }
+    fetchTypes();
+  }, []);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -52,31 +89,66 @@ export default function AddRoom() {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    if (name === 'roomTypeId') {
+      const found = roomTypes.find(t => (t._id || t.id) === value);
+      setFormData(prev => ({
+        ...prev,
+        roomTypeId: value,
+        roomType: found?.name || prev.roomType,
+        rentPerNight: found?.rent !== undefined ? found.rent : prev.rentPerNight,
+        capacity: found?.capacity !== undefined ? found.capacity : prev.capacity
+      }));
+      return;
+    }
+
     setFormData(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!formData.roomNumber.trim()) {
-      alert('Please enter a Room Number.');
+      setNotification({ open: true, message: 'Please enter a Room Number.', severity: 'error' });
       return;
     }
-    const statusMap = { Available: 'Open', Occupied: 'Booked', Cleaning: 'Inactive', Maintenance: 'Inactive' };
-    addRoom({
-      ...formData,
-      roomNo: formData.roomNumber.trim(),
-      meal: formData.mealPlan || 'None',
-      capacity: formData.capacity || 0,
-      rent: formData.rentPerNight || 0,
-      mobile: formData.contactMobile || '',
-      status: statusMap[formData.roomStatus] || formData.roomStatus || 'Open',
-      roomImage: selectedFile ? URL.createObjectURL(selectedFile) : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop',
-    });
-    alert('Room successfully configured and added!');
-    navigate('/rooms');
+    if (!formData.roomTypeId) {
+      setNotification({
+        open: true,
+        message: 'Please select a Room Type. If none exist, create one in Room Types first.',
+        severity: 'error'
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const payload = toBackendRoomPayload({
+        roomNumber: formData.roomNumber.trim(),
+        roomTypeId: formData.roomTypeId,
+        floor: formData.floorNumber || '1',
+        status: formData.roomStatus === 'Available' ? 'AVAILABLE' : (formData.roomStatus === 'Occupied' ? 'OCCUPIED' : 'MAINTENANCE'),
+        housekeepingStatus: formData.housekeepingStatus === 'Clean' ? 'CLEAN' : (formData.housekeepingStatus === 'Dirty' ? 'DIRTY' : 'INSPECTED'),
+        contactMobile: formData.contactMobile,
+      });
+
+      const res = await roomService.createRoom(payload);
+      const created = toFrontendRoom(res.data);
+      const cached = getCachedRooms();
+      syncRoomsFromBackend([created, ...cached]);
+
+      setNotification({ open: true, message: 'Room successfully created and added!', severity: 'success' });
+      setTimeout(() => navigate('/rooms'), 500);
+    } catch (err) {
+      setNotification({
+        open: true,
+        message: err.message || (err.status === 409 ? 'A room with this number already exists' : 'Failed to add room'),
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = (e) => {
@@ -92,260 +164,190 @@ export default function AddRoom() {
     '& .MuiOutlinedInput-root': {
       borderRadius: '8px', 
       backgroundColor: '#ffffff', 
-      fontSize: '13px',
+      fontSize: '12.5px',
       '& fieldset': { borderColor: '#e5e7eb', borderWidth: '1.2px' },
       '&:hover fieldset': { borderColor: '#9ca3af' },
       '&.Mui-focused fieldset': { borderColor: '#1b7f43', borderWidth: '1.5px' },
     },
     '& .MuiInputLabel-root': { 
-      fontSize: '13px', 
+      fontSize: '12.5px', 
       color: '#6b7280',
       '&.Mui-focused': { color: '#1b7f43' } 
     },
   };
 
   return (
-    <div className="max-w-[1600px] mx-auto animate-fade-in">
-      <div className="h-2"></div>
+    <div className="w-full space-y-2.5 pb-3">
+      <Snackbar 
+        open={notification.open} 
+        autoHideDuration={4000} 
+        onClose={() => setNotification(n => ({ ...n, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert severity={notification.severity} onClose={() => setNotification(n => ({ ...n, open: false }))}>
+          {notification.message}
+        </Alert>
+      </Snackbar>
 
       {/* FORM CARD */}
-      <div className="bg-white rounded-[6px] shadow-sm border border-gray-100 overflow-hidden pt-1">
-        <div className="p-4 bg-white">
-          <form onSubmit={handleSave} className="space-y-8">
+      <div className="bg-white rounded-lg shadow-xs border border-gray-100 overflow-hidden">
+        <div className="p-3 sm:p-5 bg-white">
+          <form onSubmit={handleSave} className="space-y-4">
             
             {/* SECTION 1: ROOM INFORMATION */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Hotel sx={{ fontSize: 22, color: '#1b7f43' }} />
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Room Information</h3>
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                <Hotel sx={{ fontSize: 18, color: '#1b7f43' }} />
+                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Room Information</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <TextField required label="Room Number" name="roomNumber" value={formData.roomNumber} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
-                
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Room Type</InputLabel>
-                  <Select name="roomType" value={formData.roomType} label="Room Type" onChange={handleChange}>
-                    <MenuItem value="Standard Single">Standard Single</MenuItem>
-                    <MenuItem value="Standard Double">Standard Double</MenuItem>
-                    <MenuItem value="Deluxe Double">Deluxe Double</MenuItem>
-                    <MenuItem value="Deluxe Suite">Deluxe Suite</MenuItem>
-                    <MenuItem value="Presidential Suite">Presidential Suite</MenuItem>
-                  </Select>
-                </FormControl>
-                
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>AC / Non AC</InputLabel>
-                  <Select name="acNonAc" value={formData.acNonAc} label="AC / Non AC" onChange={handleChange}>
-                    <MenuItem value="AC">AC</MenuItem>
-                    <MenuItem value="Non AC">Non AC</MenuItem>
-                  </Select>
-                </FormControl>
-                
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Meal Plan</InputLabel>
-                  <Select name="mealPlan" value={formData.mealPlan} label="Meal Plan" onChange={handleChange}>
-                    <MenuItem value="None">None / Room Only</MenuItem>
-                    <MenuItem value="Breakfast">Breakfast</MenuItem>
-                    <MenuItem value="Lunch">Lunch</MenuItem>
-                    <MenuItem value="Dinner">Dinner</MenuItem>
-                    <MenuItem value="Half Board">Half Board</MenuItem>
-                    <MenuItem value="Full Board">Full Board</MenuItem>
-                    <MenuItem value="All">All Inclusive</MenuItem>
-                  </Select>
-                </FormControl>
-                
-                <TextField label="Floor Number" name="floorNumber" value={formData.floorNumber} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
-                <TextField label="Rent per Night ($)" name="rentPerNight" type="number" value={formData.rentPerNight} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
-                
-                <FormControl required size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Room Status</InputLabel>
-                  <Select name="roomStatus" value={formData.roomStatus} label="Room Status *" onChange={handleChange}>
-                    <MenuItem value="Available">Available</MenuItem>
-                    <MenuItem value="Occupied">Occupied</MenuItem>
-                    <MenuItem value="Cleaning">Cleaning</MenuItem>
-                    <MenuItem value="Maintenance">Maintenance</MenuItem>
-                  </Select>
-                </FormControl>
-              </div>
-            </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <TextField 
+                  id="add-room-number"
+                  required
+                  label="Room Number*" 
+                  name="roomNumber" 
+                  value={formData.roomNumber} 
+                  onChange={handleChange} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
 
-            <hr className="border-gray-100" />
+                <FormControl size="small" fullWidth sx={muiInputSx} required>
+                  <InputLabel id="add-room-type-label">Select Room Type*</InputLabel>
+                  <Select
+                    labelId="add-room-type-label"
+                    id="add-room-type-select"
+                    name="roomTypeId"
+                    value={formData.roomTypeId}
+                    label="Select Room Type*"
+                    onChange={handleChange}
+                  >
+                    {roomTypes.map(rt => (
+                      <MenuItem key={rt._id || rt.id} value={rt._id || rt.id}>
+                        {rt.name} ({rt.code}) — ${rt.rent}
+                      </MenuItem>
+                    ))}
+                    {roomTypes.length === 0 && !loadingTypes && (
+                      <MenuItem disabled value="">
+                        No Room Types found. Please configure Room Types first.
+                      </MenuItem>
+                    )}
+                  </Select>
+                </FormControl>
 
-            {/* SECTION 2: BED & SPACE */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <KingBed sx={{ fontSize: 22, color: '#1b7f43' }} />
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Bed & Space Specifications</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <TextField label="Capacity (Persons)" name="capacity" type="number" value={formData.capacity} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
+                <TextField 
+                  id="add-floor-number"
+                  label="Floor Number" 
+                  name="floorNumber" 
+                  value={formData.floorNumber} 
+                  onChange={handleChange} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
+
                 <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Bed Type</InputLabel>
-                  <Select name="bedType" value={formData.bedType} label="Bed Type" onChange={handleChange}>
-                    <MenuItem value="Single">Single</MenuItem>
-                    <MenuItem value="Double">Double</MenuItem>
-                    <MenuItem value="Queen">Queen</MenuItem>
-                    <MenuItem value="King">King</MenuItem>
-                    <MenuItem value="Twin">Twin</MenuItem>
+                  <InputLabel id="add-room-status-label">Room Status*</InputLabel>
+                  <Select
+                    labelId="add-room-status-label"
+                    id="add-room-status-select"
+                    name="roomStatus"
+                    value={formData.roomStatus}
+                    label="Room Status*"
+                    onChange={handleChange}
+                  >
+                    <MenuItem value="Available">Available (Open)</MenuItem>
+                    <MenuItem value="Occupied">Occupied (Booked)</MenuItem>
+                    <MenuItem value="Maintenance">Maintenance (Inactive)</MenuItem>
                   </Select>
                 </FormControl>
-                <TextField label="Number of Beds" name="numberOfBeds" type="number" value={formData.numberOfBeds} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
-                <TextField label="Room Size (sq ft)" name="roomSize" type="number" value={formData.roomSize} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
+
                 <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>View Type</InputLabel>
-                  <Select name="viewType" value={formData.viewType} label="View Type" onChange={handleChange}>
-                    <MenuItem value="City View">City View</MenuItem>
-                    <MenuItem value="Sea View">Sea View</MenuItem>
-                    <MenuItem value="Pool View">Pool View</MenuItem>
-                    <MenuItem value="Garden View">Garden View</MenuItem>
-                    <MenuItem value="No View">No View</MenuItem>
-                  </Select>
-                </FormControl>
-              </div>
-            </div>
-
-            <hr className="border-gray-100" />
-
-            {/* SECTION 3: AMENITIES */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <SettingsSystemDaydream sx={{ fontSize: 22, color: '#1b7f43' }} />
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Amenities & Facilities</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                <FormControl required size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>TV Type</InputLabel>
-                  <Select name="tvType" value={formData.tvType} label="TV Type *" onChange={handleChange}>
-                    <MenuItem value="LED">LED</MenuItem>
-                    <MenuItem value="Smart TV">Smart TV</MenuItem>
-                    <MenuItem value="None">None</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Bathroom Type</InputLabel>
-                  <Select name="bathroomType" value={formData.bathroomType} label="Bathroom Type" onChange={handleChange}>
-                    <MenuItem value="Attached - Shower">Attached - Shower</MenuItem>
-                    <MenuItem value="Attached - Bathtub">Attached - Bathtub</MenuItem>
-                    <MenuItem value="Shared">Shared</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Accessibility Features</InputLabel>
-                  <Select name="accessibilityFeatures" value={formData.accessibilityFeatures} label="Accessibility Features" onChange={handleChange}>
-                    <MenuItem value="None">None</MenuItem>
-                    <MenuItem value="Wheelchair Accessible">Wheelchair Accessible</MenuItem>
-                    <MenuItem value="Grab Bars">Grab Bars</MenuItem>
-                  </Select>
-                </FormControl>
-              </div>
-              
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-2">
-                <FormControlLabel control={<Switch checked={formData.wifiAvailable} onChange={handleChange} name="wifiAvailable" color="success" />} label={<span className="text-sm text-gray-700">WiFi Available</span>} />
-                <FormControlLabel control={<Switch checked={formData.balconyAvailable} onChange={handleChange} name="balconyAvailable" color="success" />} label={<span className="text-sm text-gray-700">Balcony Available</span>} />
-                <FormControlLabel control={<Switch checked={formData.miniBarAvailable} onChange={handleChange} name="miniBarAvailable" color="success" />} label={<span className="text-sm text-gray-700">Mini Bar Available</span>} />
-                <FormControlLabel control={<Switch checked={formData.petFriendly} onChange={handleChange} name="petFriendly" color="success" />} label={<span className="text-sm text-gray-700">Pet Friendly</span>} />
-              </div>
-            </div>
-
-            <hr className="border-gray-100" />
-
-            {/* SECTION 4: OPERATIONS & POLICIES */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <CleaningServices sx={{ fontSize: 22, color: '#1b7f43' }} />
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Operations & Policies</h3>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <FormControl required size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Housekeeping Status</InputLabel>
-                  <Select name="housekeepingStatus" value={formData.housekeepingStatus} label="Housekeeping Status *" onChange={handleChange}>
+                  <InputLabel id="add-hk-status-label">Housekeeping Status</InputLabel>
+                  <Select
+                    labelId="add-hk-status-label"
+                    id="add-hk-status-select"
+                    name="housekeepingStatus"
+                    value={formData.housekeepingStatus}
+                    label="Housekeeping Status"
+                    onChange={handleChange}
+                  >
                     <MenuItem value="Clean">Clean</MenuItem>
                     <MenuItem value="Dirty">Dirty</MenuItem>
-                    <MenuItem value="In Progress">In Progress</MenuItem>
                     <MenuItem value="Inspected">Inspected</MenuItem>
                   </Select>
                 </FormControl>
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Maintenance Status</InputLabel>
-                  <Select name="maintenanceStatus" value={formData.maintenanceStatus} label="Maintenance Status" onChange={handleChange}>
-                    <MenuItem value="None">None</MenuItem>
-                    <MenuItem value="Scheduled">Scheduled</MenuItem>
-                    <MenuItem value="Under Repair">Under Repair</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel>Smoking Policy</InputLabel>
-                  <Select name="smokingPolicy" value={formData.smokingPolicy} label="Smoking Policy" onChange={handleChange}>
-                    <MenuItem value="Non-Smoking">Non-Smoking</MenuItem>
-                    <MenuItem value="Smoking Allowed">Smoking Allowed</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField label="Contact Mobile" name="contactMobile" value={formData.contactMobile} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
+
+                <TextField 
+                  id="add-rent-per-night"
+                  type="number"
+                  label="Rent / Night (Base Price)" 
+                  name="rentPerNight" 
+                  value={formData.rentPerNight} 
+                  disabled
+                  helperText="Derived from Room Type"
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
               </div>
             </div>
 
-            <hr className="border-gray-100" />
-
-            {/* SECTION 5: ADDITIONAL DETAILS */}
+            {/* SECTION 2: BEDDING & CAPACITY */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Info sx={{ fontSize: 22, color: '#1b7f43' }} />
-                <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider">Additional Details</h3>
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
+                <KingBed sx={{ fontSize: 18, color: '#1b7f43' }} />
+                <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Bedding & Capacity</h3>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">Room Images / Documents</label>
-                  <div 
-                    className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                  >
-                    <input 
-                      type="file" 
-                      ref={fileInputRef} 
-                      onChange={handleFileChange} 
-                      className="hidden" 
-                      accept="image/*,.pdf,.doc,.docx"
-                    />
-                    <CloudUpload sx={{ fontSize: 32, color: '#9ca3af' }} className="mb-2" />
-                    <p className="text-sm font-semibold text-gray-700">Click to upload <span className="font-normal text-gray-500">or drag and drop file here</span></p>
-                    <p className="text-xs text-gray-400 mt-1">{selectedFile ? <span className="text-[#1b7f43] font-medium">{selectedFile.name}</span> : 'No file chosen'}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-2">Notes & Instructions</label>
-                  <TextField 
-                    name="notes" 
-                    multiline 
-                    rows={5}
-                    value={formData.notes} 
-                    onChange={handleChange} 
-                    sx={muiInputSx} 
-                    placeholder="Special amenities, access instructions, or maintenance history..." 
-                    fullWidth 
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <TextField 
+                  id="add-capacity"
+                  type="number"
+                  label="Capacity (Max Guests)" 
+                  name="capacity" 
+                  value={formData.capacity} 
+                  disabled
+                  helperText="Derived from Room Type"
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
+
+                <TextField 
+                  id="add-contact-mobile"
+                  label="Contact Phone" 
+                  name="contactMobile" 
+                  value={formData.contactMobile} 
+                  onChange={handleChange} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                />
               </div>
             </div>
 
-            <div className="flex items-center space-x-2 pt-4 w-full justify-end border-t border-gray-100">
-              <button 
-                type="button" 
-                onClick={handleReset} 
-                className="flex items-center space-x-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all cursor-pointer"
+            {/* ACTION BUTTONS */}
+            <div className="flex items-center gap-2.5 pt-3 border-t border-gray-100">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#1b7f43] text-white font-semibold text-xs hover:bg-[#156334] transition-colors cursor-pointer shadow-xs disabled:opacity-50"
               >
-                <RestartAlt sx={{ fontSize: 18 }} />
-                <span>Reset</span>
+                <Save sx={{ fontSize: 16 }} />
+                {isSubmitting ? 'Saving...' : 'Save Room'}
               </button>
-              <button 
-                type="submit" 
-                className="flex items-center space-x-1.5 bg-[var(--primary-main)] hover:brightness-110 text-white px-5 py-2 rounded-xl text-sm font-bold shadow-sm transition-all cursor-pointer"
+              <button
+                type="button"
+                onClick={handleReset}
+                disabled={isSubmitting}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 font-semibold text-xs hover:bg-gray-50 transition-colors cursor-pointer shadow-xs"
               >
-                <Save sx={{ fontSize: 18 }} />
-                <span>Save Room</span>
+                <RestartAlt sx={{ fontSize: 16 }} />
+                Reset Form
               </button>
             </div>
+
           </form>
         </div>
       </div>

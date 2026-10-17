@@ -7,7 +7,19 @@ import { SalaryModals } from './SalaryModals';
 
 export default function EmployeeSalary() {
   const {
+    selectedYear,
+    setSelectedYear,
+    selectedMonth,
+    setSelectedMonth,
+    appliedYear,
+    appliedMonth,
+    handleUpdateRoster,
+    handleYearChange,
+    handleMonthChange,
     salaries,
+    isLoading,
+    error,
+    fetchSalaries,
     searchQuery,
     setSearchQuery,
     selectedIds,
@@ -35,6 +47,20 @@ export default function EmployeeSalary() {
     selectedRecord,
     formData,
     setFormData,
+    isPaymentModalOpen,
+    setIsPaymentModalOpen,
+    paymentRecord,
+    paymentForm,
+    setPaymentForm,
+    isSavingPayment,
+    handleOpenPaymentModal,
+    handleSavePayment,
+    isHistoryModalOpen,
+    setIsHistoryModalOpen,
+    historyEmployee,
+    historyList,
+    isHistoryLoading,
+    handleOpenHistoryModal,
     toast,
     setToast,
     handleSort,
@@ -54,44 +80,61 @@ export default function EmployeeSalary() {
     handleSaveEditSalary,
     handleOpenDeleteDialog,
     handleConfirmDelete,
-    payrollStats
+    payrollStats,
   } = useEmployeeSalary();
 
   return (
-    <div className="p-0 -mx-1 sm:-mx-1.5 md:-mx-2 w-[calc(100%+8px)] sm:w-[calc(100%+12px)] md:w-[calc(100%+16px)] overflow-hidden flex flex-col gap-2">
-      {/* 1. Payroll Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full">
+    <div className="animate-fade-in w-full">
+      {/* Error Banner with Retry */}
+      {error && (
+        <div className="mt-1 mb-2">
+          <Alert
+            severity="error"
+            action={
+              <button
+                type="button"
+                onClick={() => fetchSalaries(selectedYear, selectedMonth)}
+                className="text-xs font-semibold underline hover:text-red-900 cursor-pointer"
+              >
+                Retry
+              </button>
+            }
+          >
+            {error}
+          </Alert>
+        </div>
+      )}
+
+      {/* 1. KPI Summary Cards at the Top */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full mt-1 mb-1">
         {payrollStats.map((card) => {
           const IconComp = card.icon;
+          const bg = card.iconBg || 'bg-blue-50';
+          const color = card.iconColor || 'text-blue-600';
+          const colorClass = `${bg} ${color}`;
           return (
             <div
               key={card.id}
-              className="bg-white rounded-xl border border-slate-100 shadow-[0_2px_10px_rgba(0,0,0,0.03)] px-3 py-2 flex flex-col justify-between hover:border-[var(--primary-main)]/30 transition-colors"
+              className="bg-white p-3 rounded-[6px] shadow-sm border border-gray-100 flex items-center justify-between"
             >
-              <div className="flex items-center gap-1.5 min-w-0">
-                <div className={`p-1 rounded-md ${card.iconBg} ${card.iconColor} flex items-center justify-center shrink-0`}>
-                  <IconComp sx={{ fontSize: 15 }} />
-                </div>
-                <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider truncate">
-                  {card.title}
-                </span>
-              </div>
-              <div className="flex items-baseline justify-between mt-1">
-                <span className="text-xl font-bold text-[var(--text-primary)] leading-none">
+              <div>
+                <div className="text-xl font-bold text-gray-900 leading-none mb-1">
                   {card.value}
-                </span>
+                </div>
+                <div className="text-[11px] text-gray-500 font-medium">{card.title}</div>
+                <div className="text-[9.5px] text-gray-400 mt-0.5">{card.subtext}</div>
               </div>
-              {card.subtext && (
-                <span className="text-[10px] text-[var(--text-secondary)] font-normal truncate mt-0.5 block" title={card.subtext}>
-                  {card.subtext}
-                </span>
-              )}
+              <div
+                className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}
+              >
+                <IconComp sx={{ fontSize: 16 }} />
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* 2. Salary Table */}
+      {/* 2. Salary Table with Year & Month in Middle */}
       <SalaryTable
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -99,7 +142,7 @@ export default function EmployeeSalary() {
         setFilterAnchorEl={setFilterAnchorEl}
         handleOpenAddModal={handleOpenAddModal}
         handleRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
+        isRefreshing={isRefreshing || isLoading}
         setColumnAnchorEl={setColumnAnchorEl}
         handleExportPDF={handleExportPDF}
         isAllSelected={isAllSelected}
@@ -113,6 +156,8 @@ export default function EmployeeSalary() {
         selectedIds={selectedIds}
         handleSelectRow={handleSelectRow}
         handleDownloadPayslip={handleDownloadPayslip}
+        handleOpenPaymentModal={handleOpenPaymentModal}
+        handleOpenHistoryModal={handleOpenHistoryModal}
         handleOpenEditModal={handleOpenEditModal}
         handleOpenDeleteDialog={handleOpenDeleteDialog}
         rowsPerPage={rowsPerPage}
@@ -124,9 +169,20 @@ export default function EmployeeSalary() {
         setDepartmentFilter={setDepartmentFilter}
         columnAnchorEl={columnAnchorEl}
         setVisibleColumns={setVisibleColumns}
+        // Month / Year in Middle of Table
+        selectedYear={selectedYear}
+        setSelectedYear={setSelectedYear}
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+        appliedYear={appliedYear}
+        appliedMonth={appliedMonth}
+        handleUpdateRoster={handleUpdateRoster}
+        handleYearChange={handleYearChange}
+        handleMonthChange={handleMonthChange}
+        isLoading={isLoading}
       />
 
-      {/* 3. Salary Modals & Dialogs */}
+      {/* 3. Salary Modals & Dialogs (Add, Edit, Delete, Payment, History Ledger) */}
       <SalaryModals
         isAddModalOpen={isAddModalOpen}
         setIsAddModalOpen={setIsAddModalOpen}
@@ -140,6 +196,21 @@ export default function EmployeeSalary() {
         setIsDeleteDialogOpen={setIsDeleteDialogOpen}
         selectedRecord={selectedRecord}
         handleConfirmDelete={handleConfirmDelete}
+        // Payment Modal
+        isPaymentModalOpen={isPaymentModalOpen}
+        setIsPaymentModalOpen={setIsPaymentModalOpen}
+        paymentRecord={paymentRecord}
+        paymentForm={paymentForm}
+        setPaymentForm={setPaymentForm}
+        isSavingPayment={isSavingPayment}
+        handleSavePayment={handleSavePayment}
+        // History Ledger Modal
+        isHistoryModalOpen={isHistoryModalOpen}
+        setIsHistoryModalOpen={setIsHistoryModalOpen}
+        historyEmployee={historyEmployee}
+        historyList={historyList}
+        isHistoryLoading={isHistoryLoading}
+        handleDownloadPayslip={handleDownloadPayslip}
       />
 
       {/* 4. Global Snackbar Toast */}
@@ -158,11 +229,6 @@ export default function EmployeeSalary() {
           {toast.message}
         </Alert>
       </Snackbar>
-
-      {/* 5. Footer Copyright Note */}
-      <div className="text-center text-xs text-slate-400 py-3">
-        Copyright © 2026 Design By <span className="text-[#5d5fef] font-medium">Luxuria</span>
-      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
@@ -7,7 +7,9 @@ import {
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 
-import { addStaffMember } from './staffStore';
+import staffService from '../../../features/staff/services/staffService';
+import staffAdapter from '../../../features/staff/adapters/staffAdapter';
+import { fileService } from '../../../services/fileService';
 import { generateEmployeeId } from './components/staffFormStyles';
 import PersonalInfoSection from './components/PersonalInfoSection';
 import EmploymentDetailsSection from './components/EmploymentDetailsSection';
@@ -24,6 +26,9 @@ export default function AddStaff() {
   // Focus states for date inputs
   const [dobFocused, setDobFocused] = useState(false);
   const [joiningFocused, setJoiningFocused] = useState(false);
+
+  // Departments loaded from backend
+  const [departments, setDepartments] = useState([]);
 
   // Form State matching all Luxuria fields
   const [formData, setFormData] = useState({
@@ -72,6 +77,28 @@ export default function AddStaff() {
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    let isMounted = true;
+    const fetchDepartments = async () => {
+      try {
+        const res = await staffService.getDepartments();
+        if (isMounted && res?.data) {
+          const depts = res.data;
+          setDepartments(depts);
+          if (depts.length > 0 && !formData.department) {
+            setFormData((prev) => ({ ...prev, department: depts[0]._id }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load departments from backend:', err);
+      }
+    };
+    fetchDepartments();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Handle standard input change
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -86,17 +113,57 @@ export default function AddStaff() {
     setFormData((prev) => ({ ...prev, empId: generateEmployeeId() }));
   };
 
+  // Handle department created on-the-fly
+  const handleDepartmentAdded = (newDept) => {
+    if (!newDept) return;
+    setDepartments((prev) => {
+      const exists = prev.some((d) => d._id === newDept._id);
+      if (exists) return prev;
+      return [...prev, newDept].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    });
+    setFormData((prev) => ({ ...prev, department: newDept._id }));
+    if (formErrors.department) {
+      setFormErrors((prev) => ({ ...prev, department: null }));
+    }
+    setSnackbar({
+      open: true,
+      message: `Department "${newDept.name}" created and selected!`,
+      severity: 'success'
+    });
+  };
+
   // File Upload Handlers
-  const processFiles = (files) => {
+  const processFiles = async (files) => {
     const newFiles = files.map((file) => ({
       file,
       id: Math.random().toString(36).substring(7),
       name: file.name,
       size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
       type: file.type,
-      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null
+      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+      isUploading: true,
+      url: null,
     }));
     setUploadedFiles((prev) => [...prev, ...newFiles]);
+
+    for (const item of newFiles) {
+      try {
+        const res = await fileService.uploadFile(item.file, { folder: 'staff', entity_ref: 'STAFF_DOCUMENT' });
+        if (res?.file_url) {
+          setUploadedFiles((prev) =>
+            prev.map((f) => (f.id === item.id ? { ...f, isUploading: false, url: res.file_url } : f))
+          );
+          if (item.type.startsWith('image/')) {
+            setFormData((prev) => ({ ...prev, avatar: res.file_url }));
+          }
+        }
+      } catch (err) {
+        console.warn('Staff file upload failed:', err);
+        setUploadedFiles((prev) =>
+          prev.map((f) => (f.id === item.id ? { ...f, isUploading: false } : f))
+        );
+      }
+    }
   };
 
   const handleFileSelect = (e) => {
@@ -131,7 +198,15 @@ export default function AddStaff() {
     if (!formData.fullName || !formData.fullName.trim()) {
       errors.fullName = 'Full Name is required';
     }
-    if (formData.email && formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
+    if (!formData.designation || !formData.designation.trim()) {
+      errors.designation = 'Designation is required';
+    }
+    if (!formData.department || !formData.department.trim()) {
+      errors.department = 'Department is required';
+    }
+    if (!formData.email || !formData.email.trim()) {
+      errors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       errors.email = 'Invalid email address';
     }
 
@@ -139,32 +214,45 @@ export default function AddStaff() {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
       setSnackbar({
         open: true,
-        message: 'Please provide at least a Full Name for the staff member',
+        message: 'Please complete all required fields (Full Name, Designation, Department, Email).',
         severity: 'error'
       });
       return;
     }
 
     setIsSubmitting(true);
-    // Persist new staff member to localStorage
-    const savedStaff = addStaffMember(formData);
+    try {
+      const payload = staffAdapter.toBackendCreatePayload(formData);
+      const res = await staffService.createEmployee(payload);
+      const created = res?.data;
+      const createdName = created?.first_name ? `${created.first_name} ${created.last_name || ''}`.trim() : formData.fullName;
+      const createdRef = created?.employee_ref || formData.empId;
 
-    setTimeout(() => {
-      setIsSubmitting(false);
       setSnackbar({
         open: true,
-        message: `Staff member "${savedStaff.name}" (${savedStaff.empId}) successfully registered!`,
+        message: `Staff member "${createdName}" (${createdRef}) successfully registered!`,
         severity: 'success'
       });
+
       setTimeout(() => {
         navigate('/hr/staff');
       }, 700);
-    }, 400);
+    } catch (err) {
+      console.error('Failed to create employee on server:', err);
+      const errMsg = err?.response?.data?.message || err?.message || 'Failed to create employee on server';
+      setSnackbar({
+        open: true,
+        message: errMsg,
+        severity: 'error'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -190,6 +278,8 @@ export default function AddStaff() {
             onChange={handleInputChange}
             joiningFocused={joiningFocused}
             setJoiningFocused={setJoiningFocused}
+            departments={departments}
+            onDepartmentAdded={handleDepartmentAdded}
           />
 
           {/* SECTION 3 & 5: CONTACT & EMERGENCY DETAILS */}

@@ -1,20 +1,158 @@
- 
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import authService from '../services/authService';
 
-const AuthContext = createContext();
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  // Placeholder user state - in the future this will check localStorage or an API
-  const [user, setUser] = useState(null); // Example structure: { role: 'Admin', name: 'John Doe' }
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = (userData) => setUser(userData);
-  const logout = () => setUser(null);
+  const initAuth = useCallback(async () => {
+    try {
+      const token = authService.getToken();
+      if (!token) {
+        // Try background token refresh via HTTP-only cookie
+        try {
+          const refreshRes = await authService.refreshToken();
+          if (refreshRes?.data?.accessToken) {
+            const profileRes = await authService.getProfile();
+            const profileUser = profileRes?.data;
+            if (profileUser) {
+              setUser(profileUser);
+              setIsAuthenticated(true);
+              localStorage.setItem('user', JSON.stringify(profileUser));
+              localStorage.setItem('isAuthenticated', 'true');
+              if (profileUser.fullName) localStorage.setItem('fullName', profileUser.fullName);
+              if (profileUser.hotelName) localStorage.setItem('hotelName', profileUser.hotelName);
+              setIsLoading(false);
+              return;
+            }
+          }
+        } catch {
+          // No active session cookie
+        }
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+
+      // Verify token with backend /auth/me
+      const profileRes = await authService.getProfile();
+      const profileUser = profileRes?.data;
+      if (profileUser) {
+        setUser(profileUser);
+        setIsAuthenticated(true);
+        localStorage.setItem('user', JSON.stringify(profileUser));
+        localStorage.setItem('isAuthenticated', 'true');
+        if (profileUser.fullName) localStorage.setItem('fullName', profileUser.fullName);
+        if (profileUser.hotelName) localStorage.setItem('hotelName', profileUser.hotelName);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    } catch {
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      setUser(null);
+      setIsAuthenticated(false);
+    };
+    window.addEventListener('auth:logout', handleAuthLogout);
+    return () => window.removeEventListener('auth:logout', handleAuthLogout);
+  }, []);
+
+  const login = async ({ email, password }) => {
+    const res = await authService.login({ email, password });
+    const userData = res?.data?.account || res?.data?.user;
+    setUser(userData);
+    setIsAuthenticated(true);
+    if (userData?.hotelName) {
+      localStorage.setItem('hotelName', userData.hotelName);
+    }
+    return res;
+  };
+
+  const registerAndOnboard = async ({ fullName, email, phone, password, hotelName, address, city }) => {
+    // 1. Register account
+    await authService.register({ fullName, email, phone, password });
+
+    // 2. Login to get access token
+    await authService.login({ email, password });
+
+    // 3. Provision hotel tenant if hotelName is provided
+    if (hotelName && hotelName.trim()) {
+      await authService.onboard({
+        property_name: hotelName.trim(),
+        address: address?.trim() || `${hotelName.trim()} Main Road`,
+        city: city?.trim() || 'Karachi',
+      });
+      localStorage.setItem('hotelName', hotelName.trim());
+    }
+
+    // 4. Fetch the final account profile with hotelId and HOTEL_ADMIN role
+    const profileRes = await authService.getProfile();
+    const finalUser = profileRes?.data;
+    setUser(finalUser);
+    setIsAuthenticated(true);
+    return finalUser;
+  };
+
+  const registerHotel = async ({ fullName, email, phone, password, hotelName, address, city, subscriptionPlan }) => {
+    const res = await authService.registerHotel({
+      fullName,
+      email,
+      phone,
+      password,
+      hotelName,
+      address,
+      city,
+      subscriptionPlan,
+    });
+    return res?.data;
+  };
+
+  const logout = async () => {
+    await authService.logout();
+    setUser(null);
+    setIsAuthenticated(false);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoading,
+        login,
+        registerAndOnboard,
+        registerHotel,
+        logout,
+        refreshProfile: initAuth,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export default AuthContext;

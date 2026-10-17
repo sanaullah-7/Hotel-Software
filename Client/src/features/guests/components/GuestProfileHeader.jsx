@@ -30,7 +30,7 @@ export default function GuestProfileHeader({
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
-  const hasAvatar = guest.avatar && !guest.avatar.includes('pravatar.cc/150?u=guest');
+  const hasAvatar = guest.avatar && !guest.avatar.includes('pravatar.cc') && !guest.avatar.includes('ui-avatars.com');
 
   return (
     <div className="space-y-4">
@@ -157,8 +157,8 @@ export default function GuestProfileHeader({
                 Total Balance Due
               </span>
               <div className="flex items-center gap-1.5">
-                <span className={`text-base font-extrabold ${totalDues > 0 ? 'text-rose-600' : 'text-[#1b7f43]'}`}>
-                  ${Number(totalDues).toFixed(2)}
+                <span className={`text-base font-extrabold ${totalDues === null || totalDues > 0 ? 'text-rose-600' : 'text-[#1b7f43]'}`}>
+                  {totalDues === null ? 'Unresolved' : `$${Number(totalDues).toFixed(2)}`}
                 </span>
                 {totalDues === 0 && (
                   <span className="text-[10px] font-bold px-1.5 py-0.2 bg-[#e5f4eb] text-[#1b7f43] rounded">

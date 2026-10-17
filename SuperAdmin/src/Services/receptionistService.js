@@ -1,20 +1,8 @@
 import { UserService } from './UserService.js';
-import { API_BASE_URL, AUTH_TOKEN_KEY } from '../utils/constants.js';
-
-function getHeaders() {
-  const token = localStorage.getItem(AUTH_TOKEN_KEY);
-  return {
-    'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
-const USE_MOCK = true;
-const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export const ReceptionistService = {
   /**
-   * Get paginated receptionists
+   * Get paginated receptionists from live database
    * @param {Object} params
    */
   async getReceptionists(params = {}) {
@@ -47,22 +35,15 @@ export const ReceptionistService = {
   },
 
   /**
-   * Get receptionist stats
+   * Get receptionist stats from live database
    */
   async getReceptionistStats() {
-    if (USE_MOCK) {
-      await delay(400);
-      return {
-        totalReceptionists: 4,
-        activeReceptionists: 3,
-        pendingReceptionists: 1,
-        suspendedReceptionists: 0,
-      };
-    }
-    const res = await fetch(`${API_BASE_URL}/receptionists/stats`, {
-      headers: getHeaders(),
-    });
-    if (!res.ok) throw new Error('Failed to fetch receptionist stats');
-    return res.json();
+    const stats = await UserService.getStats();
+    return {
+      totalReceptionists: stats?.totalReceptionists || 0,
+      activeReceptionists: stats?.activeUsers || 0,
+      pendingReceptionists: stats?.pendingUsers || 0,
+      suspendedReceptionists: stats?.suspendedUsers || 0,
+    };
   }
 };

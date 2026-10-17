@@ -66,7 +66,7 @@ export default function ChargesPaymentsTab({
             Folio Charges Total
           </span>
           <div className="text-xl font-extrabold text-gray-900">
-            ${Number(totalChargesAmount || totalInvoiced).toFixed(2)}
+            ${Number(totalChargesAmount).toFixed(2)}
           </div>
           <span className="text-[10.5px] text-gray-400 block mt-0.5">{charges.length} itemized records</span>
         </div>
@@ -86,10 +86,10 @@ export default function ChargesPaymentsTab({
             Outstanding Balance
           </span>
           <div className={`text-xl font-extrabold ${totalDues > 0 ? 'text-rose-600' : 'text-gray-800'}`}>
-            ${Number(totalDues).toFixed(2)}
+            {totalDues === null ? 'Unresolved' : `$${Number(totalDues).toFixed(2)}`}
           </div>
           <span className="text-[10.5px] text-gray-400 block mt-0.5">
-            {totalDues > 0 ? 'Due for settlement' : 'Fully settled'}
+            {totalDues === null ? 'Financial records need review' : totalDues > 0 ? 'Due for settlement' : 'Fully settled'}
           </span>
         </div>
 
@@ -159,52 +159,52 @@ export default function ChargesPaymentsTab({
 
         {/* Tab 1: Folio Charges Table */}
         {subTab === 'charges' && (
-          <div className="overflow-x-auto hide-scrollbar">
-            <table className="w-full text-left border-collapse min-w-[650px]">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Item / Description</th>
-                  <th className="py-3 px-4">Charge Type</th>
-                  <th className="py-3 px-4">Room / Folio</th>
-                  <th className="py-3 px-4 text-center">Qty</th>
-                  <th className="py-3 px-4 text-right">Unit Price</th>
-                  <th className="py-3 px-4 text-right">Total Amount</th>
-                  <th className="py-3 px-4 text-center">Status</th>
+          <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50/50">
+                <tr>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Date</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Item / Description</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Charge Type</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Room / Folio</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Qty</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-right">Unit Price</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-right">Total Amount</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 text-xs text-gray-700">
+              <tbody className="text-xs text-gray-700">
                 {filteredCharges.map((ch) => (
                   <tr
                     key={ch.id}
                     onClick={() => setSelectedChargeForDetail(ch)}
-                    className="hover:bg-gray-50/60 transition cursor-pointer"
+                    className="hover:bg-gray-50/30 transition cursor-pointer"
                   >
-                    <td className="py-3 px-4 font-medium text-gray-600">
+                    <td className="py-2 px-3 font-medium text-gray-600">
                       {ch.reportedDate || ch.date || 'Today'}
                     </td>
-                    <td className="py-3 px-4 font-bold text-gray-900">
+                    <td className="py-2 px-3 font-bold text-gray-900">
                       {ch.itemName}
                       {ch.notes && <span className="text-[10.5px] text-gray-400 block font-normal">{ch.notes}</span>}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-2 px-3">
                       <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-700">
                         {ch.chargeType}
                       </span>
                     </td>
-                    <td className="py-3 px-4 font-medium text-gray-600">
+                    <td className="py-2 px-3 font-medium text-gray-600">
                       Room {ch.roomNumber || '101'}
                     </td>
-                    <td className="py-3 px-4 text-center font-bold">
+                    <td className="py-2 px-3 text-center font-bold">
                       {ch.quantity || 1}
                     </td>
-                    <td className="py-3 px-4 text-right text-gray-600">
+                    <td className="py-2 px-3 text-right text-gray-600">
                       ${Number(ch.unitPrice || ch.amount).toFixed(2)}
                     </td>
-                    <td className="py-3 px-4 text-right font-extrabold text-gray-900">
+                    <td className="py-2 px-3 text-right font-extrabold text-gray-900">
                       ${Number(ch.amount).toFixed(2)}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-2 px-3 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold ${
                         ch.status === 'Paid' ? 'bg-emerald-50 text-emerald-700' :
                         ch.status === 'Added to Folio' ? 'bg-blue-50 text-blue-700' :
@@ -234,47 +234,47 @@ export default function ChargesPaymentsTab({
 
         {/* Tab 2: Payment Transactions Table */}
         {subTab === 'payments' && (
-          <div className="overflow-x-auto hide-scrollbar">
-            <table className="w-full text-left border-collapse min-w-[650px]">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50/50 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                  <th className="py-3 px-4">Payment Date</th>
-                  <th className="py-3 px-4">Payment ID</th>
-                  <th className="py-3 px-4">Payment Method</th>
-                  <th className="py-3 px-4">Transaction Ref</th>
-                  <th className="py-3 px-4 text-right">Amount Paid</th>
-                  <th className="py-3 px-4 text-right">Refunded</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4">Recorded By</th>
+          <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50/50">
+                <tr>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Payment Date</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Payment ID</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Payment Method</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Transaction Ref</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-right">Amount Paid</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-right">Refunded</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700 text-center">Status</th>
+                  <th className="py-3 px-3 text-[12px] font-bold text-gray-700">Recorded By</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 text-xs text-gray-700">
+              <tbody className="text-xs text-gray-700">
                 {filteredPayments.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50/60 transition">
-                    <td className="py-3 px-4 font-medium text-gray-600">
+                  <tr key={p.id} className="hover:bg-gray-50/30 transition">
+                    <td className="py-2 px-3 font-medium text-gray-600">
                       {p.paymentDate || 'N/A'}
                     </td>
-                    <td className="py-3 px-4 font-mono font-bold text-gray-900">
+                    <td className="py-2 px-3 font-mono font-bold text-gray-900">
                       {p.paymentId || p.id}
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-2 px-3">
                       <span className="font-semibold text-gray-800">{p.paymentMethod || 'Credit Card'}</span>
                       {p.gateway && <span className="text-[10px] text-gray-400 block">{p.gateway}</span>}
                     </td>
-                    <td className="py-3 px-4 font-mono text-[11px] text-gray-500">
+                    <td className="py-2 px-3 font-mono text-[11px] text-gray-500">
                       {p.transactionRef || 'N/A'}
                     </td>
-                    <td className="py-3 px-4 text-right font-extrabold text-emerald-600">
+                    <td className="py-2 px-3 text-right font-extrabold text-emerald-600">
                       ${Number(p.amount).toFixed(2)}
                     </td>
-                    <td className="py-3 px-4 text-right font-medium text-gray-500">
+                    <td className="py-2 px-3 text-right font-medium text-gray-500">
                       {p.refundedAmount > 0 ? (
                         <span className="text-purple-600 font-bold">${Number(p.refundedAmount).toFixed(2)}</span>
                       ) : (
                         '$0.00'
                       )}
                     </td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-2 px-3 text-center">
                       <span className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold ${
                         p.status === 'Completed' ? 'bg-emerald-50 text-emerald-700' :
                         p.status === 'Refunded' ? 'bg-purple-50 text-purple-700' :
@@ -283,7 +283,7 @@ export default function ChargesPaymentsTab({
                         {p.status || 'Completed'}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-gray-500 text-[11px]">
+                    <td className="py-2 px-3 text-gray-500 text-[11px]">
                       {p.recordedBy || p.cashier || 'Front Desk'}
                     </td>
                   </tr>
@@ -312,6 +312,7 @@ export default function ChargesPaymentsTab({
           open={isAddChargeOpen}
           onClose={() => setIsAddChargeOpen(false)}
           prefilledData={{
+            guestId: guest.id,
             guestName: guest.name,
             roomNumber: guest.roomNumber || '101'
           }}

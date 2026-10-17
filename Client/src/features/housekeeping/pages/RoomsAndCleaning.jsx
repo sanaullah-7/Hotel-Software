@@ -1,37 +1,84 @@
-import React, { useState } from 'react';
-import { FormControl, InputLabel, Select, MenuItem, TextField, Box, Typography } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FormControl, InputLabel, Select, MenuItem, TextField, CircularProgress, Alert } from '@mui/material';
+import RefreshButton from '../../../components/common/RefreshButton';
 import {
-  Search, AddCircleOutlined, Refresh,
+  Search, AddCircleOutlined,
   TableChart, PictureAsPdf, Close, EditOutlined, DeleteOutlined,
   MeetingRoomOutlined, CleaningServicesOutlined, 
-  EventOutlined, AccessTimeOutlined, PersonOutlined, FlagOutlined
+  EventOutlined, AccessTimeOutlined, PersonOutlined, FlagOutlined,
+  PersonAddOutlined
 } from '@mui/icons-material';
-
-const initialRecords = [
-  { id: 1, roomNo: '101', floor: '1', guestName: 'John Doe', cleaningStatus: 'Scheduled', scheduledDate: '08-07-2024', scheduledTime: '09:00', assignedStaff: 'Alice Smith', completionTime: '', notes: 'No special instructions.', priority: 'Standard', cleaningType: 'Full Clean', lastCleanedDate: '08/06/2024', frequency: 'Daily' },
-  { id: 2, roomNo: '102', floor: '1', guestName: 'Jane Doe', cleaningStatus: 'Completed', scheduledDate: '08-07-2024', scheduledTime: '10:00', assignedStaff: 'Bob Johnson', completionTime: '10:30', notes: 'Requested extra towels.', priority: 'High', cleaningType: 'Full Clean', lastCleanedDate: '08/06/2024', frequency: 'Daily' },
-  { id: 3, roomNo: '103', floor: '1', guestName: 'Emily Clark', cleaningStatus: 'In Progress', scheduledDate: '08-07-2024', scheduledTime: '11:00', assignedStaff: 'Carol Lee', completionTime: '', notes: 'Requires vacuuming.', priority: 'Standard', cleaningType: 'Light Clean', lastCleanedDate: '08/05/2024', frequency: 'Every Other Day' },
-  { id: 4, roomNo: '104', floor: '1', guestName: 'Michael Brown', cleaningStatus: 'Scheduled', scheduledDate: '08-07-2024', scheduledTime: '12:00', assignedStaff: 'Diana Green', completionTime: '', notes: 'No specific request...', priority: 'Low', cleaningType: 'Full Clean', lastCleanedDate: '08/04/2024', frequency: 'Weekly' },
-  { id: 5, roomNo: '201', floor: '2', guestName: 'Sarah Davis', cleaningStatus: 'Completed', scheduledDate: '08-07-2024', scheduledTime: '13:00', assignedStaff: 'James Wilson', completionTime: '13:45', notes: 'Ensure bathroom is...', priority: 'High', cleaningType: 'Full Clean', lastCleanedDate: '08/06/2024', frequency: 'Daily' },
-  { id: 6, roomNo: '202', floor: '2', guestName: 'Robert Martinez', cleaningStatus: 'Scheduled', scheduledDate: '08-07-2024', scheduledTime: '14:00', assignedStaff: 'Linda Anderson', completionTime: '', notes: 'Check for any main...', priority: 'Standard', cleaningType: 'Light Clean', lastCleanedDate: '08/06/2024', frequency: 'Daily' },
-  { id: 7, roomNo: '203', floor: '2', guestName: 'Laura Wilson', cleaningStatus: 'In Progress', scheduledDate: '08-07-2024', scheduledTime: '15:00', assignedStaff: 'Frank Taylor', completionTime: '', notes: 'Extra cleaning supp...', priority: 'High', cleaningType: 'Full Clean', lastCleanedDate: '08/05/2024', frequency: 'Every Other Day' },
-  { id: 8, roomNo: '204', floor: '2', guestName: 'Jessica Young', cleaningStatus: 'Scheduled', scheduledDate: '08-07-2024', scheduledTime: '16:00', assignedStaff: 'George Thompson', completionTime: '', notes: 'No special instructi...', priority: 'Low', cleaningType: 'Light Clean', lastCleanedDate: '08/03/2024', frequency: 'Weekly' },
-];
+import { saveRooms } from './hkStore';
+import opsService from '../../../services/opsService';
+import roomService from '../../../services/roomService';
+import {
+  toFrontendTask,
+  toFrontendTaskList,
+  toBackendTaskPayload
+} from '../adapters/housekeepingAdapter';
 
 const statusStyles = {
   'Scheduled': 'bg-blue-50 text-blue-500',
   'Completed': 'bg-green-50 text-green-600',
-  'In Progress': 'bg-orange-50 text-orange-500'
+  'In Progress': 'bg-orange-50 text-orange-500',
+  'Clean / Ready': 'bg-green-50 text-green-600',
+  'Cleaning': 'bg-orange-50 text-orange-500',
+  'Dirty': 'bg-red-50 text-red-500',
+  'Assigned': 'bg-purple-50 text-purple-600',
+  'Inspection Required': 'bg-amber-50 text-amber-600',
+  'Maintenance': 'bg-gray-100 text-gray-600',
+  'DND': 'bg-red-50 text-red-600'
 };
 
 const priorityStyles = {
   'Standard': 'bg-blue-100 text-blue-600',
+  'Normal': 'bg-blue-100 text-blue-600',
   'High': 'bg-orange-100 text-orange-600',
+  'Urgent': 'bg-red-100 text-red-600',
   'Low': 'bg-green-100 text-green-600'
 };
 
+/**
+ * Temporary downstream compatibility bridge for Cleaning Schedule.
+ * Room Cleaning is strictly backend-authoritative and does not read from hk_rooms.
+ */
+function syncCleaningScheduleBridge(frontendRecords) {
+  try {
+    const bridgeRooms = frontendRecords.map(r => ({
+      id: r.roomNo || r.id,
+      roomId: r.roomId,
+      roomNo: r.roomNo,
+      guest: r.guestName || '-',
+      cleaningStatus: r.cleaningStatus,
+      status: r.cleaningStatus === 'Completed' ? 'Clean / Ready' : (r.cleaningStatus === 'In Progress' ? 'Cleaning' : (r.assignedStaff ? 'Assigned' : 'Dirty')),
+      priority: r.priority || 'Standard',
+      cleaningType: r.cleaningType || 'Full Clean',
+      taskType: r.cleaningType || 'Full Clean',
+      assignee: r.assignedStaff || '-',
+      assignedStaff: r.assignedStaff || '',
+      startTime: r.scheduledTime || '09:00',
+      endTime: r.completionTime || '10:00',
+      started: r.scheduledTime || '09:00',
+      completed: r.completionTime || '-',
+      notes: r.notes || '',
+      floor: r.floor || '1',
+      lastCleanedDate: r.lastCleanedDate || '',
+      frequency: 'Daily'
+    }));
+    saveRooms(bridgeRooms);
+  } catch (err) {
+    console.warn('[HK Bridge] Could not sync to Cleaning Schedule bridge:', err);
+  }
+}
+
 export default function RoomsAndCleaning() {
-  const [records, setRecords] = useState(initialRecords);
+  const [records, setRecords] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState(null);
   const [search, setSearch] = useState('');
   
   // Columns state
@@ -51,8 +98,8 @@ export default function RoomsAndCleaning() {
   
   // Form State
   const [form, setForm] = useState({
-    roomNo: '', guestName: '', scheduledDate: '', scheduledTime: '',
-    assignedStaff: '', completionTime: '', cleaningStatus: 'Scheduled',
+    roomNo: '', roomId: '', guestName: '', scheduledDate: '', scheduledTime: '',
+    assignedStaff: '', employeeId: '', completionTime: '', cleaningStatus: 'Scheduled',
     priority: 'Standard', notes: '', cleaningType: 'Full Clean'
   });
 
@@ -64,10 +111,96 @@ export default function RoomsAndCleaning() {
     setIsViewModalOpen(true);
   };
 
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Parallel fetch tasks, rooms, and employees
+      const [tasksRes, roomsRes, employeesRes] = await Promise.all([
+        opsService.getHousekeepingTasks({ limit: 150 }),
+        roomService.getRooms({ limit: 150 }).catch(err => {
+          console.warn('[RoomCleaning] Failed to fetch rooms:', err);
+          return { data: [] };
+        }),
+        opsService.getEmployees({ limit: 150 }).catch(err => {
+          console.warn('[RoomCleaning] Failed to fetch employees:', err);
+          return { data: [] };
+        })
+      ]);
+
+      const loadedTasks = Array.isArray(tasksRes.data)
+        ? tasksRes.data
+        : (tasksRes.data?.tasks || []);
+
+      const loadedRooms = Array.isArray(roomsRes.data)
+        ? roomsRes.data
+        : (roomsRes.data?.rooms || []);
+
+      const loadedEmployees = Array.isArray(employeesRes.data)
+        ? employeesRes.data
+        : (employeesRes.data?.employees || []);
+
+      setRooms(loadedRooms);
+      setEmployees(loadedEmployees);
+
+      const frontendRecords = toFrontendTaskList(loadedTasks, loadedRooms, loadedEmployees);
+
+      // Ingest unassigned Dirty rooms so all rooms needing cleaning immediately show up!
+      const activeTaskRoomIds = new Set(
+        loadedTasks
+          .filter(t => !t.is_deleted && t.status !== 'CANCELLED' && t.status !== 'VERIFIED')
+          .map(t => String(t.room_id?._id || t.room_id))
+      );
+
+      const dirtyRoomsWithoutTask = loadedRooms.filter(r => {
+        const hkStatus = (r.housekeeping_status || '').toUpperCase();
+        return hkStatus === 'DIRTY' && !activeTaskRoomIds.has(String(r._id));
+      });
+
+      const dirtyVirtualRecords = dirtyRoomsWithoutTask.map(r => ({
+        id: `dirty_${r._id}`,
+        _id: `dirty_${r._id}`,
+        roomId: r._id,
+        roomNo: String(r.room_number || ''),
+        guestName: '',
+        cleaningStatus: 'Dirty',
+        status: 'Dirty',
+        priority: 'High',
+        cleaningType: 'Full Clean',
+        assignedStaff: '',
+        employeeId: '',
+        scheduledDate: new Date().toISOString().split('T')[0],
+        scheduledTime: '09:00',
+        completionTime: '',
+        notes: 'Room marked dirty - needs cleaning',
+        lastCleanedDate: '-',
+        floor: r.floor || (r.room_number ? String(r.room_number)[0] : '1'),
+        isUnassignedDirtyRoom: true
+      }));
+
+      const combinedRecords = [...dirtyVirtualRecords, ...frontendRecords];
+      setRecords(combinedRecords);
+
+      // Downstream bridge sync for Cleaning Schedule
+      syncCleaningScheduleBridge(combinedRecords);
+    } catch (err) {
+      console.error('[RoomCleaning] Load error:', err);
+      setError(err?.response?.data?.message || err?.message || 'Failed to load housekeeping tasks');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+    const handleHkUpdate = () => loadData();
+    window.addEventListener('hk_update', handleHkUpdate);
+    return () => window.removeEventListener('hk_update', handleHkUpdate);
+  }, [loadData]);
+
   const handleRefresh = () => {
     setSearch('');
-    setRecords(initialRecords);
-    
+    loadData();
     setVisibleColumns({
       Room: true, Guest: true,
       'Cleaning Type': true, Status: true, Priority: true,
@@ -76,10 +209,16 @@ export default function RoomsAndCleaning() {
     });
   };
 
+  const dirtyRoomsCount = records.filter(r => 
+    r.cleaningStatus === 'Dirty' || 
+    r.status === 'Dirty' || 
+    (r.rawBackend?.status === 'PENDING' && !r.assignedStaff)
+  ).length;
+
   const filteredRecords = records.filter(r => 
-    r.roomNo.toLowerCase().includes(search.toLowerCase()) ||
-    r.guestName.toLowerCase().includes(search.toLowerCase()) || 
-    r.assignedStaff.toLowerCase().includes(search.toLowerCase())
+    (r.roomNo || '').toLowerCase().includes(search.toLowerCase()) ||
+    (r.guestName || '').toLowerCase().includes(search.toLowerCase()) ||
+    (r.assignedStaff || '').toLowerCase().includes(search.toLowerCase())
   );
 
   const handleExportCSV = () => {
@@ -168,39 +307,104 @@ export default function RoomsAndCleaning() {
 
   const openNewModal = () => {
     setEditingId(null);
+    setFormError(null);
+    const todayDate = new Date().toISOString().split('T')[0];
+    const firstDirtyRoom = rooms.find(r => (r.housekeeping_status || '').toUpperCase() === 'DIRTY');
     setForm({
-      roomNo: '', guestName: '', scheduledDate: '', scheduledTime: '',
-      assignedStaff: '', completionTime: '', cleaningStatus: 'Scheduled',
-      priority: 'Standard', notes: '', cleaningType: 'Full Clean'
+      roomNo: firstDirtyRoom ? String(firstDirtyRoom.room_number) : '',
+      roomId: firstDirtyRoom ? firstDirtyRoom._id : '',
+      guestName: '',
+      scheduledDate: todayDate,
+      scheduledTime: '09:00',
+      assignedStaff: '',
+      employeeId: '',
+      completionTime: '',
+      cleaningStatus: 'Scheduled',
+      priority: firstDirtyRoom ? 'High' : 'Standard',
+      notes: '',
+      cleaningType: 'Full Clean'
     });
     setIsModalOpen(true);
   };
 
   const openEditModal = (record) => {
     setEditingId(record.id);
+    setFormError(null);
+    const matchedEmp = employees.find(e => 
+      (record.employeeId && e._id === record.employeeId) || 
+      `${e.first_name || ''} ${e.last_name || ''}`.trim().toLowerCase() === (record.assignedStaff || '').trim().toLowerCase()
+    );
+
     setForm({
-      roomNo: record.roomNo,
-      guestName: record.guestName,
-      scheduledDate: record.scheduledDate,
-      scheduledTime: record.scheduledTime,
-      assignedStaff: record.assignedStaff,
-      completionTime: record.completionTime,
-      cleaningStatus: record.cleaningStatus,
-      priority: record.priority,
-      notes: record.notes,
-      cleaningType: record.cleaningType
+      roomNo: record.roomNo || '',
+      roomId: record.roomId || '',
+      guestName: record.guestName && record.guestName !== '-' && record.guestName !== 'Vacant' ? record.guestName : '',
+      scheduledDate: record.scheduledDate || new Date().toISOString().split('T')[0],
+      scheduledTime: record.scheduledTime || '09:00',
+      assignedStaff: record.assignedStaff || '',
+      employeeId: matchedEmp ? matchedEmp._id : (record.employeeId || ''),
+      completionTime: record.completionTime || '',
+      cleaningStatus: record.cleaningStatus === 'Dirty' ? 'Scheduled' : (record.cleaningStatus || 'Scheduled'),
+      priority: record.priority || 'Standard',
+      notes: record.notes && record.notes !== 'Room marked dirty - needs cleaning' ? record.notes : '',
+      cleaningType: record.cleaningType || 'Full Clean'
     });
     setIsModalOpen(true);
   };
 
-  const handleSaveModal = (e) => {
+  const handleSaveModal = async (e) => {
     e.preventDefault();
-    if (editingId) {
-      setRecords(records.map(r => r.id === editingId ? { ...r, ...form } : r));
-    } else {
-      setRecords([...records, { ...form, id: records.length + 1, floor: '1', lastCleanedDate: new Date().toLocaleDateString(), frequency: 'Daily' }]);
+    setFormError(null);
+    setSubmitting(true);
+
+    try {
+      const isVirtualDirty = editingId && String(editingId).startsWith('dirty_');
+      const existing = (!isVirtualDirty && editingId) ? records.find(r => r.id === editingId) : null;
+      const payload = toBackendTaskPayload(form, {
+        rooms,
+        employees,
+        existingTask: existing?.rawBackend || existing
+      });
+
+      let updatedTask;
+      if (editingId && !isVirtualDirty) {
+        const res = await opsService.updateHousekeepingTask(editingId, payload);
+        updatedTask = res.data;
+        const frontendRecord = toFrontendTask(updatedTask, 
+          rooms.reduce((acc, r) => ({ ...acc, [r._id]: r }), {}),
+          employees.reduce((acc, emp) => ({ ...acc, [emp._id]: emp }), {})
+        );
+
+        setRecords(prev => {
+          const next = prev.map(r => r.id === editingId ? frontendRecord : r);
+          syncCleaningScheduleBridge(next);
+          return next;
+        });
+      } else {
+        const res = await opsService.createHousekeepingTask(payload);
+        updatedTask = res.data;
+        const frontendRecord = toFrontendTask(updatedTask,
+          rooms.reduce((acc, r) => ({ ...acc, [r._id]: r }), {}),
+          employees.reduce((acc, emp) => ({ ...acc, [emp._id]: emp }), {})
+        );
+
+        setRecords(prev => {
+          const filtered = isVirtualDirty ? prev.filter(r => r.id !== editingId) : prev;
+          const next = [frontendRecord, ...filtered];
+          syncCleaningScheduleBridge(next);
+          return next;
+        });
+      }
+
+      setIsModalOpen(false);
+      // Background loadData sync
+      loadData();
+    } catch (err) {
+      console.error('[RoomCleaning] Save error:', err);
+      setFormError(err?.response?.data?.message || err?.message || 'Failed to save housekeeping task');
+    } finally {
+      setSubmitting(false);
     }
-    setIsModalOpen(false);
   };
 
   const confirmDelete = (record) => {
@@ -208,138 +412,213 @@ export default function RoomsAndCleaning() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleDelete = () => {
-    setRecords(records.filter(r => r.id !== recordToDelete.id));
-    setIsDeleteModalOpen(false);
-    setRecordToDelete(null);
+  const handleDelete = async () => {
+    if (!recordToDelete) return;
+    setSubmitting(true);
+    try {
+      if (String(recordToDelete.id).startsWith('dirty_')) {
+        setRecords(prev => {
+          const next = prev.filter(r => r.id !== recordToDelete.id);
+          syncCleaningScheduleBridge(next);
+          return next;
+        });
+      } else {
+        await opsService.deleteHousekeepingTask(recordToDelete.id);
+        setRecords(prev => {
+          const next = prev.filter(r => r.id !== recordToDelete.id);
+          syncCleaningScheduleBridge(next);
+          return next;
+        });
+      }
+      setIsDeleteModalOpen(false);
+      setRecordToDelete(null);
+    } catch (err) {
+      console.error('[RoomCleaning] Delete error:', err);
+      alert(err?.response?.data?.message || err?.message || 'Failed to delete task');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const muiInputSx = {
     '& .MuiOutlinedInput-root': {
-      borderRadius: '8px',
+      borderRadius: '6px',
       backgroundColor: '#ffffff',
-      fontSize: '13px',
+      fontSize: '12px',
       color: '#1f2937',
       '& fieldset': { borderColor: '#e2e8f0', borderWidth: '1px' },
       '&:hover fieldset': { borderColor: '#cbd5e1' },
-      '&.Mui-focused fieldset': { borderColor: 'var(--primary-main)', borderWidth: '1.5px' },
+      '&.Mui-focused fieldset': { borderColor: '#1b7f43', borderWidth: '1.5px' },
     },
     '& .MuiInputLabel-root': {
-      fontSize: '13px',
+      fontSize: '12px',
       color: '#64748b',
-      '&.Mui-focused': { color: 'var(--primary-main)' }
+      '&.Mui-focused': { color: '#1b7f43' }
     }
   };
 
   return (
-    <div className="w-full h-full flex flex-col pt-1 min-h-screen">
-      
-      {/* Top Header */}
-      <div className="bg-white rounded-[6px] p-2 flex items-center justify-between border-b border-gray-100">
-        <div className="flex items-center gap-4">
-          <h1 className="text-[16px] font-bold text-gray-700 whitespace-nowrap">Room Cleaning</h1>
-          <div className="relative">
-            <input 
-              type="text" 
-              placeholder="Search..." 
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-3 pr-10 py-1.5 border border-gray-200 rounded-md text-[13px] w-[250px] focus:outline-none focus:border-[var(--primary-main)] focus:ring-1 focus:ring-[var(--primary-main)] transition-colors"
-            />
-            <Search className="absolute right-2.5 top-2 text-gray-400" sx={{ fontSize: 18 }} />
+    <div className="w-full space-y-2.5 pb-3 flex flex-col">
+      {/* Card Wrapper */}
+      <div className="bg-white rounded-lg shadow-xs border border-gray-100 flex-1 flex flex-col overflow-hidden">
+        {/* Top Header */}
+        <div className="p-2 sm:p-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-sm font-bold text-gray-800 whitespace-nowrap">Room Cleaning</h1>
+            {dirtyRoomsCount > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                {dirtyRoomsCount} {dirtyRoomsCount === 1 ? 'Room Dirty' : 'Rooms Dirty'}
+              </span>
+            )}
+            <div className="relative">
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-2.5 pr-7 py-1 border border-gray-200 rounded-md text-xs w-[140px] sm:w-[180px] focus:outline-none focus:border-[#1b7f43] focus:ring-1 focus:ring-[#1b7f43] transition-colors"
+              />
+              <Search className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400" sx={{ fontSize: 15 }} />
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-1.5 ml-auto">
+            <button onClick={openNewModal} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="New Record">
+              <AddCircleOutlined sx={{ fontSize: 18 }} className="text-[#1b7f43]" />
+            </button>
+            <RefreshButton onClick={handleRefresh} />
+            <button onClick={handleExportCSV} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-sky-50 transition-colors cursor-pointer" title="Export CSV">
+              <TableChart sx={{ fontSize: 16 }} className="text-sky-600" />
+            </button>
+            <button onClick={handleExportPDF} className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-rose-50 transition-colors cursor-pointer" title="Export PDF">
+              <PictureAsPdf sx={{ fontSize: 16 }} className="text-rose-600" />
+            </button>
           </div>
         </div>
-        
-        <div className="flex items-center gap-2">
-          <button onClick={openNewModal} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="New Record">
-            <AddCircleOutlined sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
-          </button>
-          <button onClick={handleRefresh} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Refresh">
-            <Refresh sx={{ fontSize: 20 }} className="text-[var(--primary-main)]" />
-          </button>
-          <button onClick={handleExportCSV} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-[#e5f4eb] transition-colors cursor-pointer" title="Export CSV">
-            <TableChart sx={{ fontSize: 18 }} className="text-[#0ea5e9]" />
-          </button>
-          <button onClick={handleExportPDF} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-50 transition-colors cursor-pointer" title="Export PDF">
-            <PictureAsPdf sx={{ fontSize: 18 }} className="text-[#ef4444]" />
-          </button>
-        </div>
-      </div>
 
-      {/* Table Section */}
-      <div className="bg-white rounded-b-xl shadow-sm border border-gray-100 flex-1 flex flex-col">
-        <div className="flex-1 overflow-x-auto overflow-y-hidden [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-thumb]:bg-gray-300 [&::-webkit-scrollbar-thumb]:rounded-full">
-          <table className="w-full text-left whitespace-nowrap">
+        {/* Global Error Banner */}
+        {error && (
+          <div className="p-3 bg-rose-50 border-b border-rose-100 flex items-center justify-between text-xs text-rose-700">
+            <span>{error}</span>
+            <button onClick={loadData} className="font-semibold underline cursor-pointer ml-3">
+              Retry
+            </button>
+          </div>
+        )}
+
+        {/* Table Section */}
+        <div className="w-full overflow-hidden">
+          <table className="table-fixed w-full text-left border-collapse">
+            <colgroup>
+              <col style={{ width: '8%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '12%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '14%' }} />
+              <col style={{ width: '10%' }} />
+              <col style={{ width: '11%' }} />
+              <col style={{ width: '9%' }} />
+              <col style={{ width: '7%' }} />
+            </colgroup>
             <thead>
-              <tr className="border-b border-gray-100 bg-white">
-                {visibleColumns['Room'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Room</th>}
-                {visibleColumns['Guest'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Guest</th>}
-                {visibleColumns['Cleaning Type'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Cleaning Type</th>}
-                {visibleColumns['Status'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Status</th>}
-                {visibleColumns['Priority'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Priority</th>}
-                {visibleColumns['Assigned Staff'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Assigned Staff</th>}
-                {visibleColumns['Completed At'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Completed At</th>}
-                {visibleColumns['Notes'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Notes</th>}
-                {visibleColumns['Last Cleaned'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Last Cleaned</th>}
-                {visibleColumns['Actions'] && <th className="py-4 px-1 text-[11px] font-bold text-gray-700">Actions</th>}
+              <tr className="border-b border-gray-100 bg-slate-50/50">
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Room</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Guest</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Cleaning Type</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Priority</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Assigned Staff</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Completed At</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Notes</th>
+                <th className="py-2 px-1.5 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider whitespace-nowrap">Last Cleaned</th>
+                <th className="py-2 px-1 text-[10px] sm:text-[10.5px] font-bold text-gray-500 uppercase tracking-wider text-center whitespace-nowrap">Action</th>
               </tr>
             </thead>
-            <tbody>
-              {filteredRecords.map((record, index) => (
+            <tbody className="divide-y divide-gray-50">
+              {loading ? (
+                <tr>
+                  <td colSpan="10" className="py-8 text-center text-gray-500 text-xs">
+                    <div className="flex items-center justify-center gap-2">
+                      <CircularProgress size={16} sx={{ color: '#1b7f43' }} />
+                      <span>Loading housekeeping tasks...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredRecords.map((record) => (
                 <tr 
                   key={record.id} 
                   onClick={() => openViewModal(record)} 
-                  className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors cursor-pointer ${index % 2 !== 0 ? 'bg-gray-50/30' : ''}`}
+                  className="hover:bg-slate-50/60 transition-colors cursor-pointer border-b border-gray-50"
                 >
-                  {visibleColumns['Room'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.roomNo}</td>}
-                  {visibleColumns['Guest'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.guestName}</td>}
-                  {visibleColumns['Cleaning Type'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.cleaningType}</td>}
+                  <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-900 whitespace-nowrap">{record.roomNo}</td>
+                  <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-800 truncate" title={record.guestName}>
+                    {record.guestName && record.guestName !== '-' && record.guestName !== 'Vacant' ? (
+                      record.guestName
+                    ) : (
+                      <span className="text-gray-400 font-normal italic">Vacant</span>
+                    )}
+                  </td>
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">{record.cleaningType}</td>
                   
-                  {visibleColumns['Status'] && (
-                    <td className="py-3 px-1">
-                      <span className={`px-1 py-0.5 rounded-[4px] text-[11px] font-medium ${statusStyles[record.cleaningStatus]}`}>
-                        {record.cleaningStatus}
-                      </span>
-                    </td>
-                  )}
+                  <td className="py-1.5 px-1.5 whitespace-nowrap">
+                    <span className={`px-1.5 py-0.5 rounded text-[9.5px] font-semibold inline-block ${statusStyles[record.cleaningStatus] || 'bg-gray-100 text-gray-700'}`}>
+                      {record.cleaningStatus}
+                    </span>
+                  </td>
                   
-                  {visibleColumns['Priority'] && (
-                    <td className="py-3 px-1">
-                      <span className={`px-1 py-0.5 rounded-[4px] text-[11px] font-medium ${priorityStyles[record.priority]}`}>
-                        {record.priority}
-                      </span>
-                    </td>
-                  )}
+                  <td className="py-1.5 px-1.5 whitespace-nowrap">
+                    <span className={`px-1.5 py-0.5 rounded text-[9.5px] font-semibold inline-block ${priorityStyles[record.priority] || 'bg-blue-50 text-blue-600'}`}>
+                      {record.priority}
+                    </span>
+                  </td>
 
-                  {visibleColumns['Assigned Staff'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.assignedStaff}</td>}
-                  {visibleColumns['Completed At'] && <td className="py-3 px-1 text-[11px] text-gray-600">{record.completionTime}</td>}
-                  {visibleColumns['Notes'] && <td className="py-3 px-1 text-[11px] text-gray-500 truncate max-w-[80px]" title={record.notes}>{record.notes}</td>}
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 truncate" title={record.assignedStaff}>
+                    {record.assignedStaff ? (
+                      <span className="font-medium text-gray-800">{record.assignedStaff}</span>
+                    ) : (
+                      <button 
+                        type="button" 
+                        onClick={(e) => { e.stopPropagation(); openEditModal(record); }} 
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition-colors cursor-pointer"
+                        title="Assign staff to clean this room"
+                      >
+                        <PersonAddOutlined sx={{ fontSize: 13 }} />
+                        <span>Assign Staff</span>
+                      </button>
+                    )}
+                  </td>
+                  <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600 whitespace-nowrap">{record.completionTime || '-'}</td>
+                  <td className="py-1.5 px-1.5 text-[10.5px] text-gray-500 italic truncate" title={record.notes}>{record.notes || '-'}</td>
                   
-                  {visibleColumns['Last Cleaned'] && (
-                    <td className="py-3 px-1 text-[11px] text-gray-600">
-                      <div className="flex items-center gap-1.5">
-                        {record.lastCleanedDate}
-                      </div>
-                    </td>
-                  )}
+                  <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600 whitespace-nowrap">
+                    {record.lastCleanedDate || '-'}
+                  </td>
 
-                  {visibleColumns['Actions'] && (
-                    <td className="py-3 px-1 relative">
-                      <div className="flex items-center gap-3">
-                        <button onClick={(e) => { e.stopPropagation(); openEditModal(record); }} className="text-blue-400 hover:text-blue-600 transition-colors cursor-pointer" title="Edit">
-                          <EditOutlined sx={{ fontSize: 16 }} />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); confirmDelete(record); }} className="text-orange-400 hover:text-orange-600 transition-colors cursor-pointer" title="Delete">
-                          <DeleteOutlined sx={{ fontSize: 16 }} />
-                        </button>
-                      </div>
-                    </td>
-                  )}
+                  <td className="py-1.5 px-1 relative text-center whitespace-nowrap">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); openEditModal(record); }} 
+                        className="text-blue-500 hover:text-blue-700 p-0.5 transition-colors cursor-pointer" 
+                        title="Edit"
+                      >
+                        <EditOutlined sx={{ fontSize: 15 }} />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); confirmDelete(record); }} 
+                        className="text-rose-500 hover:text-rose-700 p-0.5 transition-colors cursor-pointer" 
+                        title="Delete"
+                      >
+                        <DeleteOutlined sx={{ fontSize: 15 }} />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
-              {filteredRecords.length === 0 && (
+              {!loading && filteredRecords.length === 0 && (
                 <tr>
-                  <td colSpan="10" className="py-8 text-center text-gray-500 text-sm">
+                  <td colSpan="10" className="py-8 text-center text-gray-400 text-xs">
                     No records found.
                   </td>
                 </tr>
@@ -348,81 +627,159 @@ export default function RoomsAndCleaning() {
           </table>
         </div>
         
-        {/* Pagination placeholder */}
-        <div className="flex items-center justify-end px-1 py-4 border-t border-gray-100 bg-white">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] text-gray-500">Items per page:</span>
-              <select className="border border-gray-200 rounded px-1 py-1 text-[11px] text-gray-700 outline-none">
-                <option>10</option>
-                <option>20</option>
-                <option>50</option>
-              </select>
-            </div>
-            <span className="text-[11px] text-gray-500">1 - {filteredRecords.length} of 16</span>
-            <div className="flex items-center gap-1">
-              <button className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50">&lt;</button>
-              <button className="w-7 h-7 rounded flex items-center justify-center text-gray-400 hover:bg-gray-50">&gt;</button>
-            </div>
+        {/* Pagination footer */}
+        <div className="px-3 py-1.5 sm:py-2 mt-auto flex items-center justify-between text-xs text-gray-500 border-t border-gray-100 bg-slate-50/40">
+          <span>Showing {filteredRecords.length} of {records.length} records</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-gray-700">Page 1 of 1</span>
           </div>
         </div>
       </div>
 
       {/* Edit/New Booking Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsModalOpen(false)}>
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[800px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="bg-[var(--primary-main)] px-5 py-3.5 flex items-center justify-between">
-              <h2 className="text-white text-[16px] font-bold">
-                {editingId ? `Room #${form.roomNo}` : 'New Record'}
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => !submitting && setIsModalOpen(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-[580px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#1b7f43] px-4 py-2.5 flex items-center justify-between text-white">
+              <h2 className="text-sm font-bold">
+                {editingId 
+                  ? (String(editingId).startsWith('dirty_') 
+                      ? `Assign Staff & Clean Room #${form.roomNo}` 
+                      : `Edit Room #${form.roomNo}`) 
+                  : 'New Room Cleaning Record'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-full bg-white/10 hover:bg-white/20 transition-colors cursor-pointer flex items-center justify-center">
-                <Close sx={{ fontSize: 18 }} />
+              <button disabled={submitting} onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center">
+                <Close sx={{ fontSize: 17 }} />
               </button>
             </div>
             
-            <form onSubmit={handleSaveModal} className="p-6 overflow-y-auto max-h-[80vh]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-                
-                <TextField required label="Room No*" name="roomNo" value={form.roomNo} onChange={(e)=>setForm({...form, roomNo: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-                <TextField required label="Guest Name*" name="guestName" value={form.guestName} onChange={(e)=>setForm({...form, guestName: e.target.value})} sx={muiInputSx} size="small" fullWidth />
-              <Box>
-  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
-    Scheduled Date*
-  </Typography>
-  <TextField
-    required
-    type="date"
-    label=""
-    name="scheduledDate"
-    value={form.scheduledDate}
-    onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })}
-    sx={muiInputSx}
-    size="small"
-    fullWidth
-    InputLabelProps={{ shrink: true }}
-  />
-</Box>
+            <form onSubmit={handleSaveModal} className="p-4 sm:p-5 overflow-y-auto max-h-[80vh]">
+              {formError && (
+                <Alert severity="error" sx={{ mb: 2, fontSize: '12px' }}>
+                  {formError}
+                </Alert>
+              )}
 
-<Box>
-  <Typography variant="body2" fontWeight={500} sx={{ mb: 0.5 }}>
-    Scheduled Time*
-  </Typography>
-  <TextField
-    required
-    type="time"
-    label=""
-    name="scheduledTime"
-    value={form.scheduledTime}
-    onChange={(e) => setForm({ ...form, scheduledTime: e.target.value })}
-    sx={muiInputSx}
-    size="small"
-    fullWidth
-    InputLabelProps={{ shrink: true }}
-  />
-</Box>
-                <TextField required label="Assigned Staff*" name="assignedStaff" value={form.assignedStaff} onChange={(e)=>setForm({...form, assignedStaff: e.target.value})} sx={muiInputSx} size="small" fullWidth />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="relative">
+                  <TextField 
+                    required 
+                    label="Room No*" 
+                    name="roomNo" 
+                    value={form.roomNo} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const matched = rooms.find(r => String(r.room_number) === String(val) || String(r._id) === String(val));
+                      setForm({
+                        ...form,
+                        roomNo: matched ? String(matched.room_number) : val,
+                        roomId: matched ? matched._id : form.roomId
+                      });
+                    }} 
+                    sx={muiInputSx} 
+                    size="small" 
+                    fullWidth 
+                    helperText={rooms.length > 0 && !rooms.some(r => String(r.room_number) === String(form.roomNo)) && form.roomNo ? "Room must match existing hotel room" : ""}
+                    inputProps={{ list: 'room-numbers-list' }}
+                  />
+                  <datalist id="room-numbers-list">
+                    {rooms.map(r => (
+                      <option key={r._id} value={r.room_number}>
+                        Room {r.room_number} (Floor {r.floor || '1'}{(r.housekeeping_status || '').toUpperCase() === 'DIRTY' ? ' - DIRTY' : ''})
+                      </option>
+                    ))}
+                  </datalist>
+                </div>
+                <TextField 
+                  label="Guest Name" 
+                  name="guestName" 
+                  value={form.guestName} 
+                  onChange={(e)=>setForm({...form, guestName: e.target.value})} 
+                  sx={muiInputSx} 
+                  size="small" 
+                  fullWidth 
+                  placeholder="Optional (e.g. Vacant or in-house guest)" 
+                  inputProps={{ 'aria-label': 'Guest Name*' }}
+                />
+                
+                <TextField
+                  required
+                  type="date"
+                  label="Scheduled Date*"
+                  name="scheduledDate"
+                  value={form.scheduledDate}
+                  onChange={(e) => setForm({ ...form, scheduledDate: e.target.value })}
+                  sx={muiInputSx}
+                  size="small"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+
+                <TextField
+                  required
+                  type="time"
+                  label="Scheduled Time*"
+                  name="scheduledTime"
+                  value={form.scheduledTime}
+                  onChange={(e) => setForm({ ...form, scheduledTime: e.target.value })}
+                  sx={muiInputSx}
+                  size="small"
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+
+                <FormControl size="small" fullWidth sx={muiInputSx}>
+                  <InputLabel id="assigned-staff-select-label">Assigned Staff</InputLabel>
+                  <Select
+                    labelId="assigned-staff-select-label"
+                    id="assigned-staff-select"
+                    label="Assigned Staff"
+                    name="assignedStaff"
+                    value={form.employeeId || (employees.find(e => `${e.first_name || ''} ${e.last_name || ''}`.trim().toLowerCase() === (form.assignedStaff || '').trim().toLowerCase())?._id || '')}
+                    onChange={(e) => {
+                      const empId = e.target.value;
+                      const emp = employees.find(x => x._id === empId || `${x.first_name || ''} ${x.last_name || ''}`.trim().toLowerCase() === String(empId).trim().toLowerCase());
+                      const name = emp ? `${emp.first_name || ''} ${emp.last_name || ''}`.trim() : (empId || '');
+                      setForm(prev => ({
+                        ...prev,
+                        employeeId: emp ? emp._id : '',
+                        assignedStaff: name
+                      }));
+                    }}
+                  >
+                    <MenuItem value="">
+                      <span className="text-gray-400 italic font-normal">-- Select Staff (or Unassigned) --</span>
+                    </MenuItem>
+                    {employees.map(emp => {
+                      const empName = `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || emp.employee_ref || 'Staff';
+                      const dept = emp.department_id?.name || emp.department || '';
+                      return (
+                        <MenuItem key={emp._id} value={emp._id}>
+                          <div className="flex items-center justify-between w-full">
+                            <span className="font-medium text-gray-800">{empName}</span>
+                            {dept && (
+                              <span className="text-[10px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-medium border border-emerald-100 ml-2">
+                                {dept}
+                              </span>
+                            )}
+                          </div>
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
                 <TextField type="time" label="Completion Time" name="completionTime" value={form.completionTime} onChange={(e)=>setForm({...form, completionTime: e.target.value})} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
+
+                <FormControl size="small" fullWidth sx={muiInputSx}>
+                  <InputLabel>Cleaning Type</InputLabel>
+                  <Select name="cleaningType" value={form.cleaningType} label="Cleaning Type" onChange={(e)=>setForm({...form, cleaningType: e.target.value})}>
+                    <MenuItem value="Full Clean">Full Clean</MenuItem>
+                    <MenuItem value="Quick Clean">Quick Clean</MenuItem>
+                    <MenuItem value="Turn Down">Turn Down</MenuItem>
+                    <MenuItem value="Deep Clean">Deep Clean</MenuItem>
+                    <MenuItem value="Inspection">Inspection</MenuItem>
+                  </Select>
+                </FormControl>
 
                 <FormControl size="small" fullWidth sx={muiInputSx}>
                   <InputLabel>Cleaning Status*</InputLabel>
@@ -442,17 +799,18 @@ export default function RoomsAndCleaning() {
                   </Select>
                 </FormControl>
 
-                <div className="md:col-span-2">
-                  <TextField label="Notes" name="notes" value={form.notes} onChange={(e)=>setForm({...form, notes: e.target.value})} sx={muiInputSx} size="small" fullWidth multiline rows={3} />
+                <div className="sm:col-span-2">
+                  <TextField label="Notes" name="notes" value={form.notes} onChange={(e)=>setForm({...form, notes: e.target.value})} sx={muiInputSx} size="small" fullWidth multiline rows={2} />
                 </div>
               </div>
               
-              <div className="flex items-center gap-3 mt-8">
-                <button type="submit" className="px-1 py-2 rounded-full bg-green-50 text-[var(--primary-main)] border border-green-200 font-bold text-[13.5px] hover:bg-green-100 transition-colors cursor-pointer shadow-sm">
-                  Save
-                </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-1 py-2 rounded-full border border-transparent bg-[#fce7f3] text-[#e11d48] font-bold text-[13.5px] hover:bg-[#fbcfe8] transition-colors cursor-pointer shadow-sm">
+              <div className="flex items-center justify-end gap-2 mt-4 pt-3 border-t border-gray-100">
+                <button type="button" disabled={submitting} onClick={() => setIsModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50">
                   Cancel
+                </button>
+                <button type="submit" disabled={submitting} className="px-4 py-1.5 rounded-lg bg-[#1b7f43] text-white font-semibold text-xs hover:bg-[#166534] transition-colors cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5">
+                  {submitting && <CircularProgress size={12} color="inherit" />}
+                  <span>Save</span>
                 </button>
               </div>
             </form>
@@ -462,21 +820,22 @@ export default function RoomsAndCleaning() {
 
       {/* Delete Confirmation Modal */}
       {isDeleteModalOpen && recordToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsDeleteModalOpen(false)}>
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-[340px] p-6 text-center" onClick={e => e.stopPropagation()}>
-            <h3 className="text-[22px] font-normal text-gray-800 mb-6 text-left">Are you sure?</h3>
-            <div className="text-left space-y-3 mb-8">
-              <p className="text-[13.5px] text-gray-700 font-medium grid grid-cols-[130px_1fr]"><span>Room No:</span> <span>{recordToDelete.roomNo}</span></p>
-              <p className="text-[13.5px] text-gray-700 font-medium grid grid-cols-[130px_1fr]"><span>Assign Staff:</span> <span>{recordToDelete.assignedStaff}</span></p>
-              <p className="text-[13.5px] text-gray-700 font-medium grid grid-cols-[130px_1fr]"><span>Cleaning Type:</span> <span>{recordToDelete.cleaningType}</span></p>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => !submitting && setIsDeleteModalOpen(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-[340px] p-5 text-center" onClick={e => e.stopPropagation()}>
+            <h3 className="text-base font-bold text-gray-800 mb-3 text-left">Are you sure?</h3>
+            <div className="text-left space-y-2 mb-5 bg-slate-50 p-3 rounded-lg text-xs">
+              <p className="text-gray-700 grid grid-cols-[100px_1fr]"><span className="font-semibold text-gray-500">Room No:</span> <span className="font-bold text-gray-900">{recordToDelete.roomNo}</span></p>
+              <p className="text-gray-700 grid grid-cols-[100px_1fr]"><span className="font-semibold text-gray-500">Assign Staff:</span> <span>{recordToDelete.assignedStaff || '-'}</span></p>
+              <p className="text-gray-700 grid grid-cols-[100px_1fr]"><span className="font-semibold text-gray-500">Cleaning Type:</span> <span>{recordToDelete.cleaningType}</span></p>
             </div>
             
-            <div className="flex justify-center gap-3">
-              <button onClick={handleDelete} className="px-8 py-2.5 rounded-[8px] bg-[#c0392b] text-white font-bold text-[14px] hover:bg-[#a93226] transition-colors cursor-pointer">
-                Delete
-              </button>
-              <button onClick={() => setIsDeleteModalOpen(false)} className="px-8 py-2.5 rounded-[8px] bg-[var(--primary-main)] text-white font-bold text-[14px] hover:bg-green-700 transition-colors cursor-pointer">
+            <div className="flex justify-end gap-2">
+              <button disabled={submitting} onClick={() => setIsDeleteModalOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 bg-gray-50 text-gray-700 font-semibold text-xs hover:bg-gray-100 transition-colors cursor-pointer disabled:opacity-50">
                 Cancel
+              </button>
+              <button disabled={submitting} onClick={handleDelete} className="px-3.5 py-1.5 rounded-lg bg-rose-600 text-white font-semibold text-xs hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-50 flex items-center gap-1.5">
+                {submitting && <CircularProgress size={12} color="inherit" />}
+                <span>Delete</span>
               </button>
             </div>
           </div>
@@ -485,115 +844,127 @@ export default function RoomsAndCleaning() {
 
       {/* View Details Modal */}
       {isViewModalOpen && viewRecord && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fade-in" onClick={() => setIsViewModalOpen(false)}>
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-[800px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in" onClick={() => setIsViewModalOpen(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-[560px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             {/* Header */}
-            <div className="bg-[var(--primary-main)] px-5 py-4 flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-lg border border-white/30">
-                  R
+            <div className="bg-[#1b7f43] px-4 py-3 flex items-center justify-between text-white">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white font-bold text-sm">
+                  {viewRecord.roomNo ? viewRecord.roomNo[0] : 'R'}
                 </div>
                 <div>
-                  <h2 className="text-white text-[16px] font-bold">Room Cleaning</h2>
-                  <p className="text-white/80 text-[13px] mt-0.5">{viewRecord.cleaningStatus}</p>
+                  <h2 className="text-sm font-bold">Room #{viewRecord.roomNo} Cleaning</h2>
+                  <p className="text-white/80 text-[11px]">{viewRecord.cleaningStatus}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button 
                   onClick={() => { setIsViewModalOpen(false); openEditModal(viewRecord); }} 
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors border border-white/10"
+                  className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                  title="Edit"
                 >
-                  <EditOutlined sx={{ fontSize: 16 }} />
+                  <EditOutlined sx={{ fontSize: 15 }} />
                 </button>
                 <button 
                   onClick={() => setIsViewModalOpen(false)} 
-                  className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors border border-white/10"
+                  className="w-7 h-7 rounded-md bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors cursor-pointer"
+                  title="Close"
                 >
-                  <Close sx={{ fontSize: 18 }} />
+                  <Close sx={{ fontSize: 16 }} />
                 </button>
               </div>
             </div>
             
             {/* Body */}
-            <div className="p-6 bg-transparent">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
+            <div className="p-4 sm:p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {/* Room No */}
-                <div className="bg-white rounded-lg p-3.5 border border-gray-100 flex items-center gap-4 shadow-sm">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] flex items-center justify-center text-[var(--primary-main)]">
-                    <MeetingRoomOutlined sx={{ fontSize: 20 }} />
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-gray-100 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-[#e5f4eb] flex items-center justify-center text-[#1b7f43]">
+                    <MeetingRoomOutlined sx={{ fontSize: 16 }} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Room No</p>
-                    <p className="text-[14px] font-bold text-gray-800">{viewRecord.roomNo}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Room No</p>
+                    <p className="text-xs font-bold text-gray-800">{viewRecord.roomNo}</p>
                   </div>
                 </div>
 
                 {/* Cleaning Status */}
-                <div className="bg-white rounded-lg p-3.5 border border-gray-100 flex items-center gap-4 shadow-sm">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] flex items-center justify-center text-[var(--primary-main)]">
-                    <CleaningServicesOutlined sx={{ fontSize: 20 }} />
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-gray-100 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-[#e5f4eb] flex items-center justify-center text-[#1b7f43]">
+                    <CleaningServicesOutlined sx={{ fontSize: 16 }} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Cleaning Status</p>
-                    <span className={`px-1.5 py-1 rounded-[4px] text-[11px] font-medium ${statusStyles[viewRecord.cleaningStatus]}`}>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Status</p>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${statusStyles[viewRecord.cleaningStatus] || 'bg-gray-100 text-gray-700'}`}>
                       {viewRecord.cleaningStatus}
                     </span>
                   </div>
                 </div>
 
                 {/* Scheduled Date */}
-                <div className="bg-white rounded-lg p-3.5 border border-gray-100 flex items-center gap-4 shadow-sm">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] flex items-center justify-center text-[var(--primary-main)]">
-                    <EventOutlined sx={{ fontSize: 20 }} />
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-gray-100 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-[#e5f4eb] flex items-center justify-center text-[#1b7f43]">
+                    <EventOutlined sx={{ fontSize: 16 }} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Scheduled Date</p>
-                    <p className="text-[14px] font-bold text-gray-800">{viewRecord.scheduledDate}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Date</p>
+                    <p className="text-xs font-bold text-gray-800">{viewRecord.scheduledDate || '-'}</p>
                   </div>
                 </div>
 
                 {/* Scheduled Time */}
-                <div className="bg-white rounded-lg p-3.5 border border-gray-100 flex items-center gap-4 shadow-sm">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] flex items-center justify-center text-[var(--primary-main)]">
-                    <AccessTimeOutlined sx={{ fontSize: 20 }} />
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-gray-100 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-[#e5f4eb] flex items-center justify-center text-[#1b7f43]">
+                    <AccessTimeOutlined sx={{ fontSize: 16 }} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Scheduled Time</p>
-                    <p className="text-[14px] font-bold text-gray-800">{viewRecord.scheduledTime}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Time</p>
+                    <p className="text-xs font-bold text-gray-800">{viewRecord.scheduledTime || '-'}</p>
                   </div>
                 </div>
 
                 {/* Assigned Staff */}
-                <div className="bg-white rounded-lg p-3.5 border border-gray-100 flex items-center gap-4 shadow-sm">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] flex items-center justify-center text-[var(--primary-main)]">
-                    <PersonOutlined sx={{ fontSize: 20 }} />
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-gray-100 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-[#e5f4eb] flex items-center justify-center text-[#1b7f43]">
+                    <PersonOutlined sx={{ fontSize: 16 }} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">Assigned Staff</p>
-                    <p className="text-[14px] font-bold text-gray-800">{viewRecord.assignedStaff}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Staff</p>
+                    <p className="text-xs font-bold text-gray-800">{viewRecord.assignedStaff || '-'}</p>
                   </div>
                 </div>
 
                 {/* Priority */}
-                <div className="bg-white rounded-lg p-3.5 border border-gray-100 flex items-center gap-4 shadow-sm">
-                  <div className="w-10 h-10 rounded-full bg-[#e5f4eb] flex items-center justify-center text-[var(--primary-main)]">
-                    <FlagOutlined sx={{ fontSize: 20 }} />
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-gray-100 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-[#e5f4eb] flex items-center justify-center text-[#1b7f43]">
+                    <FlagOutlined sx={{ fontSize: 16 }} />
                   </div>
                   <div>
-                    <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-1">Priority</p>
-                    <span className={`px-1.5 py-1 rounded-[4px] text-[11px] font-medium ${priorityStyles[viewRecord.priority]}`}>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Priority</p>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${priorityStyles[viewRecord.priority] || 'bg-blue-50 text-blue-600'}`}>
                       {viewRecord.priority}
                     </span>
                   </div>
                 </div>
 
+                {/* Guest */}
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-gray-100 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-[#e5f4eb] flex items-center justify-center text-[#1b7f43]">
+                    <PersonOutlined sx={{ fontSize: 16 }} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Guest</p>
+                    <p className="text-xs font-bold text-gray-800">
+                      {viewRecord.guestName && viewRecord.guestName !== '-' && viewRecord.guestName !== 'Vacant' ? viewRecord.guestName : 'Vacant'}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
-      
     </div>
   );
 }
