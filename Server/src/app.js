@@ -9,6 +9,26 @@ import errorHandler from "./middlewares/errorHandler.middleware.js";
 
 const app = express();
 app.disable("x-powered-by");
+
+// Vercel imports the Express app directly instead of running the local listener.
+// Share initialization across concurrent requests within each function instance.
+if (process.env.VERCEL) {
+  let databaseReady;
+  app.use(async (req, res, next) => {
+    try {
+      if (!databaseReady) {
+        databaseReady = import('./database/platform/platformConnection.js')
+          .then(({ connectPlatformDB }) => connectPlatformDB())
+          .catch((error) => { databaseReady = undefined; throw error; });
+      }
+      await databaseReady;
+      next();
+    } catch (error) {
+      next(error);
+    }
+  });
+}
+
 app.get("/", (req, res) => { 
   res.send("done"); 
 })
