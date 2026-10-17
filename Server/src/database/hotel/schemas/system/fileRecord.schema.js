@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const fileRecordSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     file_name: {
       type: String,
       required: true,
@@ -24,6 +19,14 @@ const fileRecordSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    storage_provider: {
+      type: String,
+      enum: ['CLOUDINARY', 'GRIDFS', 'S3'],
+      default: 'CLOUDINARY',
+    },
+    storage_key: {
+      type: String, // e.g. Cloudinary public_id or S3/GridFS key
+    },
     storage_url: {
       type: String,
       required: true,
@@ -31,10 +34,10 @@ const fileRecordSchema = new mongoose.Schema(
     uploaded_by: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Employee',
-      required: true,
+      default: null,
     },
     entity_ref: {
-      type: String, // e.g., 'GUEST_DOCUMENT', 'EMPLOYEE_DOCUMENT', 'EXPENSE_RECEIPT'
+      type: String, // e.g., 'GUEST_DOCUMENT', 'EMPLOYEE_DOCUMENT', 'EXPENSE_RECEIPT', 'CAR_PARKING', 'HOTEL_LOGO'
     },
     entity_id: {
       type: mongoose.Schema.Types.ObjectId,

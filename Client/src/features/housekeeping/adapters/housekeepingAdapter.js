@@ -43,12 +43,6 @@ export const PRIORITY_BACKEND_TO_UI = {
   'URGENT': 'Urgent'
 };
 
-export const PRIORITY_BACKEND_TO_SCHEDULE_UI = {
-  'LOW': 'Low',
-  'MEDIUM': 'Medium',
-  'HIGH': 'High',
-  'URGENT': 'High'
-};
 
 export const STATUS_UI_TO_BACKEND = {
   'Scheduled': 'PENDING',
@@ -57,7 +51,8 @@ export const STATUS_UI_TO_BACKEND = {
   'Completed': 'COMPLETED',
   'Clean / Ready': 'VERIFIED',
   'Delayed': 'PENDING',
-  'Cancelled': 'CANCELLED'
+  'Cancelled': 'CANCELLED',
+  'Dirty': 'PENDING'
 };
 
 export const STATUS_BACKEND_TO_UI = {
@@ -69,14 +64,6 @@ export const STATUS_BACKEND_TO_UI = {
   'CANCELLED': 'Scheduled'
 };
 
-export const STATUS_BACKEND_TO_SCHEDULE_UI = {
-  'PENDING': 'Pending',
-  'ASSIGNED': 'Pending',
-  'IN_PROGRESS': 'In Progress',
-  'COMPLETED': 'Completed',
-  'VERIFIED': 'Completed',
-  'CANCELLED': 'Delayed'
-};
 
 function formatToHHMM(dateVal, fallback = '09:00') {
   if (!dateVal) return fallback;
@@ -195,86 +182,6 @@ export function toFrontendTaskList(tasks = [], rooms = [], employees = []) {
   return tasks.map(t => toFrontendTask(t, roomLookup, employeeLookup));
 }
 
-/**
- * Maps a single backend HousekeepingTask to the CleaningSchedule UI representation.
- */
-export function toScheduleTask(task, roomLookup = {}, employeeLookup = {}) {
-  if (!task) return null;
-
-  // Resolve room
-  const roomId = task.room_id?._id || task.room_id;
-  const populatedRoom = task.room_id && typeof task.room_id === 'object' ? task.room_id : null;
-  const lookupRoom = (roomId && roomLookup[roomId]) || null;
-  const roomNo = String(
-    populatedRoom?.room_number ||
-    lookupRoom?.room_number ||
-    task.room_number ||
-    ''
-  );
-
-  // Resolve staff
-  const empId = task.assigned_to?._id || task.assigned_to;
-  const populatedEmp = task.assigned_to && typeof task.assigned_to === 'object' ? task.assigned_to : null;
-  const lookupEmp = (empId && employeeLookup[empId]) || null;
-  let assignedStaff = '';
-  if (populatedEmp) {
-    const fullName = `${populatedEmp.first_name || ''} ${populatedEmp.last_name || ''}`.trim();
-    assignedStaff = fullName || populatedEmp.employee_ref || '';
-  } else if (lookupEmp) {
-    const fullName = `${lookupEmp.first_name || ''} ${lookupEmp.last_name || ''}`.trim();
-    assignedStaff = fullName || lookupEmp.employee_ref || '';
-  }
-
-  let cleanNotes = task.notes || '';
-  let isDelayed = cleanNotes.includes('[Delayed]');
-  if (isDelayed) {
-    cleanNotes = cleanNotes.replace(/\[Delayed\]\s*/, '').trim();
-  }
-
-  const taskType = TASK_TYPE_BACKEND_TO_UI[task.task_type] || 'Full Clean';
-  const priority = PRIORITY_BACKEND_TO_SCHEDULE_UI[task.priority] || 'Medium';
-  let status = STATUS_BACKEND_TO_SCHEDULE_UI[task.status] || 'Pending';
-  if (isDelayed && status === 'Pending') {
-    status = 'Delayed';
-  }
-
-  const startTime = formatToHHMM(task.scheduled_at || task.started_at, '09:00');
-  const endTime = formatToHHMM(task.scheduled_end_at || task.completed_at, '10:00');
-
-  return {
-    id: task._id,
-    _id: task._id,
-    roomId,
-    roomNo,
-    taskType,
-    cleaningType: taskType,
-    assignedStaff,
-    employeeId: empId || null,
-    startTime,
-    endTime,
-    priority,
-    status,
-    notes: cleanNotes,
-    rawBackend: task
-  };
-}
-
-/**
- * Transforms an array of backend tasks to CleaningSchedule records.
- */
-export function toScheduleTaskList(tasks = [], rooms = [], employees = []) {
-  const roomLookup = {};
-  rooms.forEach(r => {
-    if (r._id) roomLookup[r._id] = r;
-  });
-
-  const employeeLookup = {};
-  employees.forEach(e => {
-    if (e._id) employeeLookup[e._id] = e;
-  });
-
-  return tasks.map(t => toScheduleTask(t, roomLookup, employeeLookup));
-}
 
 /**
  * Prepares backend task payload for RoomsAndCleaning form.
@@ -297,18 +204,22 @@ export function toBackendTaskPayload(form, { rooms = [], employees = [], existin
   }
 
   // 2. Resolve assigned_to
-  const targetStaff = String(form.assignedStaff || '').trim().toLowerCase();
   let assignedTo = undefined;
-  if (targetStaff) {
-    const matchedEmp = employees.find(e => {
-      const fullName = `${e.first_name || ''} ${e.last_name || ''}`.trim().toLowerCase();
-      const ref = String(e.employee_ref || '').trim().toLowerCase();
-      return (e._id && e._id === form.employeeId) || fullName === targetStaff || ref === targetStaff;
-    });
-    if (matchedEmp?._id) {
-      assignedTo = matchedEmp._id;
-    } else if (existingTask?.assigned_to && !form.assignedStaffChanged) {
-      assignedTo = existingTask.assigned_to._id || existingTask.assigned_to;
+  if (form.employeeId !== undefined && form.employeeId !== null && form.employeeId !== '') {
+    assignedTo = form.employeeId;
+  } else {
+    const targetStaff = String(form.assignedStaff || '').trim().toLowerCase();
+    if (targetStaff) {
+      const matchedEmp = employees.find(e => {
+        const fullName = `${e.first_name || ''} ${e.last_name || ''}`.trim().toLowerCase();
+        const ref = String(e.employee_ref || '').trim().toLowerCase();
+        return (e._id && e._id === form.employeeId) || fullName === targetStaff || ref === targetStaff;
+      });
+      if (matchedEmp?._id) {
+        assignedTo = matchedEmp._id;
+      } else if (existingTask?.assigned_to && !form.assignedStaffChanged) {
+        assignedTo = existingTask.assigned_to._id || existingTask.assigned_to;
+      }
     }
   }
 
@@ -375,109 +286,6 @@ export function toBackendTaskPayload(form, { rooms = [], employees = [], existin
   return payload;
 }
 
-/**
- * Prepares backend task payload for CleaningSchedule form.
- */
-export function toScheduleBackendPayload(form, { rooms = [], employees = [], existingTask = null } = {}) {
-  // 1. Resolve room_id
-  const targetRoomNo = String(form.roomNo || '').trim().toLowerCase();
-  const matchedRoom = rooms.find(r => 
-    (r._id && r._id === form.roomId) ||
-    (r.room_number && String(r.room_number).trim().toLowerCase() === targetRoomNo)
-  );
-
-  let roomId = matchedRoom?._id;
-  if (!roomId && existingTask) {
-    roomId = existingTask.room_id?._id || existingTask.room_id || existingTask.roomId;
-  }
-
-  if (!roomId) {
-    throw new Error(`Room "${form.roomNo}" not found. Please specify a valid room number.`);
-  }
-
-  // 2. Resolve assigned_to
-  const targetStaff = String(form.assignedStaff || '').trim().toLowerCase();
-  let assignedTo = undefined;
-  if (targetStaff && targetStaff !== 'unassigned') {
-    const matchedEmp = employees.find(e => {
-      const fullName = `${e.first_name || ''} ${e.last_name || ''}`.trim().toLowerCase();
-      const ref = String(e.employee_ref || '').trim().toLowerCase();
-      return (e._id && e._id === form.employeeId) || fullName === targetStaff || ref === targetStaff;
-    });
-    if (matchedEmp?._id) {
-      assignedTo = matchedEmp._id;
-    } else if (existingTask?.assigned_to) {
-      assignedTo = existingTask.assigned_to._id || existingTask.assigned_to;
-    }
-  }
-
-  // 3. Task type
-  const taskType = TASK_TYPE_UI_TO_BACKEND[form.taskType || form.cleaningType] || 'CLEANING';
-
-  // 4. Priority
-  const priority = PRIORITY_UI_TO_BACKEND[form.priority] || 'MEDIUM';
-
-  // 5. Status
-  let status = STATUS_UI_TO_BACKEND[form.status] || 'PENDING';
-  if (status === 'PENDING' && assignedTo) {
-    status = 'ASSIGNED';
-  }
-
-  // 6. Scheduling Timestamps (startTime, endTime)
-  const todayDate = new Date().toISOString().split('T')[0];
-  let scheduledAt = undefined;
-  if (form.startTime) {
-    const parsedStart = new Date(`${todayDate}T${form.startTime}:00`);
-    if (!isNaN(parsedStart.getTime())) {
-      scheduledAt = parsedStart.toISOString();
-    }
-  } else if (existingTask?.scheduled_at) {
-    scheduledAt = existingTask.scheduled_at;
-  }
-
-  let scheduledEndAt = undefined;
-  if (form.endTime) {
-    const parsedEnd = new Date(`${todayDate}T${form.endTime}:00`);
-    if (!isNaN(parsedEnd.getTime())) {
-      scheduledEndAt = parsedEnd.toISOString();
-    }
-  } else if (existingTask?.scheduled_end_at) {
-    scheduledEndAt = existingTask.scheduled_end_at;
-  }
-
-  // Actual execution timestamps
-  let startedAt = undefined;
-  if (status === 'IN_PROGRESS') {
-    startedAt = existingTask?.started_at || new Date().toISOString();
-  }
-
-  let completedAt = undefined;
-  if (status === 'COMPLETED' || status === 'VERIFIED') {
-    completedAt = existingTask?.completed_at || new Date().toISOString();
-  }
-
-  // 7. Notes - preserve Delayed tag if status was Delayed
-  let notes = form.notes || '';
-  if (form.status === 'Delayed') {
-    notes = `[Delayed] ${notes}`.trim();
-  }
-
-  const payload = {
-    room_id: roomId,
-    task_type: taskType,
-    priority,
-    status,
-    notes
-  };
-
-  if (assignedTo) payload.assigned_to = assignedTo;
-  if (scheduledAt) payload.scheduled_at = scheduledAt;
-  if (scheduledEndAt) payload.scheduled_end_at = scheduledEndAt;
-  if (startedAt) payload.started_at = startedAt;
-  if (completedAt) payload.completed_at = completedAt;
-
-  return payload;
-}
 
 /**
  * Transforms backend inspections, tasks, rooms, and employees to the Inspection.jsx UI table records.

@@ -1,19 +1,19 @@
-import mongoose from 'mongoose';
+import { getHotelConnection } from './connectionManager.js';
 
 /**
- * Executes a callback within a MongoDB session transaction on the shared application database.
+ * Executes a callback within a MongoDB session transaction.
  * Falls back safely if the underlying MongoDB deployment does not support transactions.
  * 
- * @param {string|Function} hotelIdOrCallback - The hotelId or the callback if hotelId is omitted
- * @param {Function} [maybeCallback] - The operations to perform. Receives the session object.
+ * @param {string} hotelId - The hotel tenant ID
+ * @param {Function} callback - The operations to perform. Receives the session object.
  * @returns {Promise<any>}
  */
-export const withTransaction = async (hotelIdOrCallback, maybeCallback) => {
-  const callback = typeof hotelIdOrCallback === 'function' ? hotelIdOrCallback : maybeCallback;
+export const withTransaction = async (hotelId, callback) => {
+  const connection = await getHotelConnection(hotelId);
   
   let session = null;
   try {
-    session = await mongoose.startSession();
+    session = await connection.startSession();
   } catch (err) {
     return await callback(null);
   }

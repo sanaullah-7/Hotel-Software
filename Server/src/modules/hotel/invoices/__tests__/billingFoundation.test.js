@@ -130,7 +130,8 @@ describe("Phase 6 Step 2: Billing Foundation & Contract", () => {
       expect(res.body.data.reservation_id.booking_ref).toBe(reservationA.booking_ref);
       expect(res.body.data.guest_id._id).toBe(guestA._id);
       expect(res.body.data.status).toBe("OPEN");
-      expect(res.body.data.balance).toBe(0);
+      // Auto-generated room accommodation charge for 4 nights @ 250 = 1000
+      expect(res.body.data.balance).toBe(1000);
 
       folioA = res.body.data;
     });
@@ -361,8 +362,8 @@ describe("Phase 6 Step 2: Billing Foundation & Contract", () => {
       const folCheck = await request(app)
         .get(`/api/v1/hotel/folios/${folioA._id}`)
         .set("Authorization", `Bearer ${adminTokenA}`);
-      // Initial balance from prior invoice (1242) + new invoice (550) - payment (200) = 1592
-      expect(folCheck.body.data.balance).toBe(1242 + 350);
+      // Initial balance from room charge (1000) + prior invoice (1242) + new invoice (550) - payment (200) = 2592
+      expect(folCheck.body.data.balance).toBe(1000 + 1242 + 350);
     });
 
     it("should enforce overpayment guard", async () => {

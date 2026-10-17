@@ -3,7 +3,7 @@ import KPICard from '../../../components/common/KPICard';
 
 export default function EventSummaryCards({ cards }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 w-full mb-2">
+    <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 w-full mb-1">
       {cards.map((card) => (
         <KPICard
           key={card.id}
@@ -14,7 +14,7 @@ export default function EventSummaryCards({ cards }) {
           iconBg={card.iconBg}
           iconColor={card.iconColor}
           variant="badge"
-          className="hover:border-[var(--primary-main)]/30"
+          className="hover:border-[#1b7f43]/40"
         />
       ))}
     </div>

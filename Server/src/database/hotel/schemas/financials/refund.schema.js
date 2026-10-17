@@ -2,14 +2,10 @@ import mongoose from 'mongoose';
 
 const refundSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     refund_ref: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     payment_id: {
@@ -37,6 +33,21 @@ const refundSchema = new mongoose.Schema(
       default: 'PROCESSED',
       required: true,
     },
+    refund_method: {
+      type: String,
+      enum: ['CASH', 'CREDIT_CARD', 'BANK_TRANSFER', 'WALLET', 'OTHER', 'ORIGINAL_METHOD'],
+      default: 'ORIGINAL_METHOD',
+    },
+    cash_shift_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'CashShift',
+      default: null,
+    },
+    staff_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Account',
+      default: null,
+    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
@@ -46,7 +57,7 @@ const refundSchema = new mongoose.Schema(
 // Indexes
 refundSchema.index({ payment_id: 1 });
 refundSchema.index({ date: -1 });
-
-refundSchema.index({ hotelId: 1, refund_ref: 1 }, { unique: true });
+refundSchema.index({ cash_shift_id: 1 });
+refundSchema.index({ staff_id: 1 });
 
 export default refundSchema;

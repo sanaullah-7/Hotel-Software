@@ -10,6 +10,7 @@ export const authService = {
       localStorage.setItem("isAuthenticated", "true");
       if (user?.fullName) localStorage.setItem("fullName", user.fullName);
       if (user?.email) localStorage.setItem("email", user.email);
+      if (user?.hotelName) localStorage.setItem("hotelName", user.hotelName);
     }
     return res;
   },
@@ -24,6 +25,19 @@ export const authService = {
       payload.phone = phone.trim();
     }
     return api.post("/auth/register", payload);
+  },
+
+  registerHotel: async ({ fullName, email, phone, password, hotelName, address, city, subscriptionPlan }) => {
+    return api.post("/auth/register-hotel", {
+      fullName: fullName?.trim(),
+      email: email?.trim()?.toLowerCase(),
+      phone: phone && phone.trim() ? phone.trim() : undefined,
+      password,
+      hotelName: hotelName?.trim(),
+      address: address?.trim() || `${hotelName?.trim()} Main Road`,
+      city: city?.trim() || "Karachi",
+      subscriptionPlan: subscriptionPlan || "STANDARD",
+    });
   },
 
   onboard: async ({ property_name, address, city }) => {

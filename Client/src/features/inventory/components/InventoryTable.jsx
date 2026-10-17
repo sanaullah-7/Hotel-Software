@@ -115,8 +115,6 @@ export default function InventoryTable({
                       </span>
                       <div className="flex items-center gap-1 mt-0.5 text-[10px] text-gray-500 font-mono">
                         <span className="truncate">{item.sku}</span>
-                        <span>•</span>
-                        <span className="truncate">{item.id}</span>
                       </div>
                     </div>
                   </td>

@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const notificationSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     recipient_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Employee', // Could also be a guest, depending on system usage

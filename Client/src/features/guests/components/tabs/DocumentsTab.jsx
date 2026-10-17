@@ -11,8 +11,9 @@ import {
   MeetingRoomOutlined,
   CalendarTodayOutlined,
   ChevronLeft,
-  ChevronRight,
-  BadgeOutlined
+  BadgeOutlined,
+  OpenInNewOutlined,
+  Close
 } from '@mui/icons-material';
 import AddDocumentModal from '../AddDocumentModal';
 
@@ -281,81 +282,110 @@ export default function DocumentsTab({
         />
       )}
 
-      {/* View Document Modal */}
+      {/* Image Viewer Lightbox Modal */}
       {viewingDoc && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/80 backdrop-blur-sm animate-fade-in"
           onClick={() => setViewingDoc(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-[500px] overflow-hidden flex flex-col border border-gray-100"
+            className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[92vh] overflow-hidden flex flex-col border border-gray-100 animate-scale-in"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-[#1b7f43] px-6 py-4 flex items-center justify-between text-white">
-              <h3 className="font-bold text-base">Document Details</h3>
-              <button
-                onClick={() => setViewingDoc(null)}
-                aria-label="Close"
-                className="text-white/80 hover:text-white p-1 rounded-full"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="p-6 space-y-3.5 text-xs text-gray-700">
-              <div className="p-3 bg-gray-50 rounded-xl space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-400 font-medium">Form / Document #</span>
-                  <span className="font-mono font-bold text-gray-900">{viewingDoc.formNo || viewingDoc.id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400 font-medium">Guest Name</span>
-                  <span className="font-bold text-gray-900">{guest.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400 font-medium">Document Type</span>
-                  <span className="font-semibold text-gray-800">{viewingDoc.idType}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400 font-medium">Document / ID Number</span>
-                  <span className="font-mono font-bold text-gray-900">{viewingDoc.idNumber}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400 font-medium">Allocated Room</span>
-                  <span className="font-semibold text-gray-800">Room {viewingDoc.room}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400 font-medium">Date</span>
-                  <span className="text-gray-700">{viewingDoc.date}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-400 font-medium">Verification Status</span>
-                  {getStatusBadge(viewingDoc.status)}
+            {/* Modal Header */}
+            <div className="bg-[#1b7f43] px-5 py-3.5 flex items-center justify-between text-white">
+              <div className="flex items-center gap-2.5">
+                <BadgeOutlined sx={{ fontSize: 20 }} />
+                <div>
+                  <h3 className="font-bold text-sm tracking-wide flex items-center gap-2">
+                    <span>{viewingDoc.idType || 'Document'}</span>
+                    <span className="text-[11px] font-normal text-emerald-100 bg-white/15 px-2 py-0.5 rounded-full">
+                      {viewingDoc.formNo || viewingDoc.id}
+                    </span>
+                  </h3>
+                  <p className="text-[11px] text-emerald-100">
+                    {guest?.name || viewingDoc.name} • {viewingDoc.idNumber && viewingDoc.idNumber !== 'N/A' ? `ID: ${viewingDoc.idNumber}` : 'Document View'}
+                  </p>
                 </div>
               </div>
 
-              
-              {viewingDoc.notes && (
-                <div className="p-3 bg-emerald-50/40 rounded-xl border border-emerald-100">
-                  <span className="text-gray-500 font-bold block mb-1">Notes:</span>
-                  <p className="text-gray-700">{viewingDoc.notes}</p>
-                </div>
-              )}
-
-              {viewingDoc.cnicImage && (
-                <div className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex flex-col items-center">
-                  <span className="text-gray-500 font-bold block mb-2 w-full text-left">Document Image:</span>
-                  <img src={viewingDoc.cnicImage} alt="CNIC Document" className="max-h-64 object-contain rounded border shadow-sm" />
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="flex items-center gap-1.5">
+                {viewingDoc.imageUrl && (
+                  <>
+                    <a
+                      href={viewingDoc.imageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition text-xs flex items-center gap-1"
+                      title="Open full size in new tab"
+                    >
+                      <OpenInNewOutlined sx={{ fontSize: 16 }} />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const w = window.open('');
+                        w.document.write(`<img src="${viewingDoc.imageUrl}" style="max-width:100%;height:auto;" onload="window.print();window.close()" />`);
+                        w.document.close();
+                      }}
+                      className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition text-xs cursor-pointer"
+                      title="Print image"
+                    >
+                      <PrintOutlined sx={{ fontSize: 16 }} />
+                    </button>
+                  </>
+                )}
                 <button
+                  type="button"
                   onClick={() => setViewingDoc(null)}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 transition cursor-pointer"
+                  aria-label="Close"
+                  className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white transition text-xs cursor-pointer ml-1"
                 >
-                  Close
+                  <Close sx={{ fontSize: 18 }} />
                 </button>
               </div>
+            </div>
+
+            {/* Modal Body - Image Preview */}
+            <div className="p-4 sm:p-6 bg-gray-950/5 flex flex-col items-center justify-center min-h-[300px] max-h-[calc(92vh-120px)] overflow-auto">
+              {viewingDoc.imageUrl ? (
+                <div className="flex flex-col items-center justify-center w-full">
+                  <img
+                    src={viewingDoc.imageUrl}
+                    alt={viewingDoc.name || viewingDoc.idType}
+                    className="max-h-[66vh] max-w-full object-contain rounded-xl shadow-lg border border-gray-200 bg-white"
+                  />
+                  {viewingDoc.notes && (
+                    <p className="mt-3 text-xs text-gray-500 italic text-center max-w-lg">
+                      {viewingDoc.notes}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12 text-center text-gray-400">
+                  <DescriptionOutlined sx={{ fontSize: 54 }} className="text-gray-300 mb-2" />
+                  <p className="font-bold text-gray-700 text-sm">No Preview Image Available</p>
+                  <p className="text-xs text-gray-400 mt-1 max-w-sm">
+                    This document record does not have an uploaded image file attached.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
+              <div className="flex items-center gap-3">
+                <span>Room: <strong className="text-gray-800">{viewingDoc.room || '101'}</strong></span>
+                <span>Date: <strong className="text-gray-800">{viewingDoc.date || 'Today'}</strong></span>
+                <span>Status: <strong className="text-emerald-700">{viewingDoc.status || 'Verified'}</strong></span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingDoc(null)}
+                className="px-4 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold rounded-lg transition cursor-pointer text-xs"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

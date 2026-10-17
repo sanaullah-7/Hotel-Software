@@ -19,6 +19,9 @@ export const roomService = {
   createRoom: (data) => api.post("/hotel/rooms", data),
   updateRoom: (id, data) => api.put(`/hotel/rooms/${id}`, data),
   deleteRoom: (id) => api.delete(`/hotel/rooms/${id}`),
+
+  // Tape Chart
+  getTapeChart: (params, options) => api.get("/hotel/rooms/tape-chart", params, options),
 };
 
 export default roomService;

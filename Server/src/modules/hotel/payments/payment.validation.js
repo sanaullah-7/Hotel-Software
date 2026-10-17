@@ -10,4 +10,5 @@ export const createPaymentSchema = Joi.object({
   }),
   payment_method: Joi.string().valid("CASH", "CREDIT_CARD", "BANK_TRANSFER", "WALLET", "OTHER").required(),
   transaction_id: Joi.string().allow("", null).max(100),
+  cash_shift_id: Joi.string().hex().length(24).optional().allow(null),
 }).or("folio_id", "invoice_id");

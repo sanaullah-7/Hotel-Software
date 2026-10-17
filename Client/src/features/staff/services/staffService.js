@@ -7,6 +7,7 @@ export const staffService = {
   updateEmployee: (id, data) => api.put(`/hotel/employees/${id}`, data),
   deleteEmployee: (id) => api.delete(`/hotel/employees/${id}`),
   getDepartments: (params) => api.get('/hotel/departments', params),
+  createDepartment: (data) => api.post('/hotel/departments', data),
 
   // Leave Requests API
   getLeaveRequests: (params) => api.get('/hotel/leave-requests', params),

@@ -137,14 +137,8 @@ export default function AddGuestChargeModal({
     });
     setErrors({});
 
-    // Async background refresh from backend API
-    inventoryService.getInventoryItems({ limit: 100 })
-      .then((res) => {
-        const rawItems = res?.data || [];
-        const adapted = rawItems.map(adaptInventoryItemToUI).filter(Boolean);
-        if (adapted.length > 0) setInventoryItems(adapted);
-      })
-      .catch(() => {});
+    // Initial load for active room
+    loadInventoryForRoom(bRoom);
 
     api.get('/hotel/reservations', { limit: 100 })
       .then((res) => {
@@ -152,14 +146,18 @@ export default function AddGuestChargeModal({
         if (Array.isArray(rawRes) && rawRes.length > 0) {
           const backendActive = rawRes
             .filter(r => r.status === 'CHECKED_IN' || r.status === 'Checked In' || isCheckedIn(r))
-            .map(r => ({
-              id: r._id || r.id,
-              guestId: r.guest_id?._id || r.guest_id || r.primary_guest_id,
-              name: r.guest_id?.first_name ? `${r.guest_id.first_name} ${r.guest_id.last_name || ''}`.trim() : (r.name || r.guestName || 'Guest'),
-              roomNo: r.room_id?.room_number || r.room_number || r.roomNo || '—',
-              roomNumber: r.room_id?.room_number || r.room_number || r.roomNo || '—',
-              status: r.status
-            }));
+            .map(r => {
+              const rRoom = r.room_number || r.room_id?.room_number || r.rooms?.[0]?.room_id?.room_number || r.roomNo || (typeof r.room === 'string' ? r.room : '') || '';
+              const cleanRoom = rRoom && rRoom !== '—' && rRoom !== '-' ? String(rRoom).replace(/^Room\s*/i, '').trim() : '';
+              return {
+                id: r._id || r.id,
+                guestId: r.guest_id?._id || r.guest_id || r.primary_guest_id,
+                name: r.guest_id?.first_name ? `${r.guest_id.first_name} ${r.guest_id.last_name || ''}`.trim() : (r.name || r.guestName || 'Guest'),
+                roomNo: cleanRoom || '—',
+                roomNumber: cleanRoom || '—',
+                status: r.status
+              };
+            });
           if (backendActive.length > 0) {
             setActiveStays(backendActive);
           }
@@ -167,6 +165,33 @@ export default function AddGuestChargeModal({
       })
       .catch(() => {});
   }, [open, prefilledData]);
+
+  const loadInventoryForRoom = (roomNum) => {
+    const cleanR = roomNum && roomNum !== '—' && roomNum !== '-' ? String(roomNum).replace(/^Room\s*/i, '').trim() : '';
+    if (!cleanR) {
+      inventoryService.getInventoryItems({ limit: 100 })
+        .then((res) => {
+          const rawItems = res?.data || [];
+          const adapted = rawItems.map(adaptInventoryItemToUI).filter(Boolean);
+          if (adapted.length > 0) setInventoryItems(adapted);
+        })
+        .catch(() => {});
+      return;
+    }
+
+    // Fetch stock assigned strictly to this specific room
+    inventoryService.getInventoryItems({ room_number: cleanR, limit: 100 })
+      .then((res) => {
+        const rawItems = res?.data || [];
+        const adapted = rawItems.map(adaptInventoryItemToUI).filter(Boolean);
+        const roomSpecific = adapted.filter((it) => {
+          const itemRoom = String(it.roomNumber || it.room_number || it.room || '').replace(/^Room\s*/i, '').trim();
+          return itemRoom === cleanR || (it.location && it.location.toLowerCase().includes(`room ${cleanR.toLowerCase()}`));
+        });
+        setInventoryItems(roomSpecific);
+      })
+      .catch(() => {});
+  };
 
   const handleBookingSelect = (bookingId) => {
     if (!bookingId) {
@@ -177,6 +202,7 @@ export default function AddGuestChargeModal({
         guestName: '',
         roomNumber: ''
       }));
+      loadInventoryForRoom('');
       return;
     }
     const target = activeStays.find((b) => String(b.id) === String(bookingId));
@@ -189,6 +215,7 @@ export default function AddGuestChargeModal({
         guestName: target.name || target.guestName || 'Guest',
         roomNumber: bRoom
       }));
+      loadInventoryForRoom(bRoom);
       setNotice('');
       if (errors.bookingId) {
         setErrors((prev) => ({ ...prev, bookingId: undefined }));
@@ -283,7 +310,7 @@ export default function AddGuestChargeModal({
       amount: totalAmount,
       description: `${formData.itemName.trim()} (${formData.chargeType})`,
       status: formData.status,
-      date: 'Today',
+      date: new Date().toISOString(),
       reportedDate: new Date().toISOString().split('T')[0],
       folioId: `FOL-${formData.roomNumber}`,
       notes: formData.notes.trim(),
@@ -299,7 +326,9 @@ export default function AddGuestChargeModal({
       onClose();
     } catch (err) {
       console.error('Failed to post guest charge:', err);
-      const msg = err.response?.data?.message || err.message || 'Failed to post guest charge.';
+      const details = err.response?.data?.error?.details || err.response?.data?.details;
+      const detailStr = Array.isArray(details) ? details.join(', ') : (typeof details === 'string' ? details : '');
+      const msg = detailStr || err.response?.data?.message || err.message || 'Failed to post guest charge.';
       setApiError(msg);
     } finally {
       setSubmitting(false);
@@ -451,12 +480,20 @@ export default function AddGuestChargeModal({
             {(formData.chargeType === 'Consumption' || formData.chargeType === 'Damage') && (
               <div className="p-2.5 bg-emerald-50/50 rounded-lg border border-emerald-100">
                 <span className="text-[10.5px] font-bold text-[#1b7f43] block mb-1.5">
-                  Link to Hotel Inventory Stock (Auto-pricing):
+                  {formData.roomNumber && formData.roomNumber !== '—'
+                    ? `Stock & Assets Assigned to Room ${formData.roomNumber} (${inventoryItems.length} items):`
+                    : 'Link to Hotel Inventory Stock (Auto-pricing):'}
                 </span>
                 <FormControl fullWidth size="small" sx={muiSelectSx}>
-                  <InputLabel>Select Hotel Stock Item</InputLabel>
+                  <InputLabel>
+                    {formData.roomNumber && formData.roomNumber !== '—'
+                      ? `Select Room ${formData.roomNumber} Stock Item`
+                      : 'Select Hotel Stock Item'}
+                  </InputLabel>
                   <Select
-                    label="Select Hotel Stock Item"
+                    label={formData.roomNumber && formData.roomNumber !== '—'
+                      ? `Select Room ${formData.roomNumber} Stock Item`
+                      : 'Select Hotel Stock Item'}
                     value={formData.selectedInventoryId}
                     onChange={(e) => handleInventoryItemSelect(e.target.value)}
                   >
@@ -468,6 +505,11 @@ export default function AddGuestChargeModal({
                     ))}
                   </Select>
                 </FormControl>
+                {formData.roomNumber && formData.roomNumber !== '—' && inventoryItems.length === 0 && (
+                  <p className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded border border-amber-200 mt-2">
+                    No pre-registered inventory assets found for Room {formData.roomNumber}. Select "Custom / Unlisted Item" to enter description & price manually.
+                  </p>
+                )}
               </div>
             )}
 

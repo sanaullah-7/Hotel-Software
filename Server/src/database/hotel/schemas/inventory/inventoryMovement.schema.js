@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const inventoryMovementSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     item_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'InventoryItem',

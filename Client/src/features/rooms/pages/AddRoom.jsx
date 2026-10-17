@@ -130,6 +130,7 @@ export default function AddRoom() {
         floor: formData.floorNumber || '1',
         status: formData.roomStatus === 'Available' ? 'AVAILABLE' : (formData.roomStatus === 'Occupied' ? 'OCCUPIED' : 'MAINTENANCE'),
         housekeepingStatus: formData.housekeepingStatus === 'Clean' ? 'CLEAN' : (formData.housekeepingStatus === 'Dirty' ? 'DIRTY' : 'INSPECTED'),
+        contactMobile: formData.contactMobile,
       });
 
       const res = await roomService.createRoom(payload);

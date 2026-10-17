@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import request from "supertest";
 import crypto from "crypto";
+import mongoose from "mongoose";
 import app from "../../../../app.js";
 import { connectPlatformDB, closePlatformDB } from "../../../../database/platform/platformConnection.js";
-import { closeAllHotelConnections } from "../../../../database/connectionManager.js";
+import { getHotelConnection, closeAllHotelConnections } from "../../../../database/connectionManager.js";
 import { getModel } from "../../../../database/hotel/modelFactory.js";
 
 const randomEmail = (prefix = "res") => `${prefix}_${crypto.randomBytes(4).toString("hex")}@hotel.com`;
@@ -239,6 +240,223 @@ describe("Phase 6: Reservations & Availability Management", () => {
           adults: 1,
         });
       expect(res2.status).toBe(201);
+    });
+
+    it("should reject booking a room if the room is OUT_OF_ORDER", async () => {
+      const connA = await getHotelConnection(hotelA);
+      const Room = await getModel(connA, "Room");
+
+      // Temporarily mark roomA as OUT_OF_ORDER
+      await Room.findByIdAndUpdate(roomA._id, { status: "OUT_OF_ORDER" });
+
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-02-01T14:00:00.000Z",
+          expected_check_out: "2027-02-05T10:00:00.000Z",
+          adults: 1,
+        });
+      expect(res.status).toBe(409);
+      expect(res.body.message).toContain("out of order");
+
+      // Restore roomA status
+      await Room.findByIdAndUpdate(roomA._id, { status: "AVAILABLE" });
+    });
+
+    it("should execute compensating rollback on room lock if subsequent reservation creation fails", async () => {
+      const connA = await getHotelConnection(hotelA);
+      const Room = await getModel(connA, "Room");
+      const Reservation = await getModel(connA, "Reservation");
+
+      // Intentionally cause failure on createReservation by mocking Reservation.create rejection
+      const originalCreate = Reservation.create;
+      Reservation.create = () => {
+        throw new Error("Simulated database failure during Reservation.create");
+      };
+
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-03-01T14:00:00.000Z",
+          expected_check_out: "2027-03-05T10:00:00.000Z",
+          adults: 1,
+        });
+      expect(res.status).toBe(500);
+
+      // Verify compensating cleanup: roomA active_bookings must NOT contain the failed date interval
+      const updatedRoom = await Room.findById(roomA._id);
+      const lingeringBooking = (updatedRoom.active_bookings || []).find(
+        (b) => new Date(b.check_in).toISOString() === "2027-03-01T14:00:00.000Z"
+      );
+      expect(lingeringBooking).toBeUndefined();
+
+      // Restore Reservation.create
+      Reservation.create = originalCreate;
+    });
+
+    it("Test A & B: should preserve existing room locks even when another booking attempt on the room fails", async () => {
+      const connA = await getHotelConnection(hotelA);
+      const Room = await getModel(connA, "Room");
+      const Reservation = await getModel(connA, "Reservation");
+
+      const existingLockId = new mongoose.Types.ObjectId();
+      const existingResId = new mongoose.Types.ObjectId();
+      const existingCheckIn = new Date("2027-04-01T14:00:00.000Z");
+      const existingCheckOut = new Date("2027-04-05T10:00:00.000Z");
+
+      // Inject a pre-existing active booking lock
+      await Room.findByIdAndUpdate(roomA._id, {
+        $push: {
+          active_bookings: {
+            _id: existingLockId,
+            reservation_id: existingResId,
+            check_in: existingCheckIn,
+            check_out: existingCheckOut,
+          },
+        },
+      });
+
+      // Inject failure on Reservation.create for a subsequent request
+      const originalCreate = Reservation.create;
+      Reservation.create = () => {
+        throw new Error("Simulated failure during concurrent booking");
+      };
+
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-04-10T14:00:00.000Z",
+          expected_check_out: "2027-04-15T10:00:00.000Z",
+          adults: 1,
+        });
+
+      Reservation.create = originalCreate;
+      expect(res.status).toBe(500);
+
+      // Verify the pre-existing lock is completely preserved
+      const updatedRoom = await Room.findById(roomA._id);
+      const preservedLock = (updatedRoom.active_bookings || []).find(
+        (b) => b._id.toString() === existingLockId.toString()
+      );
+      expect(preservedLock).toBeDefined();
+      expect(preservedLock.reservation_id.toString()).toBe(existingResId.toString());
+
+      // Clean up injected pre-existing lock
+      await Room.findByIdAndUpdate(roomA._id, {
+        $pull: { active_bookings: { _id: existingLockId } },
+      });
+    });
+
+    it("Test C: should clean up partial reservation write if ReservationRoom creation fails", async () => {
+      const connA = await getHotelConnection(hotelA);
+      const Room = await getModel(connA, "Room");
+      const Reservation = await getModel(connA, "Reservation");
+      const ReservationRoom = await getModel(connA, "ReservationRoom");
+
+      // Mock ReservationRoom.create to fail after Reservation is created
+      const originalRoomCreate = ReservationRoom.create;
+      ReservationRoom.create = () => {
+        throw new Error("Simulated database failure during ReservationRoom.create");
+      };
+
+      const checkInStr = "2027-06-01T14:00:00.000Z";
+      const checkOutStr = "2027-06-05T10:00:00.000Z";
+
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: checkInStr,
+          expected_check_out: checkOutStr,
+          adults: 1,
+        });
+
+      ReservationRoom.create = originalRoomCreate;
+      expect(res.status).toBe(500);
+
+      // 1. Room lock must be cleaned up
+      const updatedRoom = await Room.findById(roomA._id);
+      const lingeringLock = (updatedRoom.active_bookings || []).find(
+        (b) => new Date(b.check_in).toISOString() === checkInStr
+      );
+      expect(lingeringLock).toBeUndefined();
+
+      // 2. Partial Reservation document must NOT linger in the database
+      const orphanRes = await Reservation.findOne({
+        expected_check_in: new Date(checkInStr),
+        expected_check_out: new Date(checkOutStr),
+        primary_guest_id: guestA._id,
+      });
+      expect(orphanRes).toBeNull();
+    });
+
+    it("Test D: should preserve a successfully committed reservation against later failure cleanups", async () => {
+      const connA = await getHotelConnection(hotelA);
+      const Room = await getModel(connA, "Room");
+      const Reservation = await getModel(connA, "Reservation");
+
+      // 1. Create a successful reservation on Room A
+      const successRes = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-07-01T14:00:00.000Z",
+          expected_check_out: "2027-07-05T10:00:00.000Z",
+          adults: 1,
+        });
+
+      expect(successRes.status).toBe(201);
+      const committedResId = successRes.body.data.reservation._id;
+
+      // 2. Attempt another reservation that fails during creation
+      const originalCreate = Reservation.create;
+      Reservation.create = () => {
+        throw new Error("Simulated failure during subsequent reservation attempt");
+      };
+
+      const failRes = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-07-10T14:00:00.000Z",
+          expected_check_out: "2027-07-15T10:00:00.000Z",
+          adults: 1,
+        });
+
+      Reservation.create = originalCreate;
+      expect(failRes.status).toBe(500);
+
+      // 3. Verify committed reservation and its lock are completely intact
+      const preservedRes = await Reservation.findById(committedResId);
+      expect(preservedRes).not.toBeNull();
+      expect(preservedRes.status).toBe("CONFIRMED");
+
+      const updatedRoom = await Room.findById(roomA._id);
+      const committedLock = (updatedRoom.active_bookings || []).find(
+        (b) => b.reservation_id && b.reservation_id.toString() === committedResId.toString()
+      );
+      expect(committedLock).toBeDefined();
     });
   });
 
@@ -560,6 +778,390 @@ describe("Phase 6: Reservations & Availability Management", () => {
         .get(`/api/v1/hotel/reservations/groups/${inHouseGroupId}`)
         .set("Authorization", `Bearer ${adminTokenA}`);
       expect(groupCheck.body.data.status).toBe("CONFIRMED");
+    });
+  });
+
+  describe("Phase 3 Step 4: Future Reservation Room Reassignment", () => {
+    let reassignRoomB;
+
+    beforeAll(async () => {
+      // Create destination room B in hotel A
+      const resRoomB = await request(app)
+        .post("/api/v1/hotel/rooms")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_number: `402_${crypto.randomBytes(2).toString("hex")}`,
+          room_type_id: roomTypeA._id,
+          floor: "4",
+        });
+      reassignRoomB = resRoomB.body.data;
+    });
+
+    it("should successfully reassign a future reservation to an available room and update locks", async () => {
+      const connA = await getHotelConnection(hotelA);
+      const Room = await getModel(connA, "Room");
+      const ReservationRoom = await getModel(connA, "ReservationRoom");
+
+      // 1. Create a reservation on roomA
+      const createRes = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-08-01T14:00:00.000Z",
+          expected_check_out: "2027-08-05T10:00:00.000Z",
+          adults: 1,
+        });
+
+      expect(createRes.status).toBe(201);
+      const reservationId = createRes.body.data.reservation._id;
+
+      // 2. Reassign to roomB
+      const reassignRes = await request(app)
+        .post(`/api/v1/hotel/reservations/${reservationId}/reassign-room`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_id: reassignRoomB._id,
+        });
+
+      expect(reassignRes.status).toBe(200);
+      expect(reassignRes.body.success).toBe(true);
+
+      // 3. Verify ReservationRoom is now assigned to roomB
+      const resRoom = await ReservationRoom.findOne({ reservation_id: reservationId });
+      expect(resRoom.room_id.toString()).toBe(reassignRoomB._id.toString());
+
+      // 4. Verify source roomA lock has been released
+      const updatedSourceRoom = await Room.findById(roomA._id);
+      const sourceLock = (updatedSourceRoom.active_bookings || []).find(
+        (b) => b.reservation_id && b.reservation_id.toString() === reservationId.toString()
+      );
+      expect(sourceLock).toBeUndefined();
+
+      // 5. Verify destination roomB has acquired the lock
+      const updatedDestRoom = await Room.findById(reassignRoomB._id);
+      const destLock = (updatedDestRoom.active_bookings || []).find(
+        (b) => b.reservation_id && b.reservation_id.toString() === reservationId.toString()
+      );
+      expect(destLock).toBeDefined();
+      expect(destLock._id).toBeDefined();
+    });
+
+    it("should reject reassignment if destination room is already booked for overlapping dates", async () => {
+      const connA = await getHotelConnection(hotelA);
+      const Room = await getModel(connA, "Room");
+      const ReservationRoom = await getModel(connA, "ReservationRoom");
+
+      // 1. Create Res 1 on roomB: 2027-09-01 -> 2027-09-05
+      const res1 = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: reassignRoomB._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-09-01T14:00:00.000Z",
+          expected_check_out: "2027-09-05T10:00:00.000Z",
+          adults: 1,
+        });
+      expect(res1.status).toBe(201);
+
+      // 2. Create Res 2 on roomA with overlapping dates: 2027-09-03 -> 2027-09-07
+      const res2 = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-09-03T14:00:00.000Z",
+          expected_check_out: "2027-09-07T10:00:00.000Z",
+          adults: 1,
+        });
+      expect(res2.status).toBe(201);
+      const res2Id = res2.body.data.reservation._id;
+
+      // 3. Attempt to reassign Res 2 to roomB -> must fail with 409 Conflict
+      const conflictReassign = await request(app)
+        .post(`/api/v1/hotel/reservations/${res2Id}/reassign-room`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_id: reassignRoomB._id,
+        });
+
+      expect(conflictReassign.status).toBe(409);
+      expect(conflictReassign.body.error?.message || conflictReassign.body.message).toMatch(/already booked/i);
+
+      // 4. Verify source roomA lock and assignment remain intact
+      const resRoom2 = await ReservationRoom.findOne({ reservation_id: res2Id });
+      expect(resRoom2.room_id.toString()).toBe(roomA._id.toString());
+
+      const sourceRoom = await Room.findById(roomA._id);
+      const sourceLock = (sourceRoom.active_bookings || []).find(
+        (b) => b.reservation_id && b.reservation_id.toString() === res2Id.toString()
+      );
+      expect(sourceLock).toBeDefined();
+    });
+
+    it("should reject reassignment if destination room is OUT_OF_ORDER", async () => {
+      const connA = await getHotelConnection(hotelA);
+      const Room = await getModel(connA, "Room");
+
+      // Mark roomB as OUT_OF_ORDER
+      await Room.findByIdAndUpdate(reassignRoomB._id, { status: "OUT_OF_ORDER" });
+
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-10-01T14:00:00.000Z",
+          expected_check_out: "2027-10-05T10:00:00.000Z",
+          adults: 1,
+        });
+      const reservationId = res.body.data.reservation._id;
+
+      const reassignFail = await request(app)
+        .post(`/api/v1/hotel/reservations/${reservationId}/reassign-room`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_id: reassignRoomB._id,
+        });
+
+      expect(reassignFail.status).toBe(409);
+      expect(reassignFail.body.error?.message || reassignFail.body.message).toMatch(/out of order/i);
+
+      // Restore roomB
+      await Room.findByIdAndUpdate(reassignRoomB._id, { status: "AVAILABLE" });
+    });
+
+    it("should reject future reassignment if reservation is already IN_HOUSE", async () => {
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-11-01T14:00:00.000Z",
+          expected_check_out: "2027-11-05T10:00:00.000Z",
+          adults: 1,
+        });
+      const reservationId = res.body.data.reservation._id;
+
+      // Mark reservation IN_HOUSE
+      const connA = await getHotelConnection(hotelA);
+      const Reservation = await getModel(connA, "Reservation");
+      await Reservation.findByIdAndUpdate(reservationId, { status: "IN_HOUSE" });
+
+      const reassignFail = await request(app)
+        .post(`/api/v1/hotel/reservations/${reservationId}/reassign-room`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_id: reassignRoomB._id,
+        });
+
+      expect(reassignFail.status).toBe(400);
+      expect(reassignFail.body.error?.message || reassignFail.body.message).toMatch(/checked in.*active-stay/i);
+    });
+
+    it("should reject cross-tenant reassignment attempt", async () => {
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: roomA._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-12-01T14:00:00.000Z",
+          expected_check_out: "2027-12-05T10:00:00.000Z",
+          adults: 1,
+        });
+      const reservationId = res.body.data.reservation._id;
+
+      // Hotel B admin attempts to reassign Hotel A's reservation
+      const crossTenant = await request(app)
+        .post(`/api/v1/hotel/reservations/${reservationId}/reassign-room`)
+        .set("Authorization", `Bearer ${adminTokenB}`)
+        .send({
+          room_id: reassignRoomB._id,
+        });
+
+      expect(crossTenant.status).toBe(404);
+    });
+
+    it("should safely reassign one room of a multi-room reservation while preserving unrelated locks sharing the same reservation ID", async () => {
+      const connA = await getHotelConnection(hotelA);
+      const Room = await getModel(connA, "Room");
+      const Reservation = await getModel(connA, "Reservation");
+      const ReservationRoom = await getModel(connA, "ReservationRoom");
+
+      // Create two distinct rooms for the multi-room booking, plus a third destination room
+      const resR1 = await request(app)
+        .post("/api/v1/hotel/rooms")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_number: `601_${crypto.randomBytes(2).toString("hex")}`,
+          room_type_id: roomTypeA._id,
+          floor: "6",
+        });
+      const room1 = resR1.body.data;
+
+      const resR2 = await request(app)
+        .post("/api/v1/hotel/rooms")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_number: `602_${crypto.randomBytes(2).toString("hex")}`,
+          room_type_id: roomTypeA._id,
+          floor: "6",
+        });
+      const room2 = resR2.body.data;
+
+      const resR3 = await request(app)
+        .post("/api/v1/hotel/rooms")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_number: `603_${crypto.randomBytes(2).toString("hex")}`,
+          room_type_id: roomTypeA._id,
+          floor: "6",
+        });
+      const room3 = resR3.body.data;
+
+      // Create reservation initially assigned to room1
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: room1._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-12-10T14:00:00.000Z",
+          expected_check_out: "2027-12-15T10:00:00.000Z",
+          adults: 2,
+        });
+      const reservationId = res.body.data.reservation._id;
+
+      // Add a second room assignment and lock on room2 sharing the SAME reservation_id
+      const resRoom2 = await ReservationRoom.create({
+        reservation_id: reservationId,
+        room_id: room2._id,
+        room_type_id: roomTypeA._id,
+        rate_plan_id: roomTypeA._id, // placeholder
+        adults: 1,
+      });
+
+      const lockId2 = new mongoose.Types.ObjectId();
+      await Room.findByIdAndUpdate(room2._id, {
+        $push: {
+          active_bookings: {
+            _id: lockId2,
+            reservation_id: reservationId,
+            check_in: new Date("2027-12-10T14:00:00.000Z"),
+            check_out: new Date("2027-12-15T10:00:00.000Z"),
+          },
+        },
+      });
+
+      // Find the first ReservationRoom record (for room1)
+      const resRoom1 = await ReservationRoom.findOne({
+        reservation_id: reservationId,
+        room_id: room1._id,
+      });
+
+      // Reassign resRoom1 from room1 to room3
+      const reassignRes = await request(app)
+        .post(`/api/v1/hotel/reservations/${reservationId}/reassign-room`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_id: room3._id,
+          reservation_room_id: resRoom1._id,
+        });
+
+      expect(reassignRes.status).toBe(200);
+
+      // Verify room1's lock was removed
+      const updatedRoom1 = await Room.findById(room1._id);
+      const room1Locks = (updatedRoom1.active_bookings || []).filter(
+        (b) => b.reservation_id && b.reservation_id.toString() === reservationId.toString()
+      );
+      expect(room1Locks).toHaveLength(0);
+
+      // Verify room3 received a unique lock
+      const updatedRoom3 = await Room.findById(room3._id);
+      const room3Locks = (updatedRoom3.active_bookings || []).filter(
+        (b) => b.reservation_id && b.reservation_id.toString() === reservationId.toString()
+      );
+      expect(room3Locks).toHaveLength(1);
+      expect(room3Locks[0]._id.toString()).not.toBe(lockId2.toString());
+
+      // CRITICAL ASSERTION: room2's lock with the SAME reservation_id is PRESERVED!
+      const updatedRoom2 = await Room.findById(room2._id);
+      const room2Locks = (updatedRoom2.active_bookings || []).filter(
+        (b) => b.reservation_id && b.reservation_id.toString() === reservationId.toString()
+      );
+      expect(room2Locks).toHaveLength(1);
+      expect(room2Locks[0]._id.toString()).toBe(lockId2.toString());
+    });
+
+    it("should fail safely if source room lock is missing or does not match dates", async () => {
+      const connA = await getHotelConnection(hotelA);
+      const Room = await getModel(connA, "Room");
+
+      // Create room with booking
+      const resR4 = await request(app)
+        .post("/api/v1/hotel/rooms")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_number: `604_${crypto.randomBytes(2).toString("hex")}`,
+          room_type_id: roomTypeA._id,
+          floor: "6",
+        });
+      const room4 = resR4.body.data;
+
+      const resR5 = await request(app)
+        .post("/api/v1/hotel/rooms")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_number: `605_${crypto.randomBytes(2).toString("hex")}`,
+          room_type_id: roomTypeA._id,
+          floor: "6",
+        });
+      const room5 = resR5.body.data;
+
+      const res = await request(app)
+        .post("/api/v1/hotel/reservations")
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          primary_guest_id: guestA._id,
+          room_id: room4._id,
+          room_type_id: roomTypeA._id,
+          expected_check_in: "2027-12-20T14:00:00.000Z",
+          expected_check_out: "2027-12-25T10:00:00.000Z",
+          adults: 1,
+        });
+      const reservationId = res.body.data.reservation._id;
+
+      // Corrupt/remove the lock on room4
+      await Room.findByIdAndUpdate(room4._id, { $set: { active_bookings: [] } });
+
+      // Attempt reassignment: must fail safely with 409 Conflict without modifying room5
+      const failRes = await request(app)
+        .post(`/api/v1/hotel/reservations/${reservationId}/reassign-room`)
+        .set("Authorization", `Bearer ${adminTokenA}`)
+        .send({
+          room_id: room5._id,
+        });
+
+      expect(failRes.status).toBe(409);
+      expect(failRes.body.error?.message || failRes.body.message).toMatch(/booking lock not found/i);
+
+      // Verify room5 was not locked
+      const checkRoom5 = await Room.findById(room5._id);
+      expect(checkRoom5.active_bookings || []).toHaveLength(0);
     });
   });
 });

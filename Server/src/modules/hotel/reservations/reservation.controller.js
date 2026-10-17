@@ -45,6 +45,14 @@ export const updateReservation = asyncHandler(async (req, res) => {
     .json(new ApiResponse(HTTP_STATUS.OK, reservation, "Reservation updated successfully"));
 });
 
+export const reassignRoom = asyncHandler(async (req, res) => {
+  const reservation = await reservationService.reassignRoom(req.hotelContext, req.params.id, req.body);
+  res
+    .status(HTTP_STATUS.OK)
+    .json(new ApiResponse(HTTP_STATUS.OK, reservation, "Room reassigned successfully"));
+});
+
+
 export const cancelReservation = asyncHandler(async (req, res) => {
   const reservation = await reservationService.cancelReservation(
     req.hotelContext,

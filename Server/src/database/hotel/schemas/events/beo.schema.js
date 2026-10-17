@@ -2,42 +2,73 @@ import mongoose from 'mongoose';
 
 const beoSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     beo_ref: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     event_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Event',
-      required: true,
+      required: false,
+    },
+    title: {
+      type: String,
+      trim: true,
+    },
+    client: {
+      type: String,
+      trim: true,
+    },
+    venue: {
+      type: String,
+      trim: true,
     },
     setup_requirements: {
       type: String,
-      required: true,
+      default: 'Standard banquet layout',
     },
     food_and_beverage: {
+      type: String,
+    },
+    catering: {
       type: String,
     },
     audio_visual: {
       type: String,
     },
+    av_setup: {
+      type: String,
+    },
     schedule: {
       type: String,
     },
+    attendance: {
+      type: String,
+    },
+    total_price: {
+      type: String,
+      default: '$0',
+    },
+    deposit_paid: {
+      type: String,
+      default: '$0',
+    },
+    coordinator: {
+      type: String,
+      default: 'Marcella Dubois (Senior Event Director)',
+    },
     status: {
       type: String,
-      enum: ['DRAFT', 'APPROVED', 'DISTRIBUTED', 'COMPLETED', 'CANCELLED'],
-      default: 'DRAFT',
-      required: true,
+      default: 'Confirmed & Deposit Paid',
+    },
+    status_type: {
+      type: String,
+      default: 'confirmed',
     },
     approved_by: {
-      type: mongoose.Schema.Types.ObjectId, // Client or Manager
+      type: mongoose.Schema.Types.ObjectId,
       ref: 'Employee', 
     },
   },
@@ -48,6 +79,6 @@ const beoSchema = new mongoose.Schema(
 
 // Indexes
 beoSchema.index({ event_id: 1 });
-beoSchema.index({ hotelId: 1, beo_ref: 1 }, { unique: true });
 
 export default beoSchema;
+

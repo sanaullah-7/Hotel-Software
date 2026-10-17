@@ -14,6 +14,7 @@ export const stayService = {
   },
   getStays: (params) => api.get("/hotel/stays", params),
   getStayById: (id) => api.get(`/hotel/stays/${id}`),
+  transferRoom: (stayId, data) => api.post(`/hotel/stays/${stayId}/transfer-room`, data),
 };
 
 export default stayService;

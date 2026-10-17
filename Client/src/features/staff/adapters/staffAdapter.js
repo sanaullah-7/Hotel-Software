@@ -25,9 +25,10 @@ export const staffAdapter = {
 
     const id = (backendEmp._id || backendEmp.id || '').toString();
     const empId = backendEmp.employee_ref || (id ? `EMP-${id.slice(-4).toUpperCase()}` : 'EMP-000');
-    const firstName = backendEmp.first_name || '';
-    const lastName = backendEmp.last_name || '';
-    const fullName = `${firstName} ${lastName}`.trim() || backendEmp.name || 'Staff Member';
+    const firstName = (backendEmp.first_name || '').trim();
+    const rawLastName = (backendEmp.last_name || '').trim();
+    const lastName = (rawLastName === '.' || rawLastName.toLowerCase() === 'null' || rawLastName.toLowerCase() === 'undefined') ? '' : rawLastName;
+    const fullName = [firstName, lastName].filter(Boolean).join(' ').trim() || backendEmp.name || 'Staff Member';
 
     // Department extraction
     let departmentName = 'General';
@@ -73,6 +74,15 @@ export const staffAdapter = {
       joiningDate = backendEmp.joiningDate;
     }
 
+    const shiftTimingMap = {
+      'Morning Shift': '06:00 - 14:00',
+      'Evening Shift': '14:00 - 22:00',
+      'Night Shift': '22:00 - 06:00',
+      'Rotational': 'Rotational Schedule',
+    };
+    const rawShift = (backendEmp.shift || '').trim();
+    const shiftTime = backendEmp.shiftTime || shiftTimingMap[rawShift] || (rawShift ? 'Standard Schedule' : 'N/A');
+
     const emergencyContact = backendEmp.emergency_contact || {};
 
     return {
@@ -97,8 +107,8 @@ export const staffAdapter = {
       rawStatus: backendEmp.status,
       joiningDate,
       address: backendEmp.address || 'N/A',
-      shift: backendEmp.shift || 'N/A',
-      shiftTime: backendEmp.shiftTime || (backendEmp.shift ? `${backendEmp.shift} Shift` : 'N/A'),
+      shift: rawShift || 'N/A',
+      shiftTime,
       gender: backendEmp.gender || '',
       dob: backendEmp.dob || '',
       nationality: backendEmp.nationality || '',

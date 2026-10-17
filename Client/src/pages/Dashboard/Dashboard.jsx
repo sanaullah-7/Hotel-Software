@@ -23,6 +23,7 @@ import {
 import reservationService from '../../services/reservationService';
 import roomService from '../../services/roomService';
 import billingService from '../../services/billingService';
+import dashboardService from '../../services/dashboardService';
 import { toFrontendReservation } from '../../features/reservations/adapters/reservationAdapter';
 import {
   toFrontendInvoiceList,
@@ -43,6 +44,7 @@ export default function Dashboard() {
   const [reservations, setReservations] = useState(() => getReservations());
   const [invoices, setInvoices] = useState(() => getInvoices());
   const [payments, setPayments] = useState(() => getPayments());
+  const [serverMetrics, setServerMetrics] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -51,12 +53,17 @@ export default function Dashboard() {
     setIsLoading(true);
     setError(null);
     try {
-      const [resRes, roomRes, invRes, payRes] = await Promise.allSettled([
+      const [metricsRes, resRes, roomRes, invRes, payRes] = await Promise.allSettled([
+        dashboardService.getDashboardMetrics(),
         reservationService.getReservations({ limit: 100 }),
         roomService.getRooms({ limit: 100 }),
         billingService.getInvoices({ limit: 100 }),
         billingService.getPayments({ limit: 100 }),
       ]);
+
+      if (metricsRes.status === 'fulfilled' && metricsRes.value?.data) {
+        setServerMetrics(metricsRes.value.data);
+      }
 
       // 1. Authoritative Reservations
       if (resRes.status === 'fulfilled') {
@@ -154,19 +161,24 @@ export default function Dashboard() {
     const syncRes = () => {
       setReservations(getReservations());
     };
+    const handleDomainUpdate = () => {
+      fetchDashboardData();
+    };
     window.addEventListener('storage', syncRes);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncRes);
     window.addEventListener(INVOICES_UPDATED_EVENT, syncRes);
     window.addEventListener(PAYMENTS_UPDATED_EVENT, syncRes);
     window.addEventListener(REFUNDS_UPDATED_EVENT, syncRes);
+    window.addEventListener('hotel:data-updated', handleDomainUpdate);
     return () => {
       window.removeEventListener('storage', syncRes);
       window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncRes);
       window.removeEventListener(INVOICES_UPDATED_EVENT, syncRes);
       window.removeEventListener(PAYMENTS_UPDATED_EVENT, syncRes);
       window.removeEventListener(REFUNDS_UPDATED_EVENT, syncRes);
+      window.removeEventListener('hotel:data-updated', handleDomainUpdate);
     };
-  }, []);
+  }, [fetchDashboardData]);
 
   return (
     <div className="animate-fade-in pt-1 pb-4 space-y-3">
@@ -174,6 +186,7 @@ export default function Dashboard() {
       <DashboardMetrics
         reservations={reservations}
         roomInventory={roomInventory}
+        serverMetrics={serverMetrics}
       />
 
       {/* SECOND ROW CARDS / ROOM STATUS */}

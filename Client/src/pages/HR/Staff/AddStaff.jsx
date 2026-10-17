@@ -9,6 +9,7 @@ import CloseIcon from '@mui/icons-material/Close';
 
 import staffService from '../../../features/staff/services/staffService';
 import staffAdapter from '../../../features/staff/adapters/staffAdapter';
+import { fileService } from '../../../services/fileService';
 import { generateEmployeeId } from './components/staffFormStyles';
 import PersonalInfoSection from './components/PersonalInfoSection';
 import EmploymentDetailsSection from './components/EmploymentDetailsSection';
@@ -112,17 +113,57 @@ export default function AddStaff() {
     setFormData((prev) => ({ ...prev, empId: generateEmployeeId() }));
   };
 
+  // Handle department created on-the-fly
+  const handleDepartmentAdded = (newDept) => {
+    if (!newDept) return;
+    setDepartments((prev) => {
+      const exists = prev.some((d) => d._id === newDept._id);
+      if (exists) return prev;
+      return [...prev, newDept].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    });
+    setFormData((prev) => ({ ...prev, department: newDept._id }));
+    if (formErrors.department) {
+      setFormErrors((prev) => ({ ...prev, department: null }));
+    }
+    setSnackbar({
+      open: true,
+      message: `Department "${newDept.name}" created and selected!`,
+      severity: 'success'
+    });
+  };
+
   // File Upload Handlers
-  const processFiles = (files) => {
+  const processFiles = async (files) => {
     const newFiles = files.map((file) => ({
       file,
       id: Math.random().toString(36).substring(7),
       name: file.name,
       size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
       type: file.type,
-      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null
+      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : null,
+      isUploading: true,
+      url: null,
     }));
     setUploadedFiles((prev) => [...prev, ...newFiles]);
+
+    for (const item of newFiles) {
+      try {
+        const res = await fileService.uploadFile(item.file, { folder: 'staff', entity_ref: 'STAFF_DOCUMENT' });
+        if (res?.file_url) {
+          setUploadedFiles((prev) =>
+            prev.map((f) => (f.id === item.id ? { ...f, isUploading: false, url: res.file_url } : f))
+          );
+          if (item.type.startsWith('image/')) {
+            setFormData((prev) => ({ ...prev, avatar: res.file_url }));
+          }
+        }
+      } catch (err) {
+        console.warn('Staff file upload failed:', err);
+        setUploadedFiles((prev) =>
+          prev.map((f) => (f.id === item.id ? { ...f, isUploading: false } : f))
+        );
+      }
+    }
   };
 
   const handleFileSelect = (e) => {
@@ -238,6 +279,7 @@ export default function AddStaff() {
             joiningFocused={joiningFocused}
             setJoiningFocused={setJoiningFocused}
             departments={departments}
+            onDepartmentAdded={handleDepartmentAdded}
           />
 
           {/* SECTION 3 & 5: CONTACT & EMERGENCY DETAILS */}

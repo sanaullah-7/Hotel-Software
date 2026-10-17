@@ -17,14 +17,10 @@ const roomAmenitySchema = new mongoose.Schema(
 
 const roomSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     room_number: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     room_type_id: {
@@ -35,6 +31,11 @@ const roomSchema = new mongoose.Schema(
     floor: {
       type: String,
     },
+    phone: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     status: {
       type: String,
       enum: ['AVAILABLE', 'OCCUPIED', 'MAINTENANCE', 'CLEANING', 'OUT_OF_ORDER'],
@@ -44,7 +45,7 @@ const roomSchema = new mongoose.Schema(
     },
     housekeeping_status: {
       type: String,
-      enum: ['CLEAN', 'DIRTY', 'INSPECTED'],
+      enum: ['CLEAN', 'DIRTY', 'INSPECTED', 'INSPECTING', 'CLEANING', 'OUT_OF_SERVICE'],
       default: 'CLEAN',
       set: (v) => (v ? v.toUpperCase() : v),
     },
@@ -65,6 +66,7 @@ const roomSchema = new mongoose.Schema(
 // Indexes
 roomSchema.index({ room_type_id: 1 });
 roomSchema.index({ status: 1 });
+roomSchema.index({ housekeeping_status: 1, status: 1 });
 
 // Middleware to prevent duplicate extra amenities
 roomSchema.pre('save', function () {
@@ -75,7 +77,5 @@ roomSchema.pre('save', function () {
     }
   }
 });
-
-roomSchema.index({ hotelId: 1, room_number: 1 }, { unique: true });
 
 export default roomSchema;

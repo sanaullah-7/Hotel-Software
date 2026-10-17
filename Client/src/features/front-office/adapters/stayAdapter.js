@@ -311,15 +311,25 @@ export function toFrontendFrontOfficeRows(staysInput, reservationsInput) {
     let roomType = 'Standard';
     let roomFloor = '';
 
+    let housekeepingStatus = 'CLEAN';
     if (Array.isArray(rawRes.rooms) && rawRes.rooms.length > 0) {
       const firstRoom = rawRes.rooms[0];
       if (firstRoom.room_id && typeof firstRoom.room_id === 'object') {
         roomId = firstRoom.room_id._id || '';
         roomNo = firstRoom.room_id.room_number || '—';
         roomFloor = firstRoom.room_id.floor || '';
+        if (firstRoom.room_id.housekeeping_status) {
+          housekeepingStatus = firstRoom.room_id.housekeeping_status;
+        }
       }
       if (firstRoom.room_type_id && typeof firstRoom.room_type_id === 'object') {
         roomType = firstRoom.room_type_id.name || firstRoom.room_type_id.code || 'Standard';
+      }
+    } else if (rawRes.room && typeof rawRes.room === 'object') {
+      roomId = rawRes.room._id || rawRes.room.id || '';
+      roomNo = rawRes.room.room_number || rawRes.room.roomNo || '—';
+      if (rawRes.room.housekeeping_status) {
+        housekeepingStatus = rawRes.room.housekeeping_status;
       }
     }
 
@@ -363,7 +373,7 @@ export function toFrontendFrontOfficeRows(staysInput, reservationsInput) {
       roomType,
       roomFloor,
       roomStatus: 'AVAILABLE',
-      housekeepingStatus: 'CLEAN',
+      housekeepingStatus,
 
       status: uiStatus,
       rawStatus,
@@ -427,6 +437,11 @@ export function toBackendCheckInPayload(frontendData = {}) {
     payload.notes = notes;
   }
 
+  if (frontendData.manager_override || frontendData.override_cleanliness) {
+    payload.manager_override = true;
+    payload.override_cleanliness = true;
+  }
+
   return payload;
 }
 
@@ -454,6 +469,10 @@ export function toBackendCheckOutPayload(frontendData = {}) {
 
   if (notes) {
     payload.notes = notes;
+  }
+
+  if (frontendData.damage_reported) {
+    payload.damage_reported = frontendData.damage_reported;
   }
 
   return payload;

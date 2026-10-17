@@ -12,23 +12,11 @@ const generateRecordRef = () => {
 };
 
 /**
- * Ensures default parking spaces (P-01 to P-30) exist if the hotel has no spaces configured.
+ * Optional default parking spaces seeder (no-op by default so fresh hotels start clean).
  */
-export const ensureDefaultSpaces = async (tenantConn) => {
-  const ParkingSpace = await getModel(tenantConn, "ParkingSpace");
-  const count = await ParkingSpace.countDocuments();
-  if (count === 0) {
-    const defaultSpaces = [];
-    for (let i = 1; i <= 30; i++) {
-      defaultSpaces.push({
-        space_number: `P-${String(i).padStart(2, "0")}`,
-        location: "Main Lot",
-        status: "AVAILABLE",
-        vehicle_type_allowed: "ANY",
-      });
-    }
-    await ParkingSpace.insertMany(defaultSpaces, { ordered: false });
-  }
+export const ensureDefaultSpaces = async (_tenantConn) => {
+  // Fresh hotel starts with clean parking configuration (0 spaces)
+  return;
 };
 
 /**
@@ -36,7 +24,6 @@ export const ensureDefaultSpaces = async (tenantConn) => {
  */
 export const getParkingSpaces = async (tenantConn) => {
   const ParkingSpace = await getModel(tenantConn, "ParkingSpace");
-  await ensureDefaultSpaces(tenantConn);
 
   const spaces = await ParkingSpace.find().sort({ space_number: 1 });
   return spaces.sort((a, b) =>
@@ -232,8 +219,6 @@ export const getParkingRecords = async (tenantConn, query = {}) => {
 export const getParkingMetrics = async (tenantConn) => {
   const ParkingSpace = await getModel(tenantConn, "ParkingSpace");
   const ParkingRecord = await getModel(tenantConn, "ParkingRecord");
-
-  await ensureDefaultSpaces(tenantConn);
 
   const totalSpaces = await ParkingSpace.countDocuments();
   const parkedCars = await ParkingRecord.countDocuments({ status: "PARKED" });

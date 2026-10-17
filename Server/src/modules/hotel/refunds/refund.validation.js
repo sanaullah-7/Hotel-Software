@@ -12,4 +12,6 @@ export const createRefundSchema = Joi.object({
   reason: Joi.string().trim().min(3).max(500).required().messages({
     "any.required": "reason is required",
   }),
+  refund_method: Joi.string().valid("CASH", "CREDIT_CARD", "BANK_TRANSFER", "WALLET", "OTHER", "ORIGINAL_METHOD").optional(),
+  cash_shift_id: Joi.string().hex().length(24).optional().allow(null, ""),
 });

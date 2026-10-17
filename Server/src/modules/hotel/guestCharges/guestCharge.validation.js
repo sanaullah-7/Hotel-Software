@@ -40,7 +40,6 @@ export const createGuestChargeSchema = Joi.object({
   unit_price: Joi.number().min(0).optional(),
   description: Joi.string().trim().max(500).optional().allow("", null),
   amount: Joi.number().min(0).optional(),
-  notes: Joi.string().trim().max(500).optional().allow("", null),
-  date: Joi.date().iso().optional().allow(null),
+  date: Joi.alternatives().try(Joi.date().iso(), Joi.string()).optional().allow(null, ""),
   reference_id: Joi.string().hex().length(24).optional().allow(null, ""),
 }).or("folio_id", "reservation_id", "booking_id", "guest_id", "room_number");

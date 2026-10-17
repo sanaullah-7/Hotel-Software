@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { getModel } from "../../../database/hotel/modelFactory.js";
 import ApiError from "../../../utils/apiError.js";
 import { HTTP_STATUS } from "../../../constants/httpStatusCodes.js";
+import { ROLES } from "../../../constants/roles.js";
 import { asString, parsePagination } from "../../../utils/query.js";
 import crypto from "crypto";
 
@@ -10,13 +11,14 @@ const generateRefundRef = () => {
   return `REF-${Date.now().toString().slice(-6)}${randHex}`;
 };
 
-export const createRefund = async (tenantConn, refundData) => {
+export const createRefund = async (tenantConn, refundData, reqUser = null) => {
   const Payment = await getModel(tenantConn, "Payment");
   const Refund = await getModel(tenantConn, "Refund");
   const Invoice = await getModel(tenantConn, "Invoice");
   const Folio = await getModel(tenantConn, "Folio");
+  const CashShift = await getModel(tenantConn, "CashShift");
 
-  const { payment_id, amount, reason } = refundData;
+  const { payment_id, amount, reason, cash_shift_id } = refundData;
 
   // 1. Validate Payment ID format
   if (!mongoose.Types.ObjectId.isValid(payment_id)) {
@@ -87,8 +89,50 @@ export const createRefund = async (tenantConn, refundData) => {
       await updatedPayment.save({ session: sess || null });
     }
 
-    // 5. Create Refund ledger record
+    // 5. Shift & Cash Attribution for Cash Refunds
+    let activeShiftId = cash_shift_id || null;
+    const specifiedRefundMethod = refundData.refund_method ? String(refundData.refund_method).toUpperCase() : "ORIGINAL_METHOD";
+
+    // A refund affects the cash drawer ONLY when physical cash actually leaves the drawer:
+    // (1) Explicit refund_method is CASH, OR
+    // (2) refund_method is ORIGINAL_METHOD and the original payment method was CASH.
+    const isPhysicalCashPayout =
+      specifiedRefundMethod === "CASH" ||
+      (specifiedRefundMethod === "ORIGINAL_METHOD" && String(updatedPayment.payment_method || "").toUpperCase() === "CASH");
+
+    if (isPhysicalCashPayout && !activeShiftId && reqUser?.id) {
+      const activeShift = await CashShift.findOne({ staff_id: reqUser.id, status: "OPEN" }).session(sess || null);
+      if (activeShift) {
+        activeShiftId = activeShift._id;
+      } else if (reqUser.role === ROLES.HOTEL_USER) {
+        throw new ApiError(
+          HTTP_STATUS.CONFLICT,
+          "No active cash shift found. An active cash drawer shift is required to issue cash refunds."
+        );
+      }
+    }
+
+    if (activeShiftId && isPhysicalCashPayout) {
+      if (!mongoose.Types.ObjectId.isValid(activeShiftId)) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Cash Shift ID format");
+      }
+      const updatedShift = await CashShift.findOneAndUpdate(
+        { _id: activeShiftId, status: "OPEN" },
+        { $inc: { cash_refunds: amount } },
+        { session: sess || null }
+      );
+      if (!updatedShift) {
+        throw new ApiError(
+          HTTP_STATUS.CONFLICT,
+          "Cannot issue cash refund: the cash shift is closed or currently closing."
+        );
+      }
+    }
+
+    // 5b. Create Refund ledger record
     const refund_ref = generateRefundRef();
+    const effectiveRefundMethod = specifiedRefundMethod === "ORIGINAL_METHOD" ? (updatedPayment.payment_method || "OTHER") : specifiedRefundMethod;
+
     const createdRefunds = await Refund.create(
       [
         {
@@ -98,6 +142,9 @@ export const createRefund = async (tenantConn, refundData) => {
           reason,
           date: new Date(),
           status: "PROCESSED",
+          refund_method: effectiveRefundMethod,
+          cash_shift_id: isPhysicalCashPayout ? activeShiftId : null,
+          staff_id: reqUser?.id || null,
         },
       ],
       { session: sess || null }

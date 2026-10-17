@@ -12,8 +12,9 @@ import {
   Menu, MenuItem, IconButton, FormControl, InputLabel, Select, Snackbar, Alert, CircularProgress 
 } from '@mui/material';
 import inventoryService from '../../../services/inventoryService';
+import roomService from '../../../services/roomService';
 import { adaptIncidentToUI, computeIncidentMetrics } from '../adapters/inventoryAdapter';
-import { ROOM_NUMBERS, INVENTORY_CATEGORIES } from './inventoryStore';
+import { INVENTORY_CATEGORIES } from './inventoryStore';
 import IncidentDetailModal from './components/IncidentDetailModal';
 import ReportIncidentModal from './components/ReportIncidentModal';
 import AddGuestChargeModal from './components/AddGuestChargeModal';
@@ -51,6 +52,7 @@ export default function MissingInventory() {
   const navigate = useNavigate();
 
   const [incidents, setIncidents] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -84,10 +86,22 @@ export default function MissingInventory() {
     setError(null);
 
     try {
-      const response = await inventoryService.getIncidents({ limit: 500 });
+      const [response, roomsRes] = await Promise.all([
+        inventoryService.getIncidents({ limit: 500 }),
+        roomService.getRooms({ limit: 200 }).catch(() => null)
+      ]);
       const rawIncidents = response?.data || [];
       const adapted = rawIncidents.map(adaptIncidentToUI).filter(Boolean);
       setIncidents(adapted);
+
+      if (roomsRes) {
+        const loadedRooms = Array.isArray(roomsRes?.data?.rooms)
+          ? roomsRes.data.rooms
+          : Array.isArray(roomsRes?.data)
+            ? roomsRes.data
+            : [];
+        setRooms(loadedRooms);
+      }
     } catch (err) {
       console.error('Failed to load incidents:', err);
       setError(err?.message || 'Failed to load missing inventory incidents. Please check your backend connection.');
@@ -119,6 +133,13 @@ export default function MissingInventory() {
   };
 
   const metrics = computeIncidentMetrics(incidents);
+
+  const roomOptions = Array.from(
+    new Set([
+      ...rooms.map(r => String(r.room_number || r.roomNumber || '')).filter(Boolean),
+      ...incidents.map(i => String(i.roomNumber || '')).filter(Boolean)
+    ])
+  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
   // Filtering
   const filteredIncidents = incidents.filter(inc => {
@@ -360,7 +381,7 @@ export default function MissingInventory() {
                 }}
               >
                 <MenuItem value="All">All Rooms</MenuItem>
-                {ROOM_NUMBERS.map(r => (
+                {roomOptions.map(r => (
                   <MenuItem key={r} value={r}>Room {r}</MenuItem>
                 ))}
               </Select>

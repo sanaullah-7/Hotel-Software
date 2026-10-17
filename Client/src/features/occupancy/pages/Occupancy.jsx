@@ -14,7 +14,10 @@ import {
   EventBusy as EventBusyIcon,
   Block as BlockIcon,
   Refresh as RefreshIcon,
+  Timeline as TimelineIcon,
+  ViewModule as GridViewIcon,
 } from '@mui/icons-material';
+import { Link } from 'react-router-dom';
 import { 
   Box, 
   TextField, 
@@ -324,6 +327,27 @@ export default function Occupancy() {
         </div>
       )}
       
+      {/* VIEW SWITCHER */}
+      <div className="flex items-center justify-between bg-white px-3 py-2 rounded-[6px] border border-gray-100 shadow-2xs mb-1">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-gray-800">Occupancy View</span>
+        </div>
+        <div className="flex items-center bg-gray-100 p-0.5 rounded-md text-xs font-medium">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-white text-[#1b7f43] font-semibold shadow-2xs">
+            <GridViewIcon sx={{ fontSize: 13 }} />
+            <span>Room Cards</span>
+          </span>
+          <Link
+            to="/occupancy/tape-chart"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-gray-600 hover:text-gray-900 transition-colors"
+            title="Switch to Tape Chart Timeline"
+          >
+            <TimelineIcon sx={{ fontSize: 13 }} />
+            <span>Tape Chart</span>
+          </Link>
+        </div>
+      </div>
+
       {/* SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 mt-0.5">
         <div className="bg-white p-2.5 sm:p-3 rounded-[6px] shadow-xs border border-gray-100 flex items-center justify-between">

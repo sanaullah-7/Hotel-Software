@@ -5,8 +5,9 @@ import {
 } from '@mui/material';
 import { Close } from '@mui/icons-material';
 import inventoryService from '../../../../services/inventoryService';
+import roomService from '../../../../services/roomService';
 import { adaptIncidentToBackend } from '../../adapters/inventoryAdapter';
-import { ROOM_NUMBERS, INVENTORY_CATEGORIES } from '../inventoryStore';
+import { INVENTORY_CATEGORIES } from '../inventoryStore';
 
 const muiSelectSx = {
   '& .MuiOutlinedInput-root': {
@@ -32,19 +33,20 @@ export default function ReportIncidentModal({
   onIncidentCreated 
 }) {
   const [allItems, setAllItems] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState('');
 
   const [formData, setFormData] = useState({
     itemName: '',
-    roomNumber: '203',
+    roomNumber: '',
     category: 'Electronics',
     expectedQty: 2,
     quantity: 1,
     unitValue: 25.00,
-    reportedBy: 'Housekeeping (Jane Smith)',
+    reportedBy: 'Housekeeping',
     reason: 'Item missing during room inspection following guest checkout.',
-    assignedTo: 'Housekeeping Supervisor (Sarah M.)',
+    assignedTo: 'Housekeeping Supervisor',
     guestName: '',
     notes: '',
     inventoryItemId: ''
@@ -53,8 +55,24 @@ export default function ReportIncidentModal({
   useEffect(() => {
     if (open) {
       setApiError('');
-      inventoryService.getInventoryItems({ limit: 200 })
-        .then(res => {
+      Promise.all([
+        inventoryService.getInventoryItems({ limit: 200 }),
+        roomService.getRooms({ limit: 200 }).catch(() => null)
+      ])
+        .then(([res, roomsRes]) => {
+          let firstRoom = '';
+          if (roomsRes) {
+            const loadedRooms = Array.isArray(roomsRes?.data?.rooms)
+              ? roomsRes.data.rooms
+              : Array.isArray(roomsRes?.data)
+                ? roomsRes.data
+                : [];
+            setRooms(loadedRooms);
+            if (loadedRooms.length > 0) {
+              firstRoom = String(loadedRooms[0].room_number || loadedRooms[0].roomNumber || '');
+            }
+          }
+
           if (res?.data && Array.isArray(res.data)) {
             setAllItems(res.data);
             if (!prefilledItem && res.data.length > 0) {
@@ -64,8 +82,10 @@ export default function ReportIncidentModal({
                 itemName: f.itemName || res.data[0].name,
                 unitValue: f.unitValue || res.data[0].unit_cost || 25,
                 category: f.category || res.data[0].category || 'General',
-                roomNumber: res.data[0].room_number || f.roomNumber
+                roomNumber: f.roomNumber || res.data[0].room_number || firstRoom
               }));
+            } else if (firstRoom) {
+              setFormData(f => ({ ...f, roomNumber: f.roomNumber || firstRoom }));
             }
           }
         })
@@ -212,9 +232,23 @@ export default function ReportIncidentModal({
                 value={formData.roomNumber} 
                 onChange={e => setFormData({ ...formData, roomNumber: e.target.value })}
               >
-                {ROOM_NUMBERS.map(r => (
-                  <MenuItem key={r} value={r}>Room {r}</MenuItem>
-                ))}
+                {(() => {
+                  const roomOptions = Array.from(
+                    new Set([
+                      ...rooms.map(r => String(r.room_number || r.roomNumber || '')).filter(Boolean),
+                      ...allItems.map(i => String(i.room_number || i.roomNumber || '')).filter(Boolean),
+                      ...(formData.roomNumber ? [formData.roomNumber] : [])
+                    ])
+                  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+                  if (roomOptions.length === 0) {
+                    return <MenuItem disabled value="">No rooms configured</MenuItem>;
+                  }
+
+                  return roomOptions.map(r => (
+                    <MenuItem key={r} value={r}>Room {r}</MenuItem>
+                  ));
+                })()}
               </Select>
             </FormControl>
 

@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const eventResourceSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     event_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Event',

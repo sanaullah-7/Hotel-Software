@@ -115,7 +115,7 @@ export default function PendingHotels() {
                       <div style={{ fontSize: 13 }}>{item.managerName}</div>
                       <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>{item.managerEmail}</div>
                     </td>
-                    <td style={{ fontSize: 13 }}>{item.city}, {item.province}</td>
+                    <td style={{ fontSize: 13 }}>{item.city}{item.province ? `, ${item.province}` : ''}</td>
                     <td>
                       <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 6, background: 'var(--color-primary-light)', color: 'var(--color-primary)', fontWeight: 500 }}>
                         {item.subscriptionPlan}
@@ -174,7 +174,7 @@ export default function PendingHotels() {
             <div style={{ marginBottom: 20 }}>
               {infoItem(Building2, 'Hotel Name',  selected.hotelName)}
               {infoItem(MapPin,   'Address',      selected.address)}
-              {infoItem(MapPin,   'City',         `${selected.city}, ${selected.province}`)}
+              {infoItem(MapPin,   'City',         selected.province ? `${selected.city}, ${selected.province}` : selected.city)}
               {infoItem(Phone,    'Phone',        selected.phone)}
               {infoItem(Mail,     'Email',        selected.email)}
             </div>

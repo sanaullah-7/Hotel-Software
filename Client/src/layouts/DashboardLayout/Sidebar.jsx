@@ -39,23 +39,44 @@ import {
 } from './sidebarConfig';
 import { DropdownSection } from './components/DropdownSection';
 import { NavGroupHeader } from './components/NavGroupHeader';
-import { settingsService } from '../../services/dataService.js';
 
 export default function Sidebar({ mobileOpen = false, onMobileClose }) {
-  const [hotelNameState, setHotelNameState] = useState('Hotel Management');
-  const [hotelLogoState, setHotelLogoState] = useState(null);
-
-  useEffect(() => {
-    let active = true;
-    settingsService.getProfile().then(({ data }) => {
-      if (!active) return;
-      setHotelNameState(data?.property_name || 'Hotel Management');
-      setHotelLogoState(data?.logo_url || null);
-    }).catch(() => {});
-    return () => { active = false; };
-  }, []);
   const location = useLocation();
   const pathname = location.pathname;
+
+  const resolveHotelName = () => {
+    let userObj = null;
+    try {
+      userObj = JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      userObj = null;
+    }
+    return (
+      localStorage.getItem('hotelName') ||
+      userObj?.hotelName ||
+      localStorage.getItem('hotelProperty') ||
+      userObj?.fullName ||
+      localStorage.getItem('fullName') ||
+      null
+    );
+  };
+
+  const [hotelNameState, setHotelNameState] = useState(resolveHotelName);
+  const [hotelLogoState, setHotelLogoState] = useState(localStorage.getItem('hotelLogo') || null);
+
+  useEffect(() => {
+    const handleStorage = () => {
+      setHotelNameState(resolveHotelName());
+      setHotelLogoState(localStorage.getItem('hotelLogo') || null);
+    };
+    handleStorage();
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener('hotelNameChanged', handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('hotelNameChanged', handleStorage);
+    };
+  }, [pathname]);
 
   // Active paths
   const isDashboardActive = pathname === '/dashboard' || pathname === '/' || pathname === '/dashboard/';
@@ -134,18 +155,34 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
           {isOpen ? (
             <span className="text-base sm:text-lg flex flex-wrap items-center justify-center leading-tight">
               {hotelNameState ? (
-                <>
-                  <span className="mr-1">{hotelNameState.split(' ')[0]}</span>
-                  <span className="text-[#1b7f43]">{hotelNameState.split(' ').slice(1).join(' ')}</span>
-                </>
+                (() => {
+                  const parts = hotelNameState.trim().split(/\s+/);
+                  if (parts.length === 1) {
+                    return <span className="text-gray-800 font-bold">{parts[0]}</span>;
+                  }
+                  return (
+                    <>
+                      <span className="mr-1 text-gray-800 font-bold">{parts[0]}</span>
+                      <span className="text-[#1b7f43] font-bold">{parts.slice(1).join(' ')}</span>
+                    </>
+                  );
+                })()
               ) : (
                 <>Hotel<span className="text-[#1b7f43]">Admin</span></>
               )}
             </span>
           ) : (
             !hotelLogoState && (
-              <span className="text-lg text-[#1b7f43]">
-                HA
+              <span className="text-lg font-bold text-[#1b7f43]">
+                {hotelNameState
+                  ? hotelNameState
+                      .trim()
+                      .split(/\s+/)
+                      .map((w) => w[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()
+                  : 'HA'}
               </span>
             )
           )}
@@ -393,7 +430,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             items={restaurantSubItems}
           />
 
-          {/* Events & Banquets */}
+          {/* Events & Bookings */}
           <DropdownSection
             isOpen={isOpen}
             pathname={pathname}
@@ -401,7 +438,7 @@ export default function Sidebar({ mobileOpen = false, onMobileClose }) {
             open={isEventsOpen}
             toggle={() => toggleDropdown(setIsEventsOpen)}
             icon={EventsIcon}
-            label="Events & Banquets"
+            label="Events & Bookings"
             items={eventsSubItems}
           />
 

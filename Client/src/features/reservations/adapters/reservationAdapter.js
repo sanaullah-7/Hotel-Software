@@ -170,7 +170,10 @@ export function toFrontendReservation(backendRes) {
     cancellation_reason: raw.cancellation_reason || raw.cancellationReason || raw.reason || '',
     reason: raw.cancellation_reason || raw.cancellationReason || raw.reason || '',
     cancellationDate: formatDateToYMD(raw.cancelled_at || raw.cancelledAt || raw.cancellationDate || (raw.status === 'CANCELLED' ? (raw.updated_at || raw.updatedAt) : '')),
-    avatar: raw.avatar || `https://i.pravatar.cc/150?u=${raw._id || guestId || 'guest'}`,
+    actualCheckOut: formatDateToYMD(raw.actual_check_out || raw.actualCheckOut || (raw.status === 'CHECKED_OUT' ? (raw.updated_at || raw.updatedAt) : '')),
+    updatedAt: formatDateToYMD(raw.updated_at || raw.updatedAt || ''),
+    totalPrice: raw.total_price !== undefined ? Number(raw.total_price) : (raw.totalPrice !== undefined ? Number(raw.totalPrice) : undefined),
+    avatar: raw.avatar || guestObj?.avatar || guestObj?.photo_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=1b7f43&color=fff`,
     payment: raw.payment || 'Unpaid',
     dues: raw.dues !== undefined ? Number(raw.dues) : (raw.folio_balance !== undefined ? Number(raw.folio_balance) : (backendRes?.folio_balance !== undefined ? Number(backendRes.folio_balance) : undefined)),
     folio_balance: raw.folio_balance !== undefined ? Number(raw.folio_balance) : (backendRes?.folio_balance !== undefined ? Number(backendRes.folio_balance) : undefined),
@@ -214,12 +217,31 @@ export function toBackendReservationPayload(frontendForm, options = {}) {
     payload.primary_guest_id = String(guestId).trim();
   }
 
+  if (frontendForm.email || frontendForm.guestEmail) {
+    payload.guest_email = String(frontendForm.email || frontendForm.guestEmail).trim().toLowerCase();
+  }
+  if (frontendForm.firstName || frontendForm.first_name) {
+    payload.first_name = String(frontendForm.firstName || frontendForm.first_name).trim();
+  }
+  if (frontendForm.lastName || frontendForm.last_name) {
+    payload.last_name = String(frontendForm.lastName || frontendForm.last_name).trim();
+  }
+  if (frontendForm.mobile || frontendForm.phone || frontendForm.guestPhone) {
+    payload.guest_phone = String(frontendForm.mobile || frontendForm.phone || frontendForm.guestPhone).trim();
+  }
+  if (frontendForm.nationality) {
+    payload.nationality = String(frontendForm.nationality).trim();
+  }
+  if (frontendForm.idNumber || frontendForm.national_id) {
+    payload.national_id = String(frontendForm.idNumber || frontendForm.national_id).trim();
+  }
+
   if (roomId && String(roomId).trim() !== '' && String(roomId).trim() !== '—') {
-    payload.room_id = String(roomId).trim();
+    payload.room_id = typeof roomId === 'object' && roomId !== null ? String(roomId._id || roomId.id).trim() : String(roomId).trim();
   }
 
   if (roomTypeId && String(roomTypeId).trim() !== '') {
-    payload.room_type_id = String(roomTypeId).trim();
+    payload.room_type_id = typeof roomTypeId === 'object' && roomTypeId !== null ? String(roomTypeId._id || roomTypeId.id).trim() : String(roomTypeId).trim();
   }
 
   if (!options.isCreate && frontendForm.status) {
@@ -239,6 +261,17 @@ export function toBackendReservationPayload(frontendForm, options = {}) {
 
   if (!options.isUpdate && (frontendForm.groupId || frontendForm.group_id)) {
     payload.group_id = String(frontendForm.groupId || frontendForm.group_id).trim();
+  }
+
+  const pStatus = frontendForm.paymentStatus || frontendForm.payment_status || frontendForm.payment;
+  if (pStatus) {
+    payload.payment_status = String(pStatus).trim();
+    payload.payment = payload.payment_status;
+  }
+
+  const pMethod = frontendForm.paymentMethod || frontendForm.payment_method;
+  if (pMethod) {
+    payload.payment_method = String(pMethod).trim();
   }
 
   return payload;

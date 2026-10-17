@@ -124,7 +124,13 @@ export const getInventoryItems = async (tenantConn, query = {}) => {
   }
 
   if (query.room_number) {
-    filter.room_number = asString(query.room_number);
+    const rawR = asString(query.room_number).trim();
+    const cleanR = rawR.replace(/^Room\s*/i, "").trim();
+    filter.$or = [
+      { room_number: rawR },
+      { room_number: cleanR },
+      { location: new RegExp(`Room\\s*${escapeRegex(cleanR)}`, "i") },
+    ];
   }
 
   if (query.condition) {

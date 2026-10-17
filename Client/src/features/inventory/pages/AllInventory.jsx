@@ -8,12 +8,13 @@ import {
   Menu, MenuItem, FormControl, InputLabel, Select, Snackbar, Alert, CircularProgress 
 } from '@mui/material';
 import inventoryService from '../../../services/inventoryService';
+import roomService from '../../../services/roomService';
 import { 
   adaptInventoryItemToUI, 
   computeInventoryMetrics 
 } from '../adapters/inventoryAdapter';
 import { 
-  INVENTORY_CATEGORIES, INVENTORY_STATUSES, ROOM_NUMBERS 
+  INVENTORY_CATEGORIES, INVENTORY_STATUSES 
 } from './inventoryStore';
 import RoomInventoryModal from './components/RoomInventoryModal';
 import ItemDetailModal from './components/ItemDetailModal';
@@ -47,6 +48,7 @@ export default function AllInventory() {
 
   // State
   const [items, setItems] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -82,10 +84,22 @@ export default function AllInventory() {
     setError(null);
 
     try {
-      const response = await inventoryService.getInventoryItems({ limit: 500 });
+      const [response, roomsRes] = await Promise.all([
+        inventoryService.getInventoryItems({ limit: 500 }),
+        roomService.getRooms({ limit: 200 }).catch(() => null)
+      ]);
       const rawItems = response?.data || [];
       const adapted = rawItems.map(adaptInventoryItemToUI).filter(Boolean);
       setItems(adapted);
+
+      if (roomsRes) {
+        const loadedRooms = Array.isArray(roomsRes?.data?.rooms)
+          ? roomsRes.data.rooms
+          : Array.isArray(roomsRes?.data)
+            ? roomsRes.data
+            : [];
+        setRooms(loadedRooms);
+      }
     } catch (err) {
       console.error('Failed to load inventory:', err);
       setError(err?.message || 'Failed to load inventory records. Please check your backend connection.');
@@ -118,6 +132,13 @@ export default function AllInventory() {
   };
 
   const metrics = computeInventoryMetrics(items);
+
+  const roomOptions = Array.from(
+    new Set([
+      ...rooms.map(r => String(r.room_number || r.roomNumber || '')).filter(Boolean),
+      ...items.map(i => String(i.roomNumber || '')).filter(Boolean)
+    ])
+  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
   // Multi-parameter filtering
   const filteredItems = items.filter(item => {
@@ -309,7 +330,7 @@ export default function AllInventory() {
               >
                 <MenuItem value="All">All Rooms & Areas</MenuItem>
                 <MenuItem value="Storage">Hotel Storage Only</MenuItem>
-                {ROOM_NUMBERS.map(r => (
+                {roomOptions.map(r => (
                   <MenuItem key={r} value={r}>Room {r}</MenuItem>
                 ))}
               </Select>

@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const taxSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     code: {
       type: String,
       required: true,
@@ -56,7 +51,5 @@ const taxSchema = new mongoose.Schema(
 );
 
 taxSchema.index({ code: 1 }, { unique: true });
-
-taxSchema.index({ hotelId: 1, code: 1 }, { unique: true });
 
 export default taxSchema;

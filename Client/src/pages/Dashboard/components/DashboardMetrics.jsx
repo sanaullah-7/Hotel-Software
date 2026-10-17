@@ -76,27 +76,37 @@ function computePaymentsToday(payments) {
 
 export default function DashboardMetrics({
   reservations = [],
-  roomInventory = []
+  roomInventory = [],
+  serverMetrics = null
 }) {
-  // Reservation Today: reservations created/booked for today or checking in today
-  const reservationTodayCount = reservations.filter((r) =>
-    isToday(r.createdAt) || isToday(r.bookingDate) || isToday(r.reservationDate) || isToday(r.date) || isToday(r.checkIn)
-  ).length;
+  // Reservation Today: Authoritative server metric with fallback
+  const reservationTodayCount = serverMetrics?.today_reservations !== undefined
+    ? serverMetrics.today_reservations
+    : reservations.filter((r) =>
+        isToday(r.createdAt) || isToday(r.bookingDate) || isToday(r.reservationDate) || isToday(r.date) || isToday(r.checkIn)
+      ).length;
 
-  const occupiedCount = roomInventory.filter(
-    (room) => room.status === 'Booked' || room.status === 'OCCUPIED' || room.status === 'Occupied'
-  ).length;
+  // Occupied Rooms: Authoritative server metric with fallback
+  const occupiedCount = serverMetrics?.occupied_rooms !== undefined
+    ? serverMetrics.occupied_rooms
+    : roomInventory.filter(
+        (room) => room.status === 'Booked' || room.status === 'OCCUPIED' || room.status === 'Occupied'
+      ).length;
 
-  // Check-in Today: bookings currently in canonical 'Checked In' state
-  const checkInCount = reservations.filter(
-    (r) => normalizeBookingStatus(r.status) === 'Checked In'
-  ).length;
+  // Check-in Today: Authoritative server metric with fallback
+  const checkInCount = serverMetrics?.today_check_ins !== undefined
+    ? serverMetrics.today_check_ins
+    : reservations.filter(
+        (r) => normalizeBookingStatus(r.status) === 'Checked In'
+      ).length;
 
-  // Checkout Today: bookings in canonical 'Checked Out' state whose checkOut date is today
-  const checkOutCount = reservations.filter((r) => {
-    if (normalizeBookingStatus(r.status) !== 'Checked Out') return false;
-    return isToday(r.checkedOutAt || r.checkoutDate || r.checkOut);
-  }).length;
+  // Checkout Today: Authoritative server metric with fallback
+  const checkOutCount = serverMetrics?.today_check_outs !== undefined
+    ? serverMetrics.today_check_outs
+    : reservations.filter((r) => {
+        if (normalizeBookingStatus(r.status) !== 'Checked Out') return false;
+        return isToday(r.checkedOutAt || r.checkoutDate || r.checkOut);
+      }).length;
 
   // Billing-derived KPIs (reactive to payment & invoice events and backend data)
   const [revenueToday, setRevenueToday] = useState(0);
@@ -125,6 +135,14 @@ export default function DashboardMetrics({
       window.removeEventListener('storage', refreshBillingKPIs);
     };
   }, [refreshBillingKPIs]);
+
+  const displayRevenue = serverMetrics?.today_revenue !== undefined
+    ? `$${serverMetrics.today_revenue.toLocaleString()}`
+    : `$${revenueToday.toLocaleString()}`;
+
+  const displayPayments = serverMetrics?.payments_today_count !== undefined
+    ? serverMetrics.payments_today_count
+    : paymentsTodayCount;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
@@ -158,14 +176,14 @@ export default function DashboardMetrics({
       />
       <KPICard
         title="Revenue Today"
-        value={`$${revenueToday.toLocaleString()}`}
+        value={displayRevenue}
         icon={AttachMoney}
         iconColor="text-purple-500"
         variant="compact"
       />
       <KPICard
         title="Payments Today"
-        value={paymentsTodayCount}
+        value={displayPayments}
         icon={CreditCard}
         iconColor="text-indigo-500"
         variant="compact"

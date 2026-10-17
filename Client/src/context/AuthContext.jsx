@@ -23,6 +23,8 @@ export const AuthProvider = ({ children }) => {
               setIsAuthenticated(true);
               localStorage.setItem('user', JSON.stringify(profileUser));
               localStorage.setItem('isAuthenticated', 'true');
+              if (profileUser.fullName) localStorage.setItem('fullName', profileUser.fullName);
+              if (profileUser.hotelName) localStorage.setItem('hotelName', profileUser.hotelName);
               setIsLoading(false);
               return;
             }
@@ -44,6 +46,8 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(profileUser));
         localStorage.setItem('isAuthenticated', 'true');
+        if (profileUser.fullName) localStorage.setItem('fullName', profileUser.fullName);
+        if (profileUser.hotelName) localStorage.setItem('hotelName', profileUser.hotelName);
       } else {
         setUser(null);
         setIsAuthenticated(false);
@@ -74,6 +78,9 @@ export const AuthProvider = ({ children }) => {
     const userData = res?.data?.account || res?.data?.user;
     setUser(userData);
     setIsAuthenticated(true);
+    if (userData?.hotelName) {
+      localStorage.setItem('hotelName', userData.hotelName);
+    }
     return res;
   };
 
@@ -102,6 +109,20 @@ export const AuthProvider = ({ children }) => {
     return finalUser;
   };
 
+  const registerHotel = async ({ fullName, email, phone, password, hotelName, address, city, subscriptionPlan }) => {
+    const res = await authService.registerHotel({
+      fullName,
+      email,
+      phone,
+      password,
+      hotelName,
+      address,
+      city,
+      subscriptionPlan,
+    });
+    return res?.data;
+  };
+
   const logout = async () => {
     await authService.logout();
     setUser(null);
@@ -116,6 +137,7 @@ export const AuthProvider = ({ children }) => {
         isLoading,
         login,
         registerAndOnboard,
+        registerHotel,
         logout,
         refreshProfile: initAuth,
       }}

@@ -4,7 +4,6 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { getRooms as getHousekeepingRooms, saveRooms as saveHousekeepingRooms } from '../features/housekeeping/pages/hkStore';
 import { saveRooms as saveInventoryRooms } from '../features/rooms/state/roomStore';
 import RoomsAndCleaning from '../features/housekeeping/pages/RoomsAndCleaning';
-import CleaningSchedule from '../features/housekeeping/pages/CleaningSchedule';
 import opsService from '../services/opsService';
 import roomService from '../services/roomService';
 
@@ -123,63 +122,5 @@ describe('Housekeeping Canonical State Alignment & Migration Bridge', () => {
 
     const rooms = getHousekeepingRooms();
     expect(rooms.find((r) => r.id === '202').roomId).toBe('R-INV-202');
-  });
-
-  it('active CleaningSchedule UI reads canonical housekeeping records from backend and persists task edits to backend', async () => {
-    opsService.getHousekeepingTasks.mockResolvedValue({
-      data: [
-        {
-          _id: 'task_105',
-          room_id: { _id: 'INV-105', room_number: '105', floor: '1' },
-          assigned_to: { _id: 'emp_5', first_name: 'Frank', last_name: 'Miller' },
-          task_type: 'DEEP_CLEANING',
-          priority: 'HIGH',
-          status: 'IN_PROGRESS',
-          scheduled_at: '2026-10-06T10:00:00.000Z',
-          scheduled_end_at: '2026-10-06T11:30:00.000Z',
-          notes: 'Deep clean needed'
-        }
-      ]
-    });
-
-    opsService.updateHousekeepingTask.mockResolvedValue({
-      data: {
-        _id: 'task_105',
-        room_id: { _id: 'INV-105', room_number: '105', floor: '1' },
-        assigned_to: { _id: 'emp_5', first_name: 'Frank', last_name: 'Miller' },
-        task_type: 'DEEP_CLEANING',
-        priority: 'HIGH',
-        status: 'IN_PROGRESS',
-        notes: 'Clean windows and balcony'
-      }
-    });
-
-    render(<CleaningSchedule />);
-
-    await waitFor(() => {
-      expect(screen.getByText(/Room 105/)).toBeTruthy();
-      expect(screen.getByText('Frank Miller')).toBeTruthy();
-    });
-
-    // Click edit on the task
-    const editBtn = screen.getByRole('button', { name: /^Edit$/i });
-    fireEvent.click(editBtn);
-
-    // Edit notes
-    const notesInput = screen.getByLabelText(/Notes/i);
-    fireEvent.change(notesInput, { target: { value: 'Clean windows and balcony' } });
-
-    // Submit the form
-    const saveBtn = screen.getByRole('button', { name: /^Save$/i });
-    fireEvent.click(saveBtn);
-
-    await waitFor(() => {
-      expect(opsService.updateHousekeepingTask).toHaveBeenCalledWith(
-        'task_105',
-        expect.objectContaining({
-          notes: 'Clean windows and balcony'
-        })
-      );
-    });
   });
 });

@@ -3,6 +3,7 @@ import { Close, CloudUpload, DeleteOutlined, ImageOutlined } from '@mui/icons-ma
 import useModalFocus from '../../../components/common/useModalFocus';
 import { getRooms, getRoomsByRoomType, getAvailableRoomTypes, normalizeRoomType } from '../../rooms/state/roomStore.js';
 import reservationService from '../../../services/reservationService.js';
+import { fileService } from '../../../services/fileService.js';
 
 export default function ReservationFormModal({
   open,
@@ -11,11 +12,14 @@ export default function ReservationFormModal({
   onFormChange,
   onClose,
   onSave,
-  onSubmit
+  onSubmit,
+  error = null,
+  isSubmitting = false,
 }) {
   const { dialogRef, titleId } = useModalFocus({ open, onClose });
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [backendAvailability, setBackendAvailability] = useState(null);
   const availableRoomTypes = getAvailableRoomTypes();
 
@@ -110,18 +114,26 @@ export default function ReservationFormModal({
     }
   };
 
-  const handleFileProcess = (file) => {
+  const handleFileProcess = async (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       alert('Please upload a valid image file (PNG, JPG, JPEG, WEBP).');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      handleFieldChange('avatar', e.target.result);
-      handleFieldChange('avatarFileName', file.name);
-    };
-    reader.readAsDataURL(file);
+    const previewUrl = URL.createObjectURL(file);
+    handleFieldChange('avatar', previewUrl);
+    handleFieldChange('avatarFileName', file.name);
+    setIsUploading(true);
+    try {
+      const uploadRes = await fileService.uploadFile(file, { folder: 'guests', entity_ref: 'GUEST_PROFILE' });
+      if (uploadRes?.file_url) {
+        handleFieldChange('avatar', uploadRes.file_url);
+      }
+    } catch (err) {
+      console.warn('Cloudinary upload error, using local preview:', err);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleFileChange = (e) => {
@@ -188,10 +200,19 @@ export default function ReservationFormModal({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (handleSave) handleSave(e);
+            if (handleSave && !isSubmitting) handleSave(e);
           }}
           className="overflow-y-auto flex-1 p-3.5 sm:p-5 bg-gray-50/30 space-y-4"
         >
+          {error && (
+            <div
+              role="alert"
+              className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-xs font-medium flex items-center justify-between shadow-2xs animate-fade-in"
+            >
+              <span>{error}</span>
+            </div>
+          )}
+
           {/* Section 1: Guest Information */}
           <div>
             <h3 className="text-xs font-bold text-gray-800 mb-2.5 pb-1.5 border-b border-gray-200 uppercase tracking-wider">
@@ -566,7 +587,9 @@ export default function ReservationFormModal({
                         <p className="text-xs font-bold text-gray-800">
                           {form.avatarFileName || 'Guest Photo Attached'}
                         </p>
-                        <p className="text-[10.5px] text-green-700 font-medium">Image uploaded successfully</p>
+                        <p className={`text-[10.5px] font-medium ${isUploading ? 'text-amber-600 animate-pulse' : 'text-green-700'}`}>
+                          {isUploading ? 'Uploading to Cloudinary...' : 'Image stored & verified'}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -636,12 +659,15 @@ export default function ReservationFormModal({
           </button>
           <button
             type="button"
+            disabled={isSubmitting}
             onClick={(e) => {
-              if (handleSave) handleSave(e);
+              if (handleSave && !isSubmitting) handleSave(e);
             }}
-            className="px-4.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-[var(--primary-main)] hover:bg-green-700 transition-colors cursor-pointer shadow-2xs"
+            className={`px-4.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-[var(--primary-main)] hover:bg-green-700 transition-colors cursor-pointer shadow-2xs ${
+              isSubmitting ? 'opacity-60 cursor-not-allowed' : ''
+            }`}
           >
-            {editingId ? 'Save Changes' : 'Add New Booking'}
+            {isSubmitting ? 'Saving...' : editingId ? 'Save Changes' : 'Add New Booking'}
           </button>
         </div>
       </div>

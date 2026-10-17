@@ -93,6 +93,12 @@ export function toFrontendInvoice(backend) {
   const bookingId = typeof reservation === 'object'
     ? (reservation.booking_ref || reservation._id || backend.bookingId || '')
     : (backend.bookingId || '');
+  const reservationId = typeof reservation === 'object'
+    ? (reservation._id || reservation.id || '')
+    : (backend.reservation_id || '');
+  const bookingRef = typeof reservation === 'object'
+    ? (reservation.booking_ref || '')
+    : '';
 
   const roomNumber = backend.room_number || backend.roomNumber || 'Standard';
 
@@ -118,6 +124,8 @@ export function toFrontendInvoice(backend) {
     folio: folio.folio_ref || folio._id || backend.folio || '',
     folioId: folio._id || backend.folio_id || '',
     bookingId,
+    reservationId,
+    bookingRef,
     guestId: guest._id || backend.guest_id || '',
     guestName,
     guestEmail,

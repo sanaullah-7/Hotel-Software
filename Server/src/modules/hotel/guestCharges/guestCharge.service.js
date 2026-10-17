@@ -34,12 +34,13 @@ const normalizeChargeType = (type) => {
   return mapping[upper] || "MISCELLANEOUS";
 };
 
-export const createGuestCharge = async (hotelContext, chargeData) => {
-  const Folio = await getModel(hotelContext, "Folio");
-  const Reservation = await getModel(hotelContext, "Reservation");
-  const Invoice = await getModel(hotelContext, "Invoice");
-  const Room = await getModel(hotelContext, "Room");
-  const GuestCharge = await getModel(hotelContext, "GuestCharge");
+export const createGuestCharge = async (tenantConn, chargeData) => {
+  const Folio = await getModel(tenantConn, "Folio");
+  const Guest = await getModel(tenantConn, "Guest");
+  const Reservation = await getModel(tenantConn, "Reservation");
+  const Invoice = await getModel(tenantConn, "Invoice");
+  const Room = await getModel(tenantConn, "Room");
+  const GuestCharge = await getModel(tenantConn, "GuestCharge");
 
   const {
     folio_id,
@@ -65,7 +66,7 @@ export const createGuestCharge = async (hotelContext, chargeData) => {
     if (!mongoose.Types.ObjectId.isValid(folio_id)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Folio ID format");
     }
-    resolvedFolio = await Folio.findOne({ _id: folio_id, hotelId: hotelContext });
+    resolvedFolio = await Folio.findById(folio_id);
     if (!resolvedFolio) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, "Folio not found in this hotel");
     }
@@ -76,11 +77,10 @@ export const createGuestCharge = async (hotelContext, chargeData) => {
   if (!resolvedFolio && targetReservationIdentifier) {
     let reservation = null;
     if (mongoose.Types.ObjectId.isValid(targetReservationIdentifier)) {
-      reservation = await Reservation.findOne({ _id: targetReservationIdentifier, hotelId: hotelContext });
+      reservation = await Reservation.findById(targetReservationIdentifier);
     }
     if (!reservation) {
       reservation = await Reservation.findOne({
-        hotelId: hotelContext,
         $or: [
           { booking_ref: String(targetReservationIdentifier).trim() },
           { _id: mongoose.Types.ObjectId.isValid(targetReservationIdentifier) ? targetReservationIdentifier : null },
@@ -90,20 +90,19 @@ export const createGuestCharge = async (hotelContext, chargeData) => {
     if (!reservation) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, `Reservation "${targetReservationIdentifier}" not found`);
     }
-    resolvedFolio = await getOrCreateFolioForReservation(hotelContext, reservation._id);
+    resolvedFolio = await getOrCreateFolioForReservation(tenantConn, reservation._id);
   }
 
   // 3. Resolve via room_number
   if (!resolvedFolio && room_number) {
-    const room = await Room.findOne({ hotelId: hotelContext, room_number: String(room_number).trim() });
+    const room = await Room.findOne({ room_number: String(room_number).trim() });
     if (room) {
       const activeReservation = await Reservation.findOne({
-        hotelId: hotelContext,
         room_id: room._id,
         status: { $in: ["CHECKED_IN", "CONFIRMED", "Checked In"] },
       }).sort({ created_at: -1 });
       if (activeReservation) {
-        resolvedFolio = await getOrCreateFolioForReservation(hotelContext, activeReservation._id);
+        resolvedFolio = await getOrCreateFolioForReservation(tenantConn, activeReservation._id);
       }
     }
   }
@@ -111,7 +110,7 @@ export const createGuestCharge = async (hotelContext, chargeData) => {
   // 4. Resolve via guest_id
   if (!resolvedFolio && guest_id) {
     if (mongoose.Types.ObjectId.isValid(guest_id)) {
-      resolvedFolio = await Folio.findOne({ hotelId: hotelContext, guest_id, status: "OPEN" }).sort({ created_at: -1 });
+      resolvedFolio = await Folio.findOne({ guest_id, status: "OPEN" }).sort({ created_at: -1 });
     }
   }
 
@@ -131,7 +130,6 @@ export const createGuestCharge = async (hotelContext, chargeData) => {
 
   // Create GuestCharge
   const charge = await GuestCharge.create({
-    hotelId: hotelContext,
     folio_id: resolvedFolio._id,
     guest_id: resolvedFolio.guest_id || null,
     reservation_id: resolvedFolio.reservation_id || null,
@@ -148,10 +146,10 @@ export const createGuestCharge = async (hotelContext, chargeData) => {
   });
 
   // 5. Automatically post to Folio balance
-  await Folio.findOneAndUpdate({ _id: resolvedFolio._id, hotelId: hotelContext }, { $inc: { balance: calculatedAmount } });
+  await Folio.findByIdAndUpdate(resolvedFolio._id, { $inc: { balance: calculatedAmount } });
 
   // 6. Automatically attach to Folio's active Invoice (Billing line items)
-  let activeInvoice = await Invoice.findOne({ hotelId: hotelContext, folio_id: resolvedFolio._id, status: "UNPAID" });
+  let activeInvoice = await Invoice.findOne({ folio_id: resolvedFolio._id, status: "UNPAID" });
   if (activeInvoice) {
     activeInvoice.line_items.push({
       description: finalDescription,
@@ -165,7 +163,6 @@ export const createGuestCharge = async (hotelContext, chargeData) => {
   } else {
     // Create new Invoice for this Folio charge
     const newInvoice = await Invoice.create({
-      hotelId: hotelContext,
       invoice_number: generateInvoiceNumber(),
       folio_id: resolvedFolio._id,
       guest_id: resolvedFolio.guest_id,
@@ -185,14 +182,16 @@ export const createGuestCharge = async (hotelContext, chargeData) => {
     await charge.save();
   }
 
-  return await GuestCharge.findOne({ _id: charge._id, hotelId: hotelContext });
+  return await GuestCharge.findById(charge._id);
 };
 
-export const getGuestCharges = async (hotelContext, query = {}) => {
-  const GuestCharge = await getModel(hotelContext, "GuestCharge");
-  const Folio = await getModel(hotelContext, "Folio");
+export const getGuestCharges = async (tenantConn, query = {}) => {
+  const GuestCharge = await getModel(tenantConn, "GuestCharge");
+  const Guest = await getModel(tenantConn, "Guest");
+  const Folio = await getModel(tenantConn, "Folio");
+  const Reservation = await getModel(tenantConn, "Reservation");
 
-  const filter = { hotelId: hotelContext };
+  const filter = {};
 
   const folioId = asString(query.folio_id);
   if (folioId) {
@@ -207,7 +206,7 @@ export const getGuestCharges = async (hotelContext, query = {}) => {
     if (!mongoose.Types.ObjectId.isValid(guestId)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Guest ID format");
     }
-    const folios = await Folio.find({ hotelId: hotelContext, guest_id: guestId }).select("_id");
+    const folios = await Folio.find({ guest_id: guestId }).select("_id");
     const folioIds = folios.map((f) => f._id);
     filter.folio_id = { $in: folioIds };
   }
@@ -258,13 +257,13 @@ export const getGuestCharges = async (hotelContext, query = {}) => {
   };
 };
 
-export const getGuestChargeById = async (hotelContext, chargeId) => {
+export const getGuestChargeById = async (tenantConn, chargeId) => {
   if (!mongoose.Types.ObjectId.isValid(chargeId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Charge ID format");
   }
 
-  const GuestCharge = await getModel(hotelContext, "GuestCharge");
-  const charge = await GuestCharge.findOne({ _id: chargeId, hotelId: hotelContext })
+  const GuestCharge = await getModel(tenantConn, "GuestCharge");
+  const charge = await GuestCharge.findById(chargeId)
     .populate({
       path: "folio_id",
       select: "folio_ref balance status currency reservation_id guest_id",
@@ -284,16 +283,16 @@ export const getGuestChargeById = async (hotelContext, chargeId) => {
   return charge;
 };
 
-export const voidGuestCharge = async (hotelContext, chargeId) => {
+export const voidGuestCharge = async (tenantConn, chargeId) => {
   if (!mongoose.Types.ObjectId.isValid(chargeId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Charge ID format");
   }
 
-  const GuestCharge = await getModel(hotelContext, "GuestCharge");
-  const Folio = await getModel(hotelContext, "Folio");
-  const Invoice = await getModel(hotelContext, "Invoice");
+  const GuestCharge = await getModel(tenantConn, "GuestCharge");
+  const Folio = await getModel(tenantConn, "Folio");
+  const Invoice = await getModel(tenantConn, "Invoice");
 
-  const charge = await GuestCharge.findOne({ _id: chargeId, hotelId: hotelContext });
+  const charge = await GuestCharge.findById(chargeId);
 
   if (!charge) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest charge not found");
@@ -308,12 +307,12 @@ export const voidGuestCharge = async (hotelContext, chargeId) => {
 
   // Decrement Folio balance
   if (charge.folio_id) {
-    await Folio.findOneAndUpdate({ _id: charge.folio_id, hotelId: hotelContext }, { $inc: { balance: -charge.amount } });
+    await Folio.findByIdAndUpdate(charge.folio_id, { $inc: { balance: -charge.amount } });
   }
 
   // Adjust linked invoice if exists
   if (charge.invoice_id) {
-    const invoice = await Invoice.findOne({ _id: charge.invoice_id, hotelId: hotelContext });
+    const invoice = await Invoice.findById(charge.invoice_id);
     if (invoice) {
       invoice.total_amount = Math.max(0, invoice.total_amount - charge.amount);
       await invoice.save();

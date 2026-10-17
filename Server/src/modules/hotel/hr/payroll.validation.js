@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 export const PAYROLL_RUN_STATUSES = ['DRAFT', 'PROCESSING', 'APPROVED', 'COMPLETED', 'FAILED'];
-export const PAYROLL_ITEM_STATUSES = ['PENDING', 'PAID', 'FAILED'];
+export const PAYROLL_ITEM_STATUSES = ['PENDING', 'PARTIAL', 'PAID', 'FAILED'];
 
 export const createPayrollRunSchema = Joi.object({
   run_ref: Joi.string().trim().max(50).optional(),
@@ -46,6 +46,10 @@ export const createPayrollItemSchema = Joi.object({
   base_salary: Joi.number().min(0).optional(),
   bonuses: Joi.number().min(0).default(0),
   deductions: Joi.number().min(0).default(0),
+  paid_amount: Joi.number().min(0).optional(),
+  payment_method: Joi.string().allow('', null).optional(),
+  payment_date: Joi.date().iso().allow(null).optional(),
+  payment_notes: Joi.string().allow('', null).optional(),
   status: Joi.string()
     .uppercase()
     .valid(...PAYROLL_ITEM_STATUSES)
@@ -59,6 +63,10 @@ export const updatePayrollItemSchema = Joi.object({
   base_salary: Joi.number().min(0).optional(),
   bonuses: Joi.number().min(0).optional(),
   deductions: Joi.number().min(0).optional(),
+  paid_amount: Joi.number().min(0).optional(),
+  payment_method: Joi.string().allow('', null).optional(),
+  payment_date: Joi.date().iso().allow(null).optional(),
+  payment_notes: Joi.string().allow('', null).optional(),
   status: Joi.string()
     .uppercase()
     .valid(...PAYROLL_ITEM_STATUSES)

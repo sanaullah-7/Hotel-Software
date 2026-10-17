@@ -83,7 +83,7 @@ describe('Provisioning & Hotel Onboarding API', () => {
     const hotelRecord = await Hotel.findById(hotelId);
     expect(hotelRecord).not.toBeNull();
     expect(hotelRecord.property_name).toBe('Grand Test Hotel');
-    expect(hotelRecord.tenant_db_name).toBeUndefined();
+    expect(hotelRecord.tenant_db_name).toBe(`hotel_${hotelId}`);
 
     // Verify Account Updates
     const updatedAccount = await Account.findById(adminAccount._id);
@@ -93,8 +93,7 @@ describe('Provisioning & Hotel Onboarding API', () => {
     // Verify Tenant Database Provisioning
     const tenantConn = await getHotelConnection(hotelId);
     const HotelProfile = tenantConn.model('HotelProfile');
-    expect(tenantConn.name).toBe('test_explore_pakistan');
-    const profile = await HotelProfile.findOne({ hotelId });
+    const profile = await HotelProfile.findOne();
     expect(profile).not.toBeNull();
     expect(profile.property_name).toBe('Grand Test Hotel');
   });

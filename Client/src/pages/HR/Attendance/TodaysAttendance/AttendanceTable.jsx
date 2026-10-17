@@ -125,20 +125,37 @@ export const AttendanceTable = ({
                     </Tooltip>
 
                     {!isDashboard && (
-                        <Tooltip title="Filter Columns">
-                            <IconButton
-                                onClick={(e) => setColumnAnchorEl(e.currentTarget)}
-                                size="small"
-                                sx={{
-                                    color: "#1b7f43",
-                                    backgroundColor: "transparent",
-                                    "&:hover": { backgroundColor: "#f0fdf4" },
-                                    padding: "4px",
-                                }}
-                            >
-                                <FilterListIcon sx={{ fontSize: 22 }} />
-                            </IconButton>
-                        </Tooltip>
+                        <>
+                            <Tooltip title="Filter Records">
+                                <IconButton
+                                    onClick={(e) => setFilterAnchorEl(e.currentTarget)}
+                                    size="small"
+                                    sx={{
+                                        color: "#1b7f43",
+                                        backgroundColor: "transparent",
+                                        "&:hover": { backgroundColor: "#f0fdf4" },
+                                        padding: "4px",
+                                    }}
+                                >
+                                    <FilterListIcon sx={{ fontSize: 22 }} />
+                                </IconButton>
+                            </Tooltip>
+
+                            <Tooltip title="Toggle Columns">
+                                <IconButton
+                                    onClick={(e) => setColumnAnchorEl(e.currentTarget)}
+                                    size="small"
+                                    sx={{
+                                        color: "#1b7f43",
+                                        backgroundColor: "transparent",
+                                        "&:hover": { backgroundColor: "#f0fdf4" },
+                                        padding: "4px",
+                                    }}
+                                >
+                                    <ViewColumnIcon sx={{ fontSize: 22 }} />
+                                </IconButton>
+                            </Tooltip>
+                        </>
                     )}
 
                     <Tooltip title="Export PDF">
@@ -368,15 +385,35 @@ export const AttendanceTable = ({
 
                                         {visibleColumns.status && (
                                             <td className="py-1.5 px-2.5">
-                                                {row.status.toLowerCase() === "present" ? (
-                                                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700">
-                                                        present
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700">
-                                                        absent
-                                                    </span>
-                                                )}
+                                                {(() => {
+                                                    const s = (row.status || '').toLowerCase();
+                                                    if (s === 'present') {
+                                                        return (
+                                                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 capitalize">
+                                                                present
+                                                            </span>
+                                                        );
+                                                    }
+                                                    if (s === 'on_leave' || s === 'leave') {
+                                                        return (
+                                                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-100 text-blue-700 capitalize">
+                                                                leave
+                                                            </span>
+                                                        );
+                                                    }
+                                                    if (s === 'late') {
+                                                        return (
+                                                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 capitalize">
+                                                                late
+                                                            </span>
+                                                        );
+                                                    }
+                                                    return (
+                                                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700 capitalize">
+                                                            absent
+                                                        </span>
+                                                    );
+                                                })()}
                                             </td>
                                         )}
 
@@ -482,6 +519,62 @@ export const AttendanceTable = ({
                             }
                         />
                     ))}
+                </div>
+            </Popover>
+
+            {/* Popover: Filter Records */}
+            <Popover
+                open={Boolean(filterAnchorEl)}
+                anchorEl={filterAnchorEl}
+                onClose={() => setFilterAnchorEl(null)}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
+                PaperProps={{
+                    sx: {
+                        p: 2,
+                        width: 220,
+                        borderRadius: "8px",
+                        boxShadow:
+                            "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+                    },
+                }}
+            >
+                <h4 className="text-xs font-bold text-slate-800 mb-2">
+                    Filter Records
+                </h4>
+                <div className="space-y-3">
+                    <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">Status</label>
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => {
+                                setStatusFilter(e.target.value);
+                                setPage(0);
+                            }}
+                            className="w-full text-xs p-1.5 border border-slate-200 rounded focus:outline-none focus:border-[#1b7f43]"
+                        >
+                            <option value="All">All Statuses</option>
+                            <option value="present">Present</option>
+                            <option value="absent">Absent</option>
+                            <option value="on_leave">Leave</option>
+                            <option value="late">Late</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-[11px] font-semibold text-slate-600 mb-1">Shift</label>
+                        <select
+                            value={shiftFilter}
+                            onChange={(e) => {
+                                setShiftFilter(e.target.value);
+                                setPage(0);
+                            }}
+                            className="w-full text-xs p-1.5 border border-slate-200 rounded focus:outline-none focus:border-[#1b7f43]"
+                        >
+                            <option value="All">All Shifts</option>
+                            <option value="Day Shift">Day Shift</option>
+                            <option value="Night Shift">Night Shift</option>
+                        </select>
+                    </div>
                 </div>
             </Popover>
         </div>

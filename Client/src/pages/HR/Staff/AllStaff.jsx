@@ -18,7 +18,7 @@ import BusinessOutlinedIcon from '@mui/icons-material/BusinessOutlined';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Button, 
   IconButton, 
@@ -41,6 +41,7 @@ import StaffTable from './components/StaffTable';
 import '../../../features/assigned-ui/toolbarStyles.css';
 
 export default function AllStaff() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedStaff, setSelectedStaff] = useState(null);
@@ -276,8 +277,10 @@ export default function AllStaff() {
           <Tooltip title="View Profile">
             <IconButton 
               size="small" 
-              component={Link} 
-              to={`/hr/staff/${row.id}`} 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/hr/staff/${row.id}`);
+              }}
               aria-label="View Profile"
               sx={{ color: '#3b82f6', p: '2px' }}
             >
@@ -287,7 +290,10 @@ export default function AllStaff() {
           <Tooltip title="Edit Staff">
             <IconButton 
               size="small" 
-              onClick={() => handleOpenEdit(row)} 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleOpenEdit(row);
+              }}
               aria-label="Edit Staff"
               sx={{ color: '#6366f1', p: '2px' }}
             >
@@ -297,7 +303,10 @@ export default function AllStaff() {
           <Tooltip title="Delete Staff">
             <IconButton 
               size="small" 
-              onClick={() => handleDeleteStaff(row.id)} 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteStaff(row.id);
+              }}
               aria-label="Delete Staff"
               sx={{ color: '#ef4444', p: '2px' }}
             >
@@ -470,6 +479,7 @@ export default function AllStaff() {
             data={filteredStaff}
             selected={selectedIds}
             onSelectionChange={setSelectedIds}
+            onRowClick={(row) => navigate(`/hr/staff/${row.id}`)}
           />
         </div>
 

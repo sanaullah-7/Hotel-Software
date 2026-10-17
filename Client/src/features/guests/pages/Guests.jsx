@@ -34,7 +34,7 @@ export default function Guests() {
   const [deletingId, setDeletingId] = useState(null);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [dateFilter, setDateFilter] = useState('Daily');
+  const [dateFilter, setDateFilter] = useState('All');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [isCustomPopupOpen, setIsCustomPopupOpen] = useState(false);
@@ -210,9 +210,8 @@ export default function Guests() {
   };
 
   const handleExportCSV = () => {
-    const headers = ['Guest ID', 'Full Name', 'Email', 'Phone', 'City', 'Total Stays', 'Status'];
+    const headers = ['Full Name', 'Email', 'Phone', 'City', 'Total Stays', 'Status'];
     const rows = filteredGuests.map(g => [
-      g.id,
       `"${g.name.replace(/"/g, '""')}"`,
       `"${g.email || ''}"`,
       `"${g.phone || ''}"`,
@@ -393,7 +392,7 @@ export default function Guests() {
             {/* Date Filters with Custom Popup Wrapper */}
             <div className="relative shrink-0 flex items-center">
               <div className="flex bg-white border border-gray-200 rounded-lg overflow-hidden shadow-xs">
-                {['Daily', 'Weekly', 'Monthly', 'Yearly', 'Custom'].map(tab => (
+                {['All', 'Daily', 'Weekly', 'Monthly', 'Yearly', 'Custom'].map(tab => (
                   <button
                     key={tab}
                     type="button"
@@ -496,18 +495,16 @@ export default function Guests() {
         <div className="w-full flex-1 overflow-hidden">
           <table className="w-full text-left border-collapse table-fixed">
             <colgroup>
-              <col style={{ width: '12%' }} />
-              <col style={{ width: '20%' }} />
-              <col style={{ width: '20%' }} />
-              <col style={{ width: '14%' }} />
-              <col style={{ width: '11%' }} />
+              <col style={{ width: '25%' }} />
+              <col style={{ width: '23%' }} />
+              <col style={{ width: '16%' }} />
+              <col style={{ width: '13%' }} />
               <col style={{ width: '8%' }} />
               <col style={{ width: '7%' }} />
               <col style={{ width: '8%' }} />
             </colgroup>
             <thead>
               <tr className="border-b border-gray-100 bg-slate-50/50">
-                <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Guest ID</th>
                 <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Full Name</th>
                 <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Email</th>
                 <th className="py-2 px-1.5 text-[10px] sm:text-[11px] font-bold text-gray-500 uppercase tracking-wider">Phone</th>
@@ -520,7 +517,7 @@ export default function Guests() {
             <tbody className="divide-y divide-gray-50">
               {isLoading ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-8 text-gray-500 text-xs">
+                  <td colSpan="7" className="text-center py-8 text-gray-500 text-xs">
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-[var(--primary-main)] border-t-transparent rounded-full animate-spin"></div>
                       <span>Loading guests...</span>
@@ -529,7 +526,7 @@ export default function Guests() {
                 </tr>
               ) : error && allGuests.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-8 text-rose-500 text-xs font-medium">
+                  <td colSpan="7" className="text-center py-8 text-rose-500 text-xs font-medium">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <span>{error}</span>
                       <button
@@ -544,7 +541,7 @@ export default function Guests() {
                 </tr>
               ) : currentGuests.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-6 text-gray-500 text-xs">No guests found.</td>
+                  <td colSpan="7" className="text-center py-6 text-gray-500 text-xs">No guests found.</td>
                 </tr>
               ) : (
                 currentGuests.map((guest) => (
@@ -554,15 +551,16 @@ export default function Guests() {
                     className="hover:bg-gray-50/60 transition-colors cursor-pointer"
                     title="Click anywhere on the row to view Guest Profile"
                   >
-                    <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-900 truncate" title={guest.id}>
-                      {guest.id || guest.guest_ref}
-                    </td>
                     <td className="py-1.5 px-1.5">
                       <div className="flex items-center min-w-0">
                         <img 
-                          src={guest.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop'} 
+                          src={guest.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(guest.name || 'Guest')}&background=1b7f43&color=fff`} 
                           alt={guest.name} 
-                          className="w-5.5 h-5.5 rounded-full object-cover mr-1.5 bg-gray-200 shrink-0 border border-gray-200" 
+                          className="w-5.5 h-5.5 rounded-full object-cover mr-1.5 bg-gray-200 shrink-0 border border-gray-200"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(guest.name || 'Guest')}&background=1b7f43&color=fff`;
+                          }}
                         />
                         <Link 
                           to={`/guests/${guest.id}`} 

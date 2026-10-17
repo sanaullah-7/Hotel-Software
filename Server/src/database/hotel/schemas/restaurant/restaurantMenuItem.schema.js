@@ -1,11 +1,11 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 const restaurantMenuItemSchema = new mongoose.Schema(
   {
-    hotelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hotel', required: true },
     sku: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
       uppercase: true,
     },
@@ -56,6 +56,5 @@ const restaurantMenuItemSchema = new mongoose.Schema(
 restaurantMenuItemSchema.index({ category_id: 1 });
 restaurantMenuItemSchema.index({ is_available: 1 });
 restaurantMenuItemSchema.index({ category_id: 1, is_available: 1 });
-restaurantMenuItemSchema.index({ hotelId: 1, sku: 1 }, { unique: true });
 
 export default restaurantMenuItemSchema;

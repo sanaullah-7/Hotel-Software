@@ -1,18 +1,20 @@
 import SearchBar from '../Common/SearchBar.jsx';
 import FilterDropdown from '../Common/FilterDropdown.jsx';
 
-const STATUS_OPTIONS = [
+const DEFAULT_STATUS_OPTIONS = [
   { value: '', label: 'All Statuses' },
   { value: 'ACTIVE', label: 'Active' },
   { value: 'TRIAL', label: 'Trial' },
   { value: 'EXPIRED', label: 'Expired' },
+  { value: 'SUSPENDED', label: 'Suspended' },
 ];
 
-const PLAN_OPTIONS = [
+const DEFAULT_PLAN_OPTIONS = [
   { value: '', label: 'All Plans' },
-  { value: 'plan_basic', label: 'Basic Starter' },
-  { value: 'plan_pro', label: 'Business Pro' },
-  { value: 'plan_enterprise', label: 'Enterprise Elite' },
+  { value: 'BASIC', label: 'Basic Starter' },
+  { value: 'PRO', label: 'Business Pro' },
+  { value: 'PREMIUM', label: 'Premium Suite' },
+  { value: 'ENTERPRISE', label: 'Enterprise Elite' },
 ];
 
 export default function SubscriptionFilters({
@@ -22,7 +24,10 @@ export default function SubscriptionFilters({
   onStatusChange,
   plan = '',
   onPlanChange,
+  planOptions = null,
 }) {
+  const options = planOptions && planOptions.length > 0 ? planOptions : DEFAULT_PLAN_OPTIONS;
+
   return (
     <div
       style={{
@@ -45,7 +50,7 @@ export default function SubscriptionFilters({
         <FilterDropdown
           value={status}
           onChange={onStatusChange}
-          options={STATUS_OPTIONS}
+          options={DEFAULT_STATUS_OPTIONS}
           placeholder="Status"
         />
       </div>
@@ -54,7 +59,7 @@ export default function SubscriptionFilters({
         <FilterDropdown
           value={plan}
           onChange={onPlanChange}
-          options={PLAN_OPTIONS}
+          options={options}
           placeholder="Plan Tier"
         />
       </div>

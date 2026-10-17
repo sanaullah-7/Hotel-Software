@@ -2,14 +2,10 @@ import mongoose from 'mongoose';
 
 const folioSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     folio_ref: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     reservation_id: {
@@ -60,7 +56,5 @@ folioSchema.index(
 );
 folioSchema.index({ stay_id: 1 });
 folioSchema.index({ guest_id: 1 });
-
-folioSchema.index({ hotelId: 1, folio_ref: 1 }, { unique: true });
 
 export default folioSchema;

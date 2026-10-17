@@ -14,8 +14,10 @@ import { toFrontendReservation } from '../adapters/reservationAdapter';
 import reservationService from '../../../services/reservationService';
 import { getGuestById, resolveGuestForBooking } from '../../guests/state/guestStore';
 import { getRoomById, getRoomByRoomNo, toStandardRoomType } from '../../rooms/state/roomStore';
-import { getBookingDues, getInvoices } from '../../payment-billing/pages/paymentBillingStore';
+import { getBookingDues, getInvoices, syncInvoicesFromBackend, INVOICES_UPDATED_EVENT, PAYMENTS_UPDATED_EVENT } from '../../payment-billing/pages/paymentBillingStore';
 import { getGuestCharges } from '../../inventory/pages/inventoryStore';
+import billingService from '../../../services/billingService';
+import { toFrontendInvoiceList } from '../../payment-billing/adapters/billingAdapter';
 
 function parseReservationDate(value) {
   if (!value) return null;
@@ -67,26 +69,31 @@ function isChargeAssociatedWithBooking(charge, booking, guestName, roomNo) {
     return false;
   }
 
-  // 1. Explicit bookingId priority
-  if (charge.bookingId !== undefined && charge.bookingId !== null && String(charge.bookingId).trim() !== '') {
-    return String(charge.bookingId).trim() === String(booking.id).trim();
+  // 1. Explicit reservation_id / bookingId priority
+  const chargeResId = charge.reservation_id?._id || charge.reservation_id || charge.bookingId;
+  const bookingId = booking.id || booking._id || booking.canonicalBookingId;
+  if (chargeResId && bookingId && String(chargeResId).trim() !== '') {
+    return String(chargeResId).trim() === String(bookingId).trim();
   }
 
   // 2. guestId priority (with verified stay boundaries and room consistency)
-  if (charge.guestId !== undefined && charge.guestId !== null && String(charge.guestId).trim() !== '') {
-    if (!booking.guestId || String(charge.guestId).trim() !== String(booking.guestId).trim()) {
+  const chargeGuestId = charge.guest_id?._id || charge.guest_id || charge.guestId;
+  const bookingGuestId = booking.guestId || booking.primary_guest_id;
+  if (chargeGuestId && String(chargeGuestId).trim() !== '') {
+    if (!bookingGuestId || String(chargeGuestId).trim() !== String(bookingGuestId).trim()) {
       return false;
     }
-    if (charge.roomNumber && roomNo && roomNo !== '—') {
-      if (String(charge.roomNumber).trim() !== String(roomNo).trim()) {
+    const cRoom = charge.roomNumber || charge.room_number;
+    if (cRoom && roomNo && roomNo !== '—') {
+      if (String(cRoom).trim() !== String(roomNo).trim()) {
         return false;
       }
     }
     return isChargeWithinStay(charge, booking);
   }
 
-  // 3. Unambiguous existing relationship with verified stay boundaries
-  const cName = charge.guestName ? String(charge.guestName).trim().toLowerCase() : '';
+  // 3. Unambiguous name and room relationship with verified stay boundaries
+  const cName = charge.guest_name || charge.guestName ? String(charge.guest_name || charge.guestName).trim().toLowerCase() : '';
   const bName = guestName ? String(guestName).trim().toLowerCase() : '';
   if (!cName || !bName || cName === 'guest' || bName === 'guest') {
     return false;
@@ -95,7 +102,7 @@ function isChargeAssociatedWithBooking(charge, booking, guestName, roomNo) {
     return false;
   }
 
-  const cRoom = charge.roomNumber ? String(charge.roomNumber).trim() : '';
+  const cRoom = charge.roomNumber || charge.room_number ? String(charge.roomNumber || charge.room_number).trim() : '';
   const bRoom = roomNo && roomNo !== '—' ? String(roomNo).trim() : '';
   if (!cRoom || !bRoom || cRoom !== bRoom) {
     return false;
@@ -116,7 +123,11 @@ function mapCanonicalToHistoryRow(booking, invoices = [], charges = []) {
   const roomType = rawRoomType ? toStandardRoomType(rawRoomType) : '';
   const roomDisplay = roomType ? `${roomNo} - ${roomType}` : (roomNo || '—');
 
-  const linkedInvoice = invoices.find((inv) => String(inv.bookingId) === String(booking.id));
+  const linkedInvoice = invoices.find(
+    (inv) =>
+      String(inv.bookingId || inv.reservation_id) === String(booking.id || booking._id) ||
+      (inv.bookingRef && booking.bookingRef && String(inv.bookingRef) === String(booking.bookingRef))
+  );
   let totalPrice = null;
   if (linkedInvoice) {
     if (linkedInvoice.totalAmount !== undefined && linkedInvoice.totalAmount !== null && !isNaN(Number(linkedInvoice.totalAmount))) {
@@ -124,11 +135,14 @@ function mapCanonicalToHistoryRow(booking, invoices = [], charges = []) {
     }
   } else if (booking.totalPrice !== undefined && booking.totalPrice !== null && !isNaN(Number(booking.totalPrice))) {
     totalPrice = Number(booking.totalPrice);
+  } else if (booking.dues !== undefined && !isNaN(Number(booking.dues))) {
+    totalPrice = Number(booking.dues);
   }
 
   let paymentStatus = '';
-  if (linkedInvoice) {
-    paymentStatus = linkedInvoice.status || '';
+  if (linkedInvoice && linkedInvoice.status) {
+    const s = String(linkedInvoice.status).toUpperCase();
+    paymentStatus = s === 'PAID' ? 'Paid' : (s === 'UNPAID' ? 'Unpaid' : linkedInvoice.status);
   } else if (booking.paymentStatus) {
     paymentStatus = booking.paymentStatus;
   } else if (booking.payment) {
@@ -142,8 +156,8 @@ function mapCanonicalToHistoryRow(booking, invoices = [], charges = []) {
     const matchedCharges = charges.filter((c) => isChargeAssociatedWithBooking(c, booking, guestName, roomNo));
     if (matchedCharges.length > 0) {
       inventory = matchedCharges.map((c) => ({
-        name: c.itemName || 'Incidental Charge',
-        date: c.date || c.reportedDate || '',
+        name: c.item_name || c.itemName || c.description || 'Incidental Charge',
+        date: c.date || c.reportedDate || (c.created_at ? String(c.created_at).split('T')[0] : ''),
         time: '',
         price: Number(c.amount || c.unitPrice || 0)
       }));
@@ -255,11 +269,21 @@ export default function ReservationHistory() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Dynamic database billing state
+  const [invoices, setInvoices] = useState(() => getInvoices());
+  const [charges, setCharges] = useState(() => {
+    try { return getGuestCharges(); } catch { return []; }
+  });
+
   const loadHistory = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await reservationService.getReservations();
+      const [res, invRes, chargesRes] = await Promise.all([
+        reservationService.getReservations(),
+        billingService.getInvoices({ limit: 150 }).catch(() => null),
+        billingService.getGuestCharges({ limit: 150 }).catch(() => null),
+      ]);
       const items = Array.isArray(res?.data?.reservations)
         ? res.data.reservations
         : Array.isArray(res?.data)
@@ -271,6 +295,30 @@ export default function ReservationHistory() {
         const adapted = items.map(toFrontendReservation).filter(Boolean);
         setRawBookings(adapted);
         syncReservationsFromBackend(items);
+      }
+
+      if (invRes) {
+        const rawInvs = Array.isArray(invRes?.data?.invoices)
+          ? invRes.data.invoices
+          : Array.isArray(invRes?.data)
+            ? invRes.data
+            : [];
+        if (rawInvs.length > 0) {
+          const adaptedInvs = toFrontendInvoiceList(rawInvs);
+          setInvoices(adaptedInvs);
+          syncInvoicesFromBackend(adaptedInvs);
+        }
+      }
+
+      if (chargesRes) {
+        const rawCharges = Array.isArray(chargesRes?.data?.charges)
+          ? chargesRes.data.charges
+          : Array.isArray(chargesRes?.data)
+            ? chargesRes.data
+            : [];
+        if (rawCharges.length > 0) {
+          setCharges(rawCharges);
+        }
       }
     } catch (err) {
       setError(err?.message || 'Failed to load reservation history.');
@@ -289,17 +337,15 @@ export default function ReservationHistory() {
     };
     window.addEventListener('storage', syncReservations);
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+    window.addEventListener(INVOICES_UPDATED_EVENT, loadHistory);
+    window.addEventListener(PAYMENTS_UPDATED_EVENT, loadHistory);
     return () => {
       window.removeEventListener('storage', syncReservations);
       window.removeEventListener(RESERVATIONS_UPDATED_EVENT, syncReservations);
+      window.removeEventListener(INVOICES_UPDATED_EVENT, loadHistory);
+      window.removeEventListener(PAYMENTS_UPDATED_EVENT, loadHistory);
     };
   }, []);
-
-  const invoices = getInvoices();
-  let charges = [];
-  try {
-    charges = getGuestCharges();
-  } catch {}
 
   const historicalReservations = rawBookings
     .filter((booking) => {
@@ -309,10 +355,15 @@ export default function ReservationHistory() {
     .map((booking) => mapCanonicalToHistoryRow(booking, invoices, charges));
 
   const getRecordDate = (res) => {
-    return parseReservationDate(res.checkOut || res.cancellationDate || res.checkIn || res.reservationDate);
+    if (res.status === 'Checked Out' || res.normalizedStatus === 'Checked Out') {
+      return parseReservationDate(res.actualCheckOut || res.checkOut || res.updatedAt || res.reservationDate);
+    }
+    return parseReservationDate(res.cancellationDate || res.checkOut || res.checkIn || res.reservationDate);
   };
 
   const filterByDate = (res) => {
+    if (!activeTab || activeTab === 'All') return true;
+
     const recDate = getRecordDate(res);
     if (!recDate) {
       return activeTab === 'Custom' && !customStartDate && !customEndDate;
@@ -321,9 +372,19 @@ export default function ReservationHistory() {
     const now = new Date();
 
     if (activeTab === 'Daily') {
-      return recDate.getFullYear() === now.getFullYear() &&
-             recDate.getMonth() === now.getMonth() &&
-             recDate.getDate() === now.getDate();
+      const isTodayScheduled =
+        recDate.getFullYear() === now.getFullYear() &&
+        recDate.getMonth() === now.getMonth() &&
+        recDate.getDate() === now.getDate();
+
+      const actualDate = parseReservationDate(res.actualCheckOut || res.updatedAt || res.cancellationDate || res.createdAt);
+      const isTodayActual =
+        actualDate &&
+        actualDate.getFullYear() === now.getFullYear() &&
+        actualDate.getMonth() === now.getMonth() &&
+        actualDate.getDate() === now.getDate();
+
+      return isTodayScheduled || Boolean(isTodayActual);
     }
 
     if (activeTab === 'Weekly') {
@@ -390,8 +451,9 @@ export default function ReservationHistory() {
 
   const handlePrintInvoice = () => {
     if (!selectedRes) return;
-    const dues = getBookingDues(selectedRes);
-    const duesDisplay = dues === null ? 'Unverified' : `$${dues}`;
+    const invDues = getBookingDues(selectedRes);
+    const dues = invDues !== null ? invDues : (selectedRes.dues !== undefined ? selectedRes.dues : null);
+    const duesDisplay = dues === null || dues === undefined ? 'Unverified' : `$${Number(dues).toLocaleString()}`;
     const totalPriceDisplay = selectedRes.totalPrice !== null ? `$${selectedRes.totalPrice}` : '—';
 
     const printWindow = window.open('', '_blank');
@@ -502,8 +564,9 @@ export default function ReservationHistory() {
     ];
 
     const rows = filteredReservations.map((res) => {
-      const dues = getBookingDues(res);
-      const duesDisplay = dues === null ? 'Unverified' : `$${dues}`;
+      const invDues = getBookingDues(res);
+      const dues = invDues !== null ? invDues : (res.dues !== undefined ? res.dues : null);
+      const duesDisplay = dues === null || dues === undefined ? 'Unverified' : `$${Number(dues).toLocaleString()}`;
       const priceDisplay = res.totalPrice !== null ? `$${res.totalPrice}` : '—';
       const inventoryStr = (res.inventory && res.inventory.length > 0)
         ? res.inventory.map(item => `${item.name} ($${item.price})`).join('; ')
@@ -576,7 +639,7 @@ export default function ReservationHistory() {
           
           {/* Segmented Filter Control & Custom Popup */}
           <div className="relative flex bg-white border border-gray-200 rounded-md shadow-2xs shrink-0 overflow-hidden">
-            {['Daily', 'Weekly', 'Monthly', 'Yearly', 'Custom'].map(tab => (
+            {['All', 'Daily', 'Weekly', 'Monthly', 'Yearly', 'Custom'].map(tab => (
               <button
                 key={tab}
                 onClick={() => {
@@ -696,7 +759,8 @@ export default function ReservationHistory() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {paginatedReservations.map((res) => {
-                const dues = getBookingDues(res);
+                const invDues = getBookingDues(res);
+                const dues = invDues !== null ? invDues : (res.dues !== undefined ? res.dues : null);
 
                 return (
                   <tr key={res.id} className="hover:bg-gray-50/50 transition-colors">
@@ -714,8 +778,8 @@ export default function ReservationHistory() {
                       {res.totalPrice !== null ? `$${res.totalPrice}` : '—'}
                     </td>
                     <td className="py-1.5 px-1.5 text-[11px] font-semibold whitespace-nowrap">
-                      {dues === null ? <span className="text-amber-600">Unverified</span> : dues > 0 ? (
-                        <span className="text-red-500 font-bold">${dues}</span>
+                      {dues === null || dues === undefined ? <span className="text-amber-600">Unverified</span> : Number(dues) > 0 ? (
+                        <span className="text-red-500 font-bold">${Number(dues).toLocaleString()}</span>
                       ) : (
                         <span className="text-gray-400 font-normal">$0</span>
                       )}
@@ -865,8 +929,9 @@ export default function ReservationHistory() {
                     <div className="text-gray-400 text-[10.5px] uppercase font-bold">Outstanding Dues</div>
                     <div className="text-[14px] font-bold text-red-500 mt-0.5">
                       {(() => {
-                        const dues = getBookingDues(selectedRes);
-                        return dues === null ? <span className="text-amber-600 font-medium">Unverified</span> : `$${dues}`;
+                        const invDues = getBookingDues(selectedRes);
+                        const dues = invDues !== null ? invDues : (selectedRes.dues !== undefined ? selectedRes.dues : null);
+                        return dues === null || dues === undefined ? <span className="text-amber-600 font-medium">Unverified</span> : `$${Number(dues).toLocaleString()}`;
                       })()}
                     </div>
                   </div>

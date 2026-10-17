@@ -110,7 +110,7 @@ export async function initializeRestaurantStore(force = false) {
 }
 
 // Auto-initialize if token exists
-if (typeof window !== 'undefined' && null) {
+if (typeof window !== 'undefined' && localStorage.getItem('accessToken')) {
   initializeRestaurantStore();
 }
 
@@ -138,6 +138,17 @@ export async function addCategory(categoryData) {
   }
 }
 
+export async function deleteCategory(id) {
+  try {
+    await restaurantService.deleteCategory(id);
+    CATEGORIES = CATEGORIES.filter(c => c.id !== id && c._id !== id);
+    notifyCategories();
+  } catch (err) {
+    console.error('Failed to delete category on backend:', err);
+    throw err;
+  }
+}
+
 // ─── Menu Items Public API ───────────────────────────────────
 
 export function getMenuItems() {
@@ -151,7 +162,6 @@ export function subscribeMenuItems(fn) {
 
 export async function addMenuItem(data) {
   try {
-    // If categoryId matches a local dummy slug, find or map matching backend category
     let finalCatId = data.categoryId;
     const matchedCategory = CATEGORIES.find(c => c.id === data.categoryId || c._id === data.categoryId);
     if (matchedCategory && matchedCategory._id) {
@@ -280,15 +290,28 @@ export async function placeOrder(payload) {
 }
 
 export async function updateOrder(id, payload) {
-  // Operational edit of existing order notes or status
   try {
     const existing = _orders.find(o => o.id === id || o._id === id || o.order_ref === id);
     if (!existing) return;
     const backendId = existing._id || existing.id;
 
     if (payload.status) {
-      return await updateOrderStatus(id, payload.status);
+      await updateOrderStatus(id, payload.status);
     }
+
+    const backendPayload = {
+      customer_name: payload.customer || payload.customer_name,
+      room_number: payload.roomNo && payload.roomNo !== '—' && payload.roomNo !== '-' ? String(payload.roomNo).trim() : undefined,
+      notes: payload.notes || payload.description,
+    };
+
+    const res = await restaurantService.updateOrder(backendId, backendPayload);
+    const updated = adaptOrderToUI(res?.data || res);
+
+    _orders = _orders.map(o => (o.id === id || o._id === id || o.order_ref === id ? updated : o));
+    notifyOrders();
+    window.dispatchEvent(new Event('restaurant_update'));
+    return updated;
   } catch (err) {
     console.error('Failed to update order on backend:', err);
     throw err;
@@ -300,11 +323,28 @@ export async function updateOrderStatus(id, uiStatus) {
     const existing = _orders.find(o => o.id === id || o._id === id || o.order_ref === id);
     if (!existing) return;
     const backendId = existing._id || existing.id;
-    const backendStatus = mapUIStatusToBackend(uiStatus);
+    const targetStatus = mapUIStatusToBackend(uiStatus);
 
-    const res = await restaurantService.updateOrderStatus(backendId, { status: backendStatus });
+    let res;
+    // Walk canonical state machine safely:
+    // PENDING -> PREPARING -> SERVED -> COMPLETED
+    if (targetStatus === 'COMPLETED') {
+      if (existing.rawStatus === 'PENDING') {
+        await restaurantService.updateOrderStatus(backendId, { status: 'PREPARING' });
+        await restaurantService.updateOrderStatus(backendId, { status: 'SERVED' });
+      } else if (existing.rawStatus === 'PREPARING') {
+        await restaurantService.updateOrderStatus(backendId, { status: 'SERVED' });
+      }
+      res = await restaurantService.updateOrderStatus(backendId, { status: 'COMPLETED' });
+    } else if (targetStatus === 'PREPARING') {
+      if (existing.rawStatus === 'PENDING') {
+        res = await restaurantService.updateOrderStatus(backendId, { status: 'PREPARING' });
+      }
+    } else {
+      res = await restaurantService.updateOrderStatus(backendId, { status: targetStatus });
+    }
+
     const updated = adaptOrderToUI(res?.data || res);
-
     _orders = _orders.map(o => (o.id === id || o._id === id || o.order_ref === id ? updated : o));
     notifyOrders();
     window.dispatchEvent(new Event('restaurant_update'));
@@ -321,12 +361,11 @@ export async function deleteOrder(id) {
     if (!existing) return;
     const backendId = existing._id || existing.id;
 
-    // Terminal orders cannot be physically deleted; cancel if active
+    // Proactively cancel active order on backend to void guest charges and maintain audit log
     if (existing.rawStatus === 'PENDING' || existing.rawStatus === 'PREPARING') {
       await restaurantService.updateOrderStatus(backendId, { status: 'CANCELLED', notes: 'Cancelled by staff' });
       _orders = _orders.map(o => (o.id === id || o._id === id || o.order_ref === id ? { ...o, status: 'Cancelled', rawStatus: 'CANCELLED' } : o));
     } else {
-      // If completed or cancelled, local filter
       _orders = _orders.filter(o => o.id !== id && o._id !== id && o.order_ref !== id);
     }
 

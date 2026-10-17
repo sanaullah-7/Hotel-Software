@@ -2,12 +2,14 @@ import jwt from "jsonwebtoken";
 import ApiError from "../utils/apiError.js";
 import { ENV } from "../config/env.js";
 import Account from "../database/platform/models/account.model.js";
+import Hotel from "../database/platform/models/hotel.model.js";
+import { ROLES } from "../constants/roles.js";
 
 /**
  * Authentication: "Who is this user?"
  *  - verifies the JWT signature/expiry/type
  *  - re-loads the account from the DB (role/hotelId are NEVER trusted from the token)
- *  - rejects non-active accounts and revoked tokens (tokenVersion mismatch)
+ *  - rejects non-active accounts, inactive hotels, and revoked tokens (tokenVersion mismatch)
  */
 const authMiddleware = async (req, res, next) => {
   // Already authenticated earlier in this request (flag is set server-side only).
@@ -35,6 +37,15 @@ const authMiddleware = async (req, res, next) => {
       throw new ApiError(403, "Account is not active");
     }
 
+    let hotel = null;
+    // If account belongs to a hotel, ensure the hotel is active (blocks pending or suspended hotels)
+    if (account.hotelId && account.role !== ROLES.PLATFORM_ADMIN) {
+      hotel = await Hotel.findById(account.hotelId).select("status property_name").lean();
+      if (hotel && hotel.status !== "active") {
+        throw new ApiError(403, "Hotel account is not active. Access denied.");
+      }
+    }
+
     // Token revocation (logout / password reset bump tokenVersion).
     if ((decoded.tv ?? 0) !== (account.tokenVersion ?? 0)) {
       throw new ApiError(401, "Token has been revoked");
@@ -44,8 +55,8 @@ const authMiddleware = async (req, res, next) => {
       id: account._id,
       role: account.role,
       email: account.email,
-      fullName: account.fullName,
       hotelId: account.hotelId,
+      hotelName: hotel?.property_name || null,
       fullName: account.fullName,
       phone: account.phone,
     };

@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const guestDocumentSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     guest_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Guest',
@@ -28,7 +23,12 @@ const guestDocumentSchema = new mongoose.Schema(
     },
     document_number: {
       type: String,
-      required: true,
+      default: 'N/A',
+    },
+    file_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'FileRecord',
+      default: null,
     },
     document_url: {
       type: String,

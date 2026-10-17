@@ -39,7 +39,7 @@ export default function EventToolbar({
         {/* Left Side: Search Bar Input & Bulk Actions */}
         <div className="assigned-table-toolbar flex items-center gap-2 flex-1 max-w-md">
           <SearchInput
-            placeholder="Search..."
+            placeholder="Search by event, customer, venue..."
             value={searchQuery}
             onChange={onSearchChange}
             variant="slate"

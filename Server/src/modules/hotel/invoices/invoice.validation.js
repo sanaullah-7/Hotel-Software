@@ -9,7 +9,7 @@ export const lineItemSchema = Joi.object({
 
 export const createInvoiceSchema = Joi.object({
   folio_id: Joi.string().hex().length(24).optional(),
-  reservation_id: Joi.string().hex().length(24).optional(),
+  reservation_id: Joi.string().trim().max(100).optional(),
   guest_id: Joi.string().hex().length(24).optional(),
   due_date: Joi.date().iso().optional().allow(null),
   line_items: Joi.array().items(lineItemSchema).min(1).required().messages({

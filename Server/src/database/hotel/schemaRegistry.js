@@ -41,6 +41,7 @@ import invoiceSchema from './schemas/financials/invoice.schema.js';
 import paymentSchema from './schemas/financials/payment.schema.js';
 import refundSchema from './schemas/financials/refund.schema.js';
 import expenseSchema from './schemas/financials/expense.schema.js';
+import cashShiftSchema from './schemas/financials/cashShift.schema.js';
 
 // Housekeeping
 import housekeepingTaskSchema from './schemas/housekeeping/housekeepingTask.schema.js';
@@ -115,6 +116,7 @@ export const SCHEMAS = {
   Payment: paymentSchema,
   Refund: refundSchema,
   Expense: expenseSchema,
+  CashShift: cashShiftSchema,
   HousekeepingTask: housekeepingTaskSchema,
   HousekeepingInspection: housekeepingInspectionSchema,
   HousekeepingChecklist: housekeepingChecklistSchema,
@@ -142,11 +144,3 @@ export const SCHEMAS = {
   FileRecord: fileRecordSchema,
   AuditLog: auditLogSchema,
 };
-
-// Every hotel-owned collection needs an efficient ownership filter, including
-// collections without a natural unique business key.
-for (const schema of Object.values(SCHEMAS)) {
-  if (!schema.indexes().some(([keys]) => Object.keys(keys)[0] === 'hotelId')) {
-    schema.index({ hotelId: 1 });
-  }
-}

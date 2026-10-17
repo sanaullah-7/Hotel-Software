@@ -199,6 +199,14 @@ export const updateOrderStatusSchema = Joi.object({
   notes: Joi.string().trim().max(1000).optional().allow(""),
 });
 
+export const updateOrderSchema = Joi.object({
+  customer_name: Joi.string().trim().max(100).optional().allow(""),
+  room_number: Joi.string().trim().max(50).optional().allow(""),
+  payment_mode: Joi.string().valid(...PAYMENT_MODES).optional(),
+  notes: Joi.string().trim().max(1000).optional().allow(""),
+  status: Joi.string().valid(...ORDER_STATUSES).optional(),
+}).min(1);
+
 export const queryOrderSchema = Joi.object({
   status: Joi.string().valid(...ORDER_STATUSES).optional(),
   table_id: Joi.string().hex().length(24).optional(),

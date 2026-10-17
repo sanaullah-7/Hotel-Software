@@ -234,7 +234,7 @@ export default function Dashboard() {
         {/* Pending Actions */}
         <div className="sa-card" style={{ padding: 8 }}>
           <h3 style={{ fontSize: 15, fontWeight: 700, margin: '4px 4px 12px' }}>Pending Actions</h3>
-          <PendingActions pendingCount={stats?.pendingApprovals || 0} />
+          <PendingActions pendingCount={stats?.pendingApprovals || 0} hotelStats={hotelStats || stats} />
         </div>
       </div>
     </div>

@@ -2,10 +2,10 @@ import { defineConfig } from 'vite'
 import tailwindcss from '@tailwindcss/vite'
 import react from "@vitejs/plugin-react";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
-    tailwindcss(),
+    ...(process.env.VITEST ? [] : [tailwindcss()]),
   ],
   server: {
     port: 5173,
@@ -51,4 +51,4 @@ export default defineConfig({
     //"Vitest, test run karne se pehle ye setup.js file chala dena."
     setupFiles: "./src/test/setup.js",
   },
-})
+}))

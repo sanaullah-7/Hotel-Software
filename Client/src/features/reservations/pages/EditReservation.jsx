@@ -8,6 +8,7 @@ import {
   TextField, MenuItem, FormControl, InputLabel, Select, Alert, CircularProgress
 } from '@mui/material';
 import reservationService from '../../../services/reservationService';
+import { fileService } from '../../../services/fileService';
 import { registrationFormService } from '../../../services/registrationFormService';
 import { toFrontendReservation, toBackendReservationPayload } from '../adapters/reservationAdapter';
 import { getReservations, syncReservationsFromBackend } from '../state/reservationStore';
@@ -57,8 +58,10 @@ export default function EditReservation() {
   const [selectedFile, setSelectedFile] = useState(null);
   const fileInputRef = React.useRef(null);
   const [guestProfileImage, setGuestProfileImage] = useState(null);
+  const [isUploadingProfile, setIsUploadingProfile] = useState(false);
   const profileImageInputRef = React.useRef(null);
-  const [cnicBase64, setCnicBase64] = useState(null);
+  const [cnicFileUrl, setCnicFileUrl] = useState(null);
+  const [isUploadingCnic, setIsUploadingCnic] = useState(false);
 
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -281,40 +284,40 @@ export default function EditReservation() {
     });
   };
 
-  const compressImage = (file, maxWidth = 200, quality = 0.6) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const scale = Math.min(1, maxWidth / img.width);
-          canvas.width = img.width * scale;
-          canvas.height = img.height * scale;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', quality));
-        };
-        img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleFileChange = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
       setSelectedFile(file);
-      const compressed = await compressImage(file, 400, 0.6);
-      setCnicBase64(compressed);
+      setIsUploadingCnic(true);
+      try {
+        const uploadRes = await fileService.uploadFile(file, { folder: 'guest_documents', entity_ref: 'CNIC' });
+        if (uploadRes?.file_url) {
+          setCnicFileUrl(uploadRes.file_url);
+        }
+      } catch (err) {
+        console.warn('CNIC file upload failed:', err);
+      } finally {
+        setIsUploadingCnic(false);
+      }
     }
   };
 
   const handleProfileImageChange = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      const compressed = await compressImage(file, 150, 0.5);
-      setGuestProfileImage(compressed);
+      const previewUrl = URL.createObjectURL(file);
+      setGuestProfileImage(previewUrl);
+      setIsUploadingProfile(true);
+      try {
+        const uploadRes = await fileService.uploadFile(file, { folder: 'guests', entity_ref: 'GUEST_PROFILE' });
+        if (uploadRes?.file_url) {
+          setGuestProfileImage(uploadRes.file_url);
+        }
+      } catch (err) {
+        console.warn('Profile image upload failed, keeping preview:', err);
+      } finally {
+        setIsUploadingProfile(false);
+      }
     }
   };
 
@@ -327,13 +330,40 @@ export default function EditReservation() {
 
     try {
       if (!formData.firstName?.trim()) {
-        throw new Error('First Name is required.');
+        throw new Error('Guest First Name is required.');
       }
-      if (!formData.checkInDate || !formData.checkOutDate) {
-        throw new Error('Check-in and Check-out dates are required.');
+      if (!formData.lastName?.trim()) {
+        throw new Error('Guest Last Name is required.');
       }
-      if (new Date(formData.checkOutDate) <= new Date(formData.checkInDate)) {
-        throw new Error('Check-out date must be strictly after check-in date.');
+      if (!formData.email?.trim()) {
+        throw new Error('Guest Email Address is required.');
+      }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        throw new Error('Please enter a valid guest email address (e.g. guest@example.com).');
+      }
+      if (!formData.mobile?.trim()) {
+        throw new Error('Guest Mobile / Phone number is required.');
+      }
+      if (!formData.checkInDate) {
+        throw new Error('Arrival Date is required.');
+      }
+      if (!formData.checkOutDate) {
+        throw new Error('Departure Date is required.');
+      }
+      const checkInObj = new Date(formData.checkInDate);
+      const checkOutObj = new Date(formData.checkOutDate);
+      if (isNaN(checkInObj.getTime()) || isNaN(checkOutObj.getTime())) {
+        throw new Error('Please enter valid Arrival and Departure dates.');
+      }
+      if (checkOutObj <= checkInObj) {
+        throw new Error('Departure Date must be strictly after Arrival Date.');
+      }
+      if (!formData.roomType?.trim()) {
+        throw new Error('Please select a Room Type.');
+      }
+      if (!formData.totalPerson || Number(formData.totalPerson) < 1) {
+        throw new Error('Total Person must be at least 1.');
       }
 
       // Resolve the newly selected room & roomType from canonical inventory
@@ -392,8 +422,25 @@ export default function EditReservation() {
         } catch {}
       }
 
+      const gId = originalBooking?.guestId || originalBooking?.primary_guest_id;
+      // Update guest avatar if changed
+      if (guestProfileImage && !guestProfileImage.startsWith('blob:') && gId) {
+        try {
+          await guestService.updateGuest(gId, { avatar: guestProfileImage });
+          await guestService.createGuestDocument(gId, {
+            document_url: guestProfileImage,
+            document_type: 'Profile Picture',
+            document_number: formData.idNumber || 'N/A',
+            name: `${formData.firstName || ''} ${formData.lastName || ''} Profile Picture`.trim(),
+            room_number: selectedRoom ? String(selectedRoom.roomNo) : (originalBooking?.roomNo || 'N/A'),
+            status: 'Signed & Verified'
+          });
+        } catch {}
+      }
+
       // Optional CNIC document storage
-      if (cnicBase64) {
+      const finalCnic = (cnicFileUrl && !cnicFileUrl.startsWith('blob:')) ? cnicFileUrl : '';
+      if (finalCnic || selectedFile) {
         try {
           const fullName = `${formData.firstName || ''} ${formData.lastName || ''}`.trim() || 'Guest';
           await registrationFormService.createRegistrationForm({
@@ -403,8 +450,19 @@ export default function EditReservation() {
             idType: 'CNIC',
             idNumber: formData.idNumber || 'N/A',
             room: selectedRoom ? String(selectedRoom.roomNo) : (originalBooking?.roomNo || 'N/A'),
+            document_url: finalCnic,
             status: 'Signed & Verified'
           });
+          if (gId && finalCnic) {
+            await guestService.createGuestDocument(gId, {
+              document_url: finalCnic,
+              document_type: 'CNIC',
+              document_number: formData.idNumber || 'N/A',
+              name: `${fullName} CNIC`,
+              room_number: selectedRoom ? String(selectedRoom.roomNo) : (originalBooking?.roomNo || 'N/A'),
+              status: 'Signed & Verified'
+            });
+          }
         } catch (err) {
           console.warn('Backend registration form creation error:', err);
         }
@@ -490,8 +548,10 @@ export default function EditReservation() {
                     onClick={() => profileImageInputRef.current?.click()}
                     title="Click to upload profile photo"
                   >
-                    <div className="w-14 h-14 rounded-full border-2 border-gray-200 group-hover:border-[#1b7f43] transition-colors overflow-hidden bg-white shadow-2xs flex items-center justify-center">
-                      {guestProfileImage ? (
+                    <div className="w-14 h-14 rounded-full border-2 border-gray-200 group-hover:border-[#1b7f43] transition-colors overflow-hidden bg-white shadow-2xs flex items-center justify-center relative">
+                      {isUploadingProfile ? (
+                        <CircularProgress size={22} sx={{ color: '#1b7f43' }} />
+                      ) : guestProfileImage ? (
                         <img src={guestProfileImage} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
                         <Person sx={{ fontSize: 32, color: '#9ca3af' }} />
@@ -514,9 +574,9 @@ export default function EditReservation() {
 
                 {/* Form Fields Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1 w-full">
-                  <TextField required label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
-                  <TextField label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
-                  <TextField label="Email Address" name="email" type="email" value={formData.email} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
+                  <TextField required label="First Name *" name="firstName" value={formData.firstName} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
+                  <TextField required label="Last Name *" name="lastName" value={formData.lastName} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
+                  <TextField required label="Email Address *" name="email" type="email" value={formData.email} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
 
                   <FormControl size="small" fullWidth sx={muiInputSx}>
                     <InputLabel>Gender</InputLabel>
@@ -527,7 +587,7 @@ export default function EditReservation() {
                     </Select>
                   </FormControl>
 
-                  <TextField label="Mobile" name="mobile" value={formData.mobile} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
+                  <TextField required label="Mobile *" name="mobile" value={formData.mobile} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
                   <TextField label="City" name="city" value={formData.city} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
                   <TextField label="ID/Passport Number" name="idNumber" value={formData.idNumber} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
                   <TextField label="Nationality" name="nationality" value={formData.nationality} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
@@ -545,22 +605,23 @@ export default function EditReservation() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="flex gap-2">
-                  <TextField type="date" label="Arrival Date" name="checkInDate" value={formData.checkInDate} onChange={handleChange} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
-                  <TextField type="date" label="Departure Date" name="checkOutDate" value={formData.checkOutDate} onChange={handleChange} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
+                  <TextField required type="date" label="Arrival Date *" name="checkInDate" value={formData.checkInDate} onChange={handleChange} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
+                  <TextField required type="date" label="Departure Date *" name="checkOutDate" value={formData.checkOutDate} onChange={handleChange} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
                 </div>
 
                 {/* Cascading Room Type Dropdown */}
-                <FormControl size="small" fullWidth sx={muiInputSx}>
-                  <InputLabel id="edit-res-room-type-label">Select Room Type</InputLabel>
+                <FormControl required size="small" fullWidth sx={muiInputSx}>
+                  <InputLabel id="edit-res-room-type-label">Select Room Type *</InputLabel>
                   <Select
                     labelId="edit-res-room-type-label"
                     id="edit-res-room-type"
                     name="roomType"
                     value={formData.roomType}
-                    label="Select Room Type"
+                    label="Select Room Type *"
                     onChange={handleChange}
+                    required
                   >
-                    <MenuItem value=""><em>All Room Types (Show All)</em></MenuItem>
+                    <MenuItem value=""><em>Select Room Type...</em></MenuItem>
                     {availableRoomTypes.map((type) => (
                       <MenuItem key={type} value={type}>
                         {type}
@@ -615,7 +676,7 @@ export default function EditReservation() {
                   )}
                 </div>
 
-                <TextField required type="number" label="Total Person" name="totalPerson" value={formData.totalPerson} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
+                <TextField required type="number" label="Total Person *" name="totalPerson" value={formData.totalPerson} onChange={handleChange} sx={muiInputSx} size="small" fullWidth inputProps={{ min: 1 }} />
                 <TextField type="number" label="Number of Rooms" name="numberOfRooms" value={formData.numberOfRooms} onChange={handleChange} sx={muiInputSx} size="small" fullWidth />
 
                 {/* Package Dropdown */}
@@ -698,11 +759,26 @@ export default function EditReservation() {
                   htmlFor="cnic-upload"
                   className="w-full border-2 border-dashed border-gray-200 rounded-lg p-3.5 flex flex-col items-center justify-center text-center hover:bg-gray-50 transition-colors cursor-pointer bg-[#fafafa]"
                 >
-                  <UploadFile className="text-gray-400 mb-1" sx={{ fontSize: 24 }} />
-                  <p className="text-xs font-semibold text-gray-700">Upload Your CNIC</p>
-                  <p className="text-[11px] text-gray-400 mt-0.5">
-                    {selectedFile ? <span className="text-[#1b7f43] font-medium">{selectedFile.name}</span> : 'No file chosen'}
-                  </p>
+                  {isUploadingCnic ? (
+                    <div className="flex items-center gap-2 py-1">
+                      <CircularProgress size={20} sx={{ color: '#1b7f43' }} />
+                      <span className="text-xs font-semibold text-[#1b7f43]">Uploading to Cloudinary...</span>
+                    </div>
+                  ) : (
+                    <>
+                      <UploadFile className="text-gray-400 mb-1" sx={{ fontSize: 24 }} />
+                      <p className="text-xs font-semibold text-gray-700">Upload Your CNIC / Identification</p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        {cnicFileUrl ? (
+                          <span className="text-[#1b7f43] font-medium">✓ Uploaded ({selectedFile?.name || 'Document'})</span>
+                        ) : selectedFile ? (
+                          <span className="text-[#1b7f43] font-medium">{selectedFile.name}</span>
+                        ) : (
+                          'No file chosen (PNG, JPG, PDF)'
+                        )}
+                      </p>
+                    </>
+                  )}
                 </label>
 
                 <TextField label="Note" name="note" value={formData.note} onChange={handleChange} sx={muiInputSx} size="small" fullWidth multiline rows={2} />

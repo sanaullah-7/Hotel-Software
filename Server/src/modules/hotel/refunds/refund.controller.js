@@ -4,7 +4,7 @@ import { HTTP_STATUS } from "../../../constants/httpStatusCodes.js";
 import * as refundService from "./refund.service.js";
 
 export const createRefund = asyncHandler(async (req, res) => {
-  const refund = await refundService.createRefund(req.hotelContext, req.body);
+  const refund = await refundService.createRefund(req.hotelContext, req.body, req.user);
   return res
     .status(HTTP_STATUS.CREATED)
     .json(new ApiResponse(HTTP_STATUS.CREATED, refund, "Refund created successfully"));

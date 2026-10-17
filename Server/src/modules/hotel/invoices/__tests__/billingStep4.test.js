@@ -349,15 +349,11 @@ describe("Phase 6 Step 4: Downstream Consolidation & Financial Integrity Hardeni
         .send({ reservation_id: resObj._id });
       const folio = fRes.body.data;
 
-      // Create $500 invoice
-      const invRes = await request(app)
-        .post("/api/v1/hotel/invoices")
-        .set("Authorization", `Bearer ${adminTokenA}`)
-        .send({
-          folio_id: folio._id,
-          line_items: [{ description: "Stay Package", amount: 500 }],
-        });
-      const invoice = invRes.body.data;
+      // Retrieve the auto-created invoice for the reservation (2 nights @ 250 = $500)
+      const invList = await request(app)
+        .get(`/api/v1/hotel/invoices?folio_id=${folio._id}`)
+        .set("Authorization", `Bearer ${adminTokenA}`);
+      const invoice = invList.body.data[0];
 
       // Verify dues is $500
       let check = await request(app).get(`/api/v1/hotel/reservations/${resObj._id}`).set("Authorization", `Bearer ${adminTokenA}`);

@@ -23,13 +23,13 @@ import CommandPalette from './CommandPalette';
 
 const Topbar = ({ onMobileNavToggle }) => {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const { logout } = useAuth();
   // State for profile menu
   const [profileAnchorEl, setProfileAnchorEl] = useState(null);
   const isProfileMenuOpen = Boolean(profileAnchorEl);
 
-  const [profileName, setProfileName] = useState(user?.fullName || user?.email || 'Admin');
-  const [profileLogo, setProfileLogo] = useState(null);
+  const [profileName, setProfileName] = useState(localStorage.getItem('fullName') || 'Admin');
+  const [profileLogo, setProfileLogo] = useState(localStorage.getItem('ownerLogo') || null);
 
   // Command Palette State
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
@@ -37,15 +37,8 @@ const Topbar = ({ onMobileNavToggle }) => {
 
   useEffect(() => {
     const handleStorage = () => {
-      setProfileName(user?.fullName || user?.email || 'Admin');
-      setProfileLogo(null);
-    };
-
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setIsCommandPaletteOpen((prev) => !prev);
-      }
+      setProfileName(localStorage.getItem('fullName') || 'Admin');
+      setProfileLogo(localStorage.getItem('ownerLogo') || null);
     };
 
     const handleFullscreenChange = () => {
@@ -53,12 +46,10 @@ const Topbar = ({ onMobileNavToggle }) => {
     };
 
     window.addEventListener('storage', handleStorage);
-    window.addEventListener('keydown', handleKeyDown);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     
     return () => {
       window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, []);
@@ -88,6 +79,7 @@ const Topbar = ({ onMobileNavToggle }) => {
       <CommandPalette 
         isOpen={isCommandPaletteOpen} 
         onClose={() => setIsCommandPaletteOpen(false)} 
+        onOpen={() => setIsCommandPaletteOpen(true)}
       />
 
       <Box

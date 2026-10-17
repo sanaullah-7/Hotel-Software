@@ -3,14 +3,14 @@ import ApiResponse from "../../../utils/apiResponse.js";
 import { getModel } from "../../../database/hotel/modelFactory.js";
 import { HTTP_STATUS } from "../../../constants/httpStatusCodes.js";
 
-// Exactly one profile per hotel (unique compound index on hotelId).
+// Singleton: exactly one profile per tenant database. The unique `_singleton` index makes a
+// concurrent double-create impossible; the loser simply re-reads the winner's document.
 const getOrCreateProfile = async (hotelContext) => {
   const HotelProfile = await getModel(hotelContext, "HotelProfile");
-  const existing = await HotelProfile.findOne({ hotelId: hotelContext });
+  const existing = await HotelProfile.findOne();
   if (existing) return existing;
   try {
     return await HotelProfile.create({
-      hotelId: hotelContext,
       property_name: "New Hotel",
       legal_name: "New Hotel LLC",
       email: "info@hotel.com",
@@ -22,7 +22,7 @@ const getOrCreateProfile = async (hotelContext) => {
       timezone: "Asia/Karachi",
     });
   } catch (err) {
-    if (err.code === 11000) return HotelProfile.findOne({ hotelId: hotelContext });
+    if (err.code === 11000) return HotelProfile.findOne();
     throw err;
   }
 };
@@ -36,14 +36,7 @@ export const updateHotelProfile = asyncHandler(async (req, res) => {
   const HotelProfile = await getModel(req.hotelContext, "HotelProfile");
   const profile = await getOrCreateProfile(req.hotelContext);
 
-  const updateData = { ...req.body };
-  delete updateData.hotelId;
-
-  const updated = await HotelProfile.findOneAndUpdate(
-    { _id: profile._id, hotelId: req.hotelContext },
-    updateData,
-    { returnDocument: "after", runValidators: true }
-  );
+  const updated = await HotelProfile.findByIdAndUpdate(profile._id, req.body, { returnDocument: "after", runValidators: true });
 
   res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, updated, "Hotel profile updated successfully"));
 });

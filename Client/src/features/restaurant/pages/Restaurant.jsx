@@ -38,7 +38,38 @@ export default function Restaurant() {
  return (
  <div className="flex flex-col gap-4 animate-fade-in">
 
- {/* ─── Sub-Tab Bar Removed ────────────────────────── */}
+  {/* ─── Sub-Tab Navigation Bar ────────────────────────── */}
+  <div className="flex items-center justify-between border-b border-gray-200/80 pb-2">
+    <div className="flex items-center gap-2">
+      {SUB_TABS.map((tab) => {
+        const isActive = activeKey === tab.key;
+        const Icon = tab.Icon;
+        return (
+          <button
+            key={tab.key}
+            onClick={() => navigate(tab.path)}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+              isActive
+                ? 'bg-[var(--primary-main)] text-white shadow-xs'
+                : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-50 border border-gray-200'
+            }`}
+          >
+            <Icon sx={{ fontSize: 16 }} />
+            <span>{tab.label}</span>
+            {tab.key === 'orders' && inProgressCount > 0 && (
+              <span
+                className={`ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                  isActive ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-700'
+                }`}
+              >
+                {inProgressCount}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  </div>
 
  {/* ─── Active Tab Content ──────────────────────────── */}
  <div className="flex-1 min-h-0">

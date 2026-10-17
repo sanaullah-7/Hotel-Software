@@ -1,11 +1,11 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 const lostFoundItemSchema = new mongoose.Schema(
   {
-    hotelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hotel', required: true },
     reference_number: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     item_type: {
@@ -67,6 +67,5 @@ const lostFoundItemSchema = new mongoose.Schema(
 lostFoundItemSchema.index({ status: 1 });
 lostFoundItemSchema.index({ is_deleted: 1 });
 lostFoundItemSchema.index({ found_date: -1 });
-lostFoundItemSchema.index({ hotelId: 1, reference_number: 1 }, { unique: true });
 
 export default lostFoundItemSchema;

@@ -92,13 +92,25 @@ export default function OrdersTab() {
     setActionAnchorEl(null);
   };
 
-  const handleStatusUpdate = (status) => {
-    if (selectedOrder) updateOrderStatus(selectedOrder.id, status);
+  const handleStatusUpdate = async (status) => {
+    if (selectedOrder) {
+      try {
+        await updateOrderStatus(selectedOrder.id, status);
+      } catch (err) {
+        console.error('Status update error:', err);
+      }
+    }
     handleActionMenuClose();
   };
 
-  const handleDelete = () => {
-    if (selectedOrder) deleteOrder(selectedOrder.id);
+  const handleDelete = async () => {
+    if (selectedOrder) {
+      try {
+        await deleteOrder(selectedOrder.id);
+      } catch (err) {
+        console.error('Delete order error:', err);
+      }
+    }
     handleActionMenuClose();
   };
 

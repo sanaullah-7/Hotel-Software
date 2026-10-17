@@ -75,7 +75,6 @@ export default function Hotels() {
       ) : (
         <>
           <HotelTable data={data} loading={loading} onRefresh={fetchData} />
-          // eslint-disable-next-line react-hooks/set-state-in-effect
           <Pagination page={page} total={total} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(s) => { setPageSize(s); setPage(1); }} />
         </>
       )}

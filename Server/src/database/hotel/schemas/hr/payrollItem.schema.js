@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const payrollItemSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     run_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'PayrollRun',
@@ -34,9 +29,27 @@ const payrollItemSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    paid_amount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    payment_method: {
+      type: String,
+      enum: ['BANK_TRANSFER', 'CASH', 'CHEQUE', 'ONLINE'],
+      default: 'BANK_TRANSFER',
+    },
+    payment_date: {
+      type: Date,
+    },
+    payment_notes: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     status: {
       type: String,
-      enum: ['PENDING', 'PAID', 'FAILED'],
+      enum: ['PENDING', 'PARTIAL', 'PAID', 'FAILED'],
       default: 'PENDING',
     },
   },

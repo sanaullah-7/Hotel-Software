@@ -2,14 +2,10 @@ import mongoose from 'mongoose';
 
 const complaintSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     complaint_ref: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     guest_id: {
@@ -83,7 +79,5 @@ const complaintSchema = new mongoose.Schema(
 complaintSchema.index({ guest_id: 1, created_at: -1 });
 complaintSchema.index({ status: 1 });
 complaintSchema.index({ room_id: 1 });
-
-complaintSchema.index({ hotelId: 1, complaint_ref: 1 }, { unique: true });
 
 export default complaintSchema;

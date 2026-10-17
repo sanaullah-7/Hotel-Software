@@ -18,9 +18,14 @@ export const createReservationSchema = Joi.object({
   adults: Joi.number().integer().min(1).default(1).required(),
   children: Joi.number().integer().min(0).default(0),
   special_requests: Joi.string().allow("", null).max(500),
-  room_type_id: Joi.string().hex().length(24).optional().allow(null),
-  room_id: Joi.string().hex().length(24).optional().allow(null),
+  room_type_id: Joi.string().hex().length(24).optional(),
+  room_id: Joi.string().hex().length(24).optional(),
   rate_plan_id: Joi.string().hex().length(24).optional().allow(null),
+  payment_status: Joi.string().optional().allow(null, ""),
+  payment: Joi.string().optional().allow(null, ""),
+  payment_method: Joi.string().optional().allow(null, ""),
+}).or("room_type_id", "room_id").messages({
+  "object.missing": "At least one of room_type_id or room_id is required to create a reservation",
 });
 
 export const updateReservationSchema = Joi.object({
@@ -93,5 +98,14 @@ export const updateGroupReservationSchema = Joi.object({
 export const cancelGroupReservationSchema = Joi.object({
   cancellation_reason: Joi.string().allow("", null).max(500),
 });
+
+export const reassignReservationRoomSchema = Joi.object({
+  room_id: Joi.string().hex().length(24).required().messages({
+    "any.required": "Destination room_id is required",
+    "string.length": "room_id must be a valid 24-character ObjectId",
+  }),
+  reservation_room_id: Joi.string().hex().length(24).optional().allow(null),
+});
+
 
 

@@ -1,8 +1,7 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 const ratePlanSchema = new mongoose.Schema(
   {
-    hotelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hotel', required: true },
     code: {
       type: String,
       required: true,
@@ -83,6 +82,6 @@ const ratePlanSchema = new mongoose.Schema(
   }
 );
 
-ratePlanSchema.index({ hotelId: 1, code: 1 }, { unique: true });
+ratePlanSchema.index({ code: 1 }, { unique: true });
 
 export default ratePlanSchema;

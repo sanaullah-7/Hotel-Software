@@ -1,12 +1,23 @@
 import { addAuditLog } from '../../audit/state/auditStore.js';
 import { toFrontendGuest } from '../adapters/guestAdapter.js';
 
-let memoryCache = [];
+const STORAGE_KEY = 'hotel_guests_v1';
 export const GUESTS_UPDATED_EVENT = 'guests_update';
 // Kept as an event contract for existing reservation consumers.
 export const RESERVATIONS_UPDATED_EVENT = 'reservations_update';
 
-function readGuests() { return memoryCache; }
+function readGuests() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored !== null) {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : [];
+    }
+  } catch {
+    return [];
+  }
+  return [];
+}
 
 /**
  * Synchronous compatibility read of cached guests.
@@ -84,7 +95,7 @@ export function resolveGuestForBooking(booking) {
  */
 export function saveGuests(guests) {
   try {
-    // localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.isArray(guests) ? guests : []));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.isArray(guests) ? guests : []));
   } catch {
     // Ignore storage quota or private-mode errors
   }

@@ -14,6 +14,7 @@ import {
   createTableSchema,
   updateTableSchema,
   createOrderSchema,
+  updateOrderSchema,
   updateOrderStatusSchema,
 } from "./restaurant.validation.js";
 
@@ -140,6 +141,13 @@ router.get(
   "/restaurant/orders/:id",
   authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
   restaurantController.getOrderById
+);
+
+router.put(
+  "/restaurant/orders/:id",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
+  validate(updateOrderSchema),
+  restaurantController.updateOrder
 );
 
 router.patch(

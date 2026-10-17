@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as amenityController from "./amenity.controller.js";
 import * as roomTypeController from "./roomType.controller.js";
 import * as roomController from "./room.controller.js";
+import * as tapeChartController from "./tapeChart.controller.js";
 import validate from "../../../middlewares/validate.middleware.js";
 import authMiddleware from "../../../middlewares/auth.middleware.js";
 import hotelContext from "../../../middlewares/hotelContext.middleware.js";
@@ -16,6 +17,7 @@ import {
   createRoomSchema,
   updateRoomSchema
 } from "./rooms.validation.js";
+import { validateTapeChartQuery } from "./tapeChart.validation.js";
 
 const router = Router();
 
@@ -79,6 +81,12 @@ router.post(
   roomController.createRoom
 );
 router.get("/rooms", roomController.getRooms);
+router.get(
+  "/rooms/tape-chart",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.HOTEL_USER, ROLES.PLATFORM_ADMIN),
+  validateTapeChartQuery,
+  tapeChartController.getTapeChart
+);
 router.get("/rooms/:id", roomController.getRoomById);
 router.put(
   "/rooms/:id",

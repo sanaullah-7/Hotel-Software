@@ -5,6 +5,7 @@ import * as authService from "./auth.service.js";
 import logger from "../../../config/logger.js";
 import { HTTP_STATUS } from "../../../constants/httpStatusCodes.js";
 import { ENV } from "../../../config/env.js";
+import Hotel from "../../../database/platform/models/hotel.model.js";
 
 
 export const register = asyncHandler(async (req, res) => {
@@ -23,14 +24,28 @@ export const register = asyncHandler(async (req, res) => {
     .json(new ApiResponse(HTTP_STATUS.CREATED, safeAccount, "Account created successfully"));
 });
 
+export const registerHotel = asyncHandler(async (req, res) => {
+  const result = await authService.registerHotelAccount(req.body);
+  logger.info(`Hotel registration application submitted: ${result.hotelName} (${result.ownerEmail})`);
+  res
+    .status(HTTP_STATUS.CREATED)
+    .json(new ApiResponse(HTTP_STATUS.CREATED, result, result.message));
+});
+
 export const login = asyncHandler(async (req, res) => {
   const { account, accessToken, refreshToken } = await authService.loginAccount(
     req.body,
   );
 
   const safeAccount = account.toObject();
-  // Lekin frontend ko hum refreshToken directly response body mein nahi bhej rahe.
   delete safeAccount.password;
+
+  if (account.hotelId) {
+    const hotel = await Hotel.findById(account.hotelId).select("property_name").lean();
+    if (hotel?.property_name) {
+      safeAccount.hotelName = hotel.property_name;
+    }
+  }
 
 
 // Browser mein refreshToken naam ki cookie set kar do aur uske andar ye refresh token rakh do.

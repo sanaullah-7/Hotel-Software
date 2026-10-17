@@ -52,15 +52,14 @@ describe("Hotel Parking Module Backend Integration", () => {
   });
 
   describe("Parking Spaces Management", () => {
-    it("should auto-seed default spaces and fetch them", async () => {
+    it("should start with empty parking spaces for a fresh hotel", async () => {
       const res = await request(app)
         .get("/api/v1/hotel/parking/spaces")
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body.data)).toBe(true);
-      expect(res.body.data.length).toBeGreaterThanOrEqual(30);
-      expect(res.body.data[0].space_number).toBe("P-01");
+      expect(res.body.data.length).toBe(0);
     });
 
     it("should create a new custom parking space", async () => {
@@ -177,7 +176,7 @@ describe("Hotel Parking Module Backend Integration", () => {
         .set("Authorization", `Bearer ${adminToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.data.totalSpaces).toBeGreaterThanOrEqual(31);
+      expect(res.body.data.totalSpaces).toBeGreaterThanOrEqual(1);
       expect(res.body.data.parkedCars).toBeGreaterThanOrEqual(1);
       expect(res.body.data.todaysCharges).toBeGreaterThanOrEqual(500);
     });

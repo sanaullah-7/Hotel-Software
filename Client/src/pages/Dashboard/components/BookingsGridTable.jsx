@@ -180,12 +180,12 @@ export default function BookingsGridTable({
               <td className="py-1.5 px-1.5">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <img
-                    src={booking.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&auto=format&fit=crop&q=80'}
+                    src={booking.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(booking.name || 'Guest')}&background=1b7f43&color=fff`}
                     alt={booking.name || 'Guest'}
                     className="w-5 h-5 rounded-full object-cover border border-gray-200 shrink-0"
                     onError={(e) => {
                       e.target.onerror = null;
-                      e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60&auto=format&fit=crop&q=80';
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(booking.name || 'Guest')}&background=1b7f43&color=fff`;
                     }}
                   />
                   <span className="font-semibold text-gray-800 text-[11px] truncate block" title={booking.name}>
@@ -271,9 +271,10 @@ export default function BookingsGridTable({
               <td className="py-1.5 px-1.5 font-semibold">
                 {(() => {
                   const canonicalDues = getBookingDues(booking);
-                  const duesAmt = canonicalDues !== null
-                    ? canonicalDues
-                    : (booking.folio_balance !== undefined && booking.folio_balance !== null ? Number(booking.folio_balance) : null);
+                  const fallbackDues = booking.folio_balance !== undefined && booking.folio_balance !== null
+                    ? Number(booking.folio_balance)
+                    : (booking.dues !== undefined && booking.dues !== null ? Number(booking.dues) : null);
+                  const duesAmt = canonicalDues !== null ? canonicalDues : fallbackDues;
                   return duesAmt === null ? (
                     <span className="text-amber-600 text-[10px] font-medium whitespace-nowrap">Unverified</span>
                   ) : duesAmt > 0 ? (

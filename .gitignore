@@ -10,9 +10,4 @@ coverage/
 *.log
 
 .DS_Store
-scratch/
-test-results.json
-*.timestamp-*.mjs
-Server/*-audit.json
-Server/runtime-smoke.json
-Server/final-databases.json
+scratch/

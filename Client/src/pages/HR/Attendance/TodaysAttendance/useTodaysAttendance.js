@@ -2,14 +2,14 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { addAuditLog } from '../../../../features/audit/state/auditStore.js';
 import attendanceService from '../../../../features/staff/services/attendanceService.js';
 import staffService from '../../../../features/staff/services/staffService.js';
-import attendanceAdapter from '../../../../features/staff/adapters/attendanceAdapter.js';
+import attendanceAdapter, { getLocalTodayDateString } from '../../../../features/staff/adapters/attendanceAdapter.js';
 
 import PeopleOutlinedIcon from '@mui/icons-material/PeopleOutlined';
 import HowToRegOutlinedIcon from '@mui/icons-material/HowToRegOutlined';
 import PersonOffOutlinedIcon from '@mui/icons-material/PersonOffOutlined';
+import EventBusyOutlinedIcon from '@mui/icons-material/EventBusyOutlined';
 import PercentOutlinedIcon from '@mui/icons-material/PercentOutlined';
 import WbSunnyOutlinedIcon from '@mui/icons-material/WbSunnyOutlined';
-import NightsStayOutlinedIcon from '@mui/icons-material/NightsStayOutlined';
 
 export function useTodaysAttendance() {
   // Main Data State
@@ -70,8 +70,8 @@ export function useTodaysAttendance() {
   // Notification Toast State
   const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
-  // Current date string in YYYY-MM-DD
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  // Current local date string in YYYY-MM-DD
+  const todayStr = useMemo(() => getLocalTodayDateString(), []);
 
   // Fetch canonical attendance & employees
   const loadAttendance = useCallback(async () => {
@@ -112,24 +112,26 @@ export function useTodaysAttendance() {
 
   // Calculate dynamic total hours on time change
   const calculateTotalHours = (firstIn, lastOut, breakTime) => {
-    if (!firstIn || !lastOut) return '08:00';
+    if (!firstIn || !lastOut) return '00:00';
     try {
       const [inH, inM] = firstIn.split(':').map(Number);
       const [outH, outM] = lastOut.split(':').map(Number);
-      const [brkH, brkM] = (breakTime || '01:00').split(':').map(Number);
-
-      const inMinutes = inH * 60 + inM;
-      const outMinutes = outH * 60 + outM;
-      const brkMinutes = brkH * 60 + brkM;
-
-      let diffMinutes = outMinutes - inMinutes - brkMinutes;
+      let diffMinutes = (outH * 60 + outM) - (inH * 60 + inM);
       if (diffMinutes < 0) diffMinutes += 24 * 60; // Crosses midnight
 
-      const hours = Math.floor(diffMinutes / 60);
-      const mins = diffMinutes % 60;
+      let brkMinutes = 0;
+      if (breakTime && breakTime !== '00:00') {
+        const [brkH, brkM] = breakTime.split(':').map(Number);
+        brkMinutes = (brkH || 0) * 60 + (brkM || 0);
+      }
+
+      // If worked time is shorter than or equal to the break time, do not deduct break
+      const netMinutes = diffMinutes <= brkMinutes ? diffMinutes : Math.max(0, diffMinutes - brkMinutes);
+      const hours = Math.floor(netMinutes / 60);
+      const mins = netMinutes % 60;
       return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
     } catch {
-      return '08:00';
+      return '00:00';
     }
   };
 
@@ -169,6 +171,13 @@ export function useTodaysAttendance() {
     return [...filteredRecords].sort((a, b) => {
       let valA = a[sortField];
       let valB = b[sortField];
+
+      // Handle nulls/dashes so records with actual values sort first
+      const isAEmpty = valA === '-' || valA === null || valA === undefined || valA === '';
+      const isBEmpty = valB === '-' || valB === null || valB === undefined || valB === '';
+      if (isAEmpty && !isBEmpty) return 1;
+      if (!isAEmpty && isBEmpty) return -1;
+      if (isAEmpty && isBEmpty) return 0;
 
       if (typeof valA === 'string') valA = valA.toLowerCase();
       if (typeof valB === 'string') valB = valB.toLowerCase();
@@ -228,14 +237,21 @@ export function useTodaysAttendance() {
     const defaultEmpId = defaultEmp._id || defaultEmp.id || '';
     const defaultName = `${defaultEmp.first_name || ''} ${defaultEmp.last_name || ''}`.trim();
 
+    const defFirstIn = '09:00';
+    const defLastOut = '17:00';
+    const defBreakTime = '01:00';
+    const defTotal = calculateTotalHours(defFirstIn, defLastOut, defBreakTime);
+
     setFormData({
       employee_id: defaultEmpId,
       name: defaultName,
       shift: 'Day Shift',
-      firstIn: '10:30',
-      breakTime: '01:00',
-      lastOut: '19:30',
-      totalHours: '08:00',
+      firstIn: defFirstIn,
+      breakFrom: '13:00',
+      breakTo: '14:00',
+      breakTime: defBreakTime,
+      lastOut: defLastOut,
+      totalHours: defTotal,
       status: 'present',
       avatar: defaultEmp.avatar || '',
     });
@@ -275,14 +291,21 @@ export function useTodaysAttendance() {
   // Open Edit Modal
   const handleOpenEditModal = (record) => {
     setSelectedRecord(record);
+    const computed = calculateTotalHours(
+      record.firstIn === '-' ? '' : record.firstIn,
+      record.lastOut === '-' ? '' : record.lastOut,
+      record.breakTime
+    );
     setFormData({
       employee_id: record.employeeId,
       name: record.name,
       shift: record.shift,
-      firstIn: record.firstIn,
-      breakTime: record.breakTime,
-      lastOut: record.lastOut,
-      totalHours: record.totalHours,
+      firstIn: record.firstIn === '-' ? '' : record.firstIn,
+      breakTime: record.breakTime || '01:00',
+      breakFrom: record.breakFrom || '',
+      breakTo: record.breakTo || '',
+      lastOut: record.lastOut === '-' ? '' : record.lastOut,
+      totalHours: record.totalHours || computed,
       status: record.status,
       avatar: record.avatar,
     });
@@ -295,19 +318,36 @@ export function useTodaysAttendance() {
     if (!selectedRecord) return;
 
     try {
-      const total = calculateTotalHours(formData.firstIn, formData.lastOut, formData.breakTime);
+      const rawStatus = (formData.status || 'present').toUpperCase();
+      let status = 'PRESENT';
+      if (rawStatus === 'ABSENT') status = 'ABSENT';
+      else if (rawStatus === 'ON_LEAVE' || rawStatus === 'LEAVE') status = 'ON_LEAVE';
+      else if (rawStatus === 'LATE') status = 'LATE';
+      else if (rawStatus === 'HALF_DAY') status = 'HALF_DAY';
+
+      const isNonWorking = status === 'ABSENT' || status === 'ON_LEAVE';
+      const total = isNonWorking ? '00:00' : calculateTotalHours(formData.firstIn, formData.lastOut, formData.breakTime);
+
       const updatePayload = {
         shift: formData.shift,
-        status: (formData.status || 'present').toUpperCase(),
-        break_time: formData.breakTime,
+        status,
+        break_time: isNonWorking ? '00:00' : formData.breakTime,
         total_hours: total,
       };
 
-      if (formData.firstIn) {
+      if (!isNonWorking && formData.firstIn) {
         updatePayload.clock_in_time = new Date(`${todayStr}T${formData.firstIn}:00.000Z`).toISOString();
       }
-      if (formData.lastOut) {
-        updatePayload.clock_out_time = new Date(`${todayStr}T${formData.lastOut}:00.000Z`).toISOString();
+      if (!isNonWorking && formData.lastOut) {
+        if (formData.firstIn && formData.lastOut < formData.firstIn) {
+          // Cross-midnight shift
+          const d = new Date(`${todayStr}T00:00:00.000Z`);
+          d.setDate(d.getDate() + 1);
+          const nextDayStr = d.toISOString().split('T')[0];
+          updatePayload.clock_out_time = new Date(`${nextDayStr}T${formData.lastOut}:00.000Z`).toISOString();
+        } else {
+          updatePayload.clock_out_time = new Date(`${todayStr}T${formData.lastOut}:00.000Z`).toISOString();
+        }
       }
 
       await attendanceService.updateAttendance(selectedRecord.id, updatePayload);
@@ -370,6 +410,11 @@ export function useTodaysAttendance() {
       (item) => (item.status || '').toLowerCase() === 'absent'
     ).length;
 
+    const leaveCount = list.filter((item) => {
+      const s = (item.status || '').toLowerCase();
+      return s === 'on_leave' || s === 'leave';
+    }).length;
+
     const attendanceRate =
       totalRecords > 0
         ? `${Math.round((presentCount / totalRecords) * 100)}%`
@@ -377,10 +422,6 @@ export function useTodaysAttendance() {
 
     const dayShiftCount = list.filter((item) =>
       (item.shift || '').toLowerCase().includes('day')
-    ).length;
-
-    const nightShiftCount = list.filter((item) =>
-      (item.shift || '').toLowerCase().includes('night')
     ).length;
 
     return [
@@ -412,13 +453,22 @@ export function useTodaysAttendance() {
         iconColor: 'text-rose-600',
       },
       {
+        id: 'on-leave',
+        title: 'On Leave',
+        value: leaveCount,
+        subtext: 'Approved leave',
+        icon: EventBusyOutlinedIcon,
+        iconBg: 'bg-blue-50',
+        iconColor: 'text-blue-600',
+      },
+      {
         id: 'attendance-rate',
         title: 'Attendance Rate',
         value: attendanceRate,
         subtext: 'Turnout',
         icon: PercentOutlinedIcon,
-        iconBg: 'bg-blue-50',
-        iconColor: 'text-blue-600',
+        iconBg: 'bg-purple-50',
+        iconColor: 'text-purple-600',
       },
       {
         id: 'day-shift',
@@ -428,15 +478,6 @@ export function useTodaysAttendance() {
         icon: WbSunnyOutlinedIcon,
         iconBg: 'bg-amber-50',
         iconColor: 'text-amber-600',
-      },
-      {
-        id: 'night-shift',
-        title: 'Night Shift',
-        value: nightShiftCount,
-        subtext: 'Night crew',
-        icon: NightsStayOutlinedIcon,
-        iconBg: 'bg-purple-50',
-        iconColor: 'text-purple-600',
       },
     ];
   }, [attendanceList]);

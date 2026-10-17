@@ -121,8 +121,8 @@ export default function Receptionist() {
 
         <div style={{ marginTop: 16 }}>
           <Pagination
-            currentPage={page}
-            totalItems={total}
+            page={page}
+            total={total}
             pageSize={10}
             onPageChange={setPage}
           />

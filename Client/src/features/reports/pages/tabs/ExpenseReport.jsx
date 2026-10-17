@@ -1,13 +1,21 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Check as CheckIcon } from '@mui/icons-material';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { Check as CheckIcon, Refresh as RefreshIcon } from '@mui/icons-material';
+import { CircularProgress, Alert, Button } from '@mui/material';
 
-import { DEFAULT_EXPENSES } from '../../data/expenseDemoData';
 import { ExpenseTable } from '../../components/ExpenseTable';
 import { ExpenseModals } from '../../components/ExpenseModals';
+import reportService from '../../../../services/reportService.js';
+import {
+  toFrontendExpense,
+  toFrontendExpenseList,
+  toBackendExpensePayload,
+} from '../../adapters/reportAdapter';
 import '../../../assigned-ui/toolbarStyles.css';
 
 export default function ExpenseReport() {
-  const [expenses, setExpenses] = useState(DEFAULT_EXPENSES);
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,19 +65,55 @@ export default function ExpenseReport() {
     setTimeout(() => setToastMessage(''), 3000);
   };
 
+  // Fetch Authoritative Expenses from Backend
+  const loadExpenses = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await reportService.getExpenses({ limit: 100 });
+      const rawList = Array.isArray(res?.data?.expenses)
+        ? res.data.expenses
+        : (Array.isArray(res?.data) ? res.data : (Array.isArray(res?.expenses) ? res.expenses : []));
+      setExpenses(toFrontendExpenseList(rawList));
+    } catch (err) {
+      console.error('Failed to load expenses from server:', err);
+      setError(err?.message || 'Failed to connect to backend server. Please verify your connection and retry.');
+      setExpenses([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Real-time synchronization on mount, custom event, and window focus
+  useEffect(() => {
+    loadExpenses();
+
+    const handleSync = () => {
+      loadExpenses();
+    };
+
+    window.addEventListener('hotel:data-updated', handleSync);
+    window.addEventListener('focus', handleSync);
+
+    return () => {
+      window.removeEventListener('hotel:data-updated', handleSync);
+      window.removeEventListener('focus', handleSync);
+    };
+  }, [loadExpenses]);
+
   // Filtered expenses based on search
   const filteredExpenses = useMemo(() => {
     if (!searchTerm.trim()) return expenses;
     const term = searchTerm.toLowerCase();
     return expenses.filter(
       (e) =>
-        e.invoiceNo.toLowerCase().includes(term) ||
-        e.date.toLowerCase().includes(term) ||
-        e.expense.toLowerCase().includes(term) ||
-        e.expenseBy.toLowerCase().includes(term) ||
-        e.paymentMode.toLowerCase().includes(term) ||
-        e.status.toLowerCase().includes(term) ||
-        e.paidTo.toLowerCase().includes(term) ||
+        e.invoiceNo?.toLowerCase().includes(term) ||
+        e.date?.toLowerCase().includes(term) ||
+        e.expense?.toLowerCase().includes(term) ||
+        e.expenseBy?.toLowerCase().includes(term) ||
+        e.paymentMode?.toLowerCase().includes(term) ||
+        e.status?.toLowerCase().includes(term) ||
+        e.paidTo?.toLowerCase().includes(term) ||
         String(e.amount).includes(term)
     );
   }, [expenses, searchTerm]);
@@ -112,16 +156,11 @@ export default function ExpenseReport() {
   };
 
   // Refresh handler
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      setExpenses(DEFAULT_EXPENSES);
-      setSearchTerm('');
-      setSelectedIds(new Set());
-      setCurrentPage(1);
-      setIsRefreshing(false);
-      showToast('Expenses refreshed to default state');
-    }, 400);
+    await loadExpenses();
+    setIsRefreshing(false);
+    showToast('Expenses refreshed from server');
   };
 
   // Add & Edit modal handlers
@@ -129,14 +168,15 @@ export default function ExpenseReport() {
     setModalMode('add');
     const today = new Date().toISOString().slice(0, 10);
     setEditingItem({
-      invoiceNo: `${Math.floor(1000 + Math.random() * 9000)}`,
+      invoiceNo: `EXP-${Math.floor(1000 + Math.random() * 9000)}`,
       date: today,
       expense: '',
-      expenseBy: '',
+      expenseBy: 'Admin',
       amount: '',
       paymentMode: 'Cash',
       status: 'Paid',
       paidTo: '',
+      category: 'General',
     });
     setIsAddEditModalOpen(true);
   };
@@ -149,31 +189,36 @@ export default function ExpenseReport() {
     setDetailItem(null);
   };
 
-  const handleSaveModal = (formData) => {
-    if (modalMode === 'add') {
-      const newItem = {
-        ...formData,
-        id: Date.now(),
-        amount: Number(formData.amount) || 0,
-      };
-      setExpenses((prev) => [newItem, ...prev]);
-      showToast(`Added expense "${formData.expense}"`);
-    } else {
-      setExpenses((prev) =>
-        prev.map((ex) =>
-          ex.id === editingItem.id
-            ? {
-                ...ex,
-                ...formData,
-                amount: Number(formData.amount) || 0,
-              }
-            : ex
-        )
-      );
-      showToast(`Updated expense "${formData.expense}"`);
+  const handleSaveModal = async (formData) => {
+    try {
+      const payload = toBackendExpensePayload(formData);
+      if (modalMode === 'add') {
+        const res = await reportService.createExpense(payload);
+        const created = toFrontendExpense(res?.data || res);
+        if (created) {
+          setExpenses((prev) => [created, ...prev]);
+        }
+        showToast(`Added expense "${formData.expense}"`);
+      } else {
+        const targetId = editingItem._id || editingItem.id || editingItem.invoiceNo;
+        const res = await reportService.updateExpense(targetId, payload);
+        const updated = toFrontendExpense(res?.data || res);
+        if (updated) {
+          setExpenses((prev) =>
+            prev.map((ex) => (ex.id === editingItem.id ? updated : ex))
+          );
+        }
+        showToast(`Updated expense "${formData.expense}"`);
+      }
+      setIsAddEditModalOpen(false);
+      setEditingItem(null);
+      // Trigger real-time update in all tabs
+      window.dispatchEvent(new CustomEvent('hotel:data-updated', { detail: { domain: 'expense' } }));
+      loadExpenses();
+    } catch (err) {
+      console.error('Failed to save expense:', err);
+      showToast(err?.message || 'Failed to save expense to server');
     }
-    setIsAddEditModalOpen(false);
-    setEditingItem(null);
   };
 
   // Delete handlers
@@ -182,28 +227,45 @@ export default function ExpenseReport() {
     setDeleteConfirmItem(item);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!deleteConfirmItem) return;
-    setExpenses((prev) => prev.filter((ex) => ex.id !== deleteConfirmItem.id));
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      next.delete(deleteConfirmItem.id);
-      return next;
-    });
-    showToast(`Deleted invoice #${deleteConfirmItem.invoiceNo}`);
-    setDeleteConfirmItem(null);
-    if (detailItem?.id === deleteConfirmItem.id) {
-      setDetailItem(null);
+    try {
+      const targetId = deleteConfirmItem._id || deleteConfirmItem.id || deleteConfirmItem.invoiceNo;
+      await reportService.deleteExpense(targetId);
+      setExpenses((prev) => prev.filter((ex) => ex.id !== deleteConfirmItem.id));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(deleteConfirmItem.id);
+        return next;
+      });
+      showToast(`Deleted invoice #${deleteConfirmItem.invoiceNo}`);
+      setDeleteConfirmItem(null);
+      if (detailItem?.id === deleteConfirmItem.id) {
+        setDetailItem(null);
+      }
+      window.dispatchEvent(new CustomEvent('hotel:data-updated', { detail: { domain: 'expense' } }));
+    } catch (err) {
+      console.error('Failed to delete expense:', err);
+      showToast(err?.message || 'Failed to delete expense from server');
     }
   };
 
   // Bulk delete
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (selectedIds.size === 0) return;
     if (window.confirm(`Delete ${selectedIds.size} selected expense(s)?`)) {
-      setExpenses((prev) => prev.filter((ex) => !selectedIds.has(ex.id)));
-      showToast(`Deleted ${selectedIds.size} expense item(s)`);
-      setSelectedIds(new Set());
+      try {
+        const idsArray = Array.from(selectedIds);
+        await reportService.bulkDeleteExpenses(idsArray);
+        setExpenses((prev) => prev.filter((ex) => !selectedIds.has(ex.id)));
+        showToast(`Deleted ${selectedIds.size} expense item(s)`);
+        setSelectedIds(new Set());
+        window.dispatchEvent(new CustomEvent('hotel:data-updated', { detail: { domain: 'expense' } }));
+        loadExpenses();
+      } catch (err) {
+        console.error('Failed to bulk delete expenses:', err);
+        showToast(err?.message || 'Failed to delete selected expenses');
+      }
     }
   };
 
@@ -312,40 +374,64 @@ export default function ExpenseReport() {
         </div>
       )}
 
-      {/* Main Expense Table */}
-      <ExpenseTable
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        setCurrentPage={setCurrentPage}
-        selectedIds={selectedIds}
-        handleBulkDelete={handleBulkDelete}
-        filterMenuRef={filterMenuRef}
-        showColumnMenu={showColumnMenu}
-        setShowColumnMenu={setShowColumnMenu}
-        visibleColumns={visibleColumns}
-        toggleColumn={toggleColumn}
-        handleOpenAddModal={handleOpenAddModal}
-        handleRefresh={handleRefresh}
-        isRefreshing={isRefreshing}
-        handleExportExcel={handleExportExcel}
-        handleExportPdf={handleExportPdf}
-        isAllSelected={isAllSelected}
-        isIndeterminate={isIndeterminate}
-        handleSelectAll={handleSelectAll}
-        currentExpenses={currentExpenses}
-        setDetailItem={setDetailItem}
-        handleSelectRow={handleSelectRow}
-        renderStatusBadge={renderStatusBadge}
-        handleOpenEditModal={handleOpenEditModal}
-        handleDeleteClick={handleDeleteClick}
-        itemsPerPage={itemsPerPage}
-        setItemsPerPage={setItemsPerPage}
-        startRecord={startRecord}
-        endRecord={endRecord}
-        totalItems={totalItems}
-        currentPage={currentPage}
-        totalPages={totalPages}
-      />
+      {/* Error Banner with Retry */}
+      {error && (
+        <div className="mb-4">
+          <Alert
+            severity="error"
+            action={
+              <Button color="inherit" size="small" onClick={loadExpenses}>
+                Retry Connection
+              </Button>
+            }
+          >
+            {error}
+          </Alert>
+        </div>
+      )}
+
+      {/* Loading Spinner */}
+      {loading ? (
+        <div className="flex flex-col items-center justify-center p-12 bg-white rounded-lg border border-gray-100 shadow-sm my-4">
+          <CircularProgress size={36} sx={{ color: 'var(--primary-main, #3b82f6)' }} />
+          <p className="mt-3 text-sm text-gray-500 font-medium">Loading authoritative expenses from database...</p>
+        </div>
+      ) : (
+        /* Main Expense Table */
+        <ExpenseTable
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          setCurrentPage={setCurrentPage}
+          selectedIds={selectedIds}
+          handleBulkDelete={handleBulkDelete}
+          filterMenuRef={filterMenuRef}
+          showColumnMenu={showColumnMenu}
+          setShowColumnMenu={setShowColumnMenu}
+          visibleColumns={visibleColumns}
+          toggleColumn={toggleColumn}
+          handleOpenAddModal={handleOpenAddModal}
+          handleRefresh={handleRefresh}
+          isRefreshing={isRefreshing}
+          handleExportExcel={handleExportExcel}
+          handleExportPdf={handleExportPdf}
+          isAllSelected={isAllSelected}
+          isIndeterminate={isIndeterminate}
+          handleSelectAll={handleSelectAll}
+          currentExpenses={currentExpenses}
+          setDetailItem={setDetailItem}
+          handleSelectRow={handleSelectRow}
+          renderStatusBadge={renderStatusBadge}
+          handleOpenEditModal={handleOpenEditModal}
+          handleDeleteClick={handleDeleteClick}
+          itemsPerPage={itemsPerPage}
+          setItemsPerPage={setItemsPerPage}
+          startRecord={startRecord}
+          endRecord={endRecord}
+          totalItems={totalItems}
+          currentPage={currentPage}
+          totalPages={totalPages}
+        />
+      )}
 
       {/* Expense Modals (Detail, Add/Edit, Delete) */}
       <ExpenseModals

@@ -10,11 +10,13 @@ import {
   createReservationSchema,
   updateReservationSchema,
   cancelReservationSchema,
+  reassignReservationRoomSchema,
   availabilityQuerySchema,
   createGroupReservationSchema,
   updateGroupReservationSchema,
   cancelGroupReservationSchema,
 } from "./reservation.validation.js";
+
 
 const router = Router();
 
@@ -73,10 +75,18 @@ router.put(
 );
 
 router.post(
+  "/reservations/:id/reassign-room",
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
+  validate(reassignReservationRoomSchema),
+  reservationController.reassignRoom
+);
+
+router.post(
   "/reservations/:id/cancel",
   authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
   validate(cancelReservationSchema),
   reservationController.cancelReservation
 );
+
 
 export default router;

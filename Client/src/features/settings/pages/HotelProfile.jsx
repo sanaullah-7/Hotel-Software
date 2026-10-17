@@ -24,6 +24,7 @@ import { CircularProgress, Alert } from '@mui/material';
 import FormField from '../components/FormField';
 import { addAuditLog } from '../../audit/state/auditStore';
 import hotelConfigService from '../../../services/hotelConfigService';
+import { fileService } from '../../../services/fileService';
 import configAdapter from '../adapters/configAdapter';
 import '../../assigned-ui/formStyles.css';
 
@@ -75,6 +76,8 @@ export default function HotelProfile() {
     const saved = localStorage.getItem('ownerLogo');
     return saved ? { url: saved, name: 'Owner Logo', size: '' } : null;
   });
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [isUploadingOwnerLogo, setIsUploadingOwnerLogo] = useState(false);
   const [isOwnerDragging, setIsOwnerDragging] = useState(false);
   const fileInputRefOwner = useRef(null);
 
@@ -124,40 +127,64 @@ export default function HotelProfile() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileSelect = (file) => {
+  const handleFileSelect = async (file) => {
     if (!file) return;
     if (!file.type.match('image.*')) {
-      showToast('Please select a valid image file (PNG, JPG, SVG).');
+      showToast('Please select a valid image file (PNG, JPG, SVG).', 'error');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setLogoPreview({
-        url: e.target.result,
-        name: file.name,
-        size: `${(file.size / 1024).toFixed(1)} KB`,
-      });
-      showToast('Logo uploaded successfully!');
-    };
-    reader.readAsDataURL(file);
+    const localUrl = URL.createObjectURL(file);
+    setLogoPreview({
+      url: localUrl,
+      name: file.name,
+      size: `${(file.size / 1024).toFixed(1)} KB`,
+    });
+    setIsUploadingLogo(true);
+    try {
+      const res = await fileService.uploadFile(file, { folder: 'branding', entity_ref: 'HOTEL_LOGO' });
+      if (res?.file_url) {
+        setLogoPreview({
+          url: res.file_url,
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(1)} KB`,
+        });
+        showToast('Logo uploaded to Cloudinary successfully!', 'success');
+      }
+    } catch (err) {
+      console.warn('Cloudinary upload failed, using local preview:', err);
+    } finally {
+      setIsUploadingLogo(false);
+    }
   };
 
-  const handleOwnerFileSelect = (file) => {
+  const handleOwnerFileSelect = async (file) => {
     if (!file) return;
     if (!file.type.match('image.*')) {
-      showToast('Please select a valid image file (PNG, JPG, SVG).');
+      showToast('Please select a valid image file (PNG, JPG, SVG).', 'error');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setOwnerLogoPreview({
-        url: e.target.result,
-        name: file.name,
-        size: `${(file.size / 1024).toFixed(1)} KB`,
-      });
-      showToast('Owner Logo uploaded successfully!');
-    };
-    reader.readAsDataURL(file);
+    const localUrl = URL.createObjectURL(file);
+    setOwnerLogoPreview({
+      url: localUrl,
+      name: file.name,
+      size: `${(file.size / 1024).toFixed(1)} KB`,
+    });
+    setIsUploadingOwnerLogo(true);
+    try {
+      const res = await fileService.uploadFile(file, { folder: 'branding', entity_ref: 'OWNER_LOGO' });
+      if (res?.file_url) {
+        setOwnerLogoPreview({
+          url: res.file_url,
+          name: file.name,
+          size: `${(file.size / 1024).toFixed(1)} KB`,
+        });
+        showToast('Owner Logo uploaded to Cloudinary successfully!', 'success');
+      }
+    } catch (err) {
+      console.warn('Cloudinary upload failed, using local preview:', err);
+    } finally {
+      setIsUploadingOwnerLogo(false);
+    }
   };
 
   const handleDragOver = (e) => {

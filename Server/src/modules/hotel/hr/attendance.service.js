@@ -40,7 +40,7 @@ function validateClockTimes(clockIn, clockOut) {
 /**
  * Calculates total hours string formatted as HH:MM
  */
-function computeTotalHours(clockIn, clockOut, breakTime = '01:00') {
+export function computeTotalHours(clockIn, clockOut, breakTime = '01:00') {
   if (!clockIn || !clockOut) return null;
   try {
     const inDate = new Date(clockIn);
@@ -48,8 +48,8 @@ function computeTotalHours(clockIn, clockOut, breakTime = '01:00') {
     const diffMs = outDate.getTime() - inDate.getTime();
     if (diffMs <= 0) return '00:00';
 
-    let breakMins = 60;
-    if (breakTime) {
+    let breakMins = 0;
+    if (breakTime && breakTime !== '00:00') {
       const parts = breakTime.split(':').map(Number);
       if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
         breakMins = parts[0] * 60 + parts[1];
@@ -57,7 +57,8 @@ function computeTotalHours(clockIn, clockOut, breakTime = '01:00') {
     }
 
     const totalMins = Math.floor(diffMs / (1000 * 60));
-    const netMins = Math.max(0, totalMins - breakMins);
+    // If worked duration is less than or equal to the break time, do not deduct break
+    const netMins = totalMins <= breakMins ? totalMins : Math.max(0, totalMins - breakMins);
     const hrs = Math.floor(netMins / 60);
     const mins = netMins % 60;
     return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
@@ -90,22 +91,27 @@ export async function createAttendance(hotelContext, payload) {
     throw new ApiError(HTTP_STATUS.CONFLICT, 'Attendance already recorded for this employee on this date');
   }
 
-  // Auto-calculate total hours if not provided
-  let totalHours = payload.total_hours;
-  if (!totalHours && payload.clock_in_time && payload.clock_out_time) {
+  const isNonWorking = ['ABSENT', 'ON_LEAVE', 'LEAVE'].includes((payload.status || '').toUpperCase());
+
+  // Canonical auto-calculation for total hours on server side
+  let totalHours = null;
+  if (!isNonWorking && payload.clock_in_time && payload.clock_out_time) {
     totalHours = computeTotalHours(payload.clock_in_time, payload.clock_out_time, payload.break_time);
+  }
+  if (!totalHours) {
+    totalHours = isNonWorking ? '00:00' : (payload.total_hours || '00:00');
   }
 
   try {
     const record = await AttendanceRecord.create({
       employee_id: payload.employee_id,
       date: normalizedDate,
-      clock_in_time: payload.clock_in_time || null,
-      clock_out_time: payload.clock_out_time || null,
+      clock_in_time: isNonWorking ? null : (payload.clock_in_time || null),
+      clock_out_time: isNonWorking ? null : (payload.clock_out_time || null),
       status: (payload.status || 'PRESENT').toUpperCase(),
       shift: payload.shift || 'Day Shift',
-      break_time: payload.break_time || '01:00',
-      total_hours: totalHours || '08:00',
+      break_time: isNonWorking ? '00:00' : (payload.break_time || '01:00'),
+      total_hours: totalHours,
       notes: payload.notes || '',
     });
 
@@ -221,10 +227,17 @@ export async function updateAttendance(hotelContext, id, payload) {
   if (payload.break_time !== undefined) record.break_time = payload.break_time;
   if (payload.notes !== undefined) record.notes = payload.notes;
 
-  if (payload.total_hours !== undefined) {
-    record.total_hours = payload.total_hours;
+  const isNonWorking = ['ABSENT', 'ON_LEAVE', 'LEAVE'].includes((record.status || '').toUpperCase());
+  if (isNonWorking) {
+    record.total_hours = '00:00';
+    record.clock_in_time = null;
+    record.clock_out_time = null;
+    record.break_time = '00:00';
   } else if (newClockIn && newClockOut) {
-    record.total_hours = computeTotalHours(newClockIn, newClockOut, record.break_time) || record.total_hours;
+    const computed = computeTotalHours(newClockIn, newClockOut, record.break_time);
+    record.total_hours = computed || record.total_hours || '00:00';
+  } else if (payload.total_hours !== undefined) {
+    record.total_hours = payload.total_hours;
   }
 
   await record.save();

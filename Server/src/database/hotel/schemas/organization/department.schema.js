@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const departmentSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     name: {
       type: String,
       required: true,
@@ -33,6 +28,6 @@ const departmentSchema = new mongoose.Schema(
 );
 
 // Indexes
-departmentSchema.index({ hotelId: 1, code: 1 }, { unique: true });
+departmentSchema.index({ code: 1 }, { unique: true });
 
 export default departmentSchema;

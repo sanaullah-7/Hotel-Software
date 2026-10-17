@@ -6,7 +6,7 @@ export const STAFF_STORAGE_KEY = 'luxuria_staff_data';
 // Helper to get staff from localStorage
 export const getStoredStaff = () => {
   try {
-    const stored = null;
+    const stored = localStorage.getItem(STAFF_STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed)) {
@@ -22,7 +22,7 @@ export const getStoredStaff = () => {
 // Helper to save staff to localStorage
 export const saveStoredStaff = (staffList) => {
   try {
-    // localStorage.setItem(STAFF_STORAGE_KEY, JSON.stringify(staffList));
+    localStorage.setItem(STAFF_STORAGE_KEY, JSON.stringify(staffList));
     window.dispatchEvent(new Event('luxuria_staff_updated'));
   } catch (error) {
     console.error('Error saving staff to localStorage:', error);

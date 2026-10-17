@@ -145,13 +145,13 @@ describe("Guest Charges & Dynamic Folio / Billing Integration", () => {
     expect(chargeRes.body.data.quantity).toBe(2);
     expect(chargeRes.body.data.is_voided).toBe(false);
 
-    // Verify Folio balance is automatically incremented
+    // Verify Folio balance is automatically incremented (initial room charge 600 + consumption 700 = 1300)
     const updatedFolioRes = await request(app)
       .get(`/api/v1/hotel/folios/${folio._id}`)
       .set("Authorization", `Bearer ${adminToken}`);
 
     expect(updatedFolioRes.status).toBe(200);
-    expect(updatedFolioRes.body.data.balance).toBe(700);
+    expect(updatedFolioRes.body.data.balance).toBe(600 + 700);
   });
 
   it("2. POST /api/v1/hotel/guest-charges — attaches to an active Invoice on the guest's folio", async () => {
@@ -172,11 +172,11 @@ describe("Guest Charges & Dynamic Folio / Billing Integration", () => {
     expect(chargeRes.status).toBe(201);
     expect(chargeRes.body.data.invoice_id).toBeDefined();
 
-    // Verify Folio balance increased: 700 + 1500 = 2200
+    // Verify Folio balance increased: 600 (room charge) + 700 + 1500 = 2800
     const folioRes = await request(app)
       .get(`/api/v1/hotel/folios/${folio._id}`)
       .set("Authorization", `Bearer ${adminToken}`);
-    expect(folioRes.body.data.balance).toBe(2200);
+    expect(folioRes.body.data.balance).toBe(600 + 700 + 1500);
   });
 
   it("3. GET /api/v1/hotel/guest-charges — retrieves live populated charge records and supports filtering", async () => {
@@ -222,10 +222,10 @@ describe("Guest Charges & Dynamic Folio / Billing Integration", () => {
     expect(voidRes.status).toBe(200);
     expect(voidRes.body.data.is_voided).toBe(true);
 
-    // Verify Folio balance reverted back to 2200 (2700 - 500)
+    // Verify Folio balance reverted back to 2800 (3300 - 500)
     const folioRes = await request(app)
       .get(`/api/v1/hotel/folios/${folio._id}`)
       .set("Authorization", `Bearer ${adminToken}`);
-    expect(folioRes.body.data.balance).toBe(2200);
+    expect(folioRes.body.data.balance).toBe(600 + 700 + 1500);
   });
 });

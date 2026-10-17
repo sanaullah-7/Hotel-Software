@@ -1,17 +1,19 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Eye, CheckCircle, XCircle, Ban, RefreshCw, MoreHorizontal, Edit } from 'lucide-react';
+import { Eye, CheckCircle, XCircle, Ban, RefreshCw, MoreHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import StatusBadge from '../Common/StatusBadge.jsx';
 import ConfirmModal from '../Common/confirmModel.jsx';
 import { HotelService } from '../../Services/HotelService.js';
 import { useSuperAdmin } from '../../Context/SuperAdminContext.jsx';
 import { formatDate } from '../../utils/ForamteDate.js';
+import { formatCurrency } from '../../utils/formatCurrency.js';
 
 export default function HotelTable({ data, onRefresh }) {
   const navigate = useNavigate();
   const { toast } = useSuperAdmin();
   const [confirm, setConfirm] = useState(null); // { type, hotel }
   const [rejectReason, setRejectReason] = useState('');
+  const [suspendReason, setSuspendReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(null);
 
@@ -29,19 +31,20 @@ export default function HotelTable({ data, onRefresh }) {
     try {
       const { type, hotel } = confirm;
       if (type === 'approve')   await HotelService.approveHotel(hotel.id);
-      if (type === 'reject')    await HotelService.rejectHotel(hotel.id, rejectReason);
-      if (type === 'suspend')   await HotelService.suspendHotel(hotel.id, 'Suspended by admin');
+      if (type === 'reject')    await HotelService.rejectHotel(hotel.id, rejectReason || 'Application rejected by platform administrator');
+      if (type === 'suspend')   await HotelService.suspendHotel(hotel.id, suspendReason || 'Suspended by Super Admin - Subscription/Rent overdue');
       if (type === 'reactivate')await HotelService.reactivateHotel(hotel.id);
       toast.success(`Hotel ${type}d successfully.`);
       setConfirm(null);
       setRejectReason('');
+      setSuspendReason('');
       onRefresh?.();
     } catch (e) {
       toast.error(e.message || `Failed to ${confirm?.type} hotel.`);
     } finally {
       setActionLoading(false);
     }
-  }, [confirm, rejectReason, toast, onRefresh]);
+  }, [confirm, rejectReason, suspendReason, toast, onRefresh]);
 
   const dropdownBtnStyle = {
     display: 'flex', alignItems: 'center', gap: 8,
@@ -80,14 +83,14 @@ export default function HotelTable({ data, onRefresh }) {
                   <div style={{ fontSize: 11.5, color: 'var(--color-text-muted)' }}>{hotel.managerEmail}</div>
                 </td>
                 <td style={{ fontSize: 13 }}>{hotel.city}</td>
-                <td style={{ fontSize: 13 }}>{hotel.totalRooms}</td>
+                <td style={{ fontSize: 13 }}>{hotel.totalRooms || 0}</td>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 500 }}>
-                    <span style={{ color: '#f59e0b' }}>★</span> {hotel.rating}
+                    <span style={{ color: '#f59e0b' }}>★</span> {hotel.rating || '4.8'}
                   </div>
                 </td>
-                <td style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-success)' }}>
-                  ${(hotel.revenue || 0).toLocaleString()}
+                <td style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-success)' }}>
+                  {formatCurrency(hotel.revenue || 0)}
                 </td>
                 <td><StatusBadge status={hotel.status} /></td>
                 <td style={{ fontSize: 12.5, color: 'var(--color-text-muted)' }}>{formatDate(hotel.createdAt)}</td>
@@ -121,16 +124,7 @@ export default function HotelTable({ data, onRefresh }) {
                           onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-surface-2)'}
                           onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
                         >
-                          <Eye size={14} /> View
-                        </button>
-
-                        <button 
-                          style={dropdownBtnStyle} 
-                          onClick={() => { navigate(`/hotels/${hotel.id}/edit`); setOpenDropdown(null); }}
-                          onMouseEnter={(e) => e.currentTarget.style.background = 'var(--color-surface-2)'}
-                          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                        >
-                          <Edit size={14} /> Edit
+                          <Eye size={14} /> View Details
                         </button>
                         
                         {hotel.status === 'PENDING' && (
@@ -221,14 +215,23 @@ export default function HotelTable({ data, onRefresh }) {
       {/* Suspend confirm */}
       <ConfirmModal
         open={confirm?.type === 'suspend'}
-        onClose={() => setConfirm(null)}
+        onClose={() => { setConfirm(null); setSuspendReason(''); }}
         onConfirm={handleAction}
-        title="Suspend Hotel"
-        message={`Suspend "${confirm?.hotel?.name}"? Hotel users will lose access immediately.`}
+        title="Suspend Hotel Account"
+        message={`Suspend "${confirm?.hotel?.name}"? All hotel staff sessions will be immediately invalidated and login blocked.`}
         confirmLabel="Suspend Hotel"
         confirmVariant="btn-warning"
         loading={actionLoading}
-      />
+      >
+        <textarea
+          className="sa-input sa-textarea"
+          placeholder="Reason for suspension (e.g. Monthly subscription rent overdue, TOS violation)..."
+          value={suspendReason}
+          onChange={(e) => setSuspendReason(e.target.value)}
+          rows={3}
+          style={{ marginTop: 8 }}
+        />
+      </ConfirmModal>
 
       {/* Reactivate confirm */}
       <ConfirmModal

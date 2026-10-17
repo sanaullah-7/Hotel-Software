@@ -6,7 +6,7 @@ import hotelContext from "../../../middlewares/hotelContext.middleware.js";
 import authorize from "../../../middlewares/rbac.middleware.js";
 import { ROLES } from "../../../constants/roles.js";
 import { validateIdParam } from "../../../utils/query.js";
-import { checkInSchema, checkOutSchema } from "./checkInOut.validation.js";
+import { checkInSchema, checkOutSchema, transferStayRoomSchema } from "./checkInOut.validation.js";
 
 const router = Router();
 
@@ -34,8 +34,17 @@ router.post(
   checkInOutController.checkOut
 );
 
+router.post(
+  "/stays/:id/transfer-room",
+  validateIdParam,
+  authorize(ROLES.HOTEL_ADMIN, ROLES.PLATFORM_ADMIN, ROLES.HOTEL_USER),
+  validate(transferStayRoomSchema),
+  checkInOutController.transferRoom
+);
+
 router.get("/stays", checkInOutController.getStays);
 
 router.get("/stays/:id", validateIdParam, checkInOutController.getStayById);
+
 
 export default router;

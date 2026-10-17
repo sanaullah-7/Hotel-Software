@@ -3,7 +3,7 @@ import { getGuests } from '../../guests/state/guestStore.js';
 import { getRooms, toStandardRoomType } from '../../rooms/state/roomStore.js';
 import { toFrontendReservation } from '../adapters/reservationAdapter.js';
 
-let memoryCache = [];
+const STORAGE_KEY = 'hotel_reservations';
 const UPDATE_EVENT = 'reservations_update';
 
 export function migrateBookingRelationships(bookings, guests = getGuests(), rooms = getRooms()) {
@@ -53,14 +53,26 @@ export function migrateBookingRelationships(bookings, guests = getGuests(), room
   return { bookings: migrated, linkedGuests, linkedRooms, ambiguous, changed };
 }
 
-export function getReservations(status) { return status ? memoryCache.filter(r => r.status === status) : memoryCache; }
+export function getReservations(defaultReservations = []) {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === null) return defaultReservations;
+    const bookings = JSON.parse(stored);
+    if (!Array.isArray(bookings)) return [];
+    const result = migrateBookingRelationships(bookings);
+    if (result.changed) localStorage.setItem(STORAGE_KEY, JSON.stringify(result.bookings));
+    return result.bookings;
+  } catch {
+    return [];
+  }
+}
 
 export function syncReservationsFromBackend(reservations) {
   if (Array.isArray(reservations)) {
     try {
       const adapted = reservations.map((res) => toFrontendReservation(res));
       const { bookings } = migrateBookingRelationships(adapted);
-      // localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
       window.dispatchEvent(new Event(UPDATE_EVENT));
     } catch {
       // Ignore quota or private mode write errors
@@ -70,7 +82,7 @@ export function syncReservationsFromBackend(reservations) {
 
 export function saveReservations(reservations) {
   const { bookings } = migrateBookingRelationships(reservations);
-  // localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
   window.dispatchEvent(new Event(UPDATE_EVENT));
 }
 

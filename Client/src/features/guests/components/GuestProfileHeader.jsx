@@ -30,7 +30,7 @@ export default function GuestProfileHeader({
     return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
   };
 
-  const hasAvatar = guest.avatar && !guest.avatar.includes('pravatar.cc/150?u=guest');
+  const hasAvatar = guest.avatar && !guest.avatar.includes('pravatar.cc') && !guest.avatar.includes('ui-avatars.com');
 
   return (
     <div className="space-y-4">

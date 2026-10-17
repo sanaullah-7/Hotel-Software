@@ -6,7 +6,15 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper
  * A generic reusable Table wrapper using MUI's standard Table components.
  * Later, this can be swapped with @mui/x-data-grid for advanced data tables.
  */
-export default function DataGridTable({ columns, data, selectable = false, flat = false, selected = null, onSelectionChange = null }) {
+export default function DataGridTable({ 
+  columns, 
+  data, 
+  selectable = false, 
+  flat = false, 
+  selected = null, 
+  onSelectionChange = null,
+  onRowClick = null 
+}) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [internalSelected, setInternalSelected] = useState([]);
@@ -103,14 +111,26 @@ export default function DataGridTable({ columns, data, selectable = false, flat 
             return (
               <TableRow 
                 key={id} 
-                className="hover:bg-gray-50 transition-colors duration-150"
+                className={`hover:bg-gray-50/80 transition-colors duration-150 ${onRowClick ? 'cursor-pointer' : ''}`}
                 role="checkbox"
                 aria-checked={isItemSelected}
                 tabIndex={-1}
                 selected={isItemSelected}
+                onClick={(event) => {
+                  if (onRowClick) {
+                    const isInteractive = event.target.closest('button, a, input, [role="menuitem"], .no-row-click');
+                    if (!isInteractive) {
+                      onRowClick(row);
+                    }
+                  }
+                }}
               >
                 {selectable && (
-                  <TableCell padding="checkbox" sx={{ pl: flat ? '8px' : undefined }}>
+                  <TableCell 
+                    padding="checkbox" 
+                    sx={{ pl: flat ? '8px' : undefined }}
+                    onClick={(event) => event.stopPropagation()}
+                  >
                     <Checkbox
                       color="primary"
                       checked={isItemSelected}

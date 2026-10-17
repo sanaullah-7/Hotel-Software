@@ -58,7 +58,7 @@ function mapCanonicalToCancelledRow(booking) {
     email: booking.email || '',
     mobile: booking.mobile || '',
     reason: booking.reason || booking.cancellationReason || booking.cancellation_reason || '',
-    avatar: booking.avatar || 'https://i.pravatar.cc/150'
+    avatar: booking.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(booking.name || `${firstName} ${lastName}`.trim() || 'Guest')}&background=1b7f43&color=fff`
   };
 }
 
@@ -287,7 +287,7 @@ export default function CancelledBookings() {
         id: newId,
         name: fullName,
         status: 'Cancelled',
-        avatar: 'https://i.pravatar.cc/150'
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName || 'Guest')}&background=1b7f43&color=fff`
       };
       saveReservations([...allBookings, newBooking]);
     }
@@ -492,7 +492,7 @@ export default function CancelledBookings() {
             <div className="bg-[var(--primary-main)] px-5 py-3.5 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {editingId ? (
-                  <img src={canonicalBookings.find(b=>b.id===editingId)?.avatar || 'https://i.pravatar.cc/150'} alt="guest" className="w-8 h-8 rounded-full border border-white" />
+                  <img src={canonicalBookings.find(b=>b.id===editingId)?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(`${form.firstName} ${form.lastName}`.trim() || 'Guest')}&background=1b7f43&color=fff`} alt="guest" className="w-8 h-8 rounded-full border border-white" />
                 ) : (
                   <div className="w-8 h-8 rounded-full border border-white bg-[var(--primary-main)] brightness-110 flex items-center justify-center text-white">
                     <Person sx={{ fontSize: 20 }} />

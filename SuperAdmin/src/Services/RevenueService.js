@@ -1,117 +1,165 @@
 import { API_BASE_URL, AUTH_TOKEN_KEY } from '../utils/constants.js';
-function getHeaders() { const t = localStorage.getItem(AUTH_TOKEN_KEY); return { 'Content-Type': 'application/json', ...(t ? { Authorization: `Bearer ${t}` } : {}) }; }
-async function request(method, path, body) { const res = await fetch(`${API_BASE_URL}${path}`, { method, headers: getHeaders(), ...(body ? { body: JSON.stringify(body) } : {}) }); if (!res.ok) { const e = await res.json().catch(() => ({ message: res.statusText })); throw new Error(e.message || 'Request failed'); } return res.json(); }
-function delay(ms) { return new Promise((r) => setTimeout(r, ms)); }
-const USE_MOCK = true;
+import { HotelService } from './HotelService.js';
+import { SubscriptionService } from './SubscriptionService.js';
 
-// ---------------------------------------------------------------------------
-// Dashboard Analytics Service
-// Expected backend endpoints:
-//   GET /analytics/dashboard   — summary stats + chart data
-//   GET /analytics/hotel-growth
-//   GET /analytics/user-growth
-//   GET /analytics/revenue
-//   GET /analytics/subscriptions
-// ---------------------------------------------------------------------------
+function getHeaders() {
+  const token = typeof window !== 'undefined' && window.localStorage ? window.localStorage.getItem(AUTH_TOKEN_KEY) : null;
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
-const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+async function request(method, path, body) {
+  const res = await fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers: getHeaders(),
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ message: res.statusText }));
+    throw new Error(err.message || 'Request failed');
+  }
+
+  const json = await res.json();
+  return json.data !== undefined ? json.data : json;
+}
 
 export const AnalyticsService = {
+  /**
+   * Comprehensive telemetry for superadmin dashboard
+   */
   async getDashboardStats() {
-    if (USE_MOCK) {
-      await delay(700);
-      return {
-        totalHotels:          8,
-        activeHotels:         3,
-        pendingApprovals:     3,
-        suspendedHotels:      1,
-        totalManagers:        6,
-        totalReceptionists:   4,
-        activeSubscriptions:  3,
-        monthlyRevenue:       485000,
-        revenueGrowth:        12.4,
-        hotelGrowth:          8.3,
-        userGrowth:           15.2,
-        subscriptionGrowth:   5.8,
-      };
+    try {
+      return await request('GET', '/analytics/dashboard');
+    } catch {
+      // Graceful fallback to HotelService aggregation
+      try {
+        const stats = await HotelService.getStats();
+        return stats;
+      } catch {
+        return {
+          totalHotels: 0,
+          activeHotels: 0,
+          pendingApprovals: 0,
+          suspendedHotels: 0,
+          totalManagers: 0,
+          totalReceptionists: 0,
+          activeSubscriptions: 0,
+          monthlyRevenue: 0,
+          revenueGrowth: 0,
+          hotelGrowth: 0,
+          userGrowth: 0,
+          subscriptionGrowth: 0,
+        };
+      }
     }
-    return request('GET', '/analytics/dashboard');
   },
 
+  /**
+   * Monthly hotel registration and active trends
+   */
   async getHotelGrowth() {
-    if (USE_MOCK) {
-      await delay(500);
-      return MONTHS.map((month, i) => ({
-        month,
-        registrations: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0][i] ?? Math.floor(Math.random() * 3),
-        active:        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 4, 4, 4, 5, 5, 5, 5, 5][i] ?? Math.floor(Math.random() * 5),
-      }));
-    }
     return request('GET', '/analytics/hotel-growth');
   },
 
+  /**
+   * Monthly user growth (managers and staff)
+   */
   async getUserGrowth() {
-    if (USE_MOCK) {
-      await delay(500);
-      return MONTHS.map((month, i) => ({
-        month,
-        managers:      [0,0,0,0,0,0,0,0,0,0,1,1,2,3,4,5,6,6,6,7,7,8,8,8][i] ?? 0,
-        receptionists: [0,0,0,0,0,0,0,0,0,0,0,1,1,2,2,3,3,4,4,4,5,5,5,6][i] ?? 0,
-      }));
-    }
     return request('GET', '/analytics/user-growth');
   },
 
+  /**
+   * 12-Month revenue trend data for charts
+   */
   async getRevenueData() {
-    if (USE_MOCK) {
-      await delay(500);
-      return MONTHS.map((month) => ({
-        month,
-        revenue:       Math.floor(Math.random() * 300000 + 200000),
-        subscriptions: Math.floor(Math.random() * 200000 + 100000),
-        oneTime:       Math.floor(Math.random() * 100000 + 50000),
-      }));
-    }
     return request('GET', '/analytics/revenue');
   },
 
-  async getSubscriptionDistribution() {
-    if (USE_MOCK) {
-      await delay(400);
-      return [
-        { name: 'Active',   value: 3, color: '#10b981' },
-        { name: 'Trial',    value: 1, color: '#6366f1' },
-        { name: 'Expired',  value: 2, color: '#ef4444' },
-        { name: 'Canceled', value: 1, color: '#f59e0b' },
-      ];
-    }
-    return request('GET', '/analytics/subscriptions');
+  /**
+   * Revenue KPI summary
+   */
+  async getRevenueOverview() {
+    return request('GET', '/analytics/overview');
   },
 
-  async getRecentActivity() {
-    if (USE_MOCK) {
-      await delay(400);
+  /**
+   * Active subscription tier breakdown for pie chart
+   */
+  async getSubscriptionDistribution() {
+    try {
+      const stats = await SubscriptionService.getSubscriptionStats();
+      return stats.distribution || [];
+    } catch {
       return [
-        { id: 1, type: 'approval',    title: 'Hotel Approved',     message: 'Pearl Continental Lahore has been successfully approved for operations.', user: 'Admin System', time: new Date(Date.now() - 2*3600000).toISOString(), target: 'Pearl Continental' },
-        { id: 2, type: 'registration',title: 'New Registration',   message: 'Crown Plaza Quetta applied for hotel registration.',                    user: 'System',       time: new Date(Date.now() - 5*3600000).toISOString(), target: 'Crown Plaza' },
-        { id: 3, type: 'user',        title: 'Manager Onboarded',  message: 'Manager Bilal Hussain has completed the onboarding flow.',              user: 'System',       time: new Date(Date.now() - 8*3600000).toISOString(), target: 'Bilal Hussain' },
-        { id: 4, type: 'suspension',  title: 'Account Suspended',  message: 'Ramada Multan suspended due to terms of service violation.',            user: 'System Admin', time: new Date(Date.now() - 24*3600000).toISOString(), target: 'Ramada Multan' },
-        { id: 5, type: 'subscription',title: 'Plan Upgraded',      message: 'Serena Hotel successfully upgraded their plan to Enterprise.',          user: 'Sara Ali',     time: new Date(Date.now() - 48*3600000).toISOString(), target: 'Serena Hotel' },
+        { name: 'Enterprise', value: 0, color: '#6366f1' },
+        { name: 'Business Pro', value: 0, color: '#8b5cf6' },
+        { name: 'Premium Suite', value: 0, color: '#ec4899' },
+        { name: 'Basic Starter', value: 0, color: '#06b6d4' },
       ];
     }
+  },
+
+  /**
+   * Real platform recent activity stream
+   */
+  async getRecentActivity() {
     return request('GET', '/analytics/recent-activity');
   },
 
+  /**
+   * Latest hotel registrations
+   */
   async getRecentRegistrations() {
-    if (USE_MOCK) {
-      await delay(400);
-      return [
-        { id: 'r1', name: 'Crown Plaza Quetta',    managerName: 'Zara Baloch',  city: 'Quetta',  status: 'PENDING',  registeredAt: new Date(Date.now() - 1*24*3600000).toISOString() },
-        { id: 'r2', name: 'Mövenpick Hotel Karachi',managerName: 'Fatima Sheikh',city: 'Karachi', status: 'PENDING',  registeredAt: new Date(Date.now() - 4*24*3600000).toISOString() },
-        { id: 'r3', name: 'Avari Hotel Karachi',   managerName: 'Bilal Hussain',city: 'Karachi', status: 'PENDING',  registeredAt: new Date(Date.now() - 8*24*3600000).toISOString() },
-        { id: 'r4', name: 'Hotel One Faisalabad',  managerName: 'Naveed Iqbal', city: 'Faisalabad',status:'ACTIVE',  registeredAt: new Date(Date.now() - 20*24*3600000).toISOString() },
-      ];
+    try {
+      const res = await HotelService.getHotels({ page: 1, limit: 5 });
+      return res?.data || [];
+    } catch {
+      return [];
     }
-    return request('GET', '/analytics/recent-registrations');
+  },
+
+  /**
+   * Historical monthly revenue list
+   */
+  async getRevenueHistory() {
+    return request('GET', '/analytics/revenue');
+  },
+
+  /**
+   * Recent ledger transactions for dashboard tables
+   */
+  async getRecentTransactions() {
+    try {
+      const res = await this.getTransactions({ page: 1, limit: 10 });
+      return res?.data || [];
+    } catch {
+      return [];
+    }
+  },
+
+  /**
+   * Full paginated transaction query with status, search, and timeframe filters
+   */
+  async getTransactions({ page = 1, limit = 10, status = '', search = '', period = '' } = {}) {
+    const params = new URLSearchParams();
+    if (page) params.append('page', page);
+    if (limit) params.append('limit', limit);
+    if (status) params.append('status', status);
+    if (search) params.append('search', search);
+    if (period) params.append('period', period);
+
+    return request('GET', `/finance/transactions?${params.toString()}`);
+  },
+
+  /**
+   * Record a new transaction in the platform ledger
+   */
+  async recordTransaction(data) {
+    return request('POST', '/finance/transactions', data);
   },
 };
+
+export default AnalyticsService;

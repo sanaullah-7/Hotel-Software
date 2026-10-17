@@ -26,6 +26,7 @@ export const restaurantService = {
   getOrders: (params) => api.get("/hotel/restaurant/orders", params),
   getOrder: (id) => api.get(`/hotel/restaurant/orders/${id}`),
   createOrder: (data) => api.post("/hotel/restaurant/orders", data),
+  updateOrder: (id, data) => api.put(`/hotel/restaurant/orders/${id}`, data),
   updateOrderStatus: (id, data) => api.patch(`/hotel/restaurant/orders/${id}/status`, data),
   deleteOrder: (id) => api.delete(`/hotel/restaurant/orders/${id}`),
 };

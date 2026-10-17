@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CircularProgress, Alert } from '@mui/material';
+import { CircularProgress, Alert, Snackbar } from '@mui/material';
 import reservationService from '../../../services/reservationService';
 import stayService from '../../../services/stayService';
+import billingService from '../../../services/billingService';
 import { toFrontendReservation, toBackendReservationPayload } from '../adapters/reservationAdapter';
+import { toFrontendInvoiceList } from '../../payment-billing/adapters/billingAdapter';
 import {
   getReservations,
   syncReservationsFromBackend,
@@ -13,6 +15,7 @@ import {
 import {
   getBookingDues,
   getCanonicalBookingPaymentStatus,
+  syncInvoicesFromBackend,
   INVOICES_UPDATED_EVENT,
   PAYMENTS_UPDATED_EVENT,
   REFUNDS_UPDATED_EVENT
@@ -37,6 +40,7 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
   const [dateFilter, setDateFilter] = useState('Daily');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'error' });
 
   // Modals state
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -85,7 +89,11 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
     setLoading(true);
     setError(null);
     try {
-      const response = await reservationService.getReservations();
+      const [response, invoicesRes] = await Promise.all([
+        reservationService.getReservations(),
+        billingService.getInvoices({ limit: 100 }).catch(() => null),
+      ]);
+
       const rawReservations = Array.isArray(response?.data?.reservations)
         ? response.data.reservations
         : Array.isArray(response?.data)
@@ -97,6 +105,17 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
       const adapted = rawReservations.map(toFrontendReservation).filter(Boolean);
       setBookings(adapted);
       syncReservationsFromBackend(rawReservations);
+
+      if (invoicesRes) {
+        const rawInvoices = Array.isArray(invoicesRes?.data?.invoices)
+          ? invoicesRes.data.invoices
+          : Array.isArray(invoicesRes?.data)
+            ? invoicesRes.data
+            : [];
+        if (rawInvoices.length > 0) {
+          syncInvoicesFromBackend(toFrontendInvoiceList(rawInvoices));
+        }
+      }
     } catch (err) {
       setError(err?.message || 'Failed to load reservations from server.');
     } finally {
@@ -316,6 +335,19 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
       if (normalizeBookingStatus(booking.status) !== 'Checked In') {
         throw new Error('Only a checked-in booking can be checked out.');
       }
+
+      // Zero-Balance Checkout Guard: Block checkout if guest has remaining dues
+      const duesAmt = getBookingDues(booking);
+      if (duesAmt !== null && Number(duesAmt) > 0) {
+        setToast({
+          open: true,
+          message: `Dues of $${Number(duesAmt).toLocaleString()} are remaining for this guest. Please clear the outstanding balance first before checking out.`,
+          severity: 'error',
+        });
+        setActiveMenuId(null);
+        return;
+      }
+
       const canonicalId = booking._id || booking.canonicalBookingId || booking.id || id;
       const payload = {
         reservation_id: canonicalId,
@@ -410,6 +442,23 @@ export default function AllBookings({ title = 'All Booking', showDateFilter = fa
         onClose={() => setIsCancelModalOpen(false)}
         onSubmit={handleCancelBooking}
       />
+
+      {/* Dues / Checkout Guard Toast Notification */}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={6000}
+        onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ width: '100%', fontSize: '13px', fontWeight: 600, boxShadow: 3 }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

@@ -12,8 +12,9 @@ import {
   Menu, MenuItem, IconButton, FormControl, InputLabel, Select, Chip, Tooltip, Snackbar, Alert, CircularProgress 
 } from '@mui/material';
 import guestChargeService from '../../../services/guestChargeService';
+import roomService from '../../../services/roomService';
 import { adaptGuestChargeToUI, computeGuestChargeMetrics } from '../adapters/guestChargeAdapter';
-import { CHARGE_TYPES, CHARGE_STATUSES, ROOM_NUMBERS } from './inventoryStore';
+import { CHARGE_TYPES, CHARGE_STATUSES } from './inventoryStore';
 import AddGuestChargeModal from './components/AddGuestChargeModal';
 import ChargeDetailModal from './components/ChargeDetailModal';
 
@@ -42,6 +43,7 @@ export default function GuestCharges() {
 
   // State
   const [charges, setCharges] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -74,10 +76,22 @@ export default function GuestCharges() {
     setError(null);
 
     try {
-      const response = await guestChargeService.getGuestCharges({ limit: 500 });
+      const [response, roomsRes] = await Promise.all([
+        guestChargeService.getGuestCharges({ limit: 500 }),
+        roomService.getRooms({ limit: 200 }).catch(() => null)
+      ]);
       const rawCharges = response?.data || response?.charges || [];
       const adapted = rawCharges.map(adaptGuestChargeToUI).filter(Boolean);
       setCharges(adapted);
+
+      if (roomsRes) {
+        const loadedRooms = Array.isArray(roomsRes?.data?.rooms)
+          ? roomsRes.data.rooms
+          : Array.isArray(roomsRes?.data)
+            ? roomsRes.data
+            : [];
+        setRooms(loadedRooms);
+      }
     } catch (err) {
       console.error('Failed to load guest charges:', err);
       setError(err?.message || 'Failed to load guest charges from server. Please check your network connection.');
@@ -128,6 +142,13 @@ export default function GuestCharges() {
   };
 
   const metrics = computeGuestChargeMetrics(charges);
+
+  const roomOptions = Array.from(
+    new Set([
+      ...rooms.map(r => String(r.room_number || r.roomNumber || '')).filter(Boolean),
+      ...charges.map(c => String(c.roomNumber || '')).filter(Boolean)
+    ])
+  ).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
 
   // Multi-parameter filtering
   const filteredCharges = charges.filter(charge => {
@@ -373,7 +394,7 @@ export default function GuestCharges() {
                 }}
               >
                 <MenuItem value="All">All Guest Rooms</MenuItem>
-                {ROOM_NUMBERS.map(r => (
+                {roomOptions.map(r => (
                   <MenuItem key={r} value={r}>Room {r}</MenuItem>
                 ))}
               </Select>

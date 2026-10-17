@@ -1,51 +1,70 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 import { ENV } from '../../config/env.js';
+import { ROLES } from '../../constants/roles.js';
 import Account from './models/account.model.js';
 import Hotel from './models/hotel.model.js';
 import PasswordReset from './models/passwordReset.model.js';
-import { initAllHotelModels } from '../hotel/modelFactory.js';
 
+// Ensure platform unique indexes (Account.email/phone, Hotel.tenant_db_name, ...) are really built
+// before the app serves traffic - never rely on lazy background index creation.
 const ensurePlatformIndexes = async () => {
-  await Promise.all([Account.init(), Hotel.init(), PasswordReset.init()]);
+  const results = await Promise.allSettled([Account.init(), Hotel.init(), PasswordReset.init()]);
+  for (const r of results) {
+    if (r.status === 'rejected') {
+      console.error('Platform index creation failed:', r.reason?.message);
+    }
+  }
 };
 
-export const connectPlatformDB = async (customUri) => {
-  const uri = customUri || ENV.MONGODB_URI;
-  const expectedDatabase = ENV.NODE_ENV === 'test' ? 'test_explore_pakistan' : 'explore_pakistan';
-  const databaseName = uri.match(/\/([^/?]+)(?:\?.*)?$/)?.[1];
-  if (databaseName !== expectedDatabase) {
-    throw new Error(`Refusing connection: expected the ${expectedDatabase} database`);
-  }
-
-  if (mongoose.connection.readyState === 1) {
-    if (mongoose.connection.name !== expectedDatabase) {
-      throw new Error('The active MongoDB connection uses an unexpected database');
+const seedDefaultSuperAdmin = async () => {
+  try {
+    const adminEmail = 'admin@explorepakistan.com';
+    const existing = await Account.findOne({ email: adminEmail });
+    if (!existing) {
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await Account.create({
+        fullName: 'Explore Pakistan Super Admin',
+        email: adminEmail,
+        password: hashedPassword,
+        role: ROLES.PLATFORM_ADMIN,
+        status: 'active',
+        hotelId: null,
+      });
+      console.log('[SEED] Default Super Admin account created: admin@explorepakistan.com');
     }
+  } catch (err) {
+    console.error('[SEED] Super Admin seeding warning:', err.message);
+  }
+};
+
+export const connectPlatformDB = async () => {
+  if (mongoose.connection.readyState === 1) {
     await ensurePlatformIndexes();
-    await initAllHotelModels();
+    await seedDefaultSuperAdmin();
     return mongoose.connection;
   }
 
   try {
-    await mongoose.connect(uri, {
+    await mongoose.connect(ENV.PLATFORM_MONGO_URI, {
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
 
-    console.log(`Connected to Explore Pakistan Database: ${uri}`);
+    console.log('Connected to Platform Database');
     await ensurePlatformIndexes();
-    await initAllHotelModels();
+    await seedDefaultSuperAdmin();
     return mongoose.connection;
   } catch (error) {
-    console.error('Failed to connect to Explore Pakistan Database:', error.message);
+    console.error('Failed to connect to Platform Database:', error.message);
     throw error;
   }
 };
 
 export const getPlatformConnection = () => {
   if (mongoose.connection.readyState !== 1) {
-    throw new Error('Database is not connected. Call connectPlatformDB() first.');
+    throw new Error('Platform database is not connected. Call connectPlatformDB() first.');
   }
   return mongoose.connection;
 };
@@ -53,6 +72,6 @@ export const getPlatformConnection = () => {
 export const closePlatformDB = async () => {
   if (mongoose.connection.readyState !== 0) {
     await mongoose.connection.close();
-    console.log('Explore Pakistan Database connection closed.');
+    console.log('Platform Database connection closed.');
   }
 };

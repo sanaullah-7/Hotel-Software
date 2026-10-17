@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const feeSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     code: {
       type: String,
       required: true,
@@ -52,7 +47,5 @@ const feeSchema = new mongoose.Schema(
 );
 
 feeSchema.index({ code: 1 }, { unique: true });
-
-feeSchema.index({ hotelId: 1, code: 1 }, { unique: true });
 
 export default feeSchema;

@@ -327,9 +327,28 @@ export const updatePayrollItem = async (hotelContext, itemId, updateData) => {
   if (updateData.base_salary !== undefined) item.base_salary = Number(updateData.base_salary);
   if (updateData.bonuses !== undefined) item.bonuses = Number(updateData.bonuses);
   if (updateData.deductions !== undefined) item.deductions = Number(updateData.deductions);
-  if (updateData.status) item.status = updateData.status;
+  if (updateData.paid_amount !== undefined) item.paid_amount = Number(updateData.paid_amount);
+  if (updateData.payment_method !== undefined) item.payment_method = updateData.payment_method;
+  if (updateData.payment_date !== undefined) item.payment_date = updateData.payment_date ? new Date(updateData.payment_date) : new Date();
+  if (updateData.payment_notes !== undefined) item.payment_notes = updateData.payment_notes;
 
   item.net_pay = item.base_salary + item.bonuses - item.deductions;
+
+  if (updateData.status) {
+    item.status = updateData.status.toUpperCase();
+    if (item.status === 'PAID' && item.paid_amount === 0) {
+      item.paid_amount = item.net_pay;
+    }
+  } else if (updateData.paid_amount !== undefined) {
+    if (item.paid_amount >= item.net_pay && item.net_pay > 0) {
+      item.status = 'PAID';
+    } else if (item.paid_amount > 0 && item.paid_amount < item.net_pay) {
+      item.status = 'PARTIAL';
+    } else if (item.paid_amount === 0) {
+      item.status = 'PENDING';
+    }
+  }
+
   await item.save();
 
   if (run) {
@@ -370,45 +389,126 @@ export const deletePayrollItem = async (hotelContext, itemId) => {
 export const getEmployeeSalaryRoster = async (hotelContext, queryParams = {}) => {
   const Employee = await getModel(hotelContext, 'Employee');
   const PayrollItem = await getModel(hotelContext, 'PayrollItem');
+  const PayrollRun = await getModel(hotelContext, 'PayrollRun');
 
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // 1-12
+
+  // Determine requested year & month
+  let reqYear = queryParams.year ? Number(queryParams.year) : currentYear;
+  let reqMonth = queryParams.month ? Number(queryParams.month) : currentMonth;
+  if (isNaN(reqMonth) || reqMonth < 1 || reqMonth > 12) {
+    const monthNames = [
+      'january', 'february', 'march', 'april', 'may', 'june',
+      'july', 'august', 'september', 'october', 'november', 'december'
+    ];
+    const idx = monthNames.indexOf(String(queryParams.month || '').trim().toLowerCase());
+    reqMonth = idx !== -1 ? idx + 1 : currentMonth;
+  }
+
+  const isCurrentCycle = reqYear === currentYear && reqMonth === currentMonth;
+
+  const numDays = new Date(reqYear, reqMonth, 0).getDate();
+  const startPeriod = new Date(Date.UTC(reqYear, reqMonth - 1, 1, 0, 0, 0, 0));
+  const endPeriod = new Date(Date.UTC(reqYear, reqMonth - 1, numDays, 23, 59, 59, 999));
+  const runRef = `PAY-${reqYear}${String(reqMonth).padStart(2, '0')}`;
+
+  let targetRun = await PayrollRun.findOne({
+    $or: [
+      { run_ref: runRef },
+      { period_start: { $lte: endPeriod }, period_end: { $gte: startPeriod } },
+    ],
+  });
+
+  // Only auto-create run if it is the current active cycle!
+  // For other cycles where no payroll was actually performed, return empty.
+  if (!targetRun) {
+    if (isCurrentCycle) {
+      targetRun = await PayrollRun.create({
+        run_ref: runRef,
+        period_start: startPeriod,
+        period_end: endPeriod,
+        process_date: new Date(),
+        status: 'DRAFT',
+        total_amount: 0,
+        notes: `Payroll for ${new Date(reqYear, reqMonth - 1, 1).toLocaleString('default', { month: 'long', year: 'numeric' })}`,
+      });
+    } else {
+      return [];
+    }
+  }
+
+  // If targetRun exists:
+  // For the current cycle, ensure active employees have payroll items snapshotted
   const filter = { status: { $ne: 'TERMINATED' } };
   if (queryParams.department_id) {
     filter.department_id = queryParams.department_id;
   }
-
   const employees = await Employee.find(filter)
     .populate('department_id')
     .sort({ created_at: -1 });
 
-  // Get the latest payroll item for each employee
-  const employeeIds = employees.map((e) => e._id);
-  const latestItems = await PayrollItem.find({ employee_id: { $in: employeeIds } })
-    .populate('run_id')
-    .sort({ created_at: -1 });
+  if (isCurrentCycle) {
+    const existingItems = await PayrollItem.find({ run_id: targetRun._id });
+    const existingEmpIds = new Set(existingItems.map((it) => it.employee_id.toString()));
+    const missing = employees.filter((emp) => !existingEmpIds.has(emp._id.toString()));
 
-  const latestItemMap = new Map();
-  for (const item of latestItems) {
-    const empIdStr = item.employee_id.toString();
-    if (!latestItemMap.has(empIdStr)) {
-      latestItemMap.set(empIdStr, item);
+    if (missing.length > 0) {
+      const toInsert = missing.map((emp) => {
+        const baseSalary = typeof emp.salary === 'number' && !isNaN(emp.salary) ? emp.salary : 0;
+        return {
+          run_id: targetRun._id,
+          employee_id: emp._id,
+          base_salary: baseSalary,
+          bonuses: 0,
+          deductions: 0,
+          net_pay: baseSalary,
+          paid_amount: 0,
+          status: 'PENDING',
+        };
+      });
+      await PayrollItem.insertMany(toInsert);
+      await recalculateRunTotal(PayrollItem, PayrollRun, targetRun._id);
     }
   }
 
-  const roster = employees.map((emp) => {
-    const latestItem = latestItemMap.get(emp._id.toString());
-    const baseSalary = typeof emp.salary === 'number' && !isNaN(emp.salary) ? emp.salary : 0;
-    const bonus = latestItem ? latestItem.bonuses : 0;
-    const deductions = latestItem ? latestItem.deductions : 0;
-    const netSalary = latestItem ? latestItem.net_pay : baseSalary + bonus - deductions;
-    const paymentStatus = latestItem ? latestItem.status : 'PENDING';
+  // Load items for this targetRun
+  const items = await PayrollItem.find({ run_id: targetRun._id })
+    .populate({
+      path: 'employee_id',
+      populate: { path: 'department_id' },
+    })
+    .populate('run_id')
+    .sort({ created_at: -1 });
+
+  const roster = items.map((item) => {
+    const emp = item.employee_id || {};
+    const baseSalary = Number(item.base_salary || 0);
+    const bonus = Number(item.bonuses || 0);
+    const deductions = Number(item.deductions || 0);
+    const netSalary = Number(item.net_pay ?? (baseSalary + bonus - deductions));
+    const rawStatus = (item.status || 'PENDING').toUpperCase();
+    const paidAmount = Number(item.paid_amount || 0);
+    const remainingBalance = Math.max(0, netSalary - paidAmount);
+
+    let paymentStatus = 'Pending';
+    if (rawStatus === 'PAID') paymentStatus = 'Paid';
+    else if (rawStatus === 'PARTIAL') paymentStatus = 'Partial';
+    else if (paidAmount >= netSalary && netSalary > 0) paymentStatus = 'Paid';
+    else if (paidAmount > 0) paymentStatus = 'Partial';
+
+    const empName = `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || 'Staff Member';
 
     return {
-      id: emp._id.toString(),
-      employee_id: emp._id.toString(),
-      payroll_item_id: latestItem?._id?.toString() || null,
-      empId: emp.employee_ref,
-      name: `${emp.first_name} ${emp.last_name}`.trim(),
-      email: emp.email,
+      id: emp._id ? emp._id.toString() : item._id.toString(),
+      employee_id: emp._id ? emp._id.toString() : item._id.toString(),
+      payroll_item_id: item._id.toString(),
+      run_id: targetRun._id.toString(),
+      run_ref: targetRun.run_ref,
+      empId: emp.employee_ref || 'EMP',
+      name: empName,
+      email: emp.email || '',
       department: emp.department_id?.name || 'Unassigned',
       department_id: emp.department_id?._id?.toString() || null,
       role: emp.job_title || 'Staff',
@@ -416,9 +516,14 @@ export const getEmployeeSalaryRoster = async (hotelContext, queryParams = {}) =>
       bonus,
       deductions,
       netSalary,
-      paymentStatus: paymentStatus === 'PAID' ? 'Paid' : 'Pending',
-      paymentDate: latestItem?.run_id?.process_date || null,
-      avatar: emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.first_name + ' ' + emp.last_name)}&background=5d5fef&color=fff`,
+      paidAmount,
+      remainingBalance,
+      paymentStatus,
+      rawStatus,
+      paymentMethod: item.payment_method || 'BANK_TRANSFER',
+      paymentDate: item.payment_date || null,
+      paymentNotes: item.payment_notes || '',
+      avatar: emp.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(empName)}&background=5d5fef&color=fff`,
     };
   });
 

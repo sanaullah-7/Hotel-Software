@@ -1,3 +1,13 @@
+/**
+ * Returns current date in local YYYY-MM-DD format (avoids UTC timezone shift)
+ */
+export const getLocalTodayDateString = (d = new Date()) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const attendanceAdapter = {
   /**
    * Format a Date/ISO string to HH:MM (e.g. "10:30")
@@ -41,15 +51,26 @@ export const attendanceAdapter = {
       ? attendanceAdapter.formatTimeToHHMM(backendRecord.clock_out_time)
       : '';
 
-    // Status: UI expects lowercase ('present', 'absent', etc.)
+    // Status: UI expects lowercase ('present', 'absent', 'on_leave', etc.)
     const rawStatus = (backendRecord.status || 'PRESENT').toUpperCase();
     let status = 'present';
     if (rawStatus === 'ABSENT') status = 'absent';
-    else if (rawStatus === 'ON_LEAVE') status = 'on_leave';
+    else if (rawStatus === 'ON_LEAVE' || rawStatus === 'LEAVE') status = 'on_leave';
     else if (rawStatus === 'HALF_DAY') status = 'half_day';
     else if (rawStatus === 'LATE') status = 'late';
     else if (rawStatus === 'HOLIDAY') status = 'holiday';
     else if (rawStatus === 'WEEKEND') status = 'weekend';
+
+    const isNonWorking = status === 'absent' || status === 'on_leave';
+
+    // Break duration
+    const breakTime = backendRecord.break_time || (isNonWorking ? '00:00' : '01:00');
+
+    // Total hours: fallback to calculated or 00:00, never arbitrary 08:00
+    let totalHours = backendRecord.total_hours;
+    if (!totalHours || isNonWorking) {
+      totalHours = isNonWorking ? '00:00' : '00:00';
+    }
 
     return {
       id,
@@ -59,10 +80,12 @@ export const attendanceAdapter = {
       name: fullName,
       avatar,
       shift: backendRecord.shift || 'Day Shift',
-      firstIn: firstIn || '10:30',
-      breakTime: backendRecord.break_time || '01:00',
-      lastOut: lastOut || '19:30',
-      totalHours: backendRecord.total_hours || '08:00',
+      firstIn: firstIn || (isNonWorking ? '-' : ''),
+      breakTime,
+      breakFrom: backendRecord.break_from || '',
+      breakTo: backendRecord.break_to || '',
+      lastOut: lastOut || (isNonWorking ? '-' : ''),
+      totalHours,
       status,
       rawStatus,
       date: backendRecord.date,
@@ -86,25 +109,48 @@ export const attendanceAdapter = {
   toAttendanceBackendPayload(formData, dateStr) {
     if (!formData) return {};
 
-    const targetDate = dateStr || new Date().toISOString().split('T')[0];
+    const targetDate = dateStr || getLocalTodayDateString();
 
     const rawStatus = (formData.status || 'present').toUpperCase();
     let status = 'PRESENT';
     if (rawStatus === 'ABSENT') status = 'ABSENT';
-    else if (rawStatus === 'ON_LEAVE') status = 'ON_LEAVE';
+    else if (rawStatus === 'ON_LEAVE' || rawStatus === 'LEAVE') status = 'ON_LEAVE';
     else if (rawStatus === 'HALF_DAY') status = 'HALF_DAY';
     else if (rawStatus === 'LATE') status = 'LATE';
     else if (rawStatus === 'HOLIDAY') status = 'HOLIDAY';
     else if (rawStatus === 'WEEKEND') status = 'WEEKEND';
 
+    const isNonWorking = status === 'ABSENT' || status === 'ON_LEAVE';
+
     let clockIn = null;
     let clockOut = null;
 
-    if (formData.firstIn) {
+    if (!isNonWorking && formData.firstIn) {
       clockIn = new Date(`${targetDate}T${formData.firstIn}:00.000Z`).toISOString();
     }
-    if (formData.lastOut) {
+    if (!isNonWorking && formData.lastOut) {
       clockOut = new Date(`${targetDate}T${formData.lastOut}:00.000Z`).toISOString();
+    }
+
+    // Dynamic canonical total_hours calculation
+    let calculatedTotal = formData.totalHours;
+    if (isNonWorking) {
+      calculatedTotal = '00:00';
+    } else if (formData.firstIn && formData.lastOut) {
+      const [inH, inM] = formData.firstIn.split(':').map(Number);
+      const [outH, outM] = formData.lastOut.split(':').map(Number);
+      let diff = (outH * 60 + outM) - (inH * 60 + inM);
+      if (diff < 0) diff += 24 * 60;
+
+      let brkMins = 0;
+      if (formData.breakTime && formData.breakTime !== '00:00') {
+        const [bH, bM] = formData.breakTime.split(':').map(Number);
+        brkMins = (bH || 0) * 60 + (bM || 0);
+      }
+      const net = diff <= brkMins ? diff : Math.max(0, diff - brkMins);
+      const h = Math.floor(net / 60);
+      const m = net % 60;
+      calculatedTotal = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     }
 
     const payload = {
@@ -112,8 +158,8 @@ export const attendanceAdapter = {
       date: new Date(`${targetDate}T00:00:00.000Z`).toISOString(),
       shift: formData.shift || 'Day Shift',
       status,
-      break_time: formData.breakTime || '01:00',
-      total_hours: formData.totalHours || '08:00',
+      break_time: isNonWorking ? '00:00' : (formData.breakTime || '01:00'),
+      total_hours: isNonWorking ? '00:00' : (calculatedTotal || '00:00'),
       notes: formData.notes || '',
     };
 
@@ -124,32 +170,20 @@ export const attendanceAdapter = {
   },
 
   /**
-   * Maps status letter ('P' | 'A' | 'L' | 'H' | 'W') to backend enum
-   */
-  matrixSymbolToBackendStatus(symbol) {
-    switch (symbol) {
-      case 'P': return 'PRESENT';
-      case 'A': return 'ABSENT';
-      case 'L': return 'ON_LEAVE';
-      case 'H': return 'HOLIDAY';
-      case 'W': return 'WEEKEND';
-      default: return 'PRESENT';
-    }
-  },
-
-  /**
    * Maps backend enum to matrix symbol
    */
   backendStatusToMatrixSymbol(status) {
     const s = (status || '').toUpperCase();
     switch (s) {
       case 'PRESENT':
-      case 'LATE':
       case 'HALF_DAY':
         return 'P';
+      case 'LATE':
+        return 'LT';
       case 'ABSENT':
         return 'A';
       case 'ON_LEAVE':
+      case 'LEAVE':
         return 'L';
       case 'HOLIDAY':
         return 'H';

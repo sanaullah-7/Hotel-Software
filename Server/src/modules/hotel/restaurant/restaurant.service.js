@@ -60,6 +60,24 @@ export const createCategory = async (tenantConn, data) => {
 
 export const getCategories = async (tenantConn, query = {}) => {
   const RestaurantCategory = await getModel(tenantConn, "RestaurantCategory");
+
+  // Auto-seed canonical default categories if collection is completely empty
+  const count = await RestaurantCategory.countDocuments({});
+  if (count === 0) {
+    const defaultCats = [
+      { name: "Starters", description: "Appetizers, finger food, and light starters", display_order: 1 },
+      { name: "Main Course", description: "Hearty main dishes and entrees", display_order: 2 },
+      { name: "Beverages", description: "Hot, cold, and refreshing drinks", display_order: 3 },
+      { name: "Soups", description: "Warm, nourishing soups and broths", display_order: 4 },
+      { name: "Desserts", description: "Sweet treats and specialty desserts", display_order: 5 },
+      { name: "Fast Food", description: "Burgers, sandwiches, and fast bites", display_order: 6 },
+      { name: "Salads", description: "Fresh garden and dressed salads", display_order: 7 },
+    ];
+    for (const cat of defaultCats) {
+      await RestaurantCategory.create(cat);
+    }
+  }
+
   const filter = {};
 
   if (query.status) {
@@ -545,22 +563,58 @@ export const createOrder = async (tenantConn, orderData, user) => {
       // Attempt to resolve active open folio from current checked-in stay in this room
       const Room = await getModel(tenantConn, "Room");
       const Stay = await getModel(tenantConn, "Stay");
+      const StayRoom = await getModel(tenantConn, "StayRoom");
+      const Reservation = await getModel(tenantConn, "Reservation");
 
       const room = await Room.findOne({ room_number: orderData.room_number.trim() });
       if (!room) {
         throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Room '${orderData.room_number}' not found in this hotel`);
       }
 
-      const activeStay = await Stay.findOne({ room_id: room._id, status: "CHECKED_IN" });
-      if (!activeStay) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, `No checked-in guest stay found for room '${orderData.room_number}'`);
+      // 1. Check StayRoom for active occupant
+      let activeFolio = null;
+      const stayRoom = await StayRoom.findOne({ room_id: room._id, status: "OCCUPIED" });
+      if (stayRoom) {
+        const activeStay = await Stay.findOne({ _id: stayRoom.stay_id, status: "CHECKED_IN" });
+        if (activeStay) {
+          activeFolio = await Folio.findOne({ stay_id: activeStay._id, status: "OPEN" });
+          if (!activeFolio && activeStay.reservation_id) {
+            activeFolio = await Folio.findOne({ reservation_id: activeStay.reservation_id, status: "OPEN" });
+          }
+        }
       }
 
-      const activeFolio = await Folio.findOne({ stay_id: activeStay._id, status: "OPEN" });
+      // 2. Direct Stay check fallback (if Stay has room_id)
       if (!activeFolio) {
-        throw new ApiError(HTTP_STATUS.BAD_REQUEST, `No open folio found for stay in room '${orderData.room_number}'`);
+        const directStay = await Stay.findOne({ room_id: room._id, status: "CHECKED_IN" });
+        if (directStay) {
+          activeFolio = await Folio.findOne({ stay_id: directStay._id, status: "OPEN" });
+        }
       }
+
+      // 3. In-House Reservation check fallback
+      if (!activeFolio) {
+        const activeRes = await Reservation.findOne({
+          room_id: room._id,
+          status: { $in: ["IN_HOUSE", "CHECKED_IN", "Checked In"] },
+        }).sort({ created_at: -1 });
+
+        if (activeRes) {
+          activeFolio = await Folio.findOne({ reservation_id: activeRes._id, status: "OPEN" });
+          if (!activeFolio && activeRes.guest_id) {
+            activeFolio = await Folio.findOne({ guest_id: activeRes.guest_id, status: "OPEN" });
+          }
+        }
+      }
+
+      if (!activeFolio) {
+        throw new ApiError(HTTP_STATUS.BAD_REQUEST, `No checked-in guest with an open folio found for room '${orderData.room_number}'`);
+      }
+
       resolvedFolioId = activeFolio._id;
+      if (!orderData.guest_id && activeFolio.guest_id) {
+        orderData.guest_id = activeFolio.guest_id;
+      }
     } else {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Active open folio or room number is required for room folio charges");
     }
@@ -768,6 +822,31 @@ export const updateOrderStatus = async (tenantConn, id, newStatus, user, notes) 
     );
   }
 
+  return updatedOrder;
+};
+
+export const updateOrder = async (tenantConn, id, data) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Order ID format");
+  }
+
+  const RestaurantOrder = await getModel(tenantConn, "RestaurantOrder");
+  const order = await RestaurantOrder.findById(id);
+
+  if (!order) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, "Restaurant order not found");
+  }
+
+  if (order.status === "COMPLETED" || order.status === "CANCELLED") {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, `Cannot modify an order in terminal state '${order.status}'`);
+  }
+
+  const updateFields = {};
+  if (data.customer_name !== undefined) updateFields.customer_name = data.customer_name.trim();
+  if (data.room_number !== undefined) updateFields.room_number = data.room_number.trim();
+  if (data.notes !== undefined) updateFields.notes = data.notes.trim();
+
+  const updatedOrder = await RestaurantOrder.findByIdAndUpdate(id, { $set: updateFields }, { new: true });
   return updatedOrder;
 };
 

@@ -2,16 +2,12 @@ import mongoose from 'mongoose';
 
 const amenitySchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     name: {
       type: String,
       required: true,
       trim: true,
-      },
+      unique: true,
+    },
     description: {
       type: String,
     },
@@ -28,7 +24,5 @@ const amenitySchema = new mongoose.Schema(
 );
 
 // Indexes are automatically created via unique: true on name
-
-amenitySchema.index({ hotelId: 1, name: 1 }, { unique: true });
 
 export default amenitySchema;

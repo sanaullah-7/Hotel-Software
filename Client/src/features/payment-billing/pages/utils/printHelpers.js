@@ -275,3 +275,160 @@ export function printRefundVoucher(refund) {
   const html = generateRefundVoucherHtml(refund);
   printHtmlViaIframe(html, `Refund_Voucher_${refund.id || 'REF'}`);
 }
+
+export function generateZReportHtml(shift, hotelName = 'Grand Imperial Hotel & Resort') {
+  if (!shift) return '';
+
+  const formatPKR = (amt) =>
+    `PKR ${(Number(amt) || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const discrepancy = Number(shift.discrepancy_amount || 0);
+  let statusBadgeColor = '#059669';
+  let statusBadgeText = 'BALANCED (Zero Discrepancy)';
+
+  if (discrepancy < 0) {
+    statusBadgeColor = '#dc2626';
+    statusBadgeText = `SHORTAGE (${formatPKR(Math.abs(discrepancy))})`;
+  } else if (discrepancy > 0) {
+    statusBadgeColor = '#2563eb';
+    statusBadgeText = `OVERAGE (+${formatPKR(discrepancy)})`;
+  }
+
+  const tender = shift.tender_summary || {};
+  const openedDate = shift.opened_at ? new Date(shift.opened_at).toLocaleString() : 'N/A';
+  const closedDate = shift.closed_at ? new Date(shift.closed_at).toLocaleString() : 'N/A';
+
+  return `
+    <div class="voucher-container" style="max-width: 820px; margin: 0 auto; padding: 24px; border: 2px solid #1b7f43; border-radius: 8px;">
+      <div class="header" style="border-bottom: 2px solid #1b7f43; padding-bottom: 14px; margin-bottom: 18px; display: flex; justify-content: space-between; align-items: flex-start;">
+        <div>
+          <h1 class="brand-title" style="font-size: 22px; font-weight: 800; color: #1b7f43; margin: 0;">${hotelName}</h1>
+          <p class="brand-subtitle" style="font-size: 11px; color: #64748b; margin: 3px 0 0 0; text-transform: uppercase; letter-spacing: 0.5px;">Front Desk Operations &bull; Authoritative Z-Report (End-of-Shift Reconciliation)</p>
+        </div>
+        <div class="doc-badge" style="text-align: right;">
+          <div class="doc-type" style="font-size: 15px; font-weight: 800; color: #1b7f43; text-transform: uppercase;">Z-REPORT</div>
+          <div class="doc-id" style="font-family: monospace; font-size: 13px; font-weight: 700; color: #1b7f43; margin-top: 2px;">${shift.shift_number || 'SHF-UNKNOWN'}</div>
+          <div style="font-size: 10px; color: #64748b; margin-top: 2px;">Status: <strong style="color: #059669;">${shift.status || 'CLOSED'}</strong></div>
+        </div>
+      </div>
+
+      <!-- Shift Metadata Grid -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
+          <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">Staff & Terminal</div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;"><span style="color: #64748b;">Primary Cashier:</span> <strong>${shift.staff_name || 'Cashier'}</strong></div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;"><span style="color: #64748b;">Drawer / Station:</span> <strong>${shift.drawer_name || 'Front Desk Drawer'}</strong></div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px;"><span style="color: #64748b;">Closed / Sealed By:</span> <strong>${shift.closed_by_name || shift.staff_name || 'Admin'}</strong></div>
+        </div>
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px;">
+          <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">Shift Timestamps</div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;"><span style="color: #64748b;">Opened:</span> <span>${openedDate}</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;"><span style="color: #64748b;">Closed:</span> <span>${closedDate}</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 12px;"><span style="color: #64748b;">Report Run:</span> <span>${new Date().toLocaleString()}</span></div>
+        </div>
+      </div>
+
+      <!-- Authoritative Cash Drawer Balance Summary -->
+      <div style="background: #ffffff; border: 2px solid #1b7f43; border-radius: 6px; margin-bottom: 16px; overflow: hidden;">
+        <div style="background: #1b7f43; color: #ffffff; padding: 8px 14px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center;">
+          <span>Physical Cash Drawer Reconciliation</span>
+          <span style="font-size: 11px; background: ${statusBadgeColor}; padding: 2px 8px; border-radius: 4px; color: #ffffff;">${statusBadgeText}</span>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+          <tbody>
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 8px 14px; color: #334155;">(+) Opening Float (Starting Cash)</td>
+              <td style="padding: 8px 14px; text-align: right; font-family: monospace; font-weight: 600;">${formatPKR(shift.opening_float)}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 8px 14px; color: #334155;">(+) Cash Receipts / Collections</td>
+              <td style="padding: 8px 14px; text-align: right; font-family: monospace; font-weight: 600; color: #059669;">+${formatPKR(shift.cash_collected)}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 8px 14px; color: #334155;">(-) Cash Refunds Disbursed</td>
+              <td style="padding: 8px 14px; text-align: right; font-family: monospace; font-weight: 600; color: #dc2626;">-${formatPKR(shift.cash_refunds)}</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #e2e8f0;">
+              <td style="padding: 8px 14px; color: #334155;">(-) Cash Paid Out (Expenses)</td>
+              <td style="padding: 8px 14px; text-align: right; font-family: monospace; font-weight: 600; color: #dc2626;">-${formatPKR(shift.cash_paid_out)}</td>
+            </tr>
+            <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1; font-weight: 700;">
+              <td style="padding: 10px 14px; color: #1b7f43; font-size: 13px;">(=) Expected Physical Cash in Drawer</td>
+              <td style="padding: 10px 14px; text-align: right; font-family: monospace; font-size: 13px; color: #1b7f43;">${formatPKR(shift.expected_cash)}</td>
+            </tr>
+            <tr style="background: #f8fafc; border-bottom: 1px solid #cbd5e1; font-weight: 700;">
+              <td style="padding: 10px 14px; color: #1e293b; font-size: 13px;">(vs) Actual Physical Counted Cash</td>
+              <td style="padding: 10px 14px; text-align: right; font-family: monospace; font-size: 13px; color: #1e293b;">${formatPKR(shift.actual_counted_cash)}</td>
+            </tr>
+            <tr style="background: ${discrepancy === 0 ? '#f0fdf4' : discrepancy < 0 ? '#fef2f2' : '#eff6ff'}; font-weight: 800;">
+              <td style="padding: 10px 14px; font-size: 13px; color: ${statusBadgeColor};">Discrepancy (Variance = Counted &minus; Expected)</td>
+              <td style="padding: 10px 14px; text-align: right; font-family: monospace; font-size: 14px; color: ${statusBadgeColor};">${discrepancy > 0 ? '+' : ''}${formatPKR(discrepancy)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Non-Cash Tender Summary (Isolated from physical cash drawer) -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; margin-bottom: 16px;">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: #475569; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 8px;">
+          Electronic & Non-Cash Tender Breakdown (Direct Bank/Merchant Settlement)
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center; font-size: 11px;">
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;">
+            <div style="color: #64748b;">Credit/Debit Card</div>
+            <div style="font-family: monospace; font-weight: 700; color: #1e293b; margin-top: 2px;">${formatPKR(tender.card_total || 0)}</div>
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;">
+            <div style="color: #64748b;">Bank Transfer</div>
+            <div style="font-family: monospace; font-weight: 700; color: #1e293b; margin-top: 2px;">${formatPKR(tender.bank_total || 0)}</div>
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;">
+            <div style="color: #64748b;">Digital Wallet</div>
+            <div style="font-family: monospace; font-weight: 700; color: #1e293b; margin-top: 2px;">${formatPKR(tender.wallet_total || 0)}</div>
+          </div>
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px; padding: 6px 8px;">
+            <div style="color: #64748b;">Other / Misc</div>
+            <div style="font-family: monospace; font-weight: 700; color: #1e293b; margin-top: 2px;">${formatPKR(tender.other_total || 0)}</div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #475569; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+          <span>Total Transactions: <strong>${tender.total_payments_count || 0}</strong></span>
+          <span>Grand Total Collections (All Tenders): <strong style="font-family: monospace; color: #1b7f43;">${formatPKR(tender.total_collected_all_tenders || 0)}</strong></span>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      ${shift.notes ? `
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px;">
+          <div style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #475569; margin-bottom: 4px;">Operational Notes & Handover Log</div>
+          <div style="font-size: 11px; color: #334155; white-space: pre-wrap;">${shift.notes}</div>
+        </div>
+      ` : ''}
+
+      <!-- Handover Signatures -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 28px; margin-bottom: 14px;">
+        <div>
+          <div style="height: 36px; border-bottom: 1px solid #94a3b8;"></div>
+          <div style="text-align: center; font-size: 10px; text-transform: uppercase; font-weight: 700; color: #475569; margin-top: 4px;">Outbound Cashier Signature</div>
+          <div style="text-align: center; font-size: 10px; color: #64748b;">(${shift.staff_name || 'Cashier'})</div>
+        </div>
+        <div>
+          <div style="height: 36px; border-bottom: 1px solid #94a3b8;"></div>
+          <div style="text-align: center; font-size: 10px; text-transform: uppercase; font-weight: 700; color: #475569; margin-top: 4px;">Supervisor / Inbound Cashier Signature</div>
+          <div style="text-align: center; font-size: 10px; color: #64748b;">(Drawer Verification & Acceptance)</div>
+        </div>
+      </div>
+
+      <div style="text-align: center; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 16px;">
+        Authoritative System Z-Report &bull; Immutable Ledger Record &bull; Generated from sealed backend shift #${shift.shift_number || ''}
+      </div>
+    </div>
+  `;
+}
+
+export function printZReport(shift, hotelName) {
+  const html = generateZReportHtml(shift, hotelName);
+  printHtmlViaIframe(html, `Z_Report_${shift?.shift_number || 'SHIFT'}`);
+}
+

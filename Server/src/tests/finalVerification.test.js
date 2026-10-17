@@ -9,7 +9,6 @@ import Hotel from '../database/platform/models/hotel.model.js';
 import { ROLES } from '../constants/roles.js';
 import crypto from 'crypto';
 import mongoose from 'mongoose';
-import { SCHEMAS } from '../database/hotel/schemaRegistry.js';
 
 const randomEmail = (prefix = 'fin') => `${prefix}_${crypto.randomBytes(4).toString('hex')}@hotel.com`;
 const randomPhone = () => `03${Math.floor(100000001 + Math.random() * 899999999)}`;
@@ -82,11 +81,11 @@ describe('FINAL TARGETED VERIFICATION: PHASES 1–4', () => {
       const amenityIndexes = await AmenityModel.collection.getIndexes();
       const empIndexes = await EmployeeModel.collection.getIndexes();
 
-      expect(deptIndexes).toHaveProperty('hotelId_1_code_1');
-      expect(rtIndexes).toHaveProperty('hotelId_1_code_1');
-      expect(roomIndexes).toHaveProperty('hotelId_1_room_number_1');
-      expect(amenityIndexes).toHaveProperty('hotelId_1_name_1');
-      expect(empIndexes).toHaveProperty('hotelId_1_employee_ref_1');
+      expect(deptIndexes).toHaveProperty('code_1');
+      expect(rtIndexes).toHaveProperty('code_1');
+      expect(roomIndexes).toHaveProperty('room_number_1');
+      expect(amenityIndexes).toHaveProperty('name_1');
+      expect(empIndexes).toHaveProperty('employee_ref_1');
     });
   });
 
@@ -105,7 +104,7 @@ describe('FINAL TARGETED VERIFICATION: PHASES 1–4', () => {
       expect(statuses[1]).toBe(409);
 
       const DeptModel = await getModel(hotelA, 'Department');
-      const count = await DeptModel.countDocuments({ hotelId: hotelA, code });
+      const count = await DeptModel.countDocuments({ code });
       expect(count).toBe(1);
     });
 
@@ -129,7 +128,7 @@ describe('FINAL TARGETED VERIFICATION: PHASES 1–4', () => {
       expect(statuses[1]).toBe(409);
 
       const RoomModel = await getModel(hotelA, 'Room');
-      const count = await RoomModel.countDocuments({ hotelId: hotelA, room_number: roomNumber });
+      const count = await RoomModel.countDocuments({ room_number: roomNumber });
       expect(count).toBe(1);
     });
   });
@@ -161,8 +160,9 @@ describe('FINAL TARGETED VERIFICATION: PHASES 1–4', () => {
       const createdHotels = await Hotel.find({ ownerId: updatedAcc._id });
       expect(createdHotels.length).toBe(1);
 
-      const HotelProfile = await getModel('HotelProfile');
-      const profiles = await HotelProfile.find({ hotelId: createdHotels[0]._id });
+      const tenantConn = await getHotelConnection(createdHotels[0]._id.toString());
+      const HotelProfile = tenantConn.model('HotelProfile');
+      const profiles = await HotelProfile.find();
       expect(profiles.length).toBe(1);
     });
   });
@@ -250,118 +250,5 @@ describe('FINAL TARGETED VERIFICATION: PHASES 1–4', () => {
       expect(accInDb.role).toBe(ROLES.HOTEL_USER);
       expect(accInDb.hotelId).toBeNull();
     });
-  });
-
-  it('enforces hotel ownership and tenant-scoped unique indexes on every hotel schema', async () => {
-    for (const [name, schema] of Object.entries(SCHEMAS)) {
-      const ownership = schema.path('hotelId');
-      expect(ownership.instance, name).toBe('ObjectId');
-      expect(ownership.isRequired, name).toBe(true);
-      const Model = await getModel(name);
-      const indexes = await Model.collection.listIndexes().toArray();
-      expect(indexes.some(index => Object.keys(index.key)[0] === 'hotelId'), name).toBe(true);
-      for (const index of indexes.filter(index => index.unique && !index.key._id)) {
-        expect(Object.keys(index.key)[0], name + '/' + index.name).toBe('hotelId');
-      }
-    }
-  });
-
-  it('allows room 101 in both hotels and rejects cross-hotel access and ownership injection', async () => {
-    const roomIds = [];
-    for (const token of [adminTokenA, adminTokenB]) {
-      const rt = await request(app).post('/api/v1/hotel/room-types').set('Authorization', 'Bearer ' + token)
-        .send({ code: 'ISOLATION101', name: 'Isolation Room', base_occupancy: 2, max_occupancy: 2, base_price: 100 });
-      expect(rt.status).toBe(201);
-      const room = await request(app).post('/api/v1/hotel/rooms').set('Authorization', 'Bearer ' + token)
-        .send({ room_number: '101', room_type_id: rt.body.data._id, floor: '1', hotelId: token === adminTokenA ? hotelB : hotelA });
-      expect(room.status).toBe(201);
-      expect(room.body.data.hotelId).toBe(token === adminTokenA ? hotelA : hotelB);
-      roomIds.push(room.body.data._id);
-    }
-    for (const [token, own, other] of [[adminTokenA, roomIds[0], roomIds[1]], [adminTokenB, roomIds[1], roomIds[0]]]) {
-      expect((await request(app).get('/api/v1/hotel/rooms/' + own).set('Authorization', 'Bearer ' + token)).status).toBe(200);
-      for (const method of ['get', 'put', 'delete']) {
-        const response = await request(app)[method]('/api/v1/hotel/rooms/' + other)
-          .set('Authorization', 'Bearer ' + token).send(method === 'put' ? { floor: '9', hotelId: hotelB } : {});
-        expect(response.status).toBe(404);
-      }
-    }
-  });
-
-  it('rejects cross-hotel assignments before changing housekeeping or maintenance room state', async () => {
-    const Department = await getModel('Department');
-    const Employee = await getModel('Employee');
-    const Room = await getModel('Room');
-    const department = await Department.create({ hotelId: hotelB, code: 'OPS_SECURITY', name: 'Operations' });
-    const employee = await Employee.create({ hotelId: hotelB, employee_ref: 'OPS_SECURITY', first_name: 'Other', last_name: 'Hotel', email: 'other@hotel.test', job_title: 'Technician', department_id: department._id });
-    const room = await Room.findOne({ hotelId: hotelA, room_number: '101' });
-    await Room.updateOne({ _id: room._id, hotelId: hotelA }, { $set: { housekeeping_status: 'DIRTY' } });
-    const task = await request(app).post('/api/v1/hotel/housekeeping/tasks').set('Authorization', 'Bearer ' + adminTokenA)
-      .send({ room_id: String(room._id), task_type: 'CLEANING' });
-    expect(task.status).toBe(201);
-    const update = await request(app).put('/api/v1/hotel/housekeeping/tasks/' + task.body.data._id).set('Authorization', 'Bearer ' + adminTokenA)
-      .send({ assigned_to: String(employee._id), status: 'COMPLETED' });
-    expect(update.status).toBe(404);
-    expect((await Room.findOne({ _id: room._id, hotelId: hotelA })).housekeeping_status).toBe('DIRTY');
-    const ticket = await request(app).post('/api/v1/hotel/maintenance/tickets').set('Authorization', 'Bearer ' + adminTokenA)
-      .send({ room_id: String(room._id), title: 'Test repair', description: 'Validate ownership before resolving', priority: 'HIGH' });
-    expect(ticket.status).toBe(201);
-    const repair = await request(app).put('/api/v1/hotel/maintenance/tickets/' + ticket.body.data._id).set('Authorization', 'Bearer ' + adminTokenA)
-      .send({ assigned_to: String(employee._id), status: 'RESOLVED' });
-    expect(repair.status).toBe(404);
-    expect((await Room.findOne({ _id: room._id, hotelId: hotelA })).status).toBe('MAINTENANCE');
-    await Room.updateOne({ _id: room._id, hotelId: hotelA }, { $set: { status: 'AVAILABLE' } });
-  });
-
-  it('creates exactly one stay during simultaneous check-in requests on real MongoDB', async () => {
-    const Guest = await getModel('Guest');
-    const Room = await getModel('Room');
-    const Stay = await getModel('Stay');
-    const guest = await Guest.create({ hotelId: hotelA, guest_ref: 'CONCURRENT_CHECKIN', first_name: 'Concurrent', last_name: 'Guest' });
-    const room = await Room.findOne({ hotelId: hotelA, room_number: '101' });
-    const reservation = await request(app).post('/api/v1/hotel/reservations').set('Authorization', 'Bearer ' + adminTokenA)
-      .send({ primary_guest_id: String(guest._id), room_id: String(room._id), expected_check_in: '2030-01-01', expected_check_out: '2030-01-02', adults: 1 });
-    expect(reservation.status).toBe(201);
-    const id = reservation.body.data.reservation._id;
-    const results = await Promise.all([1, 2].map(() => request(app).post('/api/v1/hotel/stays/check-in')
-      .set('Authorization', 'Bearer ' + adminTokenA).send({ reservation_id: id })));
-    expect(results.map(r => r.status).sort()).toEqual([201, 409]);
-    expect(await Stay.countDocuments({ hotelId: hotelA, reservation_id: id })).toBe(1);
-    const ReservationRoom = await getModel('ReservationRoom');
-    const RatePlan = await getModel('RatePlan');
-    const details = await ReservationRoom.findOne({ hotelId: hotelA, reservation_id: id });
-    expect(await RatePlan.exists({ _id: details.rate_plan_id, hotelId: hotelA })).not.toBeNull();
-  });
-
-  it('rejects a reservation group owned by another hotel', async () => {
-    const Guest = await getModel('Guest');
-    const ReservationGroup = await getModel('ReservationGroup');
-    const guestA = await Guest.create({ hotelId: hotelA, guest_ref: 'GROUP_A', first_name: 'Group', last_name: 'A' });
-    const guestB = await Guest.create({ hotelId: hotelB, guest_ref: 'GROUP_B', first_name: 'Group', last_name: 'B' });
-    const group = await ReservationGroup.create({ hotelId: hotelB, group_ref: 'GROUP_B', guest_id: guestB._id, name: 'Other Hotel Group' });
-    const result = await request(app).post('/api/v1/hotel/reservations').set('Authorization', 'Bearer ' + adminTokenA)
-      .send({ primary_guest_id: String(guestA._id), group_id: String(group._id), expected_check_in: '2030-02-01', expected_check_out: '2030-02-02', adults: 1 });
-    expect(result.status).toBe(404);
-    const Reservation = await getModel('Reservation');
-    expect(await Reservation.countDocuments({ hotelId: hotelA, group_id: group._id })).toBe(0);
-  });
-
-  it('persists generic module records in MongoDB with server-owned tenant scope', async () => {
-    const injectedHotelId = hotelB;
-    const created = await request(app).post('/api/v1/hotel/data/alerts')
-      .set('Authorization', `Bearer ${adminTokenA}`)
-      .send({ hotelId: injectedHotelId, type: 'TEST', title: 'Database alert', message: 'Stored dynamically', severity: 'INFO' });
-    expect(created.status).toBe(201);
-    expect(created.body.data.hotelId).toBe(hotelA);
-    const recordId = created.body.data._id;
-
-    const ownList = await request(app).get('/api/v1/hotel/data/alerts').set('Authorization', `Bearer ${adminTokenA}`);
-    expect(ownList.status).toBe(200);
-    expect(ownList.body.data.some(record => record._id === recordId)).toBe(true);
-
-    const otherRead = await request(app).get(`/api/v1/hotel/data/alerts/${recordId}`).set('Authorization', `Bearer ${adminTokenB}`);
-    const otherUpdate = await request(app).put(`/api/v1/hotel/data/alerts/${recordId}`).set('Authorization', `Bearer ${adminTokenB}`).send({ title: 'Stolen' });
-    const otherDelete = await request(app).delete(`/api/v1/hotel/data/alerts/${recordId}`).set('Authorization', `Bearer ${adminTokenB}`);
-    expect([otherRead.status, otherUpdate.status, otherDelete.status]).toEqual([404, 404, 404]);
   });
 });

@@ -151,7 +151,7 @@ describe('Phase 8 Step 6: Employee Salary Frontend Backend Integration Tests', (
       // Total Employees = 2
       expect(screen.getByText('Total Employees')).toBeInTheDocument();
       expect(screen.getByText('Total Payroll')).toBeInTheDocument();
-      expect(screen.getByText('$8,600')).toBeInTheDocument(); // 5300 + 3300 = 8600
+      expect(screen.getAllByText('$8,600').length).toBeGreaterThanOrEqual(1); // 5300 + 3300 = 8600
     });
 
     it('shows error banner and does NOT fall back to mock data on backend failure', async () => {

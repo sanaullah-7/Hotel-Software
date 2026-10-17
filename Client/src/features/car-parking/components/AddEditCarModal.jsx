@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import { Close as CloseIcon, PhotoCamera as CameraIcon } from '@mui/icons-material';
 import { parkingService } from '../../../services/parkingService';
+import { fileService } from '../../../services/fileService';
 import { toFrontendSpaces, toBackendRecordPayload } from '../adapters/parkingAdapter';
 import { PARKING_UPDATED_EVENT } from '../state/carParkingStore';
 
@@ -38,6 +39,7 @@ export default function AddEditCarModal({ open, onClose, editRecord, onSuccess }
   
   const [spaces, setSpaces] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
   useEffect(() => {
@@ -79,31 +81,22 @@ export default function AddEditCarModal({ open, onClose, editRecord, onSuccess }
     }
   }, [open, editRecord]);
 
-  const compressImage = (file, maxWidth = 400, quality = 0.6) => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const scale = Math.min(1, maxWidth / img.width);
-          canvas.width = img.width * scale;
-          canvas.height = img.height * scale;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', quality));
-        };
-        img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleImageUpload = async (e) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      const compressed = await compressImage(file, 400, 0.6);
-      setFormData((prev) => ({ ...prev, carImage: compressed }));
+      const previewUrl = URL.createObjectURL(file);
+      setFormData((prev) => ({ ...prev, carImage: previewUrl }));
+      setIsUploading(true);
+      try {
+        const uploadRes = await fileService.uploadFile(file, { folder: 'vehicles', entity_ref: 'VEHICLE' });
+        if (uploadRes?.file_url) {
+          setFormData((prev) => ({ ...prev, carImage: uploadRes.file_url }));
+        }
+      } catch (err) {
+        console.warn('Vehicle photo upload failed, using local preview:', err);
+      } finally {
+        setIsUploading(false);
+      }
     }
   };
 
@@ -265,7 +258,14 @@ export default function AddEditCarModal({ open, onClose, editRecord, onSuccess }
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
               onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#fafafa'}
             >
-              {formData.carImage ? (
+              {isUploading ? (
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 1 }}>
+                  <CircularProgress size={22} sx={{ color: '#10b981', mb: 1 }} />
+                  <Typography variant="caption" sx={{ color: '#047857', fontWeight: 600, fontSize: '11px' }}>
+                    Uploading to Cloudinary...
+                  </Typography>
+                </Box>
+              ) : formData.carImage ? (
                 <img src={formData.carImage} alt="Car" style={{ maxHeight: '110px', objectFit: 'contain', borderRadius: '4px' }} />
               ) : (
                 <>

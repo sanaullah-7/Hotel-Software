@@ -25,7 +25,13 @@ const validate = (schema) => {
     if (isNested) {
       if (value.body) req.body = value.body;
       if (value.params) req.params = value.params;
-      if (value.query) req.query = value.query;
+      if (value.query) {
+        try {
+          req.query = value.query;
+        } catch {
+          Object.assign(req.query, value.query);
+        }
+      }
     } else {
       req.body = value;
     }

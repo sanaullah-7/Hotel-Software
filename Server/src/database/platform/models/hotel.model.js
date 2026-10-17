@@ -22,10 +22,63 @@ const hotelSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    province: {
+      type: String,
+      trim: true,
+      default: "Punjab",
+    },
+    country: {
+      type: String,
+      trim: true,
+      default: "Pakistan",
+    },
+    rating: {
+      type: Number,
+      default: 4.8,
+    },
+    totalRooms: {
+      type: Number,
+      default: 0,
+    },
     status: {
       type: String,
-      enum: ["active", "suspended"],
-      default: "active",
+      enum: ["pending", "active", "inactive", "suspended", "rejected"],
+      default: "pending",
+    },
+    tenant_db_name: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    email: {
+      type: String,
+      trim: true,
+      lowercase: true,
+    },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    subscriptionPlan: {
+      type: String,
+      enum: ["BASIC", "STANDARD", "PRO", "PREMIUM", "ENTERPRISE"],
+      default: "STANDARD",
+    },
+    rejectionReason: {
+      type: String,
+      default: null,
+    },
+    suspensionReason: {
+      type: String,
+      default: null,
+    },
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
+    suspendedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

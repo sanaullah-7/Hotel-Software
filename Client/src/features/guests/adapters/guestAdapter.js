@@ -108,6 +108,7 @@ export function toFrontendGuest(backendGuest) {
     vipStatus: isVip,
     status: uiStatus,
     totalStays: Number(raw.totalStays ?? raw.total_stays ?? 0),
+    avatar: raw.avatar || raw.photo_url || raw.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=1b7f43&color=fff`,
     notes: raw.notes || '',
     date_of_birth: formattedDob,
     dateOfBirth: formattedDob,
@@ -250,6 +251,16 @@ export function toBackendGuestPayload(frontendGuest, options = {}) {
     payload.vip_status = String(frontendGuest.status).toUpperCase() === 'VIP';
   } else if (!isUpdate) {
     payload.vip_status = false;
+  }
+
+  // 7. Avatar (Cloudinary URL)
+  if (frontendGuest.avatar !== undefined) {
+    const cleanAvatar = String(frontendGuest.avatar || '').trim();
+    if (cleanAvatar && !cleanAvatar.includes('ui-avatars.com') && !cleanAvatar.includes('pravatar.cc')) {
+      payload.avatar = cleanAvatar;
+    } else if (isUpdate) {
+      payload.avatar = null;
+    }
   }
 
   return payload;

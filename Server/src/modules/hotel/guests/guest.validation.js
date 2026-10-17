@@ -19,6 +19,7 @@ export const createGuestSchema = Joi.object({
   date_of_birth: Joi.date().iso().max('now').allow(null, ''),
   vip_status: Joi.boolean().default(false),
   notes: optionalText(1000),
+  avatar: Joi.string().trim().max(1000).allow('', null),
 });
 
 // guest_ref is a system-generated identifier and is IMMUTABLE after creation:
@@ -39,4 +40,5 @@ export const updateGuestSchema = Joi.object({
   date_of_birth: Joi.date().iso().max('now').allow(null, ''),
   vip_status: Joi.boolean(),
   notes: optionalText(1000),
+  avatar: Joi.string().trim().max(1000).allow('', null),
 }).min(1);

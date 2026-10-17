@@ -2,16 +2,6 @@
 // Client ne jo data bheja hai, kya woh hamare rules ke according hai?
 import Joi from "joi";
 
-const normalizePakistaniPhone = (value, helpers) => {
-  const compact = value.replace(/[\s()-]/g, "");
-  let normalized = compact;
-  if (compact.startsWith("+92")) normalized = `0${compact.slice(3)}`;
-  else if (compact.startsWith("0092")) normalized = `0${compact.slice(4)}`;
-  else if (compact.startsWith("92")) normalized = `0${compact.slice(2)}`;
-  if (!/^03[0-9]{9}$/.test(normalized)) return helpers.error("phone.invalid");
-  return normalized;
-};
-
 //  Ye schema registration request ke data ko validate karta hai.
 export const registerSchema = Joi.object({//Joi.object():"Main ek object ke rules define kar raha hoon."
   // User ka full name
@@ -30,12 +20,12 @@ export const registerSchema = Joi.object({//Joi.object():"Main ek object ke rule
   }),
 
   // Matlab Pakistani number ka specific pattern require kar rahe ho.
-  phone: Joi.string().trim()
-    .custom(normalizePakistaniPhone, "Pakistani phone normalization")
+  phone: Joi.string()
+  // "Phone number exactly mere defined pattern ke according hona chahiye."
+    .pattern(/^03[0-9]{9}$/)//03 + 9 digits
     .messages({
-      "phone.invalid":
+      "string.pattern.base":
         "Phone must be a valid Pakistani number (03XXXXXXXXX)",
-      "string.empty": "Phone cannot be empty",
     }),
 
   // Password
@@ -43,6 +33,34 @@ export const registerSchema = Joi.object({//Joi.object():"Main ek object ke rule
     "string.min": "Password must be at least 6 characters",
     "string.empty": "Password is required",
   }),
+});
+
+// Hotel Onboarding Registration Schema
+export const registerHotelSchema = Joi.object({
+  fullName: Joi.string().trim().min(2).max(100).required().messages({
+    "string.empty": "Manager full name is required",
+  }),
+  email: Joi.string().trim().lowercase().email().required().messages({
+    "string.empty": "Email is required",
+  }),
+  phone: Joi.string()
+    .pattern(/^03[0-9]{9}$/)
+    .allow("", null)
+    .optional()
+    .messages({
+      "string.pattern.base": "Phone must be a valid Pakistani number (03XXXXXXXXX)",
+    }),
+  password: Joi.string().min(6).required().messages({
+    "string.empty": "Password is required",
+  }),
+  hotelName: Joi.string().trim().min(2).max(120).required().messages({
+    "string.empty": "Hotel property name is required",
+  }),
+  address: Joi.string().trim().max(200).allow("", null).optional(),
+  city: Joi.string().trim().max(100).allow("", null).optional(),
+  subscriptionPlan: Joi.string()
+    .valid("BASIC", "STANDARD", "PREMIUM", "ENTERPRISE")
+    .default("STANDARD"),
 });
 
 //Login ke waqt sirf email aur password required hain.

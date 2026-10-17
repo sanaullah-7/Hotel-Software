@@ -81,7 +81,7 @@ export function toFrontendRoom(backendRoom) {
     active_bookings: backendRoom.active_bookings || [],
     acNonAc: 'AC',
     meal: 'All',
-    mobile: '',
+    mobile: backendRoom.phone || backendRoom.mobile || '',
     roomImage: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32?w=100&h=100&fit=crop',
     created_at: backendRoom.created_at,
     updated_at: backendRoom.updated_at,
@@ -108,6 +108,11 @@ export function toBackendRoomPayload(frontendForm) {
     status: backendStatus,
     housekeeping_status: backendHk,
   };
+
+  const rawPhone = frontendForm.phone ?? frontendForm.mobile ?? frontendForm.contactMobile;
+  if (rawPhone !== undefined && rawPhone !== null) {
+    payload.phone = String(rawPhone).trim();
+  }
 
   if (Array.isArray(frontendForm.extra_amenities) && frontendForm.extra_amenities.length > 0) {
     payload.extra_amenities = frontendForm.extra_amenities;

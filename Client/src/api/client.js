@@ -46,10 +46,16 @@ const onRefreshed = (token) => {
 
 export const apiRequest = async (endpoint, options = {}, isRetry = false) => {
   const token = getToken();
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
   const headers = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     ...(options.headers || {}),
   };
+
+  if (isFormData) {
+    delete headers["Content-Type"];
+    delete headers["content-type"];
+  }
 
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
@@ -57,12 +63,12 @@ export const apiRequest = async (endpoint, options = {}, isRetry = false) => {
 
   const config = {
     method: options.method || "GET",
-    headers,
     credentials: "include", // Essential for HTTP-only cookies (refreshToken)
     ...options,
+    headers,
   };
 
-  if (options.body && typeof options.body === "object" && !(options.body instanceof FormData)) {
+  if (options.body && typeof options.body === "object" && !isFormData) {
     config.body = JSON.stringify(options.body);
   }
 
@@ -148,7 +154,7 @@ export const apiRequest = async (endpoint, options = {}, isRetry = false) => {
 };
 
 export const api = {
-  get: (url, params = {}) => {
+  get: (url, params = {}, options = {}) => {
     const query = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => {
       if (v !== undefined && v !== null && v !== "") {
@@ -156,12 +162,12 @@ export const api = {
       }
     });
     const queryString = query.toString();
-    return apiRequest(queryString ? `${url}?${queryString}` : url, { method: "GET" });
+    return apiRequest(queryString ? `${url}?${queryString}` : url, { method: "GET", ...options });
   },
-  post: (url, body) => apiRequest(url, { method: "POST", body }),
-  put: (url, body) => apiRequest(url, { method: "PUT", body }),
-  patch: (url, body) => apiRequest(url, { method: "PATCH", body }),
-  delete: (url) => apiRequest(url, { method: "DELETE" }),
+  post: (url, body, options = {}) => apiRequest(url, { method: "POST", body, ...options }),
+  put: (url, body, options = {}) => apiRequest(url, { method: "PUT", body, ...options }),
+  patch: (url, body, options = {}) => apiRequest(url, { method: "PATCH", body, ...options }),
+  delete: (url, options = {}) => apiRequest(url, { method: "DELETE", ...options }),
 };
 
 export default api;

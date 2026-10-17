@@ -139,18 +139,26 @@ function RecordPaymentInnerForm({ invoice, invoices = [], onSave, onClose }) {
             onChange={handleInvoiceChange}
             required
           >
-            {invoices
-              .filter((inv) => inv.balanceDue > 0)
-              .map((inv) => (
-                <MenuItem key={inv.id} value={inv.id}>
-                  <div className="flex items-center justify-between w-full">
-                    <span className="font-semibold text-gray-900">{inv.id}</span>
-                    <span className="text-gray-600 text-sm ml-2">
-                      {inv.guestName} — Due: ${inv.balanceDue.toFixed(2)}
-                    </span>
-                  </div>
-                </MenuItem>
-              ))}
+            {invoices.filter((inv) => inv.balanceDue > 0).length === 0 ? (
+              <MenuItem disabled value="">
+                <span className="text-gray-400 text-xs italic">
+                  No unpaid invoices available to settle
+                </span>
+              </MenuItem>
+            ) : (
+              invoices
+                .filter((inv) => inv.balanceDue > 0)
+                .map((inv) => (
+                  <MenuItem key={inv.id} value={inv.id}>
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-semibold text-gray-900">{inv.id}</span>
+                      <span className="text-gray-600 text-sm ml-2">
+                        {inv.guestName} — Due: ${inv.balanceDue.toFixed(2)}
+                      </span>
+                    </div>
+                  </MenuItem>
+                ))
+            )}
           </TextField>
         </div>
       )}

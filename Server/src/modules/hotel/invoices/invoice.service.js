@@ -11,11 +11,11 @@ const generateInvoiceNumber = () => {
   return `INV-${Date.now().toString().slice(-6)}${randHex}`;
 };
 
-export const createInvoice = async (hotelContext, invoiceData) => {
-  const Folio = await getModel(hotelContext, "Folio");
-  const Guest = await getModel(hotelContext, "Guest");
-  const Reservation = await getModel(hotelContext, "Reservation");
-  const Invoice = await getModel(hotelContext, "Invoice");
+export const createInvoice = async (tenantConn, invoiceData) => {
+  const Folio = await getModel(tenantConn, "Folio");
+  const Guest = await getModel(tenantConn, "Guest");
+  const Reservation = await getModel(tenantConn, "Reservation");
+  const Invoice = await getModel(tenantConn, "Invoice");
 
   let { folio_id, reservation_id, guest_id, due_date, line_items } = invoiceData;
 
@@ -25,33 +25,37 @@ export const createInvoice = async (hotelContext, invoiceData) => {
     if (!mongoose.Types.ObjectId.isValid(folio_id)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Folio ID format");
     }
-    folio = await Folio.findOne({ _id: folio_id, hotelId: hotelContext });
+    folio = await Folio.findById(folio_id);
     if (!folio) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, "Folio not found in this hotel");
     }
   } else if (reservation_id) {
-    if (!mongoose.Types.ObjectId.isValid(reservation_id)) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Reservation ID format");
+    let reservation = null;
+    if (mongoose.Types.ObjectId.isValid(reservation_id)) {
+      reservation = await Reservation.findById(reservation_id);
     }
-    const reservation = await Reservation.findOne({ _id: reservation_id, hotelId: hotelContext });
+    if (!reservation) {
+      reservation = await Reservation.findOne({ booking_ref: String(reservation_id).trim() });
+    }
     if (!reservation) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, "Reservation not found in this hotel");
     }
-    folio = await getOrCreateFolioForReservation(hotelContext, reservation._id);
+    folio = await getOrCreateFolioForReservation(tenantConn, reservation._id);
     folio_id = folio._id;
   }
 
   // 2. Resolve Guest
-  const targetGuestId = guest_id || (folio ? folio.guest_id : null);
+  const folioGuestId = folio ? (folio.guest_id?._id || folio.guest_id) : null;
+  const targetGuestId = guest_id || folioGuestId;
   if (!targetGuestId || !mongoose.Types.ObjectId.isValid(targetGuestId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Guest ID format");
   }
-  const guest = await Guest.findOne({ _id: targetGuestId, hotelId: hotelContext });
+  const guest = await Guest.findById(targetGuestId);
   if (!guest) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found in this hotel");
   }
 
-  if (folio && folio.guest_id && String(folio.guest_id) !== String(guest._id)) {
+  if (folio && folioGuestId && String(folioGuestId) !== String(guest._id)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Provided guest_id does not match the folio guest");
   }
 
@@ -67,7 +71,6 @@ export const createInvoice = async (hotelContext, invoiceData) => {
   const invoice_number = generateInvoiceNumber();
 
   const invoice = await Invoice.create({
-    hotelId: hotelContext,
     invoice_number,
     folio_id: folio._id,
     guest_id: guest._id,
@@ -80,9 +83,9 @@ export const createInvoice = async (hotelContext, invoiceData) => {
   });
 
   // Update folio balance atomically
-  await Folio.findOneAndUpdate({ _id: folio._id, hotelId: hotelContext }, { $inc: { balance: total_amount } });
+  await Folio.findByIdAndUpdate(folio._id, { $inc: { balance: total_amount } });
 
-  return await Invoice.findOne({ _id: invoice._id, hotelId: hotelContext })
+  return await Invoice.findById(invoice._id)
     .populate("guest_id", "first_name last_name email phone guest_ref")
     .populate({
       path: "folio_id",
@@ -94,11 +97,11 @@ export const createInvoice = async (hotelContext, invoiceData) => {
     });
 };
 
-export const getInvoices = async (hotelContext, query = {}) => {
-  const Invoice = await getModel(hotelContext, "Invoice");
-  const Folio = await getModel(hotelContext, "Folio");
+export const getInvoices = async (tenantConn, query = {}) => {
+  const Invoice = await getModel(tenantConn, "Invoice");
+  const Folio = await getModel(tenantConn, "Folio");
 
-  const filter = { hotelId: hotelContext };
+  const filter = {};
   const status = asString(query.status);
   if (status) {
     filter.status = status.toUpperCase();
@@ -122,12 +125,22 @@ export const getInvoices = async (hotelContext, query = {}) => {
 
   const reservationId = asString(query.reservation_id);
   if (reservationId) {
-    if (!mongoose.Types.ObjectId.isValid(reservationId)) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Reservation ID format");
+    let resolvedResId = null;
+    if (mongoose.Types.ObjectId.isValid(reservationId)) {
+      resolvedResId = reservationId;
+    } else {
+      const Reservation = await getModel(tenantConn, "Reservation");
+      const matchedRes = await Reservation.findOne({ booking_ref: reservationId }).select("_id");
+      if (matchedRes) resolvedResId = matchedRes._id;
     }
-    const matchingFolios = await Folio.find({ hotelId: hotelContext, reservation_id: reservationId }).select("_id");
-    const matchingFolioIds = matchingFolios.map((f) => f._id);
-    filter.folio_id = { $in: matchingFolioIds };
+
+    if (resolvedResId) {
+      const matchingFolios = await Folio.find({ reservation_id: resolvedResId }).select("_id");
+      const matchingFolioIds = matchingFolios.map((f) => f._id);
+      filter.folio_id = { $in: matchingFolioIds };
+    } else {
+      filter.folio_id = { $in: [] };
+    }
   }
 
   const { page, limit, skip } = parsePagination(query, { defaultLimit: 50 });
@@ -154,13 +167,13 @@ export const getInvoices = async (hotelContext, query = {}) => {
   };
 };
 
-export const getInvoiceById = async (hotelContext, invoiceId) => {
+export const getInvoiceById = async (tenantConn, invoiceId) => {
   if (!mongoose.Types.ObjectId.isValid(invoiceId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Invoice ID format");
   }
 
-  const Invoice = await getModel(hotelContext, "Invoice");
-  const invoice = await Invoice.findOne({ _id: invoiceId, hotelId: hotelContext })
+  const Invoice = await getModel(tenantConn, "Invoice");
+  const invoice = await Invoice.findById(invoiceId)
     .populate("guest_id", "first_name last_name email phone guest_ref")
     .populate({
       path: "folio_id",

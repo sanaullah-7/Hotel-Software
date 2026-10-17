@@ -129,12 +129,10 @@ export default function EventFormModal({
     onSave(savedEvt);
   };
 
-  const headerBg = isEdit ? 'bg-[#1b7f43]' : 'bg-[#5c67f2]';
-  const buttonBg = isEdit
-    ? 'bg-[#1b7f43] hover:bg-[#166534]'
-    : 'bg-[#5c67f2] hover:bg-[#4b55e0]';
-  const focusRing = isEdit ? 'focus:ring-[#1b7f43]/20' : 'focus:ring-[#5c67f2]/20';
-  const focusBorder = isEdit ? 'focus:border-[#1b7f43]' : 'focus:border-[#5c67f2]';
+  const headerBg = 'bg-[#1b7f43]';
+  const buttonBg = 'bg-[#1b7f43] hover:bg-[#12572e]';
+  const focusRing = 'focus:ring-[#1b7f43]/20';
+  const focusBorder = 'focus:border-[#1b7f43]';
 
   return (
     <div
@@ -153,7 +151,7 @@ export default function EventFormModal({
         {/* Header */}
         <div className={`${headerBg} px-6 py-4 flex items-center justify-between text-white`}>
           <h3 id={titleId} className="text-lg font-bold tracking-tight">
-            {isEdit ? `Edit Event: ${initialData.name}` : 'New Event'}
+            {isEdit ? `Edit Event: ${initialData.name}` : 'New Event Booking'}
           </h3>
           <button
             onClick={onClose}
@@ -439,21 +437,19 @@ export default function EventFormModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-4 border-t border-slate-100 flex items-center gap-3">
-            <button
-              type="submit"
-              className={`px-6 py-2.5 ${buttonBg} text-white text-sm font-semibold rounded-xl shadow-sm transition-colors cursor-pointer`}
-            >
-              {isEdit ? 'Update Event' : 'Save'}
-            </button>
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className={`px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 ${
-                isEdit ? 'text-slate-600' : 'text-rose-600'
-              } text-sm font-semibold rounded-xl transition-colors cursor-pointer`}
+              className="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-sm font-semibold rounded-lg transition-colors cursor-pointer"
             >
               Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-2.5 bg-[#1b7f43] hover:bg-[#12572e] text-white text-sm font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+            >
+              {isEdit ? 'Update Booking' : 'Confirm Booking'}
             </button>
           </div>
         </form>

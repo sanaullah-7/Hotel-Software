@@ -19,7 +19,6 @@ export function useAttendanceSheet() {
 
   // Canonical data states
   const [staffList, setStaffList] = useState([]);
-  const [recordsMap, setRecordsMap] = useState({}); // { `${empId}_${day}`: record }
   const [attendanceData, setAttendanceData] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -54,19 +53,6 @@ export function useAttendanceSheet() {
 
       setStaffList(Array.isArray(emps) ? emps : []);
 
-      // Build records lookup map: `${employeeId}_${day}` -> record
-      const rMap = {};
-      if (Array.isArray(records)) {
-        records.forEach((rec) => {
-          const empId = (rec.employee_id?._id || rec.employee_id || '').toString();
-          if (!empId) return;
-          const d = new Date(rec.date);
-          const dayNumber = d.getUTCDate();
-          rMap[`${empId}_${dayNumber}`] = rec;
-        });
-      }
-      setRecordsMap(rMap);
-
       // Build attendance matrix
       const matrix = attendanceAdapter.toMatrixUI(emps, records, year, mIdx);
       setAttendanceData(matrix);
@@ -95,69 +81,6 @@ export function useAttendanceSheet() {
   const handleUpdateSheet = () => {
     setAppliedYear(selectedYear);
     setAppliedMonth(selectedMonth);
-  };
-
-  // Toggle/mutate single attendance cell
-  const handleCellClick = async (employeeId, day) => {
-    const eId = String(employeeId);
-    const currentSymbol = attendanceData[eId]?.[day] || '';
-
-    // Cycle: (blank) -> P -> A -> L -> H -> W -> P
-    const cycle = { '': 'P', P: 'A', A: 'L', L: 'H', H: 'W', W: 'P' };
-    const nextSymbol = cycle[currentSymbol] || 'P';
-    const nextBackendStatus = attendanceAdapter.matrixSymbolToBackendStatus(nextSymbol);
-
-    // Optimistic UI update
-    setAttendanceData((prev) => ({
-      ...prev,
-      [eId]: {
-        ...(prev[eId] || {}),
-        [day]: nextSymbol,
-      },
-    }));
-
-    // Server mutation
-    const key = `${eId}_${day}`;
-    const existingRec = recordsMap[key];
-    const mStr = String(monthIndex + 1).padStart(2, '0');
-    const dStr = String(day).padStart(2, '0');
-    const targetDate = `${appliedYear}-${mStr}-${dStr}`;
-
-    try {
-      if (existingRec && existingRec._id) {
-        // Update existing record
-        const updateRes = await attendanceService.updateAttendance(existingRec._id, {
-          status: nextBackendStatus,
-        });
-        const updated = updateRes?.data?.data || updateRes?.data;
-        setRecordsMap((prev) => ({ ...prev, [key]: updated }));
-      } else {
-        // Create new record
-        const createRes = await attendanceService.createAttendance({
-          employee_id: eId,
-          date: targetDate,
-          status: nextBackendStatus,
-          shift: 'Day Shift',
-        });
-        const created = createRes?.data?.data || createRes?.data;
-        setRecordsMap((prev) => ({ ...prev, [key]: created }));
-      }
-    } catch (err) {
-      // Revert optimistic update
-      console.error('Failed to update cell attendance:', err);
-      setAttendanceData((prev) => ({
-        ...prev,
-        [eId]: {
-          ...(prev[eId] || {}),
-          [day]: currentSymbol,
-        },
-      }));
-      setToast({
-        open: true,
-        message: err?.response?.data?.message || 'Failed to update attendance on server',
-        severity: 'error',
-      });
-    }
   };
 
   // Filtered staff list for table display
@@ -197,27 +120,30 @@ export function useAttendanceSheet() {
   // Dynamic 4-card Metric Summary Statistics
   const stats = useMemo(() => {
     let present = 0;
+    let late = 0;
     let absent = 0;
     let leave = 0;
-    let holiday = 0;
-    let weekend = 0;
 
     Object.values(attendanceData).forEach((empDays) => {
       Object.values(empDays || {}).forEach((symbol) => {
-        if (symbol === 'P') present++;
-        else if (symbol === 'A') absent++;
-        else if (symbol === 'L') leave++;
-        else if (symbol === 'H') holiday++;
-        else if (symbol === 'W') weekend++;
+        if (symbol === 'P') {
+          present++;
+        } else if (symbol === 'LT') {
+          present++;
+          late++;
+        } else if (symbol === 'A') {
+          absent++;
+        } else if (symbol === 'L') {
+          leave++;
+        }
       });
     });
 
     return {
       present,
+      late,
       absent,
       leave,
-      holiday,
-      weekend,
       totalStaff: filteredStaff.length,
     };
   }, [attendanceData, filteredStaff]);
@@ -228,7 +154,7 @@ export function useAttendanceSheet() {
       const headers = ['Employee ID', 'Name', 'Role', ...daysArray.map((d) => `Day ${d}`)];
       const rows = filteredStaff.map((staff) => {
         const empDays = attendanceData[staff.id] || {};
-        const dayCols = daysArray.map((d) => empDays[d] || 'P');
+        const dayCols = daysArray.map((d) => empDays[d] || '-');
         return [staff.empId, staff.name, staff.role, ...dayCols];
       });
 
@@ -280,7 +206,6 @@ export function useAttendanceSheet() {
     stats,
     filteredStaff,
     handleUpdateSheet,
-    handleCellClick,
     handleExportCSV,
     loadSheetData,
   };

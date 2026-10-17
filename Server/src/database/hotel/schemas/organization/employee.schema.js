@@ -2,14 +2,10 @@ import mongoose from 'mongoose';
 
 const employeeSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     employee_ref: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     first_name: {
@@ -87,7 +83,5 @@ const employeeSchema = new mongoose.Schema(
 // Indexes
 employeeSchema.index({ email: 1 });
 employeeSchema.index({ department_id: 1 });
-
-employeeSchema.index({ hotelId: 1, employee_ref: 1 }, { unique: true });
 
 export default employeeSchema;

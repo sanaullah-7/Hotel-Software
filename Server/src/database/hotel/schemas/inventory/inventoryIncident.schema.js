@@ -31,14 +31,10 @@ const incidentTimelineEventSchema = new mongoose.Schema(
 
 const inventoryIncidentSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     incident_ref: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
       uppercase: true,
     },
@@ -137,7 +133,5 @@ const inventoryIncidentSchema = new mongoose.Schema(
 inventoryIncidentSchema.index({ item_id: 1, date: -1 });
 inventoryIncidentSchema.index({ status: 1 });
 inventoryIncidentSchema.index({ room_number: 1 });
-
-inventoryIncidentSchema.index({ hotelId: 1, incident_ref: 1 }, { unique: true });
 
 export default inventoryIncidentSchema;

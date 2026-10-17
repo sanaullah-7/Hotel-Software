@@ -8,7 +8,7 @@ import inventoryService from '../../../../services/inventoryService';
 import roomService from '../../../../services/roomService';
 import { adaptInventoryItemToBackend } from '../../adapters/inventoryAdapter';
 import { 
-  INVENTORY_CATEGORIES, ROOM_NUMBERS, STORAGE_LOCATIONS 
+  INVENTORY_CATEGORIES, STORAGE_LOCATIONS 
 } from '../inventoryStore';
 
 const muiSelectSx = {
@@ -37,8 +37,8 @@ export default function AddStockItemModal({ open, onClose, onItemAdded }) {
     itemName: '',
     sku: `SKU-${Math.floor(100 + Math.random() * 900)}`,
     category: 'Linens',
-    locationType: 'Room',
-    roomNumber: '203',
+    locationType: 'Storage',
+    roomNumber: '',
     roomId: null,
     storageLocation: STORAGE_LOCATIONS[0],
     exactPlacement: 'Main Room Area',
@@ -69,7 +69,7 @@ export default function AddStockItemModal({ open, onClose, onItemAdded }) {
             if (res.data.length > 0 && !formData.roomId) {
               setFormData(f => ({
                 ...f,
-                roomNumber: res.data[0].room_number || res.data[0].roomNumber || '203',
+                roomNumber: String(res.data[0].room_number || res.data[0].roomNumber || ''),
                 roomId: res.data[0]._id || null
               }));
             }
@@ -139,9 +139,14 @@ export default function AddStockItemModal({ open, onClose, onItemAdded }) {
     }
   };
 
-  const availableRooms = canonicalRooms.length > 0
-    ? canonicalRooms.map(r => ({ id: r._id, number: r.room_number || r.roomNumber }))
-    : ROOM_NUMBERS.map(r => ({ id: null, number: r }));
+  const availableRooms = Array.from(
+    new Map(
+      [
+        ...canonicalRooms.map(r => [String(r.room_number || r.roomNumber || ''), { id: r._id, number: String(r.room_number || r.roomNumber || '') }]),
+        ...(formData.roomNumber ? [[formData.roomNumber, { id: formData.roomId || null, number: formData.roomNumber }]] : [])
+      ].filter(([num]) => Boolean(num))
+    ).values()
+  );
 
   return (
     <Dialog 
@@ -254,9 +259,13 @@ export default function AddStockItemModal({ open, onClose, onItemAdded }) {
                       }));
                     }}
                   >
-                    {availableRooms.map(r => (
-                      <MenuItem key={r.number} value={r.number}>Room {r.number}</MenuItem>
-                    ))}
+                    {availableRooms.length > 0 ? (
+                      availableRooms.map(r => (
+                        <MenuItem key={r.number} value={r.number}>Room {r.number}</MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled value="">No rooms configured</MenuItem>
+                    )}
                   </Select>
                 </FormControl>
               ) : (

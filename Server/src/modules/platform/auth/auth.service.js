@@ -1,7 +1,9 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import Account from "../../../database/platform/models/account.model.js";
+import Hotel from "../../../database/platform/models/hotel.model.js";
 import PasswordReset from "../../../database/platform/models/passwordReset.model.js";
 import ApiError from "../../../utils/apiError.js";
 import logger from "../../../config/logger.js";
@@ -50,6 +52,80 @@ export const registerAccount = async ({ fullName, email, phone, password }) => {
   return account;
 };
 
+/**
+ * Public Hotel Registration: Creates a pending Hotel and pending Account.
+ * The hotel CANNOT log in until approved by Super Admin.
+ */
+export const registerHotelAccount = async ({
+  fullName,
+  email,
+  phone,
+  password,
+  hotelName,
+  address = "Main Road",
+  city = "Karachi",
+  subscriptionPlan = "STANDARD",
+}) => {
+  const query = [{ email }];
+  if (phone) query.push({ phone });
+  const existingAccount = await Account.findOne({ $or: query });
+  if (existingAccount) {
+    throw new ApiError(409, "An account with this email or phone already exists");
+  }
+
+  const existingHotel = await Hotel.findOne({
+    property_name: new RegExp(`^${hotelName.trim()}$`, "i"),
+  });
+  if (existingHotel) {
+    throw new ApiError(409, "A hotel with this property name already exists or is pending approval");
+  }
+
+  const hotelId = new mongoose.Types.ObjectId();
+  const accountId = new mongoose.Types.ObjectId();
+  const tenant_db_name = `hotel_${hotelId.toString()}`;
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const hotelData = {
+    _id: hotelId,
+    property_name: hotelName.trim(),
+    ownerId: accountId,
+    address: address?.trim() || `${hotelName.trim()} Main Road`,
+    city: city?.trim() || "Karachi",
+    email: email.trim(),
+    status: "pending",
+    subscriptionPlan,
+    tenant_db_name,
+  };
+  if (phone && phone.trim()) {
+    hotelData.phone = phone.trim();
+  }
+
+  const hotel = await Hotel.create(hotelData);
+
+  const accountData = {
+    _id: accountId,
+    fullName: fullName.trim(),
+    email: email.trim(),
+    password: hashedPassword,
+    role: ROLES.HOTEL_ADMIN,
+    hotelId: hotel._id,
+    status: "pending",
+  };
+  if (phone && phone.trim()) {
+    accountData.phone = phone.trim();
+  }
+
+  const account = await Account.create(accountData);
+
+  return {
+    hotelId: hotel._id.toString(),
+    hotelName: hotel.property_name,
+    ownerEmail: account.email,
+    status: hotel.status,
+    message: "Hotel registration submitted successfully. Your request is pending Super Admin approval.",
+  };
+};
+
 export const loginAccount = async ({ email, password }) => {
   const account = await Account.findOne({ email }).select("+password");
 
@@ -72,7 +148,34 @@ export const loginAccount = async ({ email, password }) => {
     await Account.updateOne({ _id: account._id }, { $set: { failedLoginAttempts: 0, lockUntil: null } });
   }
 
-  // Only active accounts can log in.
+  // 1. Hotel status check (for hotel accounts)
+  if (account.hotelId && account.role !== ROLES.PLATFORM_ADMIN) {
+    const hotel = await Hotel.findById(account.hotelId)
+      .select("status property_name rejectionReason suspensionReason")
+      .lean();
+
+    if (hotel) {
+      if (hotel.status === "pending") {
+        throw new ApiError(403, "Your hotel registration is pending review and approval by the Super Admin.");
+      }
+      if (hotel.status === "rejected") {
+        const reason = hotel.rejectionReason ? `: ${hotel.rejectionReason}` : "";
+        throw new ApiError(403, `Your hotel registration was rejected by Super Admin${reason}. Please contact support.`);
+      }
+      if (hotel.status === "suspended" || hotel.status === "inactive") {
+        const reason = hotel.suspensionReason ? ` Reason: ${hotel.suspensionReason}` : "";
+        throw new ApiError(403, `Your hotel account is currently inactive or suspended due to subscription/fee dues.${reason} Please contact administration.`);
+      }
+      if (hotel.status !== "active") {
+        throw new ApiError(403, "Your hotel account is not active. Please contact administration.");
+      }
+    }
+  }
+
+  // 2. Account status check
+  if (account.status === "pending") {
+    throw new ApiError(403, "Your account is pending review and approval by the Super Admin.");
+  }
   if (account.status !== "active") {
     throw new ApiError(403, "Account is not active. Contact support.");
   }

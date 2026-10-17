@@ -55,6 +55,18 @@ describe('Phase 2B: Rooms Backend Integration & Adapter Tests', () => {
       expect(adapted.rawStatus).toBe('AVAILABLE');
       expect(adapted.housekeepingStatus).toBe('Clean');
       expect(adapted.floor).toBe('2');
+      expect(adapted.mobile).toBe('');
+    });
+
+    it('correctly adapts backend room phone number to frontend mobile', () => {
+      const backendRoom = {
+        _id: '6ac37e971b583261b8266317',
+        room_number: '105',
+        phone: '1234567890',
+        floor: '1',
+      };
+      const adapted = toFrontendRoom(backendRoom);
+      expect(adapted.mobile).toBe('1234567890');
     });
 
     it('correctly adapts frontend form into backend API payload', () => {
@@ -75,6 +87,22 @@ describe('Phase 2B: Rooms Backend Integration & Adapter Tests', () => {
         status: 'OCCUPIED',
         housekeeping_status: 'DIRTY',
       });
+    });
+
+    it('includes phone in payload when mobile or contactMobile is provided', () => {
+      const payloadFromContactMobile = toBackendRoomPayload({
+        roomNo: '203',
+        roomTypeId: '6ac37e971b583261b8266315',
+        contactMobile: '03001234567',
+      });
+      expect(payloadFromContactMobile.phone).toBe('03001234567');
+
+      const payloadFromMobile = toBackendRoomPayload({
+        roomNo: '204',
+        roomTypeId: '6ac37e971b583261b8266315',
+        mobile: '03119876543',
+      });
+      expect(payloadFromMobile.phone).toBe('03119876543');
     });
 
     it('correctly adapts Room Types between backend and frontend', () => {

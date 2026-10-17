@@ -25,14 +25,10 @@ const invoiceLineItemSchema = new mongoose.Schema(
 
 const invoiceSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     invoice_number: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     folio_id: {
@@ -83,7 +79,5 @@ invoiceSchema.index({ folio_id: 1 });
 invoiceSchema.index({ guest_id: 1 });
 invoiceSchema.index({ status: 1 });
 invoiceSchema.index({ issue_date: -1 });
-
-invoiceSchema.index({ hotelId: 1, invoice_number: 1 }, { unique: true });
 
 export default invoiceSchema;

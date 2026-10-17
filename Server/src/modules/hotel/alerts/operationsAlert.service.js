@@ -238,3 +238,31 @@ export const deleteAlert = async (tenantConn, id) => {
   await OperationsAlert.findByIdAndDelete(id);
   return { success: true };
 };
+
+export const resolveAlertsForRoom = async (
+  tenantConn,
+  roomNumber,
+  departments = ["HOUSEKEEPING"]
+) => {
+  try {
+    if (!roomNumber) return;
+    const OperationsAlert = await getModel(tenantConn, "OperationsAlert");
+    const regex = new RegExp(`^Room\\s*${roomNumber}$`, "i");
+    await OperationsAlert.updateMany(
+      {
+        location: regex,
+        department: { $in: departments },
+        status: { $in: ["OPEN", "IN_PROGRESS"] },
+      },
+      {
+        $set: {
+          status: "RESOLVED",
+          is_active: false,
+          resolved_at: new Date(),
+        },
+      }
+    );
+  } catch (err) {
+    console.warn("[resolveAlertsForRoom] Failed to auto-resolve alerts:", err.message);
+  }
+};

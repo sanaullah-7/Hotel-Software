@@ -2,14 +2,10 @@ import mongoose from 'mongoose';
 
 const guestSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     guest_ref: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
       maxlength: 50,
     },
@@ -36,22 +32,25 @@ const guestSchema = new mongoose.Schema(
       trim: true,
       maxlength: 30,
     },
-    // Official identities are unique within each hotel. Partial compound indexes
-    // exclude absent identities; compound sparse indexes would still index hotelId.
+    // Official identity documents. Unique PER TENANT DATABASE (each hotel has its own DB, so a
+    // unique index here is automatically hotel-scoped). Sparse: guests without the document
+    // (field ABSENT) never collide. The service guarantees empty values are stored as ABSENT.
     passport_number: {
       type: String,
       trim: true,
       uppercase: true,
       maxlength: 50,
       sparse: true,
-      },
+      unique: true,
+    },
     national_id: {
       type: String,
       trim: true,
       uppercase: true,
       maxlength: 50,
       sparse: true,
-      },
+      unique: true,
+    },
     address: {
       type: String,
       maxlength: 255,
@@ -79,6 +78,11 @@ const guestSchema = new mongoose.Schema(
       type: String,
       maxlength: 1000,
     },
+    avatar: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
@@ -88,15 +92,7 @@ const guestSchema = new mongoose.Schema(
 // Additional non-unique Indexes
 guestSchema.index({ email: 1 });
 guestSchema.index({ phone: 1 });
-
-guestSchema.index({ hotelId: 1, guest_ref: 1 }, { unique: true });
-
-guestSchema.index({ hotelId: 1, passport_number: 1 }, {
-  unique: true, partialFilterExpression: { passport_number: { $type: 'string' } },
-});
-
-guestSchema.index({ hotelId: 1, national_id: 1 }, {
-  unique: true, partialFilterExpression: { national_id: { $type: 'string' } },
-});
+guestSchema.index({ first_name: 1 });
+guestSchema.index({ last_name: 1 });
 
 export default guestSchema;

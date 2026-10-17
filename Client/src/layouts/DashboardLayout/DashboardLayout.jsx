@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useData } from '../../context/DataProvider';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 
 export default function DashboardLayout({ children }) {
   const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
-  const { isDataLoaded } = useData();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   // Auto-close mobile drawer on route navigation
@@ -16,12 +14,12 @@ export default function DashboardLayout({ children }) {
     setMobileOpen(false);
   }, [location.pathname]);
 
-  if (isLoading || (isAuthenticated && !isDataLoaded)) {
+  if (isLoading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[var(--bg-default)]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-[var(--primary-main)] border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm font-medium text-gray-500">{isLoading ? 'Verifying session...' : 'Loading system data...'}</p>
+          <p className="text-sm font-medium text-gray-500">Verifying session...</p>
         </div>
       </div>
     );

@@ -5,7 +5,8 @@ import useModalFocus from '../../../components/common/useModalFocus';
 
 export default function EventDetailsModal({
   event,
-  onClose
+  onClose,
+  onCollectPayment
 }) {
   const { dialogRef, titleId } = useModalFocus({ open: Boolean(event), onClose });
 
@@ -26,9 +27,9 @@ export default function EventDetailsModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-slate-900 px-6 py-4 flex items-center justify-between text-white">
+        <div className="bg-[#1b7f43] px-6 py-4 flex items-center justify-between text-white">
           <div>
-            <span className="text-xs font-mono text-slate-400 block">{event.id}</span>
+            <span className="text-xs font-mono text-emerald-100 block">{event.id}</span>
             <h3 id={titleId} className="text-lg font-bold tracking-tight">{event.name}</h3>
           </div>
           <button
@@ -44,7 +45,7 @@ export default function EventDetailsModal({
         <div className="p-6 overflow-y-auto space-y-4 text-sm text-slate-700">
           <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100">
             <div>
-              <span className="text-xs text-slate-400 block">Event Type</span>
+              <span className="text-xs text-slate-400 block font-medium">Event Type</span>
               <span
                 className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold mt-1 ${getTypeBadgeStyle(
                   event.type
@@ -54,7 +55,7 @@ export default function EventDetailsModal({
               </span>
             </div>
             <div>
-              <span className="text-xs text-slate-400 block">Current Status</span>
+              <span className="text-xs text-slate-400 block font-medium">Booking Status</span>
               <span
                 className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-semibold mt-1 ${getStatusBadgeStyle(
                   event.status
@@ -64,28 +65,28 @@ export default function EventDetailsModal({
               </span>
             </div>
             <div>
-              <span className="text-xs text-slate-400 block">Client</span>
+              <span className="text-xs text-slate-400 block font-medium">Customer</span>
               <span className="font-semibold text-slate-900">{event.client}</span>
               <div className="text-xs text-slate-500 mt-0.5">
                 {event.phone} • {event.email}
               </div>
             </div>
             <div>
-              <span className="text-xs text-slate-400 block">Venue &amp; Capacity</span>
+              <span className="text-xs text-slate-400 block font-medium">Event Venue & Guests</span>
               <span className="font-semibold text-slate-900">{event.venue}</span>
               <div className="text-xs text-slate-500 mt-0.5">
                 {event.guests} Expected Guests
               </div>
             </div>
             <div>
-              <span className="text-xs text-slate-400 block">Date &amp; Schedule</span>
+              <span className="text-xs text-slate-400 block font-medium">Date & Schedule</span>
               <span className="font-semibold text-slate-900">{event.displayDate}</span>
               <div className="text-xs text-slate-500 mt-0.5">
                 {event.startTime} – {event.endTime}
               </div>
             </div>
             <div>
-              <span className="text-xs text-slate-400 block">Catering Service</span>
+              <span className="text-xs text-slate-400 block font-medium">Catering Service</span>
               <span className="font-semibold text-slate-900">{event.catering}</span>
             </div>
           </div>
@@ -139,10 +140,23 @@ export default function EventDetailsModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
+        <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <div>
+            {event.balanceAmount > 0 && onCollectPayment && (
+              <button
+                onClick={() => {
+                  onClose();
+                  onCollectPayment(event);
+                }}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+              >
+                <span>Collect Remaining Balance (${event.balanceAmount.toLocaleString()})</span>
+              </button>
+            )}
+          </div>
           <button
             onClick={onClose}
-            className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+            className="px-5 py-2 bg-[#1b7f43] hover:bg-[#12572e] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
           >
             Close
           </button>

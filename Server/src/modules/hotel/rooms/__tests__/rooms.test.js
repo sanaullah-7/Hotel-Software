@@ -255,5 +255,28 @@ describe('Phase 4: Room Management (Amenities, Room Types, Rooms)', () => {
       expect(updateRes.status).toBe(200);
       expect(updateRes.body.data.housekeeping_status).toBe('DIRTY');
     });
+
+    it('should save and return room phone number when provided via phone or mobile', async () => {
+      const roomNum = `${Math.floor(100 + Math.random() * 899)}`;
+      const roomPhone = '1234567890';
+      const roomRes = await request(app).post('/api/v1/hotel/rooms')
+        .set('Authorization', `Bearer ${adminTokenA}`)
+        .send({
+          room_number: roomNum,
+          room_type_id: roomTypeA_id,
+          floor: '1',
+          phone: roomPhone,
+          status: 'AVAILABLE'
+        });
+
+      expect(roomRes.status).toBe(201);
+      expect(roomRes.body.data.phone).toBe(roomPhone);
+
+      const getRes = await request(app).get(`/api/v1/hotel/rooms/${roomRes.body.data._id}`)
+        .set('Authorization', `Bearer ${adminTokenA}`);
+
+      expect(getRes.status).toBe(200);
+      expect(getRes.body.data.phone).toBe(roomPhone);
+    });
   });
 });

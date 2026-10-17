@@ -1,8 +1,7 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 const restaurantOrderItemSchema = new mongoose.Schema(
   {
-    hotelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hotel', required: true },
     menu_item_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'RestaurantMenuItem',
@@ -40,6 +39,7 @@ const restaurantOrderSchema = new mongoose.Schema(
     order_ref: {
       type: String,
       required: true,
+      unique: true,
       trim: true,
     },
     table_id: {
@@ -108,9 +108,8 @@ restaurantOrderSchema.index({ status: 1 });
 restaurantOrderSchema.index({ folio_id: 1 });
 restaurantOrderSchema.index({ guest_id: 1 });
 restaurantOrderSchema.index({ created_at: -1 });
-restaurantOrderSchema.index({ hotelId: 1, order_ref: 1 }, { unique: true });
 restaurantOrderSchema.index(
-  { hotelId: 1, idempotency_key: 1 },
+  { idempotency_key: 1 },
   { unique: true, partialFilterExpression: { idempotency_key: { $type: 'string' } } }
 );
 

@@ -4,7 +4,7 @@ import { HTTP_STATUS } from "../../../constants/httpStatusCodes.js";
 import * as paymentService from "./payment.service.js";
 
 export const createPayment = asyncHandler(async (req, res) => {
-  const payment = await paymentService.createPayment(req.hotelContext, req.body);
+  const payment = await paymentService.createPayment(req.hotelContext, req.body, req.user);
   res
     .status(HTTP_STATUS.CREATED)
     .json(new ApiResponse(HTTP_STATUS.CREATED, payment, "Payment recorded successfully"));

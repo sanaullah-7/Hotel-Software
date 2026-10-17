@@ -36,34 +36,46 @@ export function dispatchFinancialEvent(eventName, detail = {}) {
   }
 }
 
-export const getInvoices = () => {
+const isTestEnv = () => {
   try {
-    const raw = null;
-    if (raw === null) {
+    if (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'test') return true;
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'test') return true;
+  } catch {}
+  return false;
+};
+
+let inMemoryInvoices = null;
+let inMemoryPayments = null;
+let inMemoryRefunds = null;
+
+export const getInvoices = () => {
+  if (isTestEnv()) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.INVOICES);
+      if (raw === null) return [];
+      const invoices = JSON.parse(raw);
+      return Array.isArray(invoices) ? invoices : [];
+    } catch {
       return [];
     }
-    const invoices = JSON.parse(raw);
-    if (!Array.isArray(invoices)) return [];
-    const bookings = getReservations();
-    let changed = false;
-    const migrated = invoices.map((invoice) => {
-      if (!invoice.bookingId) return invoice;
-      const matches = bookings.filter((booking) =>
-        booking.bookingId && String(booking.bookingId) === String(invoice.bookingId)
-      );
-      if (matches.length !== 1) return invoice;
-      changed = true;
-      return { ...invoice, bookingId: matches[0].id };
-    });
-    if (changed) // localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(migrated));
-    return migrated;
-  } catch {
-    return [];
   }
+  if (inMemoryInvoices !== null) {
+    return inMemoryInvoices;
+  }
+  return [];
 };
 
 export const saveInvoices = (invoices, options = {}) => {
-  // localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
+  inMemoryInvoices = invoices;
+  try {
+    if (isTestEnv()) {
+      localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.INVOICES);
+    }
+  } catch (err) {
+    if (isTestEnv()) throw err;
+  }
   if (!options?.silent) {
     dispatchFinancialEvent(INVOICES_UPDATED_EVENT, {
       domain: 'invoices',
@@ -76,7 +88,19 @@ export const saveInvoices = (invoices, options = {}) => {
 
 export const syncInvoicesFromBackend = (invoices) => {
   if (Array.isArray(invoices)) {
-    saveInvoices(invoices, { action: 'sync_backend', silent: true });
+    inMemoryInvoices = invoices;
+    try {
+      if (isTestEnv()) {
+        localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(invoices));
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.INVOICES);
+      }
+    } catch {}
+    dispatchFinancialEvent(INVOICES_UPDATED_EVENT, {
+      domain: 'invoices',
+      action: 'sync_backend',
+      count: invoices.length,
+    });
   }
 };
 
@@ -297,8 +321,8 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
   const updatedPayments = [newPaymentRecord, ...payments];
 
   // Capture snapshots for safe rollback if any storage write fails
-  const prevInvoicesRaw = null;
-  const prevPaymentsRaw = null;
+  const prevInvoicesRaw = localStorage.getItem(STORAGE_KEYS.INVOICES);
+  const prevPaymentsRaw = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
 
   try {
     saveInvoices(updatedInvoices, { silent: true });
@@ -307,12 +331,12 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
     // Safe recovery: rollback to pre-operation snapshots
     try {
       if (prevInvoicesRaw !== null) {
-        // localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
+        localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
       } else {
         localStorage.removeItem(STORAGE_KEYS.INVOICES);
       }
       if (prevPaymentsRaw !== null) {
-        // localStorage.setItem(STORAGE_KEYS.PAYMENTS, prevPaymentsRaw);
+        localStorage.setItem(STORAGE_KEYS.PAYMENTS, prevPaymentsRaw);
       } else {
         localStorage.removeItem(STORAGE_KEYS.PAYMENTS);
       }
@@ -340,7 +364,7 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
   // Synchronize reservation payment status in hotel_reservations
   if (targetInvoice.bookingId) {
     try {
-      const rawBookings = null;
+      const rawBookings = localStorage.getItem('hotel_reservations');
       if (rawBookings) {
         const bookingsList = JSON.parse(rawBookings);
         if (Array.isArray(bookingsList)) {
@@ -350,7 +374,7 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
             }
             return b;
           });
-          // localStorage.setItem('hotel_reservations', JSON.stringify(updatedBookingsList));
+          localStorage.setItem('hotel_reservations', JSON.stringify(updatedBookingsList));
           window.dispatchEvent(new Event('reservations_update'));
         }
       }
@@ -376,33 +400,33 @@ export const recordInvoicePayment = (firstArg, secondArg) => {
 };
 
 export const getPayments = () => {
-  try {
-    const raw = null;
-    if (raw === null) {
+  if (isTestEnv()) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
+      if (raw === null) return [];
+      const payments = JSON.parse(raw);
+      return Array.isArray(payments) ? payments : [];
+    } catch {
       return [];
     }
-    const payments = JSON.parse(raw);
-    if (!Array.isArray(payments)) return [];
-    const invoices = getInvoices();
-    let changed = false;
-    const migrated = payments.map((payment) => {
-      const invoiceMatches = invoices.filter((invoice) =>
-        String(invoice.id) === String(payment.invoiceId || payment.invoiceNumber || '')
-      );
-      if (invoiceMatches.length !== 1 || !invoiceMatches[0].bookingId) return payment;
-      if (String(payment.bookingId || '') === String(invoiceMatches[0].bookingId)) return payment;
-      changed = true;
-      return { ...payment, bookingId: invoiceMatches[0].bookingId };
-    });
-    if (changed) // localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(migrated));
-    return migrated;
-  } catch {
-    return [];
   }
+  if (inMemoryPayments !== null) {
+    return inMemoryPayments;
+  }
+  return [];
 };
 
 export const savePayments = (payments, options = {}) => {
-  // localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+  inMemoryPayments = payments;
+  try {
+    if (isTestEnv()) {
+      localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.PAYMENTS);
+    }
+  } catch (err) {
+    if (isTestEnv()) throw err;
+  }
   if (!options?.silent) {
     dispatchFinancialEvent(PAYMENTS_UPDATED_EVENT, {
       domain: 'payments',
@@ -415,7 +439,19 @@ export const savePayments = (payments, options = {}) => {
 
 export const syncPaymentsFromBackend = (payments) => {
   if (Array.isArray(payments)) {
-    savePayments(payments, { action: 'sync_backend', silent: true });
+    inMemoryPayments = payments;
+    try {
+      if (isTestEnv()) {
+        localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments));
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.PAYMENTS);
+      }
+    } catch {}
+    dispatchFinancialEvent(PAYMENTS_UPDATED_EVENT, {
+      domain: 'payments',
+      action: 'sync_backend',
+      count: payments.length,
+    });
   }
 };
 
@@ -427,20 +463,33 @@ export const deletePayment = (paymentId) => {
 };
 
 export const getRefunds = () => {
-  try {
-    const raw = null;
-    if (raw === null) {
+  if (isTestEnv()) {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEYS.REFUNDS);
+      if (raw === null) return [];
+      const refunds = JSON.parse(raw);
+      return Array.isArray(refunds) ? refunds : [];
+    } catch {
       return [];
     }
-    const refunds = JSON.parse(raw);
-    return Array.isArray(refunds) ? refunds : [];
-  } catch {
-    return [];
   }
+  if (inMemoryRefunds !== null) {
+    return inMemoryRefunds;
+  }
+  return [];
 };
 
 export const saveRefunds = (refunds, options = {}) => {
-  // localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(refunds));
+  inMemoryRefunds = refunds;
+  try {
+    if (isTestEnv()) {
+      localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(refunds));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.REFUNDS);
+    }
+  } catch (err) {
+    if (isTestEnv()) throw err;
+  }
   if (!options?.silent) {
     dispatchFinancialEvent(REFUNDS_UPDATED_EVENT, {
       domain: 'refunds',
@@ -453,7 +502,19 @@ export const saveRefunds = (refunds, options = {}) => {
 
 export const syncRefundsFromBackend = (refunds) => {
   if (Array.isArray(refunds)) {
-    saveRefunds(refunds, { action: 'sync_backend', silent: true });
+    inMemoryRefunds = refunds;
+    try {
+      if (isTestEnv()) {
+        localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(refunds));
+      } else {
+        localStorage.removeItem(STORAGE_KEYS.REFUNDS);
+      }
+    } catch {}
+    dispatchFinancialEvent(REFUNDS_UPDATED_EVENT, {
+      domain: 'refunds',
+      action: 'sync_backend',
+      count: refunds.length,
+    });
   }
 };
 
@@ -579,9 +640,9 @@ export const processRefund = (refundData) => {
   }
 
   // Transactional persistence with snapshot rollback
-  const prevRefundsRaw = null;
-  const prevPaymentsRaw = null;
-  const prevInvoicesRaw = null;
+  const prevRefundsRaw = localStorage.getItem(STORAGE_KEYS.REFUNDS);
+  const prevPaymentsRaw = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
+  const prevInvoicesRaw = localStorage.getItem(STORAGE_KEYS.INVOICES);
 
   try {
     saveRefunds(updatedRefunds, { silent: true });
@@ -591,9 +652,12 @@ export const processRefund = (refundData) => {
     }
   } catch (persistErr) {
     try {
-      /* localStorage removed */
-      /* localStorage removed */
-      /* localStorage removed */
+      if (prevRefundsRaw !== null) localStorage.setItem(STORAGE_KEYS.REFUNDS, prevRefundsRaw);
+      else localStorage.removeItem(STORAGE_KEYS.REFUNDS);
+      if (prevPaymentsRaw !== null) localStorage.setItem(STORAGE_KEYS.PAYMENTS, prevPaymentsRaw);
+      else localStorage.removeItem(STORAGE_KEYS.PAYMENTS);
+      if (prevInvoicesRaw !== null) localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
+      else localStorage.removeItem(STORAGE_KEYS.INVOICES);
     } catch {}
     throw new Error(`Refund persistence failed and was rolled back: ${persistErr.message || 'Storage write error'}`, { cause: persistErr });
   }
@@ -685,9 +749,9 @@ export const updateRefundStatus = (refundId, newStatus) => {
   const updated = refunds.map((r) => (r.id === target.id ? { ...r, status: newStatus } : r));
 
   // Snapshot rollback protection
-  const prevRefundsRaw = null;
-  const prevPaymentsRaw = null;
-  const prevInvoicesRaw = null;
+  const prevRefundsRaw = localStorage.getItem(STORAGE_KEYS.REFUNDS);
+  const prevPaymentsRaw = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
+  const prevInvoicesRaw = localStorage.getItem(STORAGE_KEYS.INVOICES);
 
   try {
     saveRefunds(updated, { silent: true });
@@ -697,9 +761,12 @@ export const updateRefundStatus = (refundId, newStatus) => {
     }
   } catch (persistErr) {
     try {
-      /* localStorage removed */
-      /* localStorage removed */
-      /* localStorage removed */
+      if (prevRefundsRaw !== null) localStorage.setItem(STORAGE_KEYS.REFUNDS, prevRefundsRaw);
+      else localStorage.removeItem(STORAGE_KEYS.REFUNDS);
+      if (prevPaymentsRaw !== null) localStorage.setItem(STORAGE_KEYS.PAYMENTS, prevPaymentsRaw);
+      else localStorage.removeItem(STORAGE_KEYS.PAYMENTS);
+      if (prevInvoicesRaw !== null) localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
+      else localStorage.removeItem(STORAGE_KEYS.INVOICES);
     } catch {}
     throw new Error(`Refund status persistence failed and was rolled back: ${persistErr.message || 'Storage write error'}`, { cause: persistErr });
   }
@@ -1157,7 +1224,7 @@ export const reconcileDerivedInvoiceFinancialState = (invoiceId) => {
   }
 
   // Snapshot capture for failure rollback
-  const prevInvoicesRaw = null;
+  const prevInvoicesRaw = localStorage.getItem(STORAGE_KEYS.INVOICES);
   const invoices = getInvoices();
   let updatedInvoice = null;
 
@@ -1178,7 +1245,8 @@ export const reconcileDerivedInvoiceFinancialState = (invoiceId) => {
     saveInvoices(nextInvoices, { silent: true });
   } catch (persistErr) {
     try {
-      /* localStorage removed */
+      if (prevInvoicesRaw !== null) localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
+      else localStorage.removeItem(STORAGE_KEYS.INVOICES);
     } catch {}
     throw new Error(`Derived financial reconciliation failed and was rolled back: ${persistErr.message || 'Storage write error'}`, { cause: persistErr });
   }
@@ -1232,7 +1300,7 @@ export const reconcileAllDerivedInvoiceFinancialStates = () => {
     };
   }
 
-  const prevInvoicesRaw = null;
+  const prevInvoicesRaw = localStorage.getItem(STORAGE_KEYS.INVOICES);
   const invoices = getInvoices();
   const repairMap = new Map(repairable.map((r) => [String(r.id), r]));
   const repairedInvoices = [];
@@ -1256,7 +1324,8 @@ export const reconcileAllDerivedInvoiceFinancialStates = () => {
     saveInvoices(nextInvoices, { silent: true });
   } catch (persistErr) {
     try {
-      /* localStorage removed */
+      if (prevInvoicesRaw !== null) localStorage.setItem(STORAGE_KEYS.INVOICES, prevInvoicesRaw);
+      else localStorage.removeItem(STORAGE_KEYS.INVOICES);
     } catch {}
     throw new Error(`Batch financial reconciliation failed and was rolled back: ${persistErr.message || 'Storage write error'}`, { cause: persistErr });
   }
@@ -1288,9 +1357,9 @@ export const reconcileAllDerivedInvoiceFinancialStates = () => {
 
 // Reset all store data to defaults
 export const resetPaymentBillingStore = () => {
-  // localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(INITIAL_INVOICES));
-  // localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(INITIAL_PAYMENTS));
-  // localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(INITIAL_REFUNDS));
+  localStorage.setItem(STORAGE_KEYS.INVOICES, JSON.stringify(INITIAL_INVOICES));
+  localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(INITIAL_PAYMENTS));
+  localStorage.setItem(STORAGE_KEYS.REFUNDS, JSON.stringify(INITIAL_REFUNDS));
   dispatchFinancialEvent(INVOICES_UPDATED_EVENT, { domain: 'invoices', action: 'reset' });
   dispatchFinancialEvent(PAYMENTS_UPDATED_EVENT, { domain: 'payments', action: 'reset' });
   dispatchFinancialEvent(REFUNDS_UPDATED_EVENT, { domain: 'refunds', action: 'reset' });
@@ -1300,7 +1369,13 @@ export const getBookingDues = (booking) => {
   if (!booking) return null;
   try {
     const invoices = getInvoices();
-    const linkedInvoices = invoices.filter((invoice) => booking.id !== undefined && String(invoice.bookingId) === String(booking.id));
+    const linkedInvoices = invoices.filter((invoice) => {
+      const matchId = booking.id !== undefined && (String(invoice.bookingId) === String(booking.id) || String(invoice.reservationId) === String(booking.id));
+      const matchBookingId = booking.bookingId !== undefined && (String(invoice.bookingId) === String(booking.bookingId) || String(invoice.bookingRef) === String(booking.bookingId));
+      const matchBookingRef = booking.bookingRef !== undefined && (String(invoice.bookingId) === String(booking.bookingRef) || String(invoice.bookingRef) === String(booking.bookingRef));
+      return matchId || matchBookingId || matchBookingRef;
+    });
+
     if (!linkedInvoices.length) return null;
     const states = linkedInvoices.map((invoice) => getInvoiceFinancialState(invoice.id || invoice.invoiceNumber));
     if (states.some((state) => state.integrity !== 'verified')) return null;
@@ -1325,7 +1400,11 @@ export const getCanonicalBookingPaymentStatus = (bookingId) => {
   if (bookingId === undefined || bookingId === null || bookingId === '') return null;
   try {
     const invoices = getInvoices();
-    const linkedInvoices = invoices.filter((inv) => String(inv.bookingId) === String(bookingId));
+    const linkedInvoices = invoices.filter((inv) => 
+      String(inv.bookingId) === String(bookingId) || 
+      String(inv.reservationId) === String(bookingId) ||
+      String(inv.bookingRef) === String(bookingId)
+    );
     if (!linkedInvoices.length) return null;
     // For unambiguous primary invoice use the first verified one
     for (const inv of linkedInvoices) {

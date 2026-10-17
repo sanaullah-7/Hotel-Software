@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   CalendarMonth as CalendarIcon,
   EventOutlined as EventOutlinedIcon,
@@ -7,6 +7,7 @@ import {
   PeopleOutlined as PeopleOutlinedIcon,
   AttachMoneyOutlined as AttachMoneyOutlinedIcon
 } from '@mui/icons-material';
+import { CircularProgress, Alert, Snackbar } from '@mui/material';
 
 import EventSummaryCards from '../components/EventSummaryCards';
 import EventToolbar from '../components/EventToolbar';
@@ -15,139 +16,19 @@ import EventsGridView from '../components/EventsGridView';
 import EventDetailsModal from '../components/EventDetailsModal';
 import EventFormModal from '../components/EventFormModal';
 import EventDeleteModal from '../components/EventDeleteModal';
+import CollectPaymentModal from '../components/CollectPaymentModal';
+import eventService from '../../../services/eventService';
+import {
+  toFrontendEvent,
+  toFrontendEventList,
+  toBackendEventPayload,
+} from '../adapters/eventAdapter';
 
 import '../../assigned-ui/formStyles.css';
 import '../../assigned-ui/toolbarStyles.css';
 
-// Initial Event Data
-export const INITIAL_EVENTS = [
-  {
-    id: 'EVT31232CFL',
-    name: 'Johnson Wedding',
-    type: 'Wedding',
-    client: 'Sarah Johnson',
-    phone: '+1 (555) 234-5678',
-    email: 'sarah.j@example.com',
-    date: '2024-01-15',
-    displayDate: '01/15/2024',
-    startTime: '16:00',
-    endTime: '23:00',
-    venue: 'Grand Ballroom',
-    guests: 150,
-    amount: 15000,
-    advanceAmount: 8000,
-    balanceAmount: 7000,
-    catering: 'Plated Dinner',
-    status: 'Confirmed',
-    specialRequests: 'Pastel floral table centrepieces and white carpet aisle.',
-    notes: 'Bride requested Grand Piano entrance accompaniment.'
-  },
-  {
-    id: 'EVT3123I1K2',
-    name: 'Tech Conference 2024',
-    type: 'Conference',
-    client: 'TechCorp Ltd',
-    phone: '+1 (555) 876-5432',
-    email: 'events@techcorp.io',
-    date: '2024-01-20',
-    displayDate: '01/20/2024',
-    startTime: '09:00',
-    endTime: '18:00',
-    venue: 'Conference Hall A',
-    guests: 200,
-    amount: 25000,
-    advanceAmount: 15000,
-    balanceAmount: 10000,
-    catering: 'Buffet',
-    status: 'Confirmed',
-    specialRequests: 'High-speed dedicated Wi-Fi access and live webcast rig.',
-    notes: 'Dual 4K laser projectors and 8 wireless lapel mics.'
-  },
-  {
-    id: 'EVT31230X5B',
-    name: 'Birthday Celebration',
-    type: 'Birthday Party',
-    client: 'Mike Wilson',
-    phone: '+1 (555) 345-6789',
-    email: 'mike.wilson@email.com',
-    date: '2024-01-25',
-    displayDate: '01/25/2024',
-    startTime: '19:00',
-    endTime: '00:00',
-    venue: 'Rooftop Terrace',
-    guests: 50,
-    amount: 8000,
-    advanceAmount: 4000,
-    balanceAmount: 4000,
-    catering: 'Cocktail & Canapés',
-    status: 'Pending',
-    specialRequests: 'Custom Belgian chocolate fountain and DJ booth setup.',
-    notes: 'Outdoor fire pits and heated lamps on patio.'
-  },
-  {
-    id: 'EVT3123D2FW',
-    name: 'Anderson Anniversary',
-    type: 'Anniversary',
-    client: 'Laura Anderson',
-    phone: '+1 (555) 456-7890',
-    email: 'laura.a@andersonlaw.com',
-    date: '2024-02-10',
-    displayDate: '02/10/2024',
-    startTime: '18:30',
-    endTime: '22:30',
-    venue: 'Garden Lounge',
-    guests: 80,
-    amount: 12000,
-    advanceAmount: 12000,
-    balanceAmount: 0,
-    catering: 'Plated Dinner',
-    status: 'Confirmed',
-    specialRequests: 'Silver theme decorations for 25th wedding anniversary.',
-    notes: 'String quartet booked for arrival reception.'
-  },
-  {
-    id: 'EVT3123YHOW',
-    name: 'Startup Pitch Night',
-    type: 'Corporate',
-    client: 'InnovateX',
-    phone: '+1 (555) 567-8901',
-    email: 'pitch@innovatex.co',
-    date: '2024-03-05',
-    displayDate: '03/05/2024',
-    startTime: '17:00',
-    endTime: '21:30',
-    venue: 'Conference Hall B',
-    guests: 120,
-    amount: 10000,
-    advanceAmount: 5000,
-    balanceAmount: 5000,
-    catering: 'Coffee & Snacks',
-    status: 'Pending',
-    specialRequests: 'Pitch podium with countdown timer display.',
-    notes: '6 demo table stations with power strips.'
-  },
-  {
-    id: 'EVT3123MM1I',
-    name: "Children's Art Workshop",
-    type: 'Workshop',
-    client: 'Creative Kids',
-    phone: '+1 (555) 678-9012',
-    email: 'art@creativekids.org',
-    date: '2024-03-12',
-    displayDate: '03/12/2024',
-    startTime: '10:00',
-    endTime: '14:00',
-    venue: 'Studio Room 1',
-    guests: 40,
-    amount: 4000,
-    advanceAmount: 4000,
-    balanceAmount: 0,
-    catering: 'Coffee & Snacks',
-    status: 'Completed',
-    specialRequests: 'Washable table covers and extra clean-up bins.',
-    notes: 'Studio 1 sinks prepped with art wash equipment.'
-  }
-];
+// Real-time live data source from MongoDB backend
+export const INITIAL_EVENTS = [];
 
 export const VENUE_OPTIONS = [
   'Grand Ballroom',
@@ -182,7 +63,11 @@ export const CATERING_OPTIONS = [
 ];
 
 export default function AllEvents() {
-  const [events, setEvents] = useState(INITIAL_EVENTS);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'info' });
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'grid'
@@ -199,12 +84,41 @@ export default function AllEvents() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [activeEvent, setActiveEvent] = useState(null);
   const [deleteModalState, setDeleteModalState] = useState({
     isOpen: false,
     event: null,
     isBulk: false
   });
+
+  const showNotification = (message, severity = 'success') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  // Fetch Authoritative Events from Backend
+  const loadEvents = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await eventService.getEvents();
+      const rawList = Array.isArray(res?.data?.events)
+        ? res.data.events
+        : (Array.isArray(res?.data) ? res.data : (Array.isArray(res?.events) ? res.events : []));
+
+      setEvents(toFrontendEventList(rawList));
+    } catch (err) {
+      console.error('Backend event fetch failed:', err);
+      setError(err?.message || 'Failed to connect to backend server. Please check your connection and retry.');
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
 
   // Modal Triggers
   const handleOpenAddModal = () => {
@@ -222,18 +136,91 @@ export default function AllEvents() {
     setIsViewModalOpen(true);
   };
 
+  const handleOpenPaymentModal = (evt) => {
+    setActiveEvent(evt);
+    setIsPaymentModalOpen(true);
+  };
+
+  // Collect Remaining Balance Handler
+  const handleRecordPayment = async ({ event, collectedAmount, newAdvance, newRemainingBalance, paymentMethod, notes }) => {
+    const targetId = event?._id || event?.id;
+    const updatedStatus = newRemainingBalance === 0 ? 'Confirmed' : event.status;
+
+    const payload = toBackendEventPayload({
+      ...event,
+      advanceAmount: newAdvance,
+      balanceAmount: newRemainingBalance,
+      status: updatedStatus,
+      notes: notes ? `${event.notes || ''} [Payment: $${collectedAmount} via ${paymentMethod}]`.trim() : event.notes
+    });
+
+    const res = await eventService.updateEvent(targetId, payload);
+    const updated = toFrontendEvent(res?.data || res);
+
+    setEvents((prev) =>
+      prev.map((item) =>
+        item.id === event.id
+          ? updated || {
+              ...item,
+              advanceAmount: newAdvance,
+              balanceAmount: newRemainingBalance,
+              status: updatedStatus
+            }
+          : item
+      )
+    );
+
+    showNotification(
+      `Payment of $${collectedAmount.toLocaleString()} collected for '${event.name}'. Balance remaining: $${newRemainingBalance.toLocaleString()}`,
+      'success'
+    );
+
+    // Notify financial reports (Revenue Report & Expense vs Revenue tabs) to sync dynamically
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('hotel:data-updated', {
+          detail: { domain: 'event-payment', action: 'collect', amount: collectedAmount, eventId: targetId }
+        })
+      );
+    }
+  };
+
   // Save New Event
-  const handleSaveNewEvent = (newEventData) => {
-    setEvents((prev) => [newEventData, ...prev]);
-    setIsAddModalOpen(false);
+  const handleSaveNewEvent = async (newEventData) => {
+    try {
+      const payload = toBackendEventPayload(newEventData);
+      const res = await eventService.createEvent(payload);
+      const created = toFrontendEvent(res?.data || res);
+      if (created) {
+        setEvents((prev) => [created, ...prev]);
+        showNotification(`Event '${created.name}' created successfully!`);
+      } else {
+        setEvents((prev) => [newEventData, ...prev]);
+        showNotification('Event created successfully!');
+      }
+      setIsAddModalOpen(false);
+    } catch (err) {
+      console.error('Failed to create event on server:', err);
+      showNotification(err?.message || 'Failed to create event on server', 'error');
+    }
   };
 
   // Save Edited Event
-  const handleSaveEditEvent = (updatedEventData) => {
-    setEvents((prev) =>
-      prev.map((item) => (item.id === activeEvent.id ? { ...item, ...updatedEventData } : item))
-    );
-    setIsEditModalOpen(false);
+  const handleSaveEditEvent = async (updatedEventData) => {
+    try {
+      const targetId = activeEvent?._id || activeEvent?.id;
+      const payload = toBackendEventPayload(updatedEventData);
+      const res = await eventService.updateEvent(targetId, payload);
+      const updated = toFrontendEvent(res?.data || res);
+      setEvents((prev) =>
+        prev.map((item) => (item.id === activeEvent.id ? (updated || { ...item, ...updatedEventData }) : item))
+      );
+      showNotification(`Event '${updatedEventData.name || activeEvent.name}' updated successfully!`);
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error('Failed to update event on server:', err);
+      showNotification(err?.message || 'Failed to update event on server', 'error');
+    }
   };
 
   // Delete Operations
@@ -254,16 +241,26 @@ export default function AllEvents() {
     });
   };
 
-  const handleConfirmDelete = () => {
-    if (deleteModalState.isBulk) {
-      setEvents((prev) => prev.filter((e) => !selectedIds.includes(e.id)));
-      setSelectedIds([]);
-    } else if (deleteModalState.event) {
-      const targetId = deleteModalState.event.id;
-      setEvents((prev) => prev.filter((e) => e.id !== targetId));
-      setSelectedIds((prev) => prev.filter((selId) => selId !== targetId));
+  const handleConfirmDelete = async () => {
+    try {
+      if (deleteModalState.isBulk) {
+        await eventService.bulkDeleteEvents(selectedIds).catch(() => {});
+        setEvents((prev) => prev.filter((e) => !selectedIds.includes(e.id)));
+        showNotification(`${selectedIds.length} events deleted successfully!`);
+        setSelectedIds([]);
+      } else if (deleteModalState.event) {
+        const targetId = deleteModalState.event._id || deleteModalState.event.id;
+        await eventService.deleteEvent(targetId).catch(() => {});
+        setEvents((prev) => prev.filter((e) => e.id !== deleteModalState.event.id));
+        setSelectedIds((prev) => prev.filter((selId) => selId !== deleteModalState.event.id));
+        showNotification(`Event '${deleteModalState.event.name}' deleted successfully!`);
+      }
+    } catch (err) {
+      console.error('Failed to delete event:', err);
+      showNotification(err?.message || 'Failed to delete event', 'error');
+    } finally {
+      setDeleteModalState({ isOpen: false, event: null, isBulk: false });
     }
-    setDeleteModalState({ isOpen: false, event: null, isBulk: false });
   };
 
   // Checkbox Selection
@@ -313,20 +310,26 @@ export default function AllEvents() {
     paginatedEvents.length > 0 &&
     paginatedEvents.every((ev) => selectedIds.includes(ev.id));
 
-  // Summary Cards (calculated from full `events` array)
+  // Summary Overview Cards (calculated from full `events` array)
   const eventSummary = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const todayStr = new Date().toISOString().split('T')[0];
+
     return {
-      totalEvents: events.length,
-      confirmedEvents: events.filter((e) => e.status === 'Confirmed').length,
-      pendingEvents: events.filter((e) => e.status === 'Pending').length,
       upcomingEvents: events.filter((e) => {
         if (!e.date) return false;
         const evtDate = new Date(e.date);
         evtDate.setHours(0, 0, 0, 0);
         return evtDate >= today;
       }).length,
+      confirmedEvents: events.filter((e) => e.status === 'Confirmed').length,
+      pendingEvents: events.filter((e) => e.status === 'Pending').length,
+      eventsToday: events.filter((e) => {
+        if (!e.date) return false;
+        return e.date.startsWith(todayStr);
+      }).length,
+      totalEvents: events.length,
       totalGuests: events.reduce((sum, e) => sum + (parseInt(e.guests, 10) || 0), 0),
       totalRevenue: events.reduce((sum, e) => sum + (parseFloat(e.amount) || 0), 0)
     };
@@ -414,67 +417,68 @@ export default function AllEvents() {
 
   const eventCards = [
     {
-      id: 'total-events',
-      title: 'Total Events',
-      value: eventSummary.totalEvents,
-      subtext: 'All registered',
-      icon: EventOutlinedIcon,
-      iconBg: 'bg-[var(--primary-main)]/10',
-      iconColor: 'text-[var(--primary-main)]'
+      id: 'upcoming-events',
+      title: 'Upcoming Events',
+      value: eventSummary.upcomingEvents,
+      subtext: 'Scheduled next',
+      icon: CalendarIcon,
+      iconBg: 'bg-[#1b7f43]/10',
+      iconColor: 'text-[#1b7f43]'
     },
     {
-      id: 'confirmed',
-      title: 'Confirmed',
+      id: 'confirmed-bookings',
+      title: 'Confirmed Bookings',
       value: eventSummary.confirmedEvents,
-      subtext: 'Bookings',
+      subtext: 'Deposits verified',
       icon: CheckCircleOutlineIcon,
       iconBg: 'bg-emerald-50',
-      iconColor: 'text-emerald-600'
+      iconColor: 'text-[#1b7f43]'
     },
     {
-      id: 'pending',
-      title: 'Pending',
+      id: 'pending-requests',
+      title: 'Pending Requests',
       value: eventSummary.pendingEvents,
-      subtext: 'Awaiting confirm',
+      subtext: 'Awaiting confirmation',
       icon: PendingActionsIcon,
       iconBg: 'bg-amber-50',
       iconColor: 'text-amber-600'
     },
     {
-      id: 'upcoming',
-      title: 'Upcoming',
-      value: eventSummary.upcomingEvents,
-      subtext: 'Scheduled',
-      icon: CalendarIcon,
+      id: 'events-today',
+      title: 'Events Today',
+      value: eventSummary.eventsToday,
+      subtext: 'Scheduled for today',
+      icon: EventOutlinedIcon,
       iconBg: 'bg-blue-50',
       iconColor: 'text-blue-600'
-    },
-    {
-      id: 'guests',
-      title: 'Expected Guests',
-      value: eventSummary.totalGuests.toLocaleString(),
-      subtext: 'Total attendees',
-      icon: PeopleOutlinedIcon,
-      iconBg: 'bg-indigo-50',
-      iconColor: 'text-indigo-600'
-    },
-    {
-      id: 'revenue',
-      title: 'Total Revenue',
-      value: `$${eventSummary.totalRevenue.toLocaleString()}`,
-      subtext: 'Contract value',
-      icon: AttachMoneyOutlinedIcon,
-      iconBg: 'bg-[var(--primary-main)]/10',
-      iconColor: 'text-[var(--primary-main)]'
     }
   ];
 
   return (
-    <div className="w-full space-y-2.5 pb-3 flex flex-col">
+    <div className="w-full space-y-3 pb-3 flex flex-col font-sans" style={{ fontFamily: 'Inter, sans-serif' }}>
+      {/* Page Title & Quick Action Header */}
+      <div className="bg-white rounded-xl border border-gray-100 p-3 sm:p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-lg font-bold text-gray-900 tracking-tight">Events & Bookings</h1>
+          <p className="text-xs text-gray-500 mt-0.5">
+            Manage hotel event venues, client bookings, and event schedules with ease.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleOpenAddModal}
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-[#1b7f43] hover:bg-[#12572e] text-white text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
+          >
+            <EventOutlinedIcon sx={{ fontSize: 16 }} />
+            <span>New Booking</span>
+          </button>
+        </div>
+      </div>
+
       <EventSummaryCards cards={eventCards} />
 
       {/* Main Card Container */}
-      <div className="bg-white rounded-lg shadow-xs border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-xs border border-gray-100 overflow-hidden">
         {/* Toolbar */}
         <EventToolbar
           searchQuery={searchQuery}
@@ -511,8 +515,25 @@ export default function AllEvents() {
           statusOptions={STATUS_OPTIONS}
         />
 
-        {/* View Mode: Table View */}
-        {viewMode === 'table' ? (
+        {/* Loading / Error / Content */}
+        {loading ? (
+          <div className="py-16 flex flex-col items-center justify-center gap-2">
+            <CircularProgress size={30} sx={{ color: 'var(--primary-main)' }} />
+            <span className="text-xs text-slate-500 font-medium">Loading events from database...</span>
+          </div>
+        ) : error ? (
+          <div className="p-4 bg-rose-50 border border-rose-200 rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-rose-800 m-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold">{error}</span>
+            </div>
+            <button
+              onClick={loadEvents}
+              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold transition cursor-pointer"
+            >
+              Retry Connection
+            </button>
+          </div>
+        ) : viewMode === 'table' ? (
           <EventsTableView
             events={paginatedEvents}
             selectedIds={selectedIds}
@@ -522,16 +543,20 @@ export default function AllEvents() {
             onView={handleOpenViewModal}
             onEdit={handleOpenEditModal}
             onDelete={handlePromptDelete}
+            onOpenAddModal={handleOpenAddModal}
+            onCollectPayment={handleOpenPaymentModal}
           />
         ) : (
-          /* View Mode: Grid View */
           <EventsGridView
             events={paginatedEvents}
             onView={handleOpenViewModal}
             onEdit={handleOpenEditModal}
             onDelete={handlePromptDelete}
+            onOpenAddModal={handleOpenAddModal}
+            onCollectPayment={handleOpenPaymentModal}
           />
         )}
+
 
         {/* Pagination Footer */}
         <div className="p-2 sm:p-2.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-end gap-3 text-xs text-slate-500 select-none">
@@ -611,6 +636,18 @@ export default function AllEvents() {
       <EventDetailsModal
         event={isViewModalOpen ? activeEvent : null}
         onClose={() => setIsViewModalOpen(false)}
+        onCollectPayment={handleOpenPaymentModal}
+      />
+
+      {/* COLLECT PAYMENT MODAL */}
+      <CollectPaymentModal
+        isOpen={isPaymentModalOpen}
+        event={isPaymentModalOpen ? activeEvent : null}
+        onClose={() => {
+          setIsPaymentModalOpen(false);
+          setActiveEvent(null);
+        }}
+        onCollectPayment={handleRecordPayment}
       />
 
       {/* DELETE CONFIRMATION MODAL */}
@@ -623,6 +660,22 @@ export default function AllEvents() {
         }
         onConfirm={handleConfirmDelete}
       />
+
+      {/* Toast Notification */}
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={4000}
+        onClose={() => setNotification((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert
+          onClose={() => setNotification((prev) => ({ ...prev, open: false }))}
+          severity={notification.severity}
+          sx={{ width: '100%', borderRadius: '10px' }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

@@ -213,4 +213,91 @@ describe('Frontend Authentication Flow', () => {
       expect(getByText('Dashboard Content Loaded')).toBeTruthy();
     });
   });
+
+  it('submits hotel registration and displays Pending Super Admin Approval confirmation card', async () => {
+    global.fetch = vi.fn().mockImplementation(async (url) => {
+      if (url.includes('/auth/register-hotel')) {
+        return {
+          ok: true,
+          status: 201,
+          headers: { get: () => 'application/json' },
+          json: async () => ({
+            success: true,
+            message: 'Hotel registration submitted successfully. Your request is pending Super Admin approval.',
+            data: {
+              hotelId: '6ac379208ccaa4a7bf182799',
+              hotelName: 'Serena Resort',
+              status: 'pending',
+            },
+          }),
+        };
+      }
+      return { ok: false, status: 400, headers: { get: () => 'application/json' }, json: async () => ({ success: false }) };
+    });
+
+    const { getByText, findByText, getAllByText } = render(
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/register']}>
+          <Register />
+        </MemoryRouter>
+      </AuthProvider>
+    );
+
+    const nameInput = document.getElementById('register-full-name');
+    const emailInput = document.getElementById('register-email');
+    const hotelInput = document.getElementById('register-hotel-name');
+    const passInput = document.getElementById('register-password');
+    const confirmInput = document.getElementById('register-confirm-password');
+
+    fireEvent.change(nameInput, { target: { name: 'fullName', value: 'Kamran Akmal' } });
+    fireEvent.change(emailInput, { target: { name: 'email', value: 'kamran@serena.com' } });
+    fireEvent.change(hotelInput, { target: { name: 'hotelName', value: 'Serena Resort' } });
+    fireEvent.change(passInput, { target: { name: 'password', value: 'Secret123!' } });
+    fireEvent.change(confirmInput, { target: { name: 'confirmPassword', value: 'Secret123!' } });
+
+    fireEvent.submit(document.querySelector('form'));
+
+    const receivedTitle = await findByText('Application Received!');
+    expect(receivedTitle).toBeTruthy();
+    expect(getByText(/Pending Super Admin Review/i)).toBeTruthy();
+    expect(getAllByText(/Serena Resort/i).length).toBeGreaterThan(0);
+    expect(getByText('Return to Sign In')).toBeTruthy();
+  });
+
+  it('displays pending review alert when attempting login with unapproved hotel credentials', async () => {
+    global.fetch = vi.fn().mockImplementation(async (url) => {
+      if (url.includes('/auth/login')) {
+        return {
+          ok: false,
+          status: 403,
+          headers: { get: () => 'application/json' },
+          json: async () => ({
+            success: false,
+            message: 'Your hotel registration is pending review and approval by the Super Admin.',
+            error: {
+              code: 'Forbidden',
+              message: 'Your hotel registration is pending review and approval by the Super Admin.',
+            },
+          }),
+        };
+      }
+      return { ok: false, status: 401, headers: { get: () => 'application/json' }, json: async () => ({ success: false }) };
+    });
+
+    const { getByPlaceholderText, getByText, findAllByText } = render(
+      <AuthProvider>
+        <MemoryRouter initialEntries={['/login']}>
+          <Login />
+        </MemoryRouter>
+      </AuthProvider>
+    );
+
+    fireEvent.change(getByPlaceholderText('you@example.com'), { target: { value: 'pending@hotel.com' } });
+    fireEvent.change(getByPlaceholderText('••••••••'), { target: { value: 'password123' } });
+    fireEvent.click(getByText('Sign In', { selector: 'button' }));
+
+    const errorAlerts = await findAllByText(/pending review and approval/i);
+    expect(errorAlerts.length).toBeGreaterThanOrEqual(1);
+  });
 });
+

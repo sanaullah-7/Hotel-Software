@@ -259,10 +259,14 @@ export default function ReservationTable({
                 >
                 <td className="py-1.5 px-1.5 whitespace-nowrap">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <img
-                      src={booking.avatar || `https://i.pravatar.cc/150?u=${encodeURIComponent(booking.name || booking.id || 'guest')}`}
-                      alt="Avatar"
-                      className="w-6 h-6 rounded-full object-cover shadow-2xs shrink-0"
+                    <img 
+                      src={booking.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(booking.name || 'Guest')}&background=1b7f43&color=fff`} 
+                      alt="Avatar" 
+                      className="w-6 h-6 rounded-full object-cover shadow-2xs shrink-0" 
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(booking.name || 'Guest')}&background=1b7f43&color=fff`;
+                      }}
                     />
                     {resolveGuestForBooking(booking) ? (
                       <Link

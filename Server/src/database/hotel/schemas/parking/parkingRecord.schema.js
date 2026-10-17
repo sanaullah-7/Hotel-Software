@@ -1,10 +1,10 @@
-﻿import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 
 const parkingRecordSchema = new mongoose.Schema(
   {
-    hotelId: { type: mongoose.Schema.Types.ObjectId, ref: 'Hotel', required: true },
     record_ref: {
       type: String,
+      unique: true,
       sparse: true,
       trim: true,
     },
@@ -87,6 +87,5 @@ parkingRecordSchema.index({ space_id: 1 });
 parkingRecordSchema.index({ vehicle_plate: 1 });
 parkingRecordSchema.index({ status: 1 });
 parkingRecordSchema.index({ entry_time: -1 });
-parkingRecordSchema.index({ hotelId: 1, record_ref: 1 }, { unique: true, sparse: true });
 
 export default parkingRecordSchema;

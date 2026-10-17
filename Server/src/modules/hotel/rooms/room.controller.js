@@ -4,15 +4,16 @@ import { getModel } from "../../../database/hotel/modelFactory.js";
 import { HTTP_STATUS } from "../../../constants/httpStatusCodes.js";
 import ApiError from "../../../utils/apiError.js";
 import { asString, objectIdQuery, parsePagination } from "../../../utils/query.js";
+import { resolveAlertsForRoom } from "../alerts/operationsAlert.service.js";
 
 const ROOM_STATUSES = ["AVAILABLE", "OCCUPIED", "MAINTENANCE", "CLEANING", "OUT_OF_ORDER"];
 const HK_STATUSES = ["CLEAN", "DIRTY", "INSPECTED"];
 
-// Cross-tenant protection: references must exist in THIS hotel's data.
+// Cross-tenant protection: references must exist in THIS tenant's database.
 const assertRoomRefsInTenant = async (hotelContext, body) => {
   if (body.room_type_id) {
     const RoomType = await getModel(hotelContext, "RoomType");
-    const roomType = await RoomType.findOne({ _id: body.room_type_id, hotelId: hotelContext });
+    const roomType = await RoomType.findById(body.room_type_id);
     if (!roomType) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Referenced RoomType does not exist in this hotel");
     }
@@ -20,33 +21,36 @@ const assertRoomRefsInTenant = async (hotelContext, body) => {
   if (Array.isArray(body.extra_amenities) && body.extra_amenities.length > 0) {
     const Amenity = await getModel(hotelContext, "Amenity");
     const ids = [...new Set(body.extra_amenities.map((a) => a.amenity_id))];
-    const found = await Amenity.countDocuments({ _id: { $in: ids }, hotelId: hotelContext });
+    const found = await Amenity.countDocuments({ _id: { $in: ids } });
     if (found !== ids.length) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "One or more referenced amenities do not exist in this hotel");
     }
   }
 };
 
-// Uniqueness: the UNIQUE index on `hotelId + room_number` is the final guarantee (E11000 -> 409).
+// Uniqueness: the UNIQUE index on `room_number` is the final guarantee (E11000 -> 409).
 export const createRoom = asyncHandler(async (req, res) => {
   const Room = await getModel(req.hotelContext, "Room");
 
-  const existing = await Room.findOne({ hotelId: req.hotelContext, room_number: req.body.room_number });
+  const existing = await Room.findOne({ room_number: req.body.room_number });
   if (existing) {
-    throw new ApiError(HTTP_STATUS.CONFLICT, "Room with this number already exists in this hotel");
+    throw new ApiError(HTTP_STATUS.CONFLICT, "Room with this number already exists");
   }
 
   await assertRoomRefsInTenant(req.hotelContext, req.body);
 
-  const roomData = { ...req.body, hotelId: req.hotelContext };
-  const room = await Room.create(roomData);
+  if (req.body.mobile && !req.body.phone) {
+    req.body.phone = req.body.mobile;
+  }
+
+  const room = await Room.create(req.body);
   res.status(HTTP_STATUS.CREATED).json(new ApiResponse(HTTP_STATUS.CREATED, room, "Room created successfully"));
 });
 
 export const getRooms = asyncHandler(async (req, res) => {
   const Room = await getModel(req.hotelContext, "Room");
 
-  const query = { hotelId: req.hotelContext };
+  const query = {};
   const floor = asString(req.query.floor);
   if (floor) query.floor = floor;
   const roomTypeId = objectIdQuery(req.query.room_type_id, "room_type_id");
@@ -72,7 +76,7 @@ export const getRooms = asyncHandler(async (req, res) => {
 
 export const getRoomById = asyncHandler(async (req, res) => {
   const Room = await getModel(req.hotelContext, "Room");
-  const room = await Room.findOne({ _id: req.params.id, hotelId: req.hotelContext }).populate("room_type_id");
+  const room = await Room.findById(req.params.id).populate("room_type_id");
 
   if (!room) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Room not found");
@@ -86,17 +90,18 @@ export const updateRoom = asyncHandler(async (req, res) => {
 
   await assertRoomRefsInTenant(req.hotelContext, req.body);
 
-  const updateData = { ...req.body };
-  delete updateData.hotelId;
+  if (req.body.mobile && !req.body.phone) {
+    req.body.phone = req.body.mobile;
+  }
 
-  const room = await Room.findOneAndUpdate(
-    { _id: req.params.id, hotelId: req.hotelContext },
-    updateData,
-    { returnDocument: "after", runValidators: true }
-  );
+  const room = await Room.findByIdAndUpdate(req.params.id, req.body, { returnDocument: "after", runValidators: true });
 
   if (!room) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Room not found");
+  }
+
+  if (["CLEAN", "INSPECTED"].includes(room.housekeeping_status)) {
+    await resolveAlertsForRoom(req.hotelContext, room.room_number, ["HOUSEKEEPING"]);
   }
 
   res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, room, "Room updated successfully"));
@@ -105,13 +110,13 @@ export const updateRoom = asyncHandler(async (req, res) => {
 // Business rule: an OCCUPIED room cannot be removed from inventory.
 export const deleteRoom = asyncHandler(async (req, res) => {
   const Room = await getModel(req.hotelContext, "Room");
-  const room = await Room.findOne({ _id: req.params.id, hotelId: req.hotelContext });
+  const room = await Room.findById(req.params.id);
   if (!room) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Room not found");
   }
   if (room.status === "OCCUPIED") {
     throw new ApiError(HTTP_STATUS.CONFLICT, "Occupied rooms cannot be deleted");
   }
-  await Room.deleteOne({ _id: room._id, hotelId: req.hotelContext, status: { $ne: "OCCUPIED" } });
+  await Room.deleteOne({ _id: room._id, status: { $ne: "OCCUPIED" } });
   res.status(HTTP_STATUS.OK).json(new ApiResponse(HTTP_STATUS.OK, null, "Room deleted successfully"));
 });

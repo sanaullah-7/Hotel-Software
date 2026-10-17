@@ -171,11 +171,11 @@ describe("Phase 6 Step 3: Financial Integrity, Concurrency, Refunds & Guest Char
     let testPaymentId;
 
     it("verifies folio balance increases on invoice creation", async () => {
-      // Resolve folio for reservationA
+      // Create dedicated folio for guestA to test balance lifecycle from 0
       const folioRes = await request(app)
         .post("/api/v1/hotel/folios")
         .set("Authorization", `Bearer ${adminTokenA}`)
-        .send({ reservation_id: reservationA._id });
+        .send({ guest_id: guestA._id });
 
       expect(folioRes.status).toBe(201);
       testFolioId = folioRes.body.data._id;

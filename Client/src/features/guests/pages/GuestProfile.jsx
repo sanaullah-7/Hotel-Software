@@ -228,28 +228,76 @@ export default function GuestProfile() {
     }
   }, []);
 
-  const fetchGuestDocuments = useCallback(async (guestId) => {
+  const fetchGuestDocuments = useCallback(async (guestId, currentGuest = null) => {
     if (!guestId) {
       setDocuments([]);
       return;
     }
     setIsDocumentsLoading(true);
     try {
+      const activeGuest = currentGuest || guest;
       const res = await guestService.getGuestDocuments(guestId);
       const rawList = Array.isArray(res?.data) ? res.data : (Array.isArray(res) ? res : []);
-      const mapped = rawList.map((d) => ({
-        id: d._id,
-        _id: d._id,
-        formNo: d.form_no || `DOC-${String(d._id).slice(-4)}`,
-        name: d.name || d.document_type || 'Identity Proof',
-        idType: d.document_type || 'Passport',
-        idNumber: d.document_number || 'N/A',
-        room: d.room_number || '101',
-        status: d.status || 'Signed & Verified',
-        date: d.created_at ? new Date(d.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        notes: d.notes || '',
-        raw: d,
-      }));
+      
+      const mapped = rawList.map((d) => {
+        const idType = d.document_type || d.idType || 'Identity Document';
+        const isCnic = idType.toLowerCase().includes('cnic') || idType.toLowerCase().includes('national');
+        const fallbackId = isCnic
+          ? (activeGuest?.national_id || activeGuest?.nationalId || activeGuest?.cnic || 'N/A')
+          : 'N/A';
+        const idNumber = (d.document_number && d.document_number !== 'N/A')
+          ? d.document_number
+          : fallbackId;
+
+        return {
+          id: d._id || d.id,
+          _id: d._id || d.id,
+          formNo: d.form_no || `DOC-${String(d._id || d.id).slice(-4)}`,
+          name: d.name || idType,
+          idType: idType,
+          idNumber: idNumber,
+          room: d.room_number || '101',
+          status: d.status || 'Signed & Verified',
+          date: d.created_at ? new Date(d.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          notes: d.notes || '',
+          imageUrl: d.document_url || d.file_url || d.url || d.cnicImage || '',
+          raw: d,
+        };
+      });
+
+      // Synthesize Profile Picture document if guest has an avatar and no profile doc in the table
+      const avatarUrl = activeGuest?.avatar;
+      const guestName = activeGuest?.name || activeGuest?.full_name || 'Guest';
+      const guestCnic = activeGuest?.national_id || activeGuest?.nationalId || activeGuest?.cnic || 'N/A';
+
+      const hasProfileDoc = mapped.some(
+        (doc) => doc.idType?.toLowerCase().includes('profile') || (doc.imageUrl && doc.imageUrl === avatarUrl)
+      );
+
+      const isRealAvatar = Boolean(
+        avatarUrl &&
+        !avatarUrl.startsWith('blob:') &&
+        !avatarUrl.includes('ui-avatars.com') &&
+        (avatarUrl.includes('cloudinary') || avatarUrl.startsWith('http') || avatarUrl.startsWith('/api'))
+      );
+
+      if (!hasProfileDoc && isRealAvatar) {
+        mapped.unshift({
+          id: `profile-${guestId}`,
+          _id: `profile-${guestId}`,
+          formNo: `REG-${new Date().getFullYear()}-${String(guestId).slice(-3)}`,
+          name: `${guestName} Profile Picture`,
+          idType: 'Profile Picture',
+          idNumber: guestCnic,
+          room: '101',
+          status: 'Signed & Verified',
+          date: activeGuest?.created_at ? new Date(activeGuest.created_at).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          notes: 'Official guest avatar uploaded to Cloudinary',
+          imageUrl: avatarUrl,
+          raw: { document_url: avatarUrl, document_type: 'Profile Picture' },
+        });
+      }
+
       setDocuments(mapped);
     } catch (err) {
       console.error('Failed to fetch guest documents:', err);
@@ -303,7 +351,7 @@ export default function GuestProfile() {
     fetchGuestComplaints(guestId);
 
     // 3. Documents (Authoritative Backend)
-    fetchGuestDocuments(guestId);
+    fetchGuestDocuments(guestId, g);
 
     // 4. Activities (Authoritative Backend)
     fetchGuestActivities(guestId);
@@ -366,13 +414,14 @@ export default function GuestProfile() {
 
   useEffect(() => {
     fetchGuestProfile();
-  }, [id, fetchGuestProfile]);
+  }, [id]);
 
+  const guestIdKey = String(guest?._id || guest?.id || guest?.guestId || '').trim();
   useEffect(() => {
-    if (!guest) return;
+    if (!guestIdKey) return;
 
     const handleRelatedDataReload = () => {
-      loadRelatedData(guest);
+      if (guest) loadRelatedData(guest);
     };
 
     window.addEventListener(RESERVATIONS_UPDATED_EVENT, handleRelatedDataReload);
@@ -390,7 +439,7 @@ export default function GuestProfile() {
       window.removeEventListener('refunds_update', handleRelatedDataReload);
       window.removeEventListener('storage', handleRelatedDataReload);
     };
-  }, [guest, loadRelatedData]);
+  }, [guestIdKey, loadRelatedData]);
 
   // Handle Edit Guest
   const handleSaveGuest = async (updatedFields) => {
@@ -476,7 +525,7 @@ export default function GuestProfile() {
     try {
       await guestService.createGuestDocument(canonicalGuestId, newDoc);
       await Promise.all([
-        fetchGuestDocuments(canonicalGuestId),
+        fetchGuestDocuments(canonicalGuestId, guest),
         fetchGuestActivities(canonicalGuestId),
       ]);
     } catch (err) {
@@ -492,7 +541,7 @@ export default function GuestProfile() {
     try {
       await guestService.deleteGuestDocument(canonicalGuestId, docId);
       await Promise.all([
-        fetchGuestDocuments(canonicalGuestId),
+        fetchGuestDocuments(canonicalGuestId, guest),
         fetchGuestActivities(canonicalGuestId),
       ]);
     } catch (err) {
@@ -503,16 +552,26 @@ export default function GuestProfile() {
 
   // Financial totals (authoritative from backend invoice balances)
   const totalInvoiced = useMemo(
-    () => invoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0),
-    [invoices]
+    () => {
+      if (invoices.length > 0) {
+        return invoices.reduce((sum, inv) => sum + (Number(inv.totalAmount) || 0), 0);
+      }
+      return reservations.reduce((sum, res) => sum + (Number(res.dues ?? res.folio_balance ?? 0)), 0);
+    },
+    [invoices, reservations]
   );
   const totalPaid = useMemo(
     () => invoices.reduce((sum, inv) => sum + (Number(inv.amountPaid ?? inv.effectivePaid ?? 0)), 0),
     [invoices]
   );
   const totalDues = useMemo(
-    () => invoices.reduce((sum, inv) => sum + (Number(inv.balanceDue ?? inv.effectiveDue ?? 0)), 0),
-    [invoices]
+    () => {
+      if (invoices.length > 0) {
+        return invoices.reduce((sum, inv) => sum + (Number(inv.balanceDue ?? inv.effectiveDue ?? 0)), 0);
+      }
+      return reservations.reduce((sum, res) => sum + (Number(res.dues ?? res.folio_balance ?? 0)), 0);
+    },
+    [invoices, reservations]
   );
 
   const currentStay = reservations[0] || null;
@@ -735,6 +794,9 @@ export default function GuestProfile() {
           <InvoicesTab
             guest={guest}
             invoices={invoices}
+            charges={charges}
+            payments={payments}
+            reservations={reservations}
             totalInvoiced={totalInvoiced}
             totalPaid={totalPaid}
             totalDues={totalDues}

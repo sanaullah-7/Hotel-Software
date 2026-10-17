@@ -21,6 +21,7 @@ import {
   getCategories, subscribeCategories,
   getMenuItems, subscribeMenuItems,
   addMenuItem, updateMenuItem, deleteMenuItem, toggleMenuItemAvailability,
+  addCategory,
 } from '../restaurantStore';
 import MenuItemModal from '../components/MenuItemModal';
 import ViewItemModal from '../components/ViewItemModal';
@@ -95,6 +96,83 @@ function DeleteConfirmModal({ item, onConfirm, onCancel }) {
   );
 }
 
+function AddCategoryModal({ isOpen, onClose, onSave }) {
+  const [name, setName] = useState('');
+  const [desc, setDesc] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      setError('Category name is required');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      await onSave({ name: name.trim(), description: desc.trim() });
+      setName('');
+      setDesc('');
+      onClose();
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Failed to create category');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 animate-fade-in">
+        <h3 className="text-[15px] font-bold text-gray-900 mb-3">Add Menu Category</h3>
+        {error && <p className="text-[11px] text-red-500 mb-2">⚠ {error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div>
+            <label className="text-[11px] text-gray-500 font-semibold block mb-1">Category Name *</label>
+            <input
+              type="text"
+              placeholder="e.g. Seafood, Mocktails, BBQ"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs outline-none focus:border-[var(--primary-main)]"
+            />
+          </div>
+          <div>
+            <label className="text-[11px] text-gray-500 font-semibold block mb-1">Description (Optional)</label>
+            <input
+              type="text"
+              placeholder="Brief description"
+              value={desc}
+              onChange={e => setDesc(e.target.value)}
+              className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-xs outline-none focus:border-[var(--primary-main)]"
+            />
+          </div>
+          <div className="flex gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-600 hover:bg-gray-50 cursor-pointer"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-1.5 rounded-lg bg-[var(--primary-main)] text-white text-xs font-semibold hover:brightness-110 cursor-pointer disabled:opacity-50"
+            >
+              {loading ? 'Creating...' : 'Create'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 const ROWS_PER_PAGE_OPTIONS = [5, 10, 25, 100];
 
 /* ══════════════════════════════════════════════════════════
@@ -133,6 +211,9 @@ export default function MenuTab() {
 
   // View item state
   const [viewItem, setViewItem] = useState(null);
+
+  // Category modal state
+  const [catModalOpen, setCatModalOpen] = useState(false);
 
   // Subscribe to store changes
   useEffect(() => {
@@ -190,11 +271,11 @@ export default function MenuTab() {
   };
 
   // ── CRUD handlers ─────────────────────────────────────────
-  const handleSave = (data) => {
+  const handleSave = async (data) => {
     if (editingItem) {
-      updateMenuItem(editingItem.id, data);
+      await updateMenuItem(editingItem.id, data);
     } else {
-      addMenuItem(data);
+      await addMenuItem(data);
     }
     setEditingItem(null);
   };
@@ -204,15 +285,25 @@ export default function MenuTab() {
     setModalOpen(true);
   };
 
-  const handleDeleteConfirm = (id) => {
-    deleteMenuItem(id);
-    setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
-    setDeleteTarget(null);
+  const handleDeleteConfirm = async (id) => {
+    try {
+      await deleteMenuItem(id);
+      setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; });
+      setDeleteTarget(null);
+    } catch (err) {
+      console.error('Failed to delete menu item:', err);
+    }
   };
 
-  const handleBulkDelete = () => {
-    [...selectedIds].forEach(id => deleteMenuItem(id));
+  const handleBulkDelete = async () => {
+    for (const id of selectedIds) {
+      try { await deleteMenuItem(id); } catch(e){}
+    }
     setSelectedIds(new Set());
+  };
+
+  const handleSaveCategory = async (catData) => {
+    await addCategory(catData);
   };
 
   // ── CSV Export ────────────────────────────────────────────
@@ -387,6 +478,13 @@ export default function MenuTab() {
               {cat.label || cat.name}
             </button>
           ))}
+          <button
+            onClick={() => setCatModalOpen(true)}
+            title="Create New Menu Category"
+            className="px-2.5 py-0.5 rounded-md text-[11px] font-bold text-[var(--primary-main)] bg-[var(--primary-main)]/10 hover:bg-[var(--primary-main)]/20 transition-colors cursor-pointer whitespace-nowrap shrink-0 border border-[var(--primary-main)]/20"
+          >
+            + Add Category
+          </button>
         </div>
 
         {/* ── Table ───────────────────────────────────────── */}
@@ -615,6 +713,12 @@ export default function MenuTab() {
         item={viewItem}
         onClose={() => setViewItem(null)}
         onEdit={(item) => { setEditingItem(item); setModalOpen(true); }}
+      />
+
+      <AddCategoryModal
+        isOpen={catModalOpen}
+        onClose={() => setCatModalOpen(false)}
+        onSave={handleSaveCategory}
       />
 
       <Popover

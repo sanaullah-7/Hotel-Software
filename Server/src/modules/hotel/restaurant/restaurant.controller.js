@@ -158,6 +158,17 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
   );
 });
 
+export const updateOrder = asyncHandler(async (req, res) => {
+  const result = await restaurantService.updateOrder(
+    req.hotelContext,
+    req.params.id,
+    req.body
+  );
+  res.status(HTTP_STATUS.OK).json(
+    new ApiResponse(HTTP_STATUS.OK, result, "Restaurant order updated successfully")
+  );
+});
+
 export const deleteOrder = asyncHandler(async (req, res) => {
   const result = await restaurantService.deleteOrder(req.hotelContext, req.params.id);
   res.status(HTTP_STATUS.OK).json(

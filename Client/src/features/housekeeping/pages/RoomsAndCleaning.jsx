@@ -5,7 +5,8 @@ import {
   Search, AddCircleOutlined,
   TableChart, PictureAsPdf, Close, EditOutlined, DeleteOutlined,
   MeetingRoomOutlined, CleaningServicesOutlined, 
-  EventOutlined, AccessTimeOutlined, PersonOutlined, FlagOutlined
+  EventOutlined, AccessTimeOutlined, PersonOutlined, FlagOutlined,
+  PersonAddOutlined
 } from '@mui/icons-material';
 import { saveRooms } from './hkStore';
 import opsService from '../../../services/opsService';
@@ -97,8 +98,8 @@ export default function RoomsAndCleaning() {
   
   // Form State
   const [form, setForm] = useState({
-    roomNo: '', guestName: '', scheduledDate: '', scheduledTime: '',
-    assignedStaff: '', completionTime: '', cleaningStatus: 'Scheduled',
+    roomNo: '', roomId: '', guestName: '', scheduledDate: '', scheduledTime: '',
+    assignedStaff: '', employeeId: '', completionTime: '', cleaningStatus: 'Scheduled',
     priority: 'Standard', notes: '', cleaningType: 'Full Clean'
   });
 
@@ -116,12 +117,12 @@ export default function RoomsAndCleaning() {
     try {
       // Parallel fetch tasks, rooms, and employees
       const [tasksRes, roomsRes, employeesRes] = await Promise.all([
-        opsService.getHousekeepingTasks({ limit: 100 }),
-        roomService.getRooms({ limit: 100 }).catch(err => {
+        opsService.getHousekeepingTasks({ limit: 150 }),
+        roomService.getRooms({ limit: 150 }).catch(err => {
           console.warn('[RoomCleaning] Failed to fetch rooms:', err);
           return { data: [] };
         }),
-        opsService.getEmployees({ limit: 100 }).catch(err => {
+        opsService.getEmployees({ limit: 150 }).catch(err => {
           console.warn('[RoomCleaning] Failed to fetch employees:', err);
           return { data: [] };
         })
@@ -143,10 +144,45 @@ export default function RoomsAndCleaning() {
       setEmployees(loadedEmployees);
 
       const frontendRecords = toFrontendTaskList(loadedTasks, loadedRooms, loadedEmployees);
-      setRecords(frontendRecords);
+
+      // Ingest unassigned Dirty rooms so all rooms needing cleaning immediately show up!
+      const activeTaskRoomIds = new Set(
+        loadedTasks
+          .filter(t => !t.is_deleted && t.status !== 'CANCELLED' && t.status !== 'VERIFIED')
+          .map(t => String(t.room_id?._id || t.room_id))
+      );
+
+      const dirtyRoomsWithoutTask = loadedRooms.filter(r => {
+        const hkStatus = (r.housekeeping_status || '').toUpperCase();
+        return hkStatus === 'DIRTY' && !activeTaskRoomIds.has(String(r._id));
+      });
+
+      const dirtyVirtualRecords = dirtyRoomsWithoutTask.map(r => ({
+        id: `dirty_${r._id}`,
+        _id: `dirty_${r._id}`,
+        roomId: r._id,
+        roomNo: String(r.room_number || ''),
+        guestName: '',
+        cleaningStatus: 'Dirty',
+        status: 'Dirty',
+        priority: 'High',
+        cleaningType: 'Full Clean',
+        assignedStaff: '',
+        employeeId: '',
+        scheduledDate: new Date().toISOString().split('T')[0],
+        scheduledTime: '09:00',
+        completionTime: '',
+        notes: 'Room marked dirty - needs cleaning',
+        lastCleanedDate: '-',
+        floor: r.floor || (r.room_number ? String(r.room_number)[0] : '1'),
+        isUnassignedDirtyRoom: true
+      }));
+
+      const combinedRecords = [...dirtyVirtualRecords, ...frontendRecords];
+      setRecords(combinedRecords);
 
       // Downstream bridge sync for Cleaning Schedule
-      syncCleaningScheduleBridge(frontendRecords);
+      syncCleaningScheduleBridge(combinedRecords);
     } catch (err) {
       console.error('[RoomCleaning] Load error:', err);
       setError(err?.response?.data?.message || err?.message || 'Failed to load housekeeping tasks');
@@ -157,6 +193,9 @@ export default function RoomsAndCleaning() {
 
   useEffect(() => {
     loadData();
+    const handleHkUpdate = () => loadData();
+    window.addEventListener('hk_update', handleHkUpdate);
+    return () => window.removeEventListener('hk_update', handleHkUpdate);
   }, [loadData]);
 
   const handleRefresh = () => {
@@ -169,6 +208,12 @@ export default function RoomsAndCleaning() {
       'Last Cleaned': true, Actions: true
     });
   };
+
+  const dirtyRoomsCount = records.filter(r => 
+    r.cleaningStatus === 'Dirty' || 
+    r.status === 'Dirty' || 
+    (r.rawBackend?.status === 'PENDING' && !r.assignedStaff)
+  ).length;
 
   const filteredRecords = records.filter(r => 
     (r.roomNo || '').toLowerCase().includes(search.toLowerCase()) ||
@@ -264,10 +309,20 @@ export default function RoomsAndCleaning() {
     setEditingId(null);
     setFormError(null);
     const todayDate = new Date().toISOString().split('T')[0];
+    const firstDirtyRoom = rooms.find(r => (r.housekeeping_status || '').toUpperCase() === 'DIRTY');
     setForm({
-      roomNo: '', guestName: '', scheduledDate: todayDate, scheduledTime: '09:00',
-      assignedStaff: '', completionTime: '', cleaningStatus: 'Scheduled',
-      priority: 'Standard', notes: '', cleaningType: 'Full Clean'
+      roomNo: firstDirtyRoom ? String(firstDirtyRoom.room_number) : '',
+      roomId: firstDirtyRoom ? firstDirtyRoom._id : '',
+      guestName: '',
+      scheduledDate: todayDate,
+      scheduledTime: '09:00',
+      assignedStaff: '',
+      employeeId: '',
+      completionTime: '',
+      cleaningStatus: 'Scheduled',
+      priority: firstDirtyRoom ? 'High' : 'Standard',
+      notes: '',
+      cleaningType: 'Full Clean'
     });
     setIsModalOpen(true);
   };
@@ -275,17 +330,24 @@ export default function RoomsAndCleaning() {
   const openEditModal = (record) => {
     setEditingId(record.id);
     setFormError(null);
+    const matchedEmp = employees.find(e => 
+      (record.employeeId && e._id === record.employeeId) || 
+      `${e.first_name || ''} ${e.last_name || ''}`.trim().toLowerCase() === (record.assignedStaff || '').trim().toLowerCase()
+    );
+
     setForm({
-      roomNo: record.roomNo,
-      guestName: record.guestName,
-      scheduledDate: record.scheduledDate,
-      scheduledTime: record.scheduledTime,
-      assignedStaff: record.assignedStaff,
-      completionTime: record.completionTime,
-      cleaningStatus: record.cleaningStatus,
-      priority: record.priority,
-      notes: record.notes,
-      cleaningType: record.cleaningType
+      roomNo: record.roomNo || '',
+      roomId: record.roomId || '',
+      guestName: record.guestName && record.guestName !== '-' && record.guestName !== 'Vacant' ? record.guestName : '',
+      scheduledDate: record.scheduledDate || new Date().toISOString().split('T')[0],
+      scheduledTime: record.scheduledTime || '09:00',
+      assignedStaff: record.assignedStaff || '',
+      employeeId: matchedEmp ? matchedEmp._id : (record.employeeId || ''),
+      completionTime: record.completionTime || '',
+      cleaningStatus: record.cleaningStatus === 'Dirty' ? 'Scheduled' : (record.cleaningStatus || 'Scheduled'),
+      priority: record.priority || 'Standard',
+      notes: record.notes && record.notes !== 'Room marked dirty - needs cleaning' ? record.notes : '',
+      cleaningType: record.cleaningType || 'Full Clean'
     });
     setIsModalOpen(true);
   };
@@ -296,7 +358,8 @@ export default function RoomsAndCleaning() {
     setSubmitting(true);
 
     try {
-      const existing = editingId ? records.find(r => r.id === editingId) : null;
+      const isVirtualDirty = editingId && String(editingId).startsWith('dirty_');
+      const existing = (!isVirtualDirty && editingId) ? records.find(r => r.id === editingId) : null;
       const payload = toBackendTaskPayload(form, {
         rooms,
         employees,
@@ -304,7 +367,7 @@ export default function RoomsAndCleaning() {
       });
 
       let updatedTask;
-      if (editingId) {
+      if (editingId && !isVirtualDirty) {
         const res = await opsService.updateHousekeepingTask(editingId, payload);
         updatedTask = res.data;
         const frontendRecord = toFrontendTask(updatedTask, 
@@ -326,13 +389,16 @@ export default function RoomsAndCleaning() {
         );
 
         setRecords(prev => {
-          const next = [frontendRecord, ...prev];
+          const filtered = isVirtualDirty ? prev.filter(r => r.id !== editingId) : prev;
+          const next = [frontendRecord, ...filtered];
           syncCleaningScheduleBridge(next);
           return next;
         });
       }
 
       setIsModalOpen(false);
+      // Background loadData sync
+      loadData();
     } catch (err) {
       console.error('[RoomCleaning] Save error:', err);
       setFormError(err?.response?.data?.message || err?.message || 'Failed to save housekeeping task');
@@ -350,12 +416,20 @@ export default function RoomsAndCleaning() {
     if (!recordToDelete) return;
     setSubmitting(true);
     try {
-      await opsService.deleteHousekeepingTask(recordToDelete.id);
-      setRecords(prev => {
-        const next = prev.filter(r => r.id !== recordToDelete.id);
-        syncCleaningScheduleBridge(next);
-        return next;
-      });
+      if (String(recordToDelete.id).startsWith('dirty_')) {
+        setRecords(prev => {
+          const next = prev.filter(r => r.id !== recordToDelete.id);
+          syncCleaningScheduleBridge(next);
+          return next;
+        });
+      } else {
+        await opsService.deleteHousekeepingTask(recordToDelete.id);
+        setRecords(prev => {
+          const next = prev.filter(r => r.id !== recordToDelete.id);
+          syncCleaningScheduleBridge(next);
+          return next;
+        });
+      }
       setIsDeleteModalOpen(false);
       setRecordToDelete(null);
     } catch (err) {
@@ -391,6 +465,12 @@ export default function RoomsAndCleaning() {
         <div className="p-2 sm:p-2.5 flex flex-wrap items-center justify-between gap-2 border-b border-gray-100">
           <div className="flex items-center gap-2.5">
             <h1 className="text-sm font-bold text-gray-800 whitespace-nowrap">Room Cleaning</h1>
+            {dirtyRoomsCount > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                {dirtyRoomsCount} {dirtyRoomsCount === 1 ? 'Room Dirty' : 'Rooms Dirty'}
+              </span>
+            )}
             <div className="relative">
               <input 
                 type="text" 
@@ -473,7 +553,13 @@ export default function RoomsAndCleaning() {
                   className="hover:bg-slate-50/60 transition-colors cursor-pointer border-b border-gray-50"
                 >
                   <td className="py-1.5 px-1.5 text-[11px] font-bold text-gray-900 whitespace-nowrap">{record.roomNo}</td>
-                  <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-800 truncate" title={record.guestName}>{record.guestName || '-'}</td>
+                  <td className="py-1.5 px-1.5 text-[11px] font-semibold text-gray-800 truncate" title={record.guestName}>
+                    {record.guestName && record.guestName !== '-' && record.guestName !== 'Vacant' ? (
+                      record.guestName
+                    ) : (
+                      <span className="text-gray-400 font-normal italic">Vacant</span>
+                    )}
+                  </td>
                   <td className="py-1.5 px-1.5 text-[11px] text-gray-600 whitespace-nowrap">{record.cleaningType}</td>
                   
                   <td className="py-1.5 px-1.5 whitespace-nowrap">
@@ -488,7 +574,21 @@ export default function RoomsAndCleaning() {
                     </span>
                   </td>
 
-                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 truncate" title={record.assignedStaff}>{record.assignedStaff || '-'}</td>
+                  <td className="py-1.5 px-1.5 text-[11px] text-gray-600 truncate" title={record.assignedStaff}>
+                    {record.assignedStaff ? (
+                      <span className="font-medium text-gray-800">{record.assignedStaff}</span>
+                    ) : (
+                      <button 
+                        type="button" 
+                        onClick={(e) => { e.stopPropagation(); openEditModal(record); }} 
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded transition-colors cursor-pointer"
+                        title="Assign staff to clean this room"
+                      >
+                        <PersonAddOutlined sx={{ fontSize: 13 }} />
+                        <span>Assign Staff</span>
+                      </button>
+                    )}
+                  </td>
                   <td className="py-1.5 px-1.5 text-[10.5px] text-gray-600 whitespace-nowrap">{record.completionTime || '-'}</td>
                   <td className="py-1.5 px-1.5 text-[10.5px] text-gray-500 italic truncate" title={record.notes}>{record.notes || '-'}</td>
                   
@@ -542,7 +642,11 @@ export default function RoomsAndCleaning() {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-[580px] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="bg-[#1b7f43] px-4 py-2.5 flex items-center justify-between text-white">
               <h2 className="text-sm font-bold">
-                {editingId ? `Edit Room #${form.roomNo}` : 'New Room Cleaning Record'}
+                {editingId 
+                  ? (String(editingId).startsWith('dirty_') 
+                      ? `Assign Staff & Clean Room #${form.roomNo}` 
+                      : `Edit Room #${form.roomNo}`) 
+                  : 'New Room Cleaning Record'}
               </h2>
               <button disabled={submitting} onClick={() => setIsModalOpen(false)} className="text-white/80 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors cursor-pointer flex items-center justify-center">
                 <Close sx={{ fontSize: 17 }} />
@@ -557,18 +661,46 @@ export default function RoomsAndCleaning() {
               )}
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="relative">
+                  <TextField 
+                    required 
+                    label="Room No*" 
+                    name="roomNo" 
+                    value={form.roomNo} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const matched = rooms.find(r => String(r.room_number) === String(val) || String(r._id) === String(val));
+                      setForm({
+                        ...form,
+                        roomNo: matched ? String(matched.room_number) : val,
+                        roomId: matched ? matched._id : form.roomId
+                      });
+                    }} 
+                    sx={muiInputSx} 
+                    size="small" 
+                    fullWidth 
+                    helperText={rooms.length > 0 && !rooms.some(r => String(r.room_number) === String(form.roomNo)) && form.roomNo ? "Room must match existing hotel room" : ""}
+                    inputProps={{ list: 'room-numbers-list' }}
+                  />
+                  <datalist id="room-numbers-list">
+                    {rooms.map(r => (
+                      <option key={r._id} value={r.room_number}>
+                        Room {r.room_number} (Floor {r.floor || '1'}{(r.housekeeping_status || '').toUpperCase() === 'DIRTY' ? ' - DIRTY' : ''})
+                      </option>
+                    ))}
+                  </datalist>
+                </div>
                 <TextField 
-                  required 
-                  label="Room No*" 
-                  name="roomNo" 
-                  value={form.roomNo} 
-                  onChange={(e)=>setForm({...form, roomNo: e.target.value})} 
+                  label="Guest Name" 
+                  name="guestName" 
+                  value={form.guestName} 
+                  onChange={(e)=>setForm({...form, guestName: e.target.value})} 
                   sx={muiInputSx} 
                   size="small" 
                   fullWidth 
-                  helperText={rooms.length > 0 && !rooms.some(r => String(r.room_number) === String(form.roomNo)) && form.roomNo ? "Room must match existing hotel room" : ""}
+                  placeholder="Optional (e.g. Vacant or in-house guest)" 
+                  inputProps={{ 'aria-label': 'Guest Name*' }}
                 />
-                <TextField required label="Guest Name*" name="guestName" value={form.guestName} onChange={(e)=>setForm({...form, guestName: e.target.value})} sx={muiInputSx} size="small" fullWidth />
                 
                 <TextField
                   required
@@ -596,7 +728,46 @@ export default function RoomsAndCleaning() {
                   InputLabelProps={{ shrink: true }}
                 />
 
-                <TextField label="Assigned Staff" name="assignedStaff" value={form.assignedStaff} onChange={(e)=>setForm({...form, assignedStaff: e.target.value})} sx={muiInputSx} size="small" fullWidth />
+                <FormControl size="small" fullWidth sx={muiInputSx}>
+                  <InputLabel id="assigned-staff-select-label">Assigned Staff</InputLabel>
+                  <Select
+                    labelId="assigned-staff-select-label"
+                    id="assigned-staff-select"
+                    label="Assigned Staff"
+                    name="assignedStaff"
+                    value={form.employeeId || (employees.find(e => `${e.first_name || ''} ${e.last_name || ''}`.trim().toLowerCase() === (form.assignedStaff || '').trim().toLowerCase())?._id || '')}
+                    onChange={(e) => {
+                      const empId = e.target.value;
+                      const emp = employees.find(x => x._id === empId || `${x.first_name || ''} ${x.last_name || ''}`.trim().toLowerCase() === String(empId).trim().toLowerCase());
+                      const name = emp ? `${emp.first_name || ''} ${emp.last_name || ''}`.trim() : (empId || '');
+                      setForm(prev => ({
+                        ...prev,
+                        employeeId: emp ? emp._id : '',
+                        assignedStaff: name
+                      }));
+                    }}
+                  >
+                    <MenuItem value="">
+                      <span className="text-gray-400 italic font-normal">-- Select Staff (or Unassigned) --</span>
+                    </MenuItem>
+                    {employees.map(emp => {
+                      const empName = `${emp.first_name || ''} ${emp.last_name || ''}`.trim() || emp.employee_ref || 'Staff';
+                      const dept = emp.department_id?.name || emp.department || '';
+                      return (
+                        <MenuItem key={emp._id} value={emp._id}>
+                          <div className="flex items-center justify-between w-full">
+                            <span className="font-medium text-gray-800">{empName}</span>
+                            {dept && (
+                              <span className="text-[10px] text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded font-medium border border-emerald-100 ml-2">
+                                {dept}
+                              </span>
+                            )}
+                          </div>
+                        </MenuItem>
+                      );
+                    })}
+                  </Select>
+                </FormControl>
                 <TextField type="time" label="Completion Time" name="completionTime" value={form.completionTime} onChange={(e)=>setForm({...form, completionTime: e.target.value})} sx={muiInputSx} size="small" fullWidth InputLabelProps={{ shrink: true }} />
 
                 <FormControl size="small" fullWidth sx={muiInputSx}>
@@ -774,6 +945,19 @@ export default function RoomsAndCleaning() {
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${priorityStyles[viewRecord.priority] || 'bg-blue-50 text-blue-600'}`}>
                       {viewRecord.priority}
                     </span>
+                  </div>
+                </div>
+
+                {/* Guest */}
+                <div className="bg-slate-50 rounded-lg p-2.5 border border-gray-100 flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-md bg-[#e5f4eb] flex items-center justify-center text-[#1b7f43]">
+                    <PersonOutlined sx={{ fontSize: 16 }} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Guest</p>
+                    <p className="text-xs font-bold text-gray-800">
+                      {viewRecord.guestName && viewRecord.guestName !== '-' && viewRecord.guestName !== 'Vacant' ? viewRecord.guestName : 'Vacant'}
+                    </p>
                   </div>
                 </div>
               </div>

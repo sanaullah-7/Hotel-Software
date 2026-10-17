@@ -10,11 +10,11 @@ const generateFolioRef = () => {
   return `FOL-${Date.now().toString().slice(-6)}${randHex}`;
 };
 
-export const createFolio = async (hotelContext, folioData) => {
-  const Guest = await getModel(hotelContext, "Guest");
-  const Reservation = await getModel(hotelContext, "Reservation");
-  const Stay = await getModel(hotelContext, "Stay");
-  const Folio = await getModel(hotelContext, "Folio");
+export const createFolio = async (tenantConn, folioData) => {
+  const Guest = await getModel(tenantConn, "Guest");
+  const Reservation = await getModel(tenantConn, "Reservation");
+  const Stay = await getModel(tenantConn, "Stay");
+  const Folio = await getModel(tenantConn, "Folio");
 
   const { guest_id, reservation_id, stay_id, currency = "PKR" } = folioData;
 
@@ -27,13 +27,13 @@ export const createFolio = async (hotelContext, folioData) => {
     if (!mongoose.Types.ObjectId.isValid(reservation_id)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Reservation ID format");
     }
-    reservation = await Reservation.findOne({ _id: reservation_id, hotelId: hotelContext });
+    reservation = await Reservation.findById(reservation_id);
     if (!reservation) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, "Reservation not found in this hotel");
     }
 
     // Idempotency check: if an open folio already exists for this reservation, return it
-    const existingFolio = await Folio.findOne({ hotelId: hotelContext, reservation_id: reservation._id, status: "OPEN" })
+    const existingFolio = await Folio.findOne({ reservation_id: reservation._id, status: "OPEN" })
       .populate("guest_id", "first_name last_name email phone guest_ref")
       .populate("reservation_id", "booking_ref status expected_check_in expected_check_out primary_guest_id")
       .populate("stay_id", "stay_ref status");
@@ -51,7 +51,7 @@ export const createFolio = async (hotelContext, folioData) => {
     if (!mongoose.Types.ObjectId.isValid(stay_id)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Stay ID format");
     }
-    stay = await Stay.findOne({ _id: stay_id, hotelId: hotelContext });
+    stay = await Stay.findById(stay_id);
     if (!stay) {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, "Stay not found in this hotel");
     }
@@ -63,7 +63,7 @@ export const createFolio = async (hotelContext, folioData) => {
   if (!resolvedGuestId || !mongoose.Types.ObjectId.isValid(resolvedGuestId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Guest ID format");
   }
-  const guest = await Guest.findOne({ _id: resolvedGuestId, hotelId: hotelContext });
+  const guest = await Guest.findById(resolvedGuestId);
   if (!guest) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Guest not found in this hotel");
   }
@@ -72,7 +72,6 @@ export const createFolio = async (hotelContext, folioData) => {
 
   try {
     const folio = await Folio.create({
-      hotelId: hotelContext,
       folio_ref,
       guest_id: guest._id,
       reservation_id: reservation ? reservation._id : null,
@@ -82,13 +81,13 @@ export const createFolio = async (hotelContext, folioData) => {
       currency,
     });
 
-    return await Folio.findOne({ _id: folio._id, hotelId: hotelContext })
+    return await Folio.findById(folio._id)
       .populate("guest_id", "first_name last_name email phone guest_ref")
       .populate("reservation_id", "booking_ref status expected_check_in expected_check_out primary_guest_id")
       .populate("stay_id", "stay_ref status");
   } catch (err) {
     if (err.code === 11000 && reservation?._id) {
-      const existingFolio = await Folio.findOne({ hotelId: hotelContext, reservation_id: reservation._id, status: "OPEN" })
+      const existingFolio = await Folio.findOne({ reservation_id: reservation._id, status: "OPEN" })
         .populate("guest_id", "first_name last_name email phone guest_ref")
         .populate("reservation_id", "booking_ref status expected_check_in expected_check_out primary_guest_id")
         .populate("stay_id", "stay_ref status");
@@ -100,19 +99,19 @@ export const createFolio = async (hotelContext, folioData) => {
   }
 };
 
-export const getOrCreateFolioForReservation = async (hotelContext, reservationId, options = {}) => {
+export const getOrCreateFolioForReservation = async (tenantConn, reservationId, options = {}) => {
   if (!mongoose.Types.ObjectId.isValid(reservationId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Reservation ID format");
   }
-  const Reservation = await getModel(hotelContext, "Reservation");
-  const Folio = await getModel(hotelContext, "Folio");
+  const Reservation = await getModel(tenantConn, "Reservation");
+  const Folio = await getModel(tenantConn, "Folio");
 
-  const reservation = await Reservation.findOne({ _id: reservationId, hotelId: hotelContext });
+  const reservation = await Reservation.findById(reservationId);
   if (!reservation) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Reservation not found in this hotel");
   }
 
-  let folio = await Folio.findOne({ hotelId: hotelContext, reservation_id: reservation._id, status: "OPEN" })
+  let folio = await Folio.findOne({ reservation_id: reservation._id, status: "OPEN" })
     .populate("guest_id", "first_name last_name email phone guest_ref")
     .populate("reservation_id", "booking_ref status expected_check_in expected_check_out primary_guest_id")
     .populate("stay_id", "stay_ref status");
@@ -121,7 +120,6 @@ export const getOrCreateFolioForReservation = async (hotelContext, reservationId
     const folio_ref = generateFolioRef();
     try {
       const created = await Folio.create({
-        hotelId: hotelContext,
         folio_ref,
         guest_id: reservation.primary_guest_id,
         reservation_id: reservation._id,
@@ -131,13 +129,13 @@ export const getOrCreateFolioForReservation = async (hotelContext, reservationId
         currency: options.currency || "PKR",
       });
 
-      folio = await Folio.findOne({ _id: created._id, hotelId: hotelContext })
+      folio = await Folio.findById(created._id)
         .populate("guest_id", "first_name last_name email phone guest_ref")
         .populate("reservation_id", "booking_ref status expected_check_in expected_check_out primary_guest_id")
         .populate("stay_id", "stay_ref status");
     } catch (err) {
       if (err.code === 11000) {
-        folio = await Folio.findOne({ hotelId: hotelContext, reservation_id: reservation._id, status: "OPEN" })
+        folio = await Folio.findOne({ reservation_id: reservation._id, status: "OPEN" })
           .populate("guest_id", "first_name last_name email phone guest_ref")
           .populate("reservation_id", "booking_ref status expected_check_in expected_check_out primary_guest_id")
           .populate("stay_id", "stay_ref status");
@@ -152,10 +150,10 @@ export const getOrCreateFolioForReservation = async (hotelContext, reservationId
   return folio;
 };
 
-export const getFolios = async (hotelContext, query = {}) => {
-  const Folio = await getModel(hotelContext, "Folio");
+export const getFolios = async (tenantConn, query = {}) => {
+  const Folio = await getModel(tenantConn, "Folio");
 
-  const filter = { hotelId: hotelContext };
+  const filter = {};
   const guestId = asString(query.guest_id);
   if (guestId) {
     if (!mongoose.Types.ObjectId.isValid(guestId)) {
@@ -195,13 +193,13 @@ export const getFolios = async (hotelContext, query = {}) => {
   };
 };
 
-export const getFolioById = async (hotelContext, folioId) => {
+export const getFolioById = async (tenantConn, folioId) => {
   if (!mongoose.Types.ObjectId.isValid(folioId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Folio ID format");
   }
 
-  const Folio = await getModel(hotelContext, "Folio");
-  const folio = await Folio.findOne({ _id: folioId, hotelId: hotelContext })
+  const Folio = await getModel(tenantConn, "Folio");
+  const folio = await Folio.findById(folioId)
     .populate("guest_id", "first_name last_name email phone guest_ref")
     .populate("reservation_id", "booking_ref status expected_check_in expected_check_out primary_guest_id")
     .populate("stay_id", "stay_ref status");
@@ -213,28 +211,27 @@ export const getFolioById = async (hotelContext, folioId) => {
   return folio;
 };
 
-export const recalculateFolioBalance = async (hotelContext, folioId) => {
+export const recalculateFolioBalance = async (tenantConn, folioId) => {
   if (!mongoose.Types.ObjectId.isValid(folioId)) {
     throw new ApiError(HTTP_STATUS.BAD_REQUEST, "Invalid Folio ID format");
   }
 
-  const Folio = await getModel(hotelContext, "Folio");
-  const Invoice = await getModel(hotelContext, "Invoice");
-  const Payment = await getModel(hotelContext, "Payment");
+  const Folio = await getModel(tenantConn, "Folio");
+  const Invoice = await getModel(tenantConn, "Invoice");
+  const Payment = await getModel(tenantConn, "Payment");
 
-  const folio = await Folio.findOne({ _id: folioId, hotelId: hotelContext });
+  const folio = await Folio.findById(folioId);
   if (!folio) {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, "Folio not found");
   }
 
-  const invoices = await Invoice.find({ hotelId: hotelContext, folio_id: folio._id, status: { $ne: "VOIDED" } });
+  const invoices = await Invoice.find({ folio_id: folio._id, status: { $ne: "VOIDED" } });
   const totalOutstanding = invoices.reduce(
     (sum, inv) => sum + Math.max(0, Number(inv.total_amount || 0) - Number(inv.amount_paid || 0)),
     0
   );
 
   const unallocatedPayments = await Payment.find({
-    hotelId: hotelContext,
     folio_id: folio._id,
     invoice_id: null,
     status: "COMPLETED",

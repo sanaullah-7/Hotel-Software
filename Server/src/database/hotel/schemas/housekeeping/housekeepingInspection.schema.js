@@ -2,11 +2,6 @@ import mongoose from 'mongoose';
 
 const housekeepingInspectionSchema = new mongoose.Schema(
   {
-    hotelId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Hotel',
-      required: true,
-    },
     task_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'HousekeepingTask',

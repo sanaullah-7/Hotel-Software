@@ -11,7 +11,6 @@ import roomService from '../../../services/roomService';
 import { toFrontendRoom, toBackendRoomPayload, toFrontendRoomType } from '../adapters/roomAdapter';
 import { syncRoomsFromBackend, getRooms as getCachedRooms, ROOM_UPDATED_EVENT } from '../state/roomStore';
 import RoomInventoryModal from '../../inventory/pages/components/RoomInventoryModal';
-import { getInventoryItems } from '../../inventory/pages/inventoryStore';
 import SearchInput from '../../../components/common/SearchInput';
 
 export default function Rooms() {
@@ -127,6 +126,7 @@ export default function Rooms() {
       floor: room.floor || '1',
       status: room.status || 'Open',
       housekeepingStatus: room.housekeepingStatus || 'Clean',
+      mobile: room.mobile || '',
     });
     setIsModalOpen(true);
   };
@@ -740,7 +740,6 @@ export default function Rooms() {
         open={Boolean(selectedRoomForStock)}
         onClose={() => setSelectedRoomForStock(null)}
         roomNumber={selectedRoomForStock}
-        inventoryItems={getInventoryItems()}
       />
 
     </div>

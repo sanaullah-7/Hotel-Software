@@ -61,15 +61,19 @@ export const createRoomSchema = Joi.object({
   room_number: Joi.string().trim().max(20).required(),
   room_type_id: objectId().required(),
   floor: Joi.string().trim().max(20).allow(''),
+  phone: Joi.string().trim().max(30).allow('', null),
+  mobile: Joi.string().trim().max(30).allow('', null),
   status: Joi.string().valid('AVAILABLE', 'OCCUPIED', 'MAINTENANCE', 'CLEANING', 'OUT_OF_ORDER'),
-  housekeeping_status: Joi.string().valid('CLEAN', 'DIRTY', 'INSPECTED'),
+  housekeeping_status: Joi.string().valid('CLEAN', 'DIRTY', 'INSPECTED', 'INSPECTING', 'CLEANING', 'OUT_OF_SERVICE'),
   extra_amenities: extraAmenities()
 });
 
 export const updateRoomSchema = Joi.object({
   room_type_id: objectId(),
   floor: Joi.string().trim().max(20).allow(''),
+  phone: Joi.string().trim().max(30).allow('', null),
+  mobile: Joi.string().trim().max(30).allow('', null),
   status: Joi.string().valid('AVAILABLE', 'OCCUPIED', 'MAINTENANCE', 'CLEANING', 'OUT_OF_ORDER'),
-  housekeeping_status: Joi.string().valid('CLEAN', 'DIRTY', 'INSPECTED'),
+  housekeeping_status: Joi.string().valid('CLEAN', 'DIRTY', 'INSPECTED', 'INSPECTING', 'CLEANING', 'OUT_OF_SERVICE'),
   extra_amenities: extraAmenities()
 }).min(1);
