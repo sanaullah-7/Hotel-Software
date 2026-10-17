@@ -1,0 +1,24 @@
+{
+  "mode": "audit",
+  "target": "explore_pakistan",
+  "sources": [
+    {
+      "database": "hotel_pms_platform",
+      "collections": [
+        {
+          "collection": "accounts",
+          "count": 0,
+          "identical": 0,
+          "missing": 0,
+          "conflicts": 0
+        }
+      ]
+    }
+  ],
+  "conflicts": [],
+  "ownershipErrors": [],
+  "absentSources": [
+    "explore_pakistan_platform"
+  ],
+  "safeToApply": true
+}

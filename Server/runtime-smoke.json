@@ -1,0 +1,95 @@
+[
+  {
+    "path": "auth/me",
+    "status": 200,
+    "success": true
+  },
+  {
+    "path": "hotel/profile",
+    "status": 200,
+    "success": true
+  },
+  {
+    "path": "hotel/policies",
+    "status": 200,
+    "success": true
+  },
+  {
+    "path": "hotel/rooms",
+    "status": 200,
+    "success": true,
+    "count": 0
+  },
+  {
+    "path": "hotel/room-types",
+    "status": 200,
+    "success": true,
+    "count": 1
+  },
+  {
+    "path": "hotel/amenities",
+    "status": 200,
+    "success": true,
+    "count": 1
+  },
+  {
+    "path": "hotel/guests",
+    "status": 200,
+    "success": true,
+    "count": 0
+  },
+  {
+    "path": "hotel/reservations",
+    "status": 200,
+    "success": true,
+    "count": 0
+  },
+  {
+    "path": "hotel/stays",
+    "status": 200,
+    "success": true,
+    "count": 0
+  },
+  {
+    "path": "hotel/folios",
+    "status": 200,
+    "success": true,
+    "count": 0
+  },
+  {
+    "path": "hotel/invoices",
+    "status": 200,
+    "success": true,
+    "count": 0
+  },
+  {
+    "path": "hotel/payments",
+    "status": 200,
+    "success": true,
+    "count": 0
+  },
+  {
+    "path": "hotel/departments",
+    "status": 200,
+    "success": true,
+    "count": 1
+  },
+  {
+    "path": "hotel/employees",
+    "status": 200,
+    "success": true,
+    "count": 0
+  },
+  {
+    "path": "hotel/housekeeping/tasks",
+    "status": 200,
+    "success": true,
+    "count": 0
+  },
+  {
+    "path": "hotel/maintenance/tickets",
+    "status": 200,
+    "success": true,
+    "count": 0
+  }
+]

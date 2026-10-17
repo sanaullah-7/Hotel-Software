@@ -27,9 +27,10 @@ export default function PendingHotels() {
   const [rejectReason, setRejectReason] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (background = false) => {
      
-    setLoading(true); setError('');
+    if (!background) setLoading(true);
+    setError('');
     try {
       const res = await ApprovalService.getApprovals({ status: 'PENDING', page, limit: DEFAULT_PAGE_SIZE, search });
       setData(res.data); setTotal(res.total);
@@ -41,6 +42,26 @@ export default function PendingHotels() {
   useEffect(() => { fetchData(); }, [fetchData]);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(1); }, [search]);
+
+  useEffect(() => {
+    let active = true;
+    let timer;
+    const refresh = async () => {
+      if (document.visibilityState === 'visible') await fetchData(true);
+      if (active) timer = window.setTimeout(refresh, 15000);
+    };
+    const onFocus = () => { if (document.visibilityState === 'visible') fetchData(true); };
+    timer = window.setTimeout(refresh, 15000);
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+  }, [fetchData]);
+
 
   const handleAction = async () => {
     if (!confirm) return;
